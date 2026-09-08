@@ -137,13 +137,13 @@ Do not set production accidentally. The pipeline will not auto-deploy to product
 In `pubspec.yaml`:
 
 ```yaml
-version: 4.0.7+49
+version: 4.0.9+51
 ```
 
-- **versionName** = `4.0.7` (user-visible)
-- **versionCode** = `49` (integer Play requires to increase for every upload)
+- **versionName** = `4.0.9` (user-visible)
+- **versionCode** = `51` (integer Play requires to increase for every upload)
 
-**Before each Play release**, bump the `+N` build number (and version name when appropriate), for example `4.0.8+50`. CI does **not** auto-increment versions. If Play already has that `versionCode`, upload fails with a clear error — bump and retry.
+**Before each Play release**, bump the `+N` build number (and version name when appropriate), for example `4.1.0+52`. CI does **not** auto-increment versions. If Play already has that `versionCode`, upload fails with a clear error — bump and retry.
 
 ### Artifacts
 

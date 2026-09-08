@@ -102,3 +102,5 @@ coverage/
 !**/ios/**/default.perspectivev3
 !/packages/flutter_tools/test/data/dart_dependencies_test/**/.packages
 play_store_files/moi-master-f2f9415b77b0.json
+# Widget Preview related
+.widget_preview/

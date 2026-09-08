@@ -1,18 +1,22 @@
-# Moi Backend Node.js API
+# Moi Kanakku - Backend API Server
 
-A Node.js/Express backend API for the Moi Credit/Debit management system.
+A robust Node.js/Express REST API backend for the **Moi Kanakku** gift and transaction management system.
 
-## Prerequisites
+---
 
-- **Node.js** (v14 or higher recommended)
-- **MySQL** (MariaDB 10.11+ or MySQL 8.0+)
+## 📋 Prerequisites
+
+- **Node.js**: v18.0.0 or higher
+- **MySQL / MariaDB**: 10.11+ or MySQL 8.0+
 - **npm** or **yarn**
 
-## Installation
+---
 
-1. **Clone/Navigate to the project directory:**
+## ⚡ Installation & Setup
+
+1. **Navigate to the backend directory:**
    ```bash
-   cd moi-beckend-nodejs
+   cd backend
    ```
 
 2. **Install dependencies:**
@@ -20,144 +24,105 @@ A Node.js/Express backend API for the Moi Credit/Debit management system.
    npm install
    ```
 
-3. **Set up the database:**
-   - Create a MySQL database named `prasowla_moi_master`
-   - Import the database backup:
+3. **Set up the Database:**
+   - Create a MySQL database named `prasowla_moi_master` (or custom name configured in `.env`).
+   - Import database dump from `prasowla_moi_kanakku_db.sql` or `db backup/`:
      ```bash
-     mysql -u root -p prasowla_moi_master < "db backup/prasowla_moi_master_28_11_2025.sql"
+     mysql -u root -p prasowla_moi_master < prasowla_moi_kanakku_db.sql
      ```
-   - Run migrations (if any):
+   - Apply any necessary migrations:
      ```bash
      mysql -u root -p prasowla_moi_master < migrations/add_firstname_secondname_city_to_credit_debit.sql
      ```
 
-4. **Configure environment variables:**
-   - Create a `.env` file in the root directory (or use the existing `env_copy.txt` as reference)
-   - Update database credentials in `src/config/database.js` or use environment variables:
-     ```env
-     DB_HOST=localhost
-     DB_USER=root
-     DB_PASSWORD=your_password
-     DB_NAME=prasowla_moi_master
-     JWT_SECRET=mysonnameisrenzo
-     API_SECRET_KEY=your_secure_api_key_here
-     PORT=3000
-     ```
-   
-   **Important:** Set a strong, random `API_SECRET_KEY` to protect your registration endpoint. This key must be included in the `X-API-Key` header for registration requests.
+4. **Configure Environment Variables:**
+   Create a `.env` file in the root of `backend/` using the following configuration:
+   ```env
+   PORT=3000
+   DB_HOST=localhost
+   DB_USER=root
+   DB_PASSWORD=your_mysql_password
+   DB_NAME=prasowla_moi_master
+   JWT_SECRET=your_jwt_secret_key
+   API_SECRET_KEY=your_secure_api_registration_key
+   NODE_ENV=development
+   ```
 
-## Running the Project
+   > ⚠️ **Security Note:** Set a strong `API_SECRET_KEY` to protect registration endpoints. Registration requests must send this key in the `X-API-Key` HTTP header.
 
-### Development Mode (with auto-reload):
+---
 
-```bash
-npx nodemon app.js
-```
+## 🚀 Running the Server
 
-or
+### Development Mode (with auto-reload via nodemon)
 
 ```bash
-node app.js
+npm run dev
 ```
 
-The server will start on `http://localhost:3000`
-
-### Production Mode:
+### Production Mode
 
 ```bash
-node app.js
+npm start
 ```
 
-## API Endpoints
+The API server will listen on `http://localhost:3000/apis`.
 
-Base URL: `http://localhost:3000/apis`
+---
 
-### Main Endpoints:
-- `/apis/user/*` - User management
-- `/apis/moi-persons/*` - Person management
-- `/apis/moi-credit-debit/*` - Credit/Debit transactions
-- `/apis/moi-functions/*` - Function management
-- `/apis/moi-default-functions/*` - Default functions
-- `/apis/notifications/*` - Notifications
-- `/apis/uploads/*` - File uploads
+## 🌐 API Endpoints Overview
 
-See `POSTMAN_API_DOCUMENTATION.md` for detailed API documentation.
+Base Endpoint: `http://localhost:3000/apis`
 
-### Security
+| Endpoint Route | Resource Description |
+|---|---|
+| `/apis/user/*` | User authentication, registration, profiles, MFA setup/verify |
+| `/apis/moi-persons/*` | Person contacts and gift contributor directory |
+| `/apis/moi-credit-debit/*` | Credit/Debit transactions and event gift entries |
+| `/apis/moi-functions/*` | Custom event & function management |
+| `/apis/moi-default-functions/*` | Pre-defined default function categories |
+| `/apis/notifications/*` | User and system notification delivery |
+| `/apis/uploads/*` | Attachment uploads and media handling |
 
-**Registration Endpoint Protection:**
-- The `/apis/user/create` endpoint requires an `X-API-Key` header with a valid API secret key
-- Rate limiting: Maximum 5 registration attempts per IP address per 15 minutes
-- Set `API_SECRET_KEY` in your `.env` file and include it in the `X-API-Key` header for registration requests
+---
 
-## Database Configuration
+## ⏰ Scheduled Tasks (Cron Jobs)
 
-The database configuration is in `src/config/database.js`. Currently configured for:
-- Host: `localhost`
-- User: `root`
-- Password: `` (empty)
-- Database: `prasowla_moi_master`
+The backend runs automated daily tasks (`node-cron`) at 9:00 AM:
+1. **Password Expiration Check**: Evaluates user password age and dispatches renewal notifications.
+2. **Function Reminder Service**: Sends reminders 1 day prior to upcoming scheduled functions.
 
-**To use environment variables**, uncomment the lines in `database.js` and create a `.env` file.
+---
 
-## Scheduled Tasks
-
-The application runs two scheduled tasks daily at 9:00 AM:
-1. **Password Expiration Check** - Checks and notifies users about password expiration
-2. **Function Reminder** - Sends reminders for upcoming functions (1 day before)
-
-## Project Structure
+## 📁 Project Structure
 
 ```
-moi-beckend-nodejs/
-├── app.js                 # Main application entry point
+backend/
+├── app.js                 # Main server entrypoint & middleware stack
 ├── src/
-│   ├── config/           # Configuration files
-│   ├── controllers/      # Request handlers
-│   ├── models/           # Database models/queries
-│   ├── routes/           # API routes
-│   ├── middlewares/      # Custom middlewares (auth, etc.)
-│   └── services/         # Background services
-├── migrations/           # Database migration scripts
-├── db backup/           # Database backup files
-└── package.json         # Dependencies
+│   ├── config/           # Database & environmental configurations
+│   ├── controllers/      # Route request controllers
+│   ├── models/           # Data access objects & MySQL query models
+│   ├── routes/           # Express router endpoints
+│   ├── middlewares/      # JWT validation, rate limiting, header checks
+│   └── services/         # Cron tasks, notification & mail services
+├── migrations/           # SQL migration scripts
+├── db backup/            # Database schema & seed backups
+└── package.json          # Node.js dependencies & scripts
 ```
 
-## Troubleshooting
+---
 
-1. **Database Connection Error:**
-   - Check MySQL is running: `mysql -u root -p`
-   - Verify database exists: `SHOW DATABASES;`
-   - Update credentials in `src/config/database.js`
+## 🛠 Main Dependencies
 
-2. **Port Already in Use:**
-   - Change PORT in `.env` or `app.js`
-   - Kill process using port 3000: `lsof -ti:3000 | xargs kill`
+- **Framework**: `express`, `cors`, `helmet`, `morgan`
+- **Database**: `mysql2`
+- **Security**: `jsonwebtoken`, `bcryptjs`, `speakeasy`, `express-rate-limit`
+- **Utilities**: `moment`, `nodemailer`, `multer`, `winston`, `qrcode`
+- **Firebase**: `firebase-admin`
 
-3. **Module Not Found:**
-   - Run `npm install` again
-   - Check `node_modules` folder exists
+---
 
-## Dependencies
+## 📄 License & Author
 
-Key dependencies:
-- `express` - Web framework
-- `mysql2` - MySQL database driver
-- `jsonwebtoken` - JWT authentication
-- `bcryptjs` - Password hashing
-- `moment` - Date manipulation
-- `nodemailer` - Email sending
-- `multer` - File uploads
-- `firebase-admin` - Firebase integration
-
-## License
-
-ISC
-
-## Additional Dependencies
-
-* `pdfkit` — required for generating PDF statements. Run `npm install pdfkit` before starting the server.
-
-## Author
-
-gpdhanush
+Maintained by **GP_Dhanush** (gpdhanush).
