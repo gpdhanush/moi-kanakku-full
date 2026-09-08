@@ -16,7 +16,7 @@ class SecureStorageService {
     // unset and re-show the permissions page repeatedly.
     enforceBiometrics: false,
     resetOnError: true,
-    sharedPreferencesName: "_Pref_",
+    storageNamespace: "_Pref_",
     preferencesKeyPrefix: "MOI_",
   );
 

@@ -51,7 +51,7 @@ class ThemeProvider with ChangeNotifier {
   final AndroidOptions _androidOptions = const AndroidOptions(
     enforceBiometrics: false,
     resetOnError: true,
-    sharedPreferencesName: "_Pref_",
+    storageNamespace: "_Pref_",
     preferencesKeyPrefix: "MOI_",
   );
   final IOSOptions _iosOptions = const IOSOptions(accountName: "moi_theme");

@@ -27,6 +27,7 @@ class PermissionController extends ChangeNotifier {
   bool isRequesting = false;
   bool isLoadingPermissions = true;
   Set<String> grantedPermissions = {};
+  Set<String> permanentlyDeniedPermissions = {};
   bool _disposed = false;
   List<PermissionInfo> _permissions = [];
 
@@ -103,15 +104,29 @@ class PermissionController extends ChangeNotifier {
   Future<void> checkPermissions() async {
     if (_disposed || _permissions.isEmpty) return;
     grantedPermissions.clear();
+    permanentlyDeniedPermissions.clear();
     for (var permInfo in _permissions) {
       final status = await permInfo.permission.status;
       if (status.isGranted) {
         grantedPermissions.add(permInfo.id);
+      } else if (status.isPermanentlyDenied) {
+        permanentlyDeniedPermissions.add(permInfo.id);
       }
     }
     if (!_disposed) {
       notifyListeners();
     }
+  }
+
+  Future<void> requestSinglePermission(PermissionInfo permInfo) async {
+    if (_disposed) return;
+    final status = await permInfo.permission.status;
+    if (status.isPermanentlyDenied) {
+      await openAppSettings();
+    } else if (!status.isGranted) {
+      await permInfo.permission.request();
+    }
+    await checkPermissions();
   }
 
   Future<void> requestAllPermissions() async {

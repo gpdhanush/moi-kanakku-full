@@ -34,7 +34,7 @@ class PdfExportService {
       final boldFontData = await _loadFont('RobotoBold');
 
       final appFontFamilyData = await rootBundle.load(
-        'assets/fonts/NotoSansTamil.ttf',
+        'assets/fonts/NotoSansTamil-Regular.ttf',
       );
       final appFontFamily = pw.Font.ttf(appFontFamilyData);
       // Load app logo for promotion section

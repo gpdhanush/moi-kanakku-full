@@ -97,9 +97,9 @@ class _MaintenanceModePageState extends State<MaintenanceModePage>
             padding: const EdgeInsets.symmetric(horizontal: 28),
             child: Column(
               children: [
-                const SizedBox(height: 36),
-                Image.asset(AppImages.appLogoImage, width: 72, height: 72),
-                const Spacer(),
+                // const SizedBox(height: 36),
+                // Image.asset(AppImages.appLogoImage, width: 72, height: 72),
+                // const Spacer(),
                 ScaleTransition(
                   scale: _pulseAnimation,
                   child: Container(

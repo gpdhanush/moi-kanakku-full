@@ -94,9 +94,7 @@ dependencies {
     // Firebase BoM
     implementation(platform("com.google.firebase:firebase-bom:34.6.0"))
 
-    // Firebase services (KTX modules removed from BoM, using main modules with KTX APIs)
-    implementation("com.google.firebase:firebase-analytics")
+    // Firebase services
     implementation("com.google.firebase:firebase-crashlytics")
     implementation("com.google.firebase:firebase-config")
-    implementation("com.google.firebase:firebase-perf")
 }
