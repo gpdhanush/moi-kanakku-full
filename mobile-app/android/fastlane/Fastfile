@@ -1,0 +1,46 @@
+# frozen_string_literal: true
+
+default_platform(:android)
+
+platform :android do
+  desc "Upload a signed AAB to Google Play"
+  lane :deploy_play do |options|
+    aab_path = options[:aab_path] || ENV["AAB_PATH"]
+    json_key = options[:json_key] || ENV["GOOGLE_PLAY_JSON_PATH"]
+    track = options[:track] || ENV["PLAY_STORE_TRACK"] || "internal"
+
+    UI.user_error!("AAB path is required") if aab_path.to_s.empty?
+    UI.user_error!("Service account JSON key path is required") if json_key.to_s.empty?
+    UI.user_error!("AAB not found at #{aab_path}") unless File.exist?(aab_path)
+    UI.user_error!("JSON key not found at #{json_key}") unless File.exist?(json_key)
+
+    unless %w[internal closed open production].include?(track)
+      UI.user_error!("Invalid track '#{track}'. Use: internal, closed, open, production")
+    end
+
+    begin
+      upload_to_play_store(
+        package_name: "com.renzo.moi",
+        track: track,
+        aab: aab_path,
+        json_key: json_key,
+        skip_upload_metadata: true,
+        skip_upload_images: true,
+        skip_upload_screenshots: true,
+        skip_upload_changelogs: true,
+        release_status: "completed"
+      )
+    rescue => e
+      message = e.message.to_s
+      if message.match?(/version.?code|Version code|APK.*(already|exists)|duplicate/i)
+        UI.user_error!(
+          "Existing versionCode already used. Bump the +N build number in pubspec.yaml and retry. Original error: #{message}"
+        )
+      end
+      if message.match?(/auth|credential|permission|forbidden|unauthorized|access/i)
+        UI.user_error!("Google Play authentication failed: #{message}")
+      end
+      UI.user_error!("Google Play upload failed: #{message}")
+    end
+  end
+end

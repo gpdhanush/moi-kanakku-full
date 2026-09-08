@@ -1,0 +1,163 @@
+name: moi
+description: "A new Flutter project."
+publish_to: "none"
+
+version: 4.0.9+51 # ANDROID PLAY STORE VERSION
+
+environment:
+  sdk: ^3.8.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  provider: ^6.1.5
+  speech_to_text: ^7.0.0
+  fluttertoast: ^9.0.0
+  http: ^1.4.0
+  upgrader: ^12.3.0
+  intl: ^0.20.2
+  local_auth: ^3.0.0
+  path_provider: ^2.1.5
+  flutter_exit_app: ^2.0.0
+  package_info_plus: ^9.0.0
+  connectivity_plus: ^7.0.0
+  permission_handler: ^12.0.0+1
+  path: ^1.9.1
+  url_launcher: ^6.3.1
+  flutter_secure_storage: ^10.0.0
+  in_app_review: ^2.0.10
+  dio: ^5.8.0+1
+  crypto: ^3.0.6
+  asn1lib: ^1.6.5
+  flutter_easyloading: ^3.0.5
+  adaptive_action_sheet: ^2.0.4
+  image_picker: ^1.1.2
+  flutter_image_compress: ^2.3.0
+  image_cropper: ^11.0.0
+  flutter_image_gallery_saver: ^1.1.3
+  flutter_file_downloader: ^2.1.1
+  # razorpay_flutter: ^1.3.7
+  webview_flutter: ^4.10.0
+  # FIREBASE PLUGINS
+  firebase_core: ^4.3.0
+  firebase_crashlytics: ^5.0.6
+  firebase_performance: ^0.11.1+3
+  firebase_remote_config: ^6.1.3
+  firebase_messaging: ^16.1.0
+  cloud_firestore: ^6.1.1
+  firebase_analytics: ^12.1.0
+  flutter_local_notifications: ^19.2.1
+  check_disposable_email: ^0.2.1
+  pdf: ^3.11.1
+  printing: ^5.13.3
+  open_file: ^3.5.2
+  device_info_plus: ^12.3.0
+  screenshot: ^3.0.0
+  # share_plus: ^12.0.1
+  tamil_pdf_shaper: ^1.0.4
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.3
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/
+    - assets/img/
+    - assets/translations/
+    - assets/img/logo.png
+    - assets/fonts/NotoSansTamil-Regular.ttf
+
+  fonts:
+    - family: Arimo
+      fonts:
+        - asset: assets/fonts/Arimo/Arimo-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Arimo/Arimo-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Arimo/Arimo-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Arimo/Arimo-Bold.ttf
+          weight: 700
+
+    - family: NotoSansTamil
+      fonts:
+        - asset: assets/fonts/NotoSansTamil-Regular.ttf
+
+    - family: AzeretMono
+      fonts:
+        - asset: assets/fonts/AzeretMono/AzeretMono-Variable.ttf
+
+    # Compatibility aliases used by existing widgets.
+    - family: appFontFamily
+      fonts:
+        - asset: assets/fonts/Arimo/Arimo-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Arimo/Arimo-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Arimo/Arimo-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Arimo/Arimo-Bold.ttf
+          weight: 700
+
+    - family: RobotoBold
+      fonts:
+        - asset: assets/fonts/Arimo/Arimo-Bold.ttf
+          weight: 700
+
+    - family: ProximaNova
+      fonts:
+        - asset: assets/fonts/Arimo/Arimo-Regular.ttf
+
+    - family: Roboto
+      fonts:
+        - asset: assets/fonts/Arimo/Arimo-Regular.ttf
+
+    - family: Poppins
+      fonts:
+        - asset: assets/fonts/Arimo/Arimo-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Arimo/Arimo-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Arimo/Arimo-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Arimo/Arimo-Bold.ttf
+          weight: 700
+
+    - family: tamilFont
+      fonts:
+        - asset: assets/fonts/Arimo/Arimo-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Arimo/Arimo-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Arimo/Arimo-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Arimo/Arimo-Bold.ttf
+          weight: 700
+    
+    - family: englishFont
+      fonts:
+        - asset: assets/fonts/Arimo/Arimo-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Arimo/Arimo-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Arimo/Arimo-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Arimo/Arimo-Bold.ttf
+          weight: 700
+
+    - family: amountFont
+      fonts:
+        - asset: assets/fonts/AzeretMono/AzeretMono-Variable.ttf
+
+
+# Launcher icons
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/img/new logo.png"
+  remove_alpha_ios: true

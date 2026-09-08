@@ -1,0 +1,69 @@
+const User = require('../models/user');
+const { sendPushNotification } = require('../controllers/notificationController');
+const { NotificationType, Notification } = require('../models/notificationModels');
+const logger = require('../config/logger');
+
+/**
+ * Check for users with passwords older than 3 months and send push notifications
+ * This function is called by the cron job
+ */
+async function checkAndNotifyPasswordExpiration() {
+    try {
+        logger.info('Checking for users with passwords older than 3 months...');
+        
+        // Find users with passwords older than 3 months
+        const usersWithOldPasswords = await User.findUsersWithOldPasswords(3);
+        
+        if (usersWithOldPasswords.length === 0) {
+            logger.info('No users found with passwords older than 3 months.');
+            return;
+        }
+
+        logger.info(`Found ${usersWithOldPasswords.length} user(s) with passwords older than 3 months.`);
+
+        // Send notifications to each user
+        const notificationTitle = 'கடவுச்சொல் புதுப்பிப்பு நினைவூட்டல்';
+        const notificationBody = 'உங்கள் கடவுச்சொல் 3 மாதங்களுக்கு மேல் மாற்றப்படவில்லை. உங்கள் கணக்கின் பாதுகாப்பை உறுதிப்படுத்த, தயவுசெய்து உங்கள் கடவுச்சொல்லை மாற்றவும்.';
+
+        for (const user of usersWithOldPasswords) {
+            if (user.um_notification_token) {
+                try {
+                    // Check if notification was already sent today to prevent duplicates
+                    const alreadySent = await Notification.wasSentToday(
+                        user.um_id,
+                        notificationTitle,
+                        NotificationType.ACCOUNT
+                    );
+
+                    if (alreadySent) {
+                        logger.info(`Password expiration notification already sent today to user ${user.um_id} (${user.um_email}), skipping.`);
+                        continue;
+                    }
+
+                    // Send FCM notification (this will save to DB if successful)
+                    await sendPushNotification({
+                        userId: user.um_id,
+                        title: notificationTitle,
+                        body: notificationBody,
+                        token: user.um_notification_token,
+                        type: NotificationType.ACCOUNT
+                    });
+                    logger.info(`Password expiration notification sent to user ${user.um_id} (${user.um_email})`);
+                } catch (notificationError) {
+                    logger.error(`Error sending password expiration notification to user ${user.um_id}:`, notificationError);
+                    // Continue with other users even if one fails
+                }
+            } else {
+                logger.info(`User ${user.um_id} (${user.um_email}) does not have a notification token, skipping.`);
+            }
+        }
+
+        logger.info('Password expiration check completed.');
+    } catch (error) {
+        logger.error('Error in password expiration check:', error);
+    }
+}
+
+module.exports = {
+    checkAndNotifyPasswordExpiration
+};

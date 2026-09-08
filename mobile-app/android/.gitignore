@@ -1,0 +1,23 @@
+gradle-wrapper.jar
+/.gradle
+/captures/
+/gradlew
+/gradlew.bat
+/local.properties
+GeneratedPluginRegistrant.java
+.cxx/
+
+# Remember to never publicly share your keystore.
+# See https://flutter.dev/to/reference-keystore
+key.properties
+**/key.properties
+**/*.keystore
+**/*.jks
+**/keystore
+app/keystore
+app/ci-upload-keystore.jks
+play-store-service-account.json
+**/google-play-service-account.json
+**/play-store-*.json
+vendor/
+.bundle/

@@ -1,0 +1,4 @@
+# Fastlane configuration for Google Play uploads.
+# Secrets come from GitLab CI/CD variables — never commit credentials here.
+
+app_identifier("com.renzo.moi")
