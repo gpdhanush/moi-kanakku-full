@@ -533,5 +533,16 @@
     "subtitle": "Allow the permissions below for the best experience",
     "allow": "Allow Access",
     "skip": "Skip"
+  },
+  "onboarding": {
+    "skip": "Skip",
+    "next": "Next",
+    "getStarted": "Get Started",
+    "slide1Title": "Manage Events & Functions",
+    "slide1Subtitle": "Organize your traditional functions, weddings, and special events in one simple place.",
+    "slide2Title": "Track Moi & Gift Records",
+    "slide2Subtitle": "Accurately record incoming and outgoing Moi gifts and payments with person-wise tracking.",
+    "slide3Title": "Instant Reports & Security",
+    "slide3Subtitle": "Generate PDF/Excel statements and keep your event transactions safe and accessible."
   }
 }

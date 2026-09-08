@@ -104,6 +104,15 @@ class SplashScreenController extends ChangeNotifier {
       return;
     }
 
+    // Check if onboarding has been completed
+    final onboardingCompleted =
+        await secureStorage.get("onboardingCompleted") ?? false;
+
+    if (!onboardingCompleted) {
+      await navigation("onboarding");
+      return;
+    }
+
     // User is not logged in, check permissions
     final permissionsRequested = await secureStorage
         .hasPermissionsBeenRequested();

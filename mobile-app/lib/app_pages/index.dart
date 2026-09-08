@@ -1,5 +1,7 @@
 export 'splash_screen/splash_screen.dart';
 export 'splash_screen/splash_screen_controller.dart';
+// ONBOARDING PAGE
+export 'onboarding/onboarding_page.dart';
 // PERMISSION PAGE
 export 'permissions/permission_page.dart';
 export 'permissions/permission_controller.dart';

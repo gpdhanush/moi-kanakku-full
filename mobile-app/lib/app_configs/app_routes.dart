@@ -26,6 +26,8 @@ class AppRoute {
         switch (settings.name) {
           case "splash":
             return const SplashScreen();
+          case "onboarding":
+            return const OnboardingPage();
           case "permissions":
             return const PermissionPage();
           case "home":

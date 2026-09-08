@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:moi/app_utils/app_providers/language_provider.dart';
+import 'package:speech_to_text/speech_recognition_error.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 import 'package:provider/provider.dart';
 
@@ -24,6 +26,8 @@ class _SearchWidgetState extends State<SearchWidget> {
   final SpeechToText _speech = SpeechToText();
   bool _isListening = false;
   bool _isInitialized = false;
+  bool _initializing = false;
+  List<LocaleName> _availableLocales = [];
 
   @override
   void initState() {
@@ -49,28 +53,71 @@ class _SearchWidgetState extends State<SearchWidget> {
 
   /// Initialize speech recognition
   Future<void> _initializeSpeech() async {
-    bool available = await _speech.initialize(
-      onStatus: (status) {
-        if (mounted) {
-          setState(() {
-            _isListening = status == 'listening';
-          });
-        }
-      },
-      onError: (error) {
-        debugPrint('Speech Error: $error');
-        if (mounted) {
-          setState(() {
-            _isListening = false;
-          });
-        }
-      },
-    );
-    if (mounted) {
-      setState(() {
-        _isInitialized = available;
-      });
+    if (_initializing) return;
+    _initializing = true;
+
+    try {
+      final micStatus = await Permission.microphone.status;
+      if (!micStatus.isGranted) {
+        await Permission.microphone.request();
+      }
+
+      bool available = await _speech.initialize(
+        onStatus: (status) {
+          debugPrint('Search Speech Status: $status');
+          if (mounted) {
+            setState(() {
+              _isListening = status == 'listening';
+            });
+          }
+        },
+        onError: (SpeechRecognitionError error) {
+          debugPrint('Search Speech Error: ${error.errorMsg}');
+          if (mounted) {
+            setState(() {
+              _isListening = false;
+            });
+          }
+        },
+      );
+
+      if (available) {
+        _availableLocales = await _speech.locales();
+      }
+
+      if (mounted) {
+        setState(() {
+          _isInitialized = available;
+        });
+      }
+    } catch (e) {
+      debugPrint('Search Speech Init Exception: $e');
+      if (mounted) {
+        setState(() {
+          _isInitialized = false;
+        });
+      }
+    } finally {
+      _initializing = false;
     }
+  }
+
+  /// Resolves the best supported localeId for speech-to-text
+  String? _resolveLocaleId(String desiredLocaleId) {
+    if (_availableLocales.isEmpty) return null;
+
+    final hasExact =
+        _availableLocales.any((loc) => loc.localeId == desiredLocaleId);
+    if (hasExact) return desiredLocaleId;
+
+    final langPrefix = desiredLocaleId.split('_').first;
+    for (final loc in _availableLocales) {
+      if (loc.localeId.startsWith(langPrefix)) {
+        return loc.localeId;
+      }
+    }
+
+    return _availableLocales.first.localeId;
   }
 
   /// Starts listening for speech input and updates the controller with recognized words
@@ -83,26 +130,38 @@ class _SearchWidgetState extends State<SearchWidget> {
       return;
     }
 
-    if (mounted) {
-      setState(() {
-        _isListening = true;
-      });
-    }
+    final voiceCode = context.read<LanguageProvider>().voiceLanguageCode;
+    final localeId = _resolveLocaleId(voiceCode);
 
-    await _speech.listen(
-      localeId: context.read<LanguageProvider>().voiceLanguageCode,
-      onResult: (result) {
-        if (mounted && widget.controller != null) {
-          widget.controller!.text = result.recognizedWords;
-        }
-      },
-      listenOptions: SpeechListenOptions(
-        cancelOnError: true,
-        partialResults: true,
-        autoPunctuation: true,
-        enableHapticFeedback: true,
-      ),
-    );
+    try {
+      if (mounted) {
+        setState(() {
+          _isListening = true;
+        });
+      }
+
+      await _speech.listen(
+        listenOptions: SpeechListenOptions(
+          localeId: localeId,
+          cancelOnError: true,
+          partialResults: true,
+          autoPunctuation: true,
+          enableHapticFeedback: true,
+        ),
+        onResult: (result) {
+          if (mounted && widget.controller != null) {
+            widget.controller!.text = result.recognizedWords;
+          }
+        },
+      );
+    } catch (e) {
+      debugPrint('Search Speech Listen Exception: $e');
+      if (mounted) {
+        setState(() {
+          _isListening = false;
+        });
+      }
+    }
   }
 
   /// Stops listening for speech input
