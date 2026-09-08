@@ -112,7 +112,7 @@ async function sendPushNotification({ userId, title, body, token, type, skipDbSa
         logger.info('FCM sent successfully', { traceId, userId, messageId });
         return {
             success: true,
-            message: 'அறிவிப்பு வெற்றிகரமாக அனுப்பப்பட்டது',
+            message: 'Notification sent successfully',
             fcmSent: true,
             dbSaved: !!notificationId,
             notificationId,
@@ -127,9 +127,9 @@ async function sendPushNotification({ userId, title, body, token, type, skipDbSa
             code: error?.code || null,
             message: error?.message || String(error)
         });
-        
+
         // If the token is invalid, deactivate it in the database
-        if (error.code === 'messaging/invalid-registration-token' || 
+        if (error.code === 'messaging/invalid-registration-token' ||
             error.code === 'messaging/registration-token-not-registered') {
             try {
                 const db = require('../config/database');
@@ -142,12 +142,12 @@ async function sendPushNotification({ userId, title, body, token, type, skipDbSa
                 logger.error('Error deactivating FCM token:', { traceId, userId, error: dbError?.message || String(dbError) });
             }
         }
-        
+
         // Return success if notification was saved to DB, even if FCM failed
         if (notificationId) {
             return {
                 success: true,
-                message: 'அறிவிப்பு தரவுத்தளத்தில் சேமிக்கப்பட்டது, ஆனால் FCM அனுப்ப முடியவில்லை',
+                message: 'Notification saved to database, but FCM could not be sent',
                 fcmSent: false,
                 dbSaved: true,
                 notificationId,
@@ -158,7 +158,7 @@ async function sendPushNotification({ userId, title, body, token, type, skipDbSa
                 }
             };
         }
-        
+
         if (traceId) error.traceId = traceId;
         throw error;
     }
@@ -226,44 +226,44 @@ exports.controller = {
 
         const idCheck = validateUuid(userId, 'userId');
         if (!idCheck.ok) return sendUuidError(res, idCheck.message);
-        
+
         try {
             const result = await sendPushNotification({ userId, title, body, token, type });
-            return res.status(200).json({ 
-                responseType: "S", 
-                responseValue: { message: result.message } 
+            return res.status(200).json({
+                responseType: "S",
+                responseValue: { message: result.message }
             });
         } catch (error) {
             // FCM send failed, don't save to database
             logger.error('FCM send error:', error);
-            
+
             // Handle FCM-specific errors
-            let errorMessage = 'அறிவிப்பை அனுப்ப முடியவில்லை.';
+            let errorMessage = 'Could not send notification.';
             let statusCode = 500;
 
             if (error.code) {
                 switch (error.code) {
                     case 'messaging/invalid-registration-token':
                     case 'messaging/registration-token-not-registered':
-                        errorMessage = 'தவறான அல்லது காலாவதியான சாதன டோக்கன். பயனர் பயன்பாட்டை நிறுவல் நீக்கியிருக்கலாம் அல்லது டோக்கன் இனி செல்லுபடியாகாது.';
+                        errorMessage = 'Invalid or expired device token. The user may have uninstalled the app or the token is no longer valid.';
                         statusCode = 400;
                         break;
                     case 'messaging/invalid-argument':
-                        errorMessage = 'தவறான அறிவிப்பு தரவு வழங்கப்பட்டது.';
+                        errorMessage = 'Invalid notification data provided.';
                         statusCode = 400;
                         break;
                     case 'messaging/unavailable':
-                        errorMessage = 'FCM சேவை தற்காலிகமாக கிடைக்கவில்லை. தயவுசெய்து பின்னர் மீண்டும் முயற்சிக்கவும்.';
+                        errorMessage = 'FCM service is temporarily unavailable. Please try again later.';
                         statusCode = 503;
                         break;
                     case 'messaging/internal-error':
-                        errorMessage = 'உள் FCM பிழை ஏற்பட்டது. தயவுசெய்து பின்னர் மீண்டும் முயற்சிக்கவும்.';
+                        errorMessage = 'Internal FCM error occurred. Please try again later.';
                         statusCode = 500;
                         break;
                     default:
                         // Check error message for common patterns
                         if (error.message && error.message.includes('Requested entity was not found')) {
-                            errorMessage = 'தவறான அல்லது காலாவதியான சாதன டோக்கன். சாதனம் நிறுவல் நீக்கப்பட்டிருக்கலாம் அல்லது டோக்கன் இனி செல்லுபடியாகாது.';
+                            errorMessage = 'Invalid or expired device token. The device may have been uninstalled or the token is no longer valid.';
                             statusCode = 400;
                         } else if (error.message) {
                             errorMessage = error.message;
@@ -279,9 +279,9 @@ exports.controller = {
                 }
             }
 
-            return res.status(statusCode).json({ 
-                responseType: "F", 
-                responseValue: { message: errorMessage } 
+            return res.status(statusCode).json({
+                responseType: "F",
+                responseValue: { message: errorMessage }
             });
         }
     },
@@ -295,18 +295,18 @@ exports.controller = {
         try {
             const userId = req.user.userId;
             const { limit = 50, offset = 0 } = req.body;
-            
+
             if (!userId) {
                 return res.status(400).json({
                     responseType: "F",
-                    responseValue: { message: 'பயனர் ஐடி தேவையானது.' }
+                    responseValue: { message: 'User ID is required.' }
                 });
             }
 
             const notifications = await Notification.findByUserId(userId, Math.min(parseInt(limit), 100), parseInt(offset));
             const unreadCount = await Notification.getUnreadCount(userId);
             const totalCount = await Notification.getTotalCountByUserId(userId);
-            
+
             return res.status(200).json({
                 responseType: "S",
                 count: notifications.length,
@@ -329,16 +329,16 @@ exports.controller = {
     getUnreadCount: async (req, res) => {
         try {
             const userId = req.user.userId;
-            
+
             if (!userId) {
                 return res.status(400).json({
                     responseType: "F",
-                    responseValue: { message: 'பயனர் ஐடி தேவையானது.' }
+                    responseValue: { message: 'User ID is required.' }
                 });
             }
 
             const count = await Notification.getUnreadCount(userId);
-            
+
             return res.status(200).json({
                 responseType: "S",
                 responseValue: { unreadCount: Number(count) || 0 }
@@ -363,7 +363,7 @@ exports.controller = {
             if (!notificationId) {
                 return res.status(400).json({
                     responseType: "F",
-                    responseValue: { message: 'அறிவிப்பு ஐடி தேவையானது.' }
+                    responseValue: { message: 'Notification ID is required.' }
                 });
             }
 
@@ -375,7 +375,7 @@ exports.controller = {
             if (!notification) {
                 return res.status(404).json({
                     responseType: "F",
-                    responseValue: { message: 'விவரங்கள் எதுவும் கிடைக்கவில்லை.' }
+                    responseValue: { message: 'No details found.' }
                 });
             }
 
@@ -384,7 +384,7 @@ exports.controller = {
             if (notification.userId !== userId) {
                 return res.status(403).json({
                     responseType: "F",
-                    responseValue: { message: 'இந்த அறிவிப்பை அணுக உங்களுக்கு அனுமதி இல்லை.' }
+                    responseValue: { message: 'You do not have permission to access this notification.' }
                 });
             }
 
@@ -394,12 +394,12 @@ exports.controller = {
             if (result && result.affectedRows > 0) {
                 return res.status(200).json({
                     responseType: "S",
-                    responseValue: { message: 'அறிவிப்பு வெற்றிகரமாக படிக்கப்பட்டதாக குறிக்கப்பட்டது.' }
+                    responseValue: { message: 'Notification successfully marked as read.' }
                 });
             } else {
                 return res.status(404).json({
                     responseType: "F",
-                    responseValue: { message: 'அறிவிப்பு நிலையை புதுப்பிக்க முடியவில்லை.' }
+                    responseValue: { message: 'Could not update notification status.' }
                 });
             }
         } catch (error) {
@@ -422,7 +422,7 @@ exports.controller = {
             if (!notificationId) {
                 return res.status(400).json({
                     responseType: "F",
-                    responseValue: { message: 'அறிவிப்பு ஐடி தேவையானது.' }
+                    responseValue: { message: 'Notification ID is required.' }
                 });
             }
 
@@ -434,7 +434,7 @@ exports.controller = {
             if (!notification) {
                 return res.status(404).json({
                     responseType: "F",
-                    responseValue: { message: 'விவரங்கள் எதுவும் கிடைக்கவில்லை.' }
+                    responseValue: { message: 'No details found.' }
                 });
             }
 
@@ -443,7 +443,7 @@ exports.controller = {
             if (notification.userId !== userId) {
                 return res.status(403).json({
                     responseType: "F",
-                    responseValue: { message: 'இந்த அறிவிப்பை அணுக உங்களுக்கு அனுமதி இல்லை.' }
+                    responseValue: { message: 'You do not have permission to access this notification.' }
                 });
             }
 
@@ -453,12 +453,12 @@ exports.controller = {
             if (result && result.affectedRows > 0) {
                 return res.status(200).json({
                     responseType: "S",
-                    responseValue: { message: 'அறிவிப்பு வெற்றிகரமாக படிக்கப்படாததாக குறிக்கப்பட்டது.' }
+                    responseValue: { message: 'Notification successfully marked as unread.' }
                 });
             } else {
                 return res.status(404).json({
                     responseType: "F",
-                    responseValue: { message: 'அறிவிப்பு நிலையை புதுப்பிக்க முடியவில்லை.' }
+                    responseValue: { message: 'Could not update notification status.' }
                 });
             }
         } catch (error) {
@@ -481,7 +481,7 @@ exports.controller = {
             if (!notificationId) {
                 return res.status(400).json({
                     responseType: "F",
-                    responseValue: { message: 'அறிவிப்பு ஐடி தேவையானது.' }
+                    responseValue: { message: 'Notification ID is required.' }
                 });
             }
 
@@ -493,7 +493,7 @@ exports.controller = {
             if (!notification) {
                 return res.status(404).json({
                     responseType: "F",
-                    responseValue: { message: 'விவரங்கள் எதுவும் கிடைக்கவில்லை.' }
+                    responseValue: { message: 'No details found.' }
                 });
             }
 
@@ -502,7 +502,7 @@ exports.controller = {
             if (userId && notification.userId !== userId) {
                 return res.status(403).json({
                     responseType: "F",
-                    responseValue: { message: 'இந்த அறிவிப்பை நீக்க உங்களுக்கு அனுமதி இல்லை.' }
+                    responseValue: { message: 'You do not have permission to delete this notification.' }
                 });
             }
 
@@ -512,12 +512,12 @@ exports.controller = {
             if (result && result.affectedRows > 0) {
                 return res.status(200).json({
                     responseType: "S",
-                    responseValue: { message: 'அறிவிப்பு வெற்றிகரமாக நீக்கப்பட்டது.' }
+                    responseValue: { message: 'Notification deleted successfully.' }
                 });
             } else {
                 return res.status(404).json({
                     responseType: "F",
-                    responseValue: { message: 'அறிவிப்பை நீக்க முடியவில்லை.' }
+                    responseValue: { message: 'Could not delete notification.' }
                 });
             }
         } catch (error) {
@@ -540,7 +540,7 @@ exports.controller = {
             if (!notificationIds || !Array.isArray(notificationIds) || notificationIds.length === 0) {
                 return res.status(400).json({
                     responseType: "F",
-                    responseValue: { message: 'அறிவிப்பு ஐடிகளின் வரிசை தேவையானது.' }
+                    responseValue: { message: 'An array of notification IDs is required.' }
                 });
             }
 
@@ -563,7 +563,7 @@ exports.controller = {
                 return res.status(200).json({
                     responseType: "S",
                     responseValue: {
-                        message: 'தேர்ந்தெடுக்கப்பட்ட அறிவிப்புகள் வெற்றிகரமாக நீக்கப்பட்டன.',
+                        message: 'Selected notifications deleted successfully.',
                         deletedCount: result.affectedRows
                     }
                 });
@@ -574,7 +574,7 @@ exports.controller = {
             return res.status(200).json({
                 responseType: "S",
                 responseValue: {
-                    message: 'தேர்ந்தெடுக்கப்பட்ட அறிவிப்புகள் வெற்றிகரமாக நீக்கப்பட்டன.',
+                    message: 'Selected notifications deleted successfully.',
                     deletedCount: result.affectedRows
                 }
             });
@@ -593,20 +593,20 @@ exports.controller = {
     markAllAsRead: async (req, res) => {
         try {
             const userId = req.user.userId;
-            
+
             if (!userId) {
                 return res.status(400).json({
                     responseType: "F",
-                    responseValue: { message: 'பயனர் ஐடி தேவையானது.' }
+                    responseValue: { message: 'User ID is required.' }
                 });
             }
 
             const result = await Notification.markAllAsRead(userId);
-            
+
             return res.status(200).json({
                 responseType: "S",
-                responseValue: { 
-                    message: 'அனைத்து அறிவிப்புகளும் வெற்றிகரமாக படிக்கப்பட்டதாக குறிக்கப்பட்டது.',
+                responseValue: {
+                    message: 'All notifications successfully marked as read.',
                     updatedCount: result.changedRows
                 }
             });
@@ -632,12 +632,12 @@ exports.controller = {
     sendBulkNotifications: async (req, res) => {
         try {
             const { userIds, title, body, type } = req.body;
-            
+
             // Validate input
             if (!userIds || !Array.isArray(userIds) || userIds.length === 0) {
                 return res.status(400).json({
                     responseType: "F",
-                    responseValue: { message: 'பயனர் ஐடிகளின் வரிசை தேவையானது.' }
+                    responseValue: { message: 'An array of user IDs is required.' }
                 });
             }
 
@@ -647,7 +647,7 @@ exports.controller = {
             if (!title || !body) {
                 return res.status(400).json({
                     responseType: "F",
-                    responseValue: { message: 'தலைப்பு மற்றும் பொருள் தேவையானது.' }
+                    responseValue: { message: 'Title and body are required.' }
                 });
             }
 
@@ -665,7 +665,7 @@ exports.controller = {
             // Step 1: Get all users and their FCM tokens
             const userIdsFormatted = userIds.map(id => toBinaryUUID(id));
             const placeholders = userIdsFormatted.map(() => '?').join(',');
-            
+
             // Use a subquery to get the most recent active device for each user
             const [users] = await db.query(
                 `SELECT u.id, u.full_name, u.email,
@@ -680,7 +680,7 @@ exports.controller = {
             if (users.length === 0) {
                 return res.status(404).json({
                     responseType: "F",
-                    responseValue: { message: 'கொடுக்கப்பட்ட பயனர் ஐடிகளுக்கு பயனர்கள் கிடைக்கவில்லை.' }
+                    responseValue: { message: 'No users found for the provided user IDs.' }
                 });
             }
 
@@ -695,9 +695,17 @@ exports.controller = {
                 successfulUsers: []
             };
 
+            const notificationsToSave = [];
+
             for (const user of users) {
                 const userId = fromBinaryUUID(user.id);
-                
+                notificationsToSave.push({
+                    userId: userId,
+                    title: title,
+                    body: body,
+                    type: type || NotificationType.GENERAL
+                });
+
                 // Check if user has FCM token
                 if (!user.fcm_token) {
                     results.noDeviceToken++;
@@ -705,18 +713,6 @@ exports.controller = {
                         userId: userId,
                         reason: 'FCM device token not found'
                     });
-                    
-                    // Still save notification to DB even without token
-                    try {
-                        await Notification.create({
-                            userId: userId,
-                            title: title,
-                            body: body,
-                            type: type || NotificationType.GENERAL
-                        });
-                    } catch (dbError) {
-                        logger.error(`Error saving notification to DB for user ${userId}:`, dbError);
-                    }
                     continue;
                 }
 
@@ -766,18 +762,6 @@ exports.controller = {
                     await admin.messaging().send(message);
                     logger.info(`FCM sent successfully to user ${userId}`);
 
-                    // Save notification to database
-                    try {
-                        await Notification.create({
-                            userId: userId,
-                            title: title,
-                            body: body,
-                            type: type || NotificationType.GENERAL
-                        });
-                    } catch (dbError) {
-                        logger.error(`Error saving notification to DB for user ${userId}:`, dbError);
-                    }
-
                     results.successful++;
                     results.successfulUsers.push({
                         userId: userId,
@@ -786,9 +770,9 @@ exports.controller = {
 
                 } catch (fcmError) {
                     logger.error(`FCM send error for user ${userId}:`, fcmError);
-                    
+
                     // Handle invalid token
-                    if (fcmError.code === 'messaging/invalid-registration-token' || 
+                    if (fcmError.code === 'messaging/invalid-registration-token' ||
                         fcmError.code === 'messaging/registration-token-not-registered') {
                         try {
                             await db.query(
@@ -807,18 +791,16 @@ exports.controller = {
                         email: user.email || 'N/A',
                         reason: fcmError.message || 'Unknown FCM error'
                     });
+                }
+            }
 
-                    // Still try to save notification to DB
-                    try {
-                        await Notification.create({
-                            userId: userId,
-                            title: title,
-                            body: body,
-                            type: type || NotificationType.GENERAL
-                        });
-                    } catch (dbError) {
-                        logger.error(`Error saving notification to DB for user ${userId}:`, dbError);
-                    }
+            // Save all notifications to database in a single bulk query
+            if (notificationsToSave.length > 0) {
+                try {
+                    await Notification.createBulk(notificationsToSave);
+                    logger.info(`Successfully saved ${notificationsToSave.length} notifications in bulk.`);
+                } catch (dbError) {
+                    logger.error('Error saving bulk notifications to DB:', dbError);
                 }
             }
 
@@ -826,7 +808,7 @@ exports.controller = {
             return res.status(200).json({
                 responseType: results.successful > 0 ? "S" : "F",
                 responseValue: {
-                    message: `${results.successful} பயனர்களுக்கு அறிவிப்புகள் வெற்றிகரமாக அனுப்பப்பட்டன.`,
+                    message: `Notifications sent successfully to ${results.successful} users.`,
                     ...results
                 }
             });
@@ -851,7 +833,7 @@ exports.controller = {
             if (!userId) {
                 return res.status(400).json({
                     responseType: "F",
-                    responseValue: { message: 'பயனர் ஐடி தேவையானது.' }
+                    responseValue: { message: 'User ID is required.' }
                 });
             }
 
@@ -861,7 +843,7 @@ exports.controller = {
             if (!title || !body) {
                 return res.status(400).json({
                     responseType: "F",
-                    responseValue: { message: 'தலைப்பு மற்றும் பொருள் தேவையானது.' }
+                    responseValue: { message: 'Title and body are required.' }
                 });
             }
 
@@ -889,7 +871,7 @@ exports.controller = {
             if (users.length === 0) {
                 return res.status(404).json({
                     responseType: "F",
-                    responseValue: { message: 'பயனர் கிடைக்கவில்லை.' }
+                    responseValue: { message: 'User not found.' }
                 });
             }
 
@@ -913,7 +895,7 @@ exports.controller = {
                 return res.status(200).json({
                     responseType: "S",
                     responseValue: {
-                        message: 'அறிவிப்பு தரவுத்தளத்தில் சேமிக்கப்பட்டது (FCM சாதன டோக்கன் கிடைக்கவில்லை).',
+                        message: 'Notification saved to database (FCM device token not available).',
                         fcmSent: false,
                         dbSaved: !!notificationId,
                         notificationId
@@ -961,7 +943,7 @@ exports.controller = {
             if (!userId) {
                 return res.status(400).json({
                     responseType: "F",
-                    responseValue: { message: 'பயனர் ஐடி தேவையானது.' }
+                    responseValue: { message: 'User ID is required.' }
                 });
             }
 
@@ -980,7 +962,7 @@ exports.controller = {
             if (users.length === 0) {
                 return res.status(404).json({
                     responseType: "F",
-                    responseValue: { message: 'பயனர் கிடைக்கவில்லை.' }
+                    responseValue: { message: 'User not found.' }
                 });
             }
 

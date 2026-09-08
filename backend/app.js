@@ -87,7 +87,8 @@ app.options("*", cors());
 // Secure headers
 app.use(helmet());
 
-// Request logging
+// Request logging (Console + File logging via Winston stream)
+app.use(morgan(":method :url :status :res[content-length] - :response-time ms", { stream: logger.stream }));
 app.use(morgan("dev"));
 
 // Body parsing

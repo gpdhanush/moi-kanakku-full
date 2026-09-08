@@ -36,7 +36,7 @@ exports.controller = {
       if (!user) {
         return res.status(404).json({
           responseType: "F",
-          responseValue: { message: "குறிப்பிடப்பட்ட பயனர் இல்லை!" },
+          responseValue: { message: "Specified user not found!" },
         });
       }
 
@@ -45,7 +45,7 @@ exports.controller = {
       if (persons.length === 0) {
         return res.status(404).json({
           responseType: "F",
-          responseValue: { message: "விவரங்கள் எதுவும் கிடைக்கவில்லை." },
+          responseValue: { message: "No details found." },
         });
       }
 
@@ -72,7 +72,7 @@ exports.controller = {
       if (!userId || !firstName) {
         return res.status(400).json({
           responseType: "F",
-          responseValue: { message: "தேவையான தரவுகள் வழங்கப்படவில்லை." },
+          responseValue: { message: "Required fields are missing." },
         });
       }
 
@@ -83,7 +83,7 @@ exports.controller = {
       if (!user) {
         return res.status(404).json({
           responseType: "F",
-          responseValue: { message: "குறிப்பிடப்பட்ட பயனர் இல்லை!" },
+          responseValue: { message: "Specified user not found!" },
         });
       }
 
@@ -94,7 +94,7 @@ exports.controller = {
           return res.status(400).json({
             responseType: "F",
             responseValue: {
-              message: "இந்த மொபைல் எண்ணுடன் ஒரு நபர் ஏற்கனவே உள்ளது.",
+              message: "A person with this mobile number already exists.",
               personId: existing.mp_id,
             },
           });
@@ -114,7 +114,7 @@ exports.controller = {
         return res.status(400).json({
           responseType: "F",
           responseValue: {
-            message: "இந்த விவரங்களுடன் ஒரு நபர் ஏற்கனவே உள்ளது.",
+            message: "A person with these details already exists.",
             personId: duplicate.mp_id,
           },
         });
@@ -134,14 +134,14 @@ exports.controller = {
         return res.status(200).json({
           responseType: "S",
           responseValue: {
-            message: "நபர் வெற்றிகரமாக சேர்க்கப்பட்டது.",
+            message: "Person added successfully.",
             id: result.insertId,
           },
         });
       } else {
         return res.status(404).json({
           responseType: "F",
-          responseValue: { message: "தரவு சேமிப்பு தோல்வியடைந்தது." },
+          responseValue: { message: "Failed to save data." },
         });
       }
     } catch (error) {
@@ -159,7 +159,7 @@ exports.controller = {
       if (!userId || !id || !firstName) {
         return res.status(400).json({
           responseType: "F",
-          responseValue: { message: "தேவையான தரவுகள் வழங்கப்படவில்லை." },
+          responseValue: { message: "Required fields are missing." },
         });
       }
 
@@ -170,7 +170,7 @@ exports.controller = {
       if (!user) {
         return res.status(404).json({
           responseType: "F",
-          responseValue: { message: "குறிப்பிடப்பட்ட பயனர் இல்லை!" },
+          responseValue: { message: "Specified user not found!" },
         });
       }
 
@@ -178,7 +178,7 @@ exports.controller = {
       if (!existing) {
         return res.status(404).json({
           responseType: "F",
-          responseValue: { message: "குறிப்பிடப்பட்ட நபர் இல்லை!" },
+          responseValue: { message: "Specified person not found!" },
         });
       }
 
@@ -189,7 +189,7 @@ exports.controller = {
           return res.status(400).json({
             responseType: "F",
             responseValue: {
-              message: "இந்த மொபைல் எண் ஏற்கனவே பயன்படுத்தப்படுகிறது.",
+              message: "This mobile number is already in use.",
             },
           });
         }
@@ -209,13 +209,13 @@ exports.controller = {
         return res.status(200).json({
           responseType: "S",
           responseValue: {
-            message: "நபர் விவரங்கள் வெற்றிகரமாக புதுப்பிக்கப்பட்டது.",
+            message: "Person details updated successfully.",
           },
         });
       } else {
         return res.status(404).json({
           responseType: "F",
-          responseValue: { message: "தரவு புதுப்பித்தல் தோல்வியடைந்தது." },
+          responseValue: { message: "Failed to update data." },
         });
       }
     } catch (error) {
@@ -233,7 +233,7 @@ exports.controller = {
       if (!id || id.trim() === "") {
         return res.status(400).json({
           responseType: "F",
-          responseValue: { message: "நபர் ID வழங்கப்படவில்லை." },
+          responseValue: { message: "Person ID not provided." },
         });
       }
 
@@ -245,7 +245,7 @@ exports.controller = {
       if (!existing) {
         return res.status(404).json({
           responseType: "F",
-          responseValue: { message: "குறிப்பிடப்பட்ட நபர் இல்லை!" },
+          responseValue: { message: "Specified person not found!" },
         });
       }
 
@@ -253,12 +253,12 @@ exports.controller = {
       if (result && result.affectedRows > 0) {
         return res.status(200).json({
           responseType: "S",
-          responseValue: { message: "நபர் வெற்றிகரமாக நீக்கப்பட்டது." },
+          responseValue: { message: "Person deleted successfully." },
         });
       } else {
         return res.status(404).json({
           responseType: "F",
-          responseValue: { message: "இந்த நபரை நீக்க முடியவில்லை!" },
+          responseValue: { message: "Could not delete this person!" },
         });
       }
     } catch (error) {
@@ -276,7 +276,7 @@ exports.controller = {
       if (!id || id.trim() === "") {
         return res.status(400).json({
           responseType: "F",
-          responseValue: { message: "நபர் ID வழங்கப்படவில்லை." },
+          responseValue: { message: "Person ID not provided." },
         });
       }
 
@@ -288,7 +288,7 @@ exports.controller = {
       if (!person) {
         return res.status(404).json({
           responseType: "F",
-          responseValue: { message: "குறிப்பிடப்பட்ட நபர் இல்லை!" },
+          responseValue: { message: "Specified person not found!" },
         });
       }
 
@@ -314,7 +314,7 @@ exports.controller = {
       if (!user) {
         return res.status(404).json({
           responseType: "F",
-          responseValue: { message: "குறிப்பிடப்பட்ட பயனர் இல்லை!" },
+          responseValue: { message: "Specified user not found!" },
         });
       }
 
@@ -323,7 +323,7 @@ exports.controller = {
       if (!person) {
         return res.status(404).json({
           responseType: "F",
-          responseValue: { message: "நபர் விவரங்கள் கிடைக்கவில்லை." },
+          responseValue: { message: "Person details not found." },
         });
       }
 
@@ -385,7 +385,7 @@ exports.controller = {
       if (!id || id.trim() === "") {
         return res.status(400).json({
           responseType: "F",
-          responseValue: { message: "நபர் ID வழங்கப்படவில்லை." },
+          responseValue: { message: "Person ID not provided." },
         });
       }
 
@@ -397,7 +397,7 @@ exports.controller = {
       if (!person) {
         return res.status(404).json({
           responseType: "F",
-          responseValue: { message: "குறிப்பிடப்பட்ட நபர் இல்லை!" },
+          responseValue: { message: "Specified person not found!" },
         });
       }
 
@@ -419,7 +419,7 @@ exports.controller = {
       if (!userId || userId.trim() === "") {
         return res.status(400).json({
           responseType: "F",
-          responseValue: { message: "பயனர் ID வழங்கப்படவில்லை." },
+          responseValue: { message: "User ID not provided." },
         });
       }
 
@@ -448,7 +448,7 @@ exports.controller = {
       if (!id || !firstName) {
         return res.status(400).json({
           responseType: "F",
-          responseValue: { message: "தேவையான தரவுகள் வழங்கப்படவில்லை." },
+          responseValue: { message: "Required fields are missing." },
         });
       }
 
@@ -459,7 +459,7 @@ exports.controller = {
       if (!existing) {
         return res.status(404).json({
           responseType: "F",
-          responseValue: { message: "குறிப்பிடப்பட்ட நபர் இல்லை!" },
+          responseValue: { message: "Specified person not found!" },
         });
       }
 
@@ -471,7 +471,7 @@ exports.controller = {
           return res.status(400).json({
             responseType: "F",
             responseValue: {
-              message: "இந்த மொபைல் எண் ஏற்கனவே பயன்படுத்தப்படுகிறது.",
+              message: "This mobile number is already in use.",
             },
           });
         }
@@ -489,7 +489,7 @@ exports.controller = {
       if (!result || result.affectedRows <= 0) {
         return res.status(404).json({
           responseType: "F",
-          responseValue: { message: "தரவு புதுப்பித்தல் தோல்வியடைந்தது." },
+          responseValue: { message: "Failed to update data." },
         });
       }
 
@@ -498,7 +498,7 @@ exports.controller = {
       return res.status(200).json({
         responseType: "S",
         responseValue: {
-          message: "நபர் விவரங்கள் வெற்றிகரமாக புதுப்பிக்கப்பட்டது.",
+          message: "Person details updated successfully.",
           person: updatedPerson ? formatAdminPerson(updatedPerson) : null,
         },
       });
@@ -517,7 +517,7 @@ exports.controller = {
       if (!id || id.trim() === "") {
         return res.status(400).json({
           responseType: "F",
-          responseValue: { message: "நபர் ID வழங்கப்படவில்லை." },
+          responseValue: { message: "Person ID not provided." },
         });
       }
 
@@ -529,7 +529,7 @@ exports.controller = {
       if (!existing) {
         return res.status(404).json({
           responseType: "F",
-          responseValue: { message: "குறிப்பிடப்பட்ட நபர் இல்லை!" },
+          responseValue: { message: "Specified person not found!" },
         });
       }
 
@@ -538,7 +538,7 @@ exports.controller = {
         return res.status(200).json({
           responseType: "S",
           responseValue: {
-            message: "நபர் வெற்றிகரமாக நீக்கப்பட்டது.",
+            message: "Person deleted successfully.",
             id,
           },
         });
@@ -546,7 +546,7 @@ exports.controller = {
 
       return res.status(404).json({
         responseType: "F",
-        responseValue: { message: "இந்த நபரை நீக்க முடியவில்லை!" },
+        responseValue: { message: "Could not delete this person!" },
       });
     } catch (error) {
       return res.status(500).json({

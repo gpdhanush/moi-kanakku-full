@@ -2,73 +2,95 @@ const path = require('path');
 const fs = require('fs');
 const winston = require('winston');
 
+// Ensure logs directory exists
 const logsDir = path.join(process.cwd(), 'logs');
 if (!fs.existsSync(logsDir)) {
-    fs.mkdirSync(logsDir, { recursive: true });
+  fs.mkdirSync(logsDir, { recursive: true });
 }
 
-const { combine, timestamp, printf, errors } = winston.format;
+const { combine, timestamp, printf, errors, json } = winston.format;
 
-const logFormat = printf(({ level, message, timestamp: ts, stack, ...meta }) => {
-    let line = `${ts} [${level.toUpperCase()}] ${message}`;
-    if (stack) line += `\n${stack}`;
-    if (Object.keys(meta).length > 0) line += ` ${JSON.stringify(meta)}`;
-    return line;
+// Custom readable log format for console and file logs
+const customFormat = printf(({ level, message, timestamp: ts, stack, ...meta }) => {
+  let logLine = `${ts} [${level.toUpperCase()}]: ${message}`;
+  if (stack) {
+    logLine += `\nStack: ${stack}`;
+  }
+  if (Object.keys(meta).length > 0) {
+    logLine += ` | Meta: ${JSON.stringify(meta)}`;
+  }
+  return logLine;
 });
 
 const logger = winston.createLogger({
-    level: process.env.LOG_LEVEL || 'info',
-    format: combine(
-        errors({ stack: true }),
+  level: process.env.LOG_LEVEL || 'info',
+  format: combine(
+    errors({ stack: true }),
+    timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+    customFormat
+  ),
+  transports: [
+    // Console transport (Colored output)
+    new winston.transports.Console({
+      format: combine(
+        winston.format.colorize(),
         timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
-        logFormat
-    ),
-    defaultMeta: {},
-    transports: [
-        new winston.transports.Console({
-            format: combine(
-                winston.format.colorize(),
-                timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
-                logFormat
-            )
-        }),
-        new winston.transports.File({
-            filename: path.join(logsDir, 'error.log'),
-            level: 'error',
-            maxsize: 5 * 1024 * 1024,
-            maxFiles: 5
-        }),
-        new winston.transports.File({
-            filename: path.join(logsDir, 'combined.log'),
-            maxsize: 5 * 1024 * 1024,
-            maxFiles: 3
-        })
-    ]
+        customFormat
+      )
+    }),
+    // Error log transport
+    new winston.transports.File({
+      filename: path.join(logsDir, 'error.log'),
+      level: 'error',
+      maxsize: 10 * 1024 * 1024, // 10MB
+      maxFiles: 5,
+      tailable: true
+    }),
+    // Combined log transport (All application logs)
+    new winston.transports.File({
+      filename: path.join(logsDir, 'combined.log'),
+      maxsize: 10 * 1024 * 1024, // 10MB
+      maxFiles: 5,
+      tailable: true
+    }),
+    // Server / HTTP access log transport
+    new winston.transports.File({
+      filename: path.join(logsDir, 'server.log'),
+      maxsize: 10 * 1024 * 1024, // 10MB
+      maxFiles: 5,
+      tailable: true
+    })
+  ]
 });
 
+// Stream for Morgan HTTP request logging into server.log & combined.log
+logger.stream = {
+  write: (message) => {
+    logger.info(message.trim());
+  }
+};
+
 /**
- * Log an error (message + optional Error object or metadata).
- * Use: logError('Password expiration check failed', err);
- * or:  logError('Failed', { userId: 123 });
+ * Enhanced error logging helper
  */
 function logError(message, errOrMeta) {
-    if (errOrMeta instanceof Error) {
-        logger.error(message, { error: errOrMeta.message, stack: errOrMeta.stack });
-    } else if (errOrMeta && typeof errOrMeta === 'object') {
-        logger.error(message, errOrMeta);
-    } else {
-        logger.error(message);
-    }
+  if (errOrMeta instanceof Error) {
+    logger.error(message, { error: errOrMeta.message, stack: errOrMeta.stack });
+  } else if (errOrMeta && typeof errOrMeta === 'object') {
+    logger.error(message, errOrMeta);
+  } else {
+    logger.error(message);
+  }
 }
 
-// Support logger.error('msg', err) so Error objects get stack logged
+// Preserve original error handling for Error objects passed directly
 const originalError = logger.error.bind(logger);
 logger.error = (msg, meta) => {
-    if (meta instanceof Error) {
-        logError(msg, meta);
-    } else {
-        originalError(msg, meta);
-    }
+  if (meta instanceof Error) {
+    logError(msg, meta);
+  } else {
+    originalError(msg, meta);
+  }
 };
 
 module.exports = logger;

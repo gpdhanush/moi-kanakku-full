@@ -13,6 +13,13 @@ const path = require("path");
 const fs = require("fs");
 const logger = require("../config/logger");
 const { validateUuid, sendUuidError } = require("../helpers/idParams");
+const cache = require("../utils/cache");
+
+function clearAdminUserListCache() {
+  cache.delByPrefix("admin:all-user-lists");
+  cache.del("dashboard:stats");
+  cache.del("dashboard:detailed");
+}
 
 const {
   sendEmail,
@@ -725,6 +732,7 @@ exports.userController = {
       if (query) {
         // Remove token from memory when user is deleted (security best practice)
         tokenService.removeToken(chk.id);
+        clearAdminUserListCache();
         return res.status(200).json({
           responseType: "S",
           responseValue: { message: "பயனர் கணக்கு நீக்கப்பட்டது." },
@@ -1237,9 +1245,18 @@ exports.userController = {
    */
   adminAllUserLists: async (req, res) => {
     try {
+      const cacheKey = "admin:all-user-lists:v1";
+      const cached = cache.get(cacheKey);
+      if (cached) {
+        return res.status(200).json(cached);
+      }
+
       const users = await User.getAllPublicDetails();
       const formatted = users.map(formatAdminUserListItem);
-      return res.status(200).json({ responseType: "S", responseValue: formatted });
+      const response = { responseType: "S", responseValue: formatted };
+
+      cache.set(cacheKey, response, cache.TTL.USER_STATS || 60);
+      return res.status(200).json(response);
     } catch (error) {
       logger.error('adminAllUserLists failure', error);
       return res.status(500).json({

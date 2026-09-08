@@ -5,6 +5,15 @@ const DefaultModel = require('../models/moiDefaultFunctions');
 const User = require('../models/user');
 const logger = require('../config/logger');
 const { validateUuid, validateUuidFields, sendUuidError } = require('../helpers/idParams');
+const cache = require('../utils/cache');
+
+function clearTransactionCaches(userId) {
+    if (userId) {
+        cache.del(`user:totalAmount:${userId}`);
+    }
+    cache.del('dashboard:stats');
+    cache.del('dashboard:detailed');
+}
 
 async function resolveTransactionFunction(transactionFunctionId, userId, transactionFunctionName) {
     let func = await DefaultModel.readById(transactionFunctionId);
@@ -15,7 +24,7 @@ async function resolveTransactionFunction(transactionFunctionId, userId, transac
     func = await FunctionModel.readById(transactionFunctionId);
     const funcUserId = func && (func.user_id || func.userId);
     if (!func || funcUserId !== userId) {
-        return { error: 'இந்த நிகழ்வு கிடைக்கவில்லை அல்லது உங்களுக்கு சொந்தமாக இல்லை.' };
+        return { error: 'This event was not found or does not belong to you.' };
     }
 
     return {
@@ -50,7 +59,7 @@ exports.controller = {
             if (!userId || !personId || !transactionDate || !type || !itemType) {
                 return res.status(400).json({
                     responseType: "F",
-                    responseValue: { message: "தேவையான தரவுகள் வழங்கப்படவில்லை." }
+                    responseValue: { message: "Required fields are missing." }
                 });
             }
 
@@ -61,7 +70,7 @@ exports.controller = {
             if (!['INVEST', 'RETURN'].includes(type)) {
                 return res.status(400).json({
                     responseType: "F",
-                    responseValue: { message: "வகை INVEST அல்லது RETURN ஆக இருக்க வேண்டும்." }
+                    responseValue: { message: "Type must be INVEST or RETURN." }
                 });
             }
 
@@ -69,7 +78,7 @@ exports.controller = {
             if (!['MONEY', 'THING'].includes(itemType)) {
                 return res.status(400).json({
                     responseType: "F",
-                    responseValue: { message: "பொருளின் வகை MONEY அல்லது THING ஆக இருக்க வேண்டும்." }
+                    responseValue: { message: "Item type must be MONEY or THING." }
                 });
             }
 
@@ -77,7 +86,7 @@ exports.controller = {
             if (itemType === 'MONEY' && (!amount || amount <= 0)) {
                 return res.status(400).json({
                     responseType: "F",
-                    responseValue: { message: "பணத்திற்கான தொகை தேவை." }
+                    responseValue: { message: "Amount is required for money." }
                 });
             }
 
@@ -85,7 +94,7 @@ exports.controller = {
             if (itemType === 'THING' && !itemName) {
                 return res.status(400).json({
                     responseType: "F",
-                    responseValue: { message: "பொருளுக்கான பெயர் தேவை." }
+                    responseValue: { message: "Item name is required for thing." }
                 });
             }
 
@@ -94,7 +103,7 @@ exports.controller = {
             if (!user) {
                 return res.status(404).json({
                     responseType: "F",
-                    responseValue: { message: "குறிப்பிடப்பட்ட பயனர் இல்லை!" }
+                    responseValue: { message: "Specified user not found!" }
                 });
             }
 
@@ -104,7 +113,7 @@ exports.controller = {
             if (!person || personUserId !== userId) {
                 return res.status(404).json({
                     responseType: "F",
-                    responseValue: { message: "இந்த நபர் கிடைக்கவில்லை அல்லது உங்களுக்கு சொந்தமாக இல்லை." }
+                    responseValue: { message: "This person was not found or does not belong to you." }
                 });
             }
 
@@ -113,7 +122,7 @@ exports.controller = {
                 if (!transactionFunctionId) {
                     return res.status(400).json({
                         responseType: "F",
-                        responseValue: { message: "INVEST வகைக்கு transactionFunctionId தேவை." }
+                        responseValue: { message: "transactionFunctionId is required for INVEST type." }
                     });
                 }
 
@@ -160,7 +169,7 @@ exports.controller = {
             return res.status(201).json({
                 responseType: "S",
                 responseValue: {
-                    message: "வெற்றிகரமாக உருவாக்கப்பட்டது.",
+                    message: "Created successfully.",
                     transactionId: result.insertId
                 }
             });
@@ -346,6 +355,11 @@ exports.controller = {
             const results = [];
             const errors = [];
 
+            // In-request caching maps to prevent N+1 DB queries across batch items
+            const userCache = new Map();
+            const personCache = new Map();
+            const functionCache = new Map();
+
             for (let i = 0; i < transactions.length; i++) {
                 const transactionData = transactions[i];
                 try {
@@ -390,21 +404,32 @@ exports.controller = {
                         continue;
                     }
 
-                    // Verify user exists
-                    const user = await User.findById(userId);
+                    // Verify user exists (cached within batch request)
+                    let user = userCache.get(userId);
+                    if (user === undefined) {
+                        user = await User.findById(userId);
+                        userCache.set(userId, user || null);
+                    }
                     if (!user) {
                         errors.push({ index: i, error: "User not found!" });
                         continue;
                     }
 
                     let finalPersonId = null;
+                    let personDetails = null;
 
                     // Scenario A: Handle embedded person data
                     if (firstName) {
-                        // Check for duplicate person
-                        const duplicate = await PersonModel.findDuplicate(userId, firstName, secondName, business, city, mobile);
+                        const duplicateKey = `${userId}:${firstName}:${secondName || ''}:${business || ''}:${city || ''}:${mobile || ''}`;
+                        let duplicate = personCache.get(duplicateKey);
+                        if (duplicate === undefined) {
+                            duplicate = await PersonModel.findDuplicate(userId, firstName, secondName, business, city, mobile);
+                            if (duplicate) personCache.set(duplicateKey, duplicate);
+                        }
+
                         if (duplicate) {
                             finalPersonId = duplicate.id || duplicate.mp_id;
+                            personDetails = duplicate;
                         } else {
                             // Create new person
                             const personData = {
@@ -417,16 +442,30 @@ exports.controller = {
                             };
                             const personResult = await PersonModel.create(personData);
                             finalPersonId = personResult.insertId;
+                            personDetails = {
+                                id: finalPersonId,
+                                firstName,
+                                lastName: secondName || null,
+                                mobile: mobile || null,
+                                city: city || null,
+                                occupation: business || null
+                            };
+                            personCache.set(duplicateKey, personDetails);
                         }
                     } else if (personId) {
                         // Scenario B: Use provided personId
-                        const person = await PersonModel.readById(personId);
-                        const personUserId = person.user_id || person.userId;
+                        let person = personCache.get(personId);
+                        if (person === undefined) {
+                            person = await PersonModel.readById(personId);
+                            personCache.set(personId, person || null);
+                        }
+                        const personUserId = person && (person.user_id || person.userId);
                         if (!person || personUserId !== userId) {
                             errors.push({ index: i, error: "Person not found or does not belong to user." });
                             continue;
                         }
                         finalPersonId = personId;
+                        personDetails = person;
                     } else {
                         errors.push({ index: i, error: "Either personId or firstName is required." });
                         continue;
@@ -437,11 +476,16 @@ exports.controller = {
                     let finalFunctionName = transactionFunctionName || null;
 
                     if (transactionFunctionId) {
-                        const resolved = await resolveTransactionFunction(
-                            transactionFunctionId,
-                            userId,
-                            transactionFunctionName
-                        );
+                        const funcKey = `${transactionFunctionId}:${userId}:${transactionFunctionName || ''}`;
+                        let resolved = functionCache.get(funcKey);
+                        if (!resolved) {
+                            resolved = await resolveTransactionFunction(
+                                transactionFunctionId,
+                                userId,
+                                transactionFunctionName
+                            );
+                            functionCache.set(funcKey, resolved);
+                        }
                         if (resolved.error) {
                             errors.push({ index: i, error: resolved.error });
                             continue;
@@ -465,9 +509,32 @@ exports.controller = {
                     };
 
                     const result = await Model.create(payload);
+                    const createdId = result.insertId;
 
-                    // Fetch full transaction details to return
-                    const transaction = await Model.readById(result.insertId);
+                    // Build returned transaction structure locally to eliminate post-insert readById DB round trip
+                    const transaction = {
+                        id: createdId,
+                        userId,
+                        personId: finalPersonId,
+                        transactionFunctionId: finalFunctionId,
+                        transactionFunctionName: finalFunctionName,
+                        transactionDate,
+                        type,
+                        amount: amount ?? null,
+                        itemName: itemName || null,
+                        notes: notes || null,
+                        isCustom: Boolean(finalIsCustom),
+                        customFunction: customFunction || null,
+                        person: personDetails ? {
+                            firstName: personDetails.first_name || personDetails.firstName || null,
+                            lastName: personDetails.last_name || personDetails.lastName || null,
+                            mobile: personDetails.mobile || null,
+                            city: personDetails.city || null,
+                            occupation: personDetails.occupation || personDetails.business || null
+                        } : null,
+                        createdAt: new Date().toISOString(),
+                        updatedAt: new Date().toISOString()
+                    };
 
                     results.push({
                         index: i,
@@ -479,6 +546,8 @@ exports.controller = {
                     errors.push({ index: i, error: error.toString() });
                 }
             }
+
+            clearTransactionCaches(transactions[0]?.userId);
 
             return res.status(201).json({
                 responseType: "S",
@@ -515,7 +584,7 @@ exports.controller = {
             if (!userId) {
                 return res.status(400).json({
                     responseType: "F",
-                    responseValue: { message: "பயனர் ID தேவை!" }
+                    responseValue: { message: "User ID is required!" }
                 });
             }
 
@@ -527,7 +596,7 @@ exports.controller = {
             if (!user) {
                 return res.status(404).json({
                     responseType: "F",
-                    responseValue: { message: "குறிப்பிடப்பட்ட பயனர் இல்லை!" }
+                    responseValue: { message: "Specified user not found!" }
                 });
             }
 
@@ -566,7 +635,7 @@ exports.controller = {
             if (!transactionId) {
                 return res.status(400).json({
                     responseType: "F",
-                    responseValue: { message: "பொருள் ID தேவை!" }
+                    responseValue: { message: "Transaction ID is required!" }
                 });
             }
 
@@ -578,7 +647,7 @@ exports.controller = {
             if (!transaction) {
                 return res.status(404).json({
                     responseType: "F",
-                    responseValue: { message: "பொருள் கிடைக்கவில்லை!" }
+                    responseValue: { message: "Transaction not found!" }
                 });
             }
 
@@ -721,7 +790,7 @@ exports.controller = {
             if (!transactionId) {
                 return res.status(400).json({
                     responseType: "F",
-                    responseValue: { message: "பொருள் ID தேவை!" }
+                    responseValue: { message: "Transaction ID is required!" }
                 });
             }
 
@@ -733,7 +802,7 @@ exports.controller = {
             if (!transaction) {
                 return res.status(404).json({
                     responseType: "F",
-                    responseValue: { message: "பொருள் கிடைக்கவில்லை!" }
+                    responseValue: { message: "Transaction not found!" }
                 });
             }
 
@@ -742,12 +811,12 @@ exports.controller = {
             if (success) {
                 return res.status(200).json({
                     responseType: "S",
-                    responseValue: { message: "பொருள் வெற்றிகரமாக நீக்கப்பட்டது." }
+                    responseValue: { message: "Transaction deleted successfully." }
                 });
             } else {
                 return res.status(500).json({
                     responseType: "F",
-                    responseValue: { message: "பொருள் நீக்குதல் தோல்வியடைந்தது!" }
+                    responseValue: { message: "Failed to delete transaction!" }
                 });
             }
         } catch (error) {
@@ -770,7 +839,7 @@ exports.controller = {
             if (!userId) {
                 return res.status(400).json({
                     responseType: "F",
-                    responseValue: { message: "பயனர் ID தேவை!" }
+                    responseValue: { message: "User ID is required!" }
                 });
             }
 
@@ -782,7 +851,7 @@ exports.controller = {
             if (!user) {
                 return res.status(404).json({
                     responseType: "F",
-                    responseValue: { message: "குறிப்பிடப்பட்ட பயனர் இல்லை!" }
+                    responseValue: { message: "Specified user not found!" }
                 });
             }
 
@@ -820,7 +889,7 @@ exports.controller = {
             if (!userId || !personId) {
                 return res.status(400).json({
                     responseType: "F",
-                    responseValue: { message: "பயனர் ID மற்றும் நபர் ID தேவை!" }
+                    responseValue: { message: "User ID and Person ID are required!" }
                 });
             }
 
@@ -832,7 +901,7 @@ exports.controller = {
             if (!user) {
                 return res.status(404).json({
                     responseType: "F",
-                    responseValue: { message: "குறிப்பிடப்பட்ட பயனர் இல்லை!" }
+                    responseValue: { message: "Specified user not found!" }
                 });
             }
 
@@ -842,7 +911,7 @@ exports.controller = {
             if (!person || personUserId !== userId) {
                 return res.status(404).json({
                     responseType: "F",
-                    responseValue: { message: "விரும்பிய நபர் கிடைக்கவில்லை!" }
+                    responseValue: { message: "Requested person not found!" }
                 });
             }
 

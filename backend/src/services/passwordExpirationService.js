@@ -22,8 +22,8 @@ async function checkAndNotifyPasswordExpiration() {
         logger.info(`Found ${usersWithOldPasswords.length} user(s) with passwords older than 3 months.`);
 
         // Send notifications to each user
-        const notificationTitle = 'கடவுச்சொல் புதுப்பிப்பு நினைவூட்டல்';
-        const notificationBody = 'உங்கள் கடவுச்சொல் 3 மாதங்களுக்கு மேல் மாற்றப்படவில்லை. உங்கள் கணக்கின் பாதுகாப்பை உறுதிப்படுத்த, தயவுசெய்து உங்கள் கடவுச்சொல்லை மாற்றவும்.';
+        const notificationTitle = 'Password Update Reminder';
+        const notificationBody = 'Your password has not been updated in over 3 months. Please update your password to keep your account secure.';
 
         for (const user of usersWithOldPasswords) {
             if (user.um_notification_token) {

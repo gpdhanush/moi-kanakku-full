@@ -69,8 +69,8 @@ const User = {
              FROM users u
              INNER JOIN user_credentials uc ON uc.user_id = u.id
              LEFT JOIN user_profiles up ON up.user_id = u.id
-             WHERE LOWER(u.email) = LOWER(?) AND (u.is_deleted = 0 OR u.is_deleted IS NULL)`,
-            [email]
+             WHERE u.email = ? AND (u.is_deleted = 0 OR u.is_deleted IS NULL)`,
+            [email ? String(email).toLowerCase().trim() : email]
         );
         const row = rows[0];
         if (!row) return null;
@@ -91,8 +91,8 @@ const User = {
              FROM users u
              INNER JOIN user_credentials uc ON uc.user_id = u.id
              LEFT JOIN user_profiles up ON up.user_id = u.id
-             WHERE LOWER(u.email) = LOWER(?)`,
-            [email]
+             WHERE u.email = ?`,
+            [email ? String(email).toLowerCase().trim() : email]
         );
         const row = rows[0];
         if (!row) return null;
@@ -717,19 +717,19 @@ const User = {
         );
         
         if (!otpRows || otpRows.length === 0) {
-            return { success: false, message: 'OTP ஐக் கண்டுபிடிக்க முடியவில்லை!' };
+            return { success: false, message: 'OTP not found!' };
         }
         
         const otpRecord = otpRows[0];
         
         // Check if already used
         if (otpRecord.is_used) {
-            return { success: false, message: 'இந்த OTP ஏற்கனவே பயன்படுத்தப்பட்டுவிட்டது!' };
+            return { success: false, message: 'This OTP has already been used!' };
         }
         
         // Check if expired
         if (new Date() > otpRecord.expires_at) {
-            return { success: false, message: 'OTP காலாவதியாகிவிட்டது! புதிய OTP கோருங்கள்.' };
+            return { success: false, message: 'OTP has expired! Please request a new OTP.' };
         }
         
         try {
@@ -745,7 +745,7 @@ const User = {
                 [now, idBin]
             );
             
-            return { success: true, message: 'மின்னஞ்சல் வெற்றிகரமாக சரிபார்க்கப்பட்டது!' };
+            return { success: true, message: 'Email verified successfully!' };
         } catch (error) {
             throw error;
         }
@@ -766,17 +766,17 @@ const User = {
         );
 
         if (!otpRows || otpRows.length === 0) {
-            return { success: false, message: 'OTP ஐக் கண்டுபிடிக்க முடியவில்லை!' };
+            return { success: false, message: 'OTP not found!' };
         }
 
         const otpRecord = otpRows[0];
 
         if (otpRecord.is_used) {
-            return { success: false, message: 'இந்த OTP ஏற்கனவே பயன்படுத்தப்பட்டுவிட்டது!' };
+            return { success: false, message: 'This OTP has already been used!' };
         }
 
         if (new Date() > otpRecord.expires_at) {
-            return { success: false, message: 'OTP காலாவதியாகிவிட்டது! புதிய OTP கோருங்கள்.' };
+            return { success: false, message: 'OTP has expired! Please request a new OTP.' };
         }
 
         try {
@@ -785,7 +785,7 @@ const User = {
                 [otpRecord.id]
             );
 
-            return { success: true, message: 'OTP சரியாக உள்ளது.' };
+            return { success: true, message: 'OTP is valid.' };
         } catch (error) {
             throw error;
         }
@@ -805,17 +805,17 @@ const User = {
         );
 
         if (!otpRows || otpRows.length === 0) {
-            return { success: false, message: 'OTP ஐக் கண்டுபிடிக்க முடியவில்லை!' };
+            return { success: false, message: 'OTP not found!' };
         }
 
         const otpRecord = otpRows[0];
 
         if (otpRecord.is_used) {
-            return { success: false, message: 'இந்த OTP ஏற்கனவே பயன்படுத்தப்பட்டுவிட்டது!' };
+            return { success: false, message: 'This OTP has already been used!' };
         }
 
         if (new Date() > otpRecord.expires_at) {
-            return { success: false, message: 'OTP காலாவதியாகிவிட்டது! புதிய OTP கோருங்கள்.' };
+            return { success: false, message: 'OTP has expired! Please request a new OTP.' };
         }
 
         try {
@@ -824,7 +824,7 @@ const User = {
                 [otpRecord.id]
             );
 
-            return { success: true, message: 'OTP சரியாக உள்ளது.' };
+            return { success: true, message: 'OTP is valid.' };
         } catch (error) {
             throw error;
         }
@@ -969,22 +969,67 @@ const User = {
     // retrieve public details for all active users (admin use)
     async getAllPublicDetails() {
         const [rows] = await db.query(
-            `SELECT id
-             FROM users
-             WHERE (is_deleted = 0 OR is_deleted IS NULL)
-             ORDER BY created_at DESC`
+            `SELECT 
+                u.id, u.full_name, u.email, u.mobile, u.referral_code, u.status, 
+                u.is_verified, u.email_verified_at, u.last_activity_at, u.created_at, u.updated_at,
+                up.gender, up.date_of_birth, up.address_line1, up.address_line2, 
+                up.city, up.state, up.country, up.postal_code, up.profile_image_url,
+                ud.id AS device_id_raw, ud.fcm_token, ud.device_name, ud.device_id, 
+                ud.is_active AS device_is_active, ud.last_used_at AS device_last_used_at, 
+                ud.brand, ud.model, ud.manufacturer, ud.android_version, ud.ram_size
+             FROM users u
+             LEFT JOIN user_profiles up ON up.user_id = u.id
+             LEFT JOIN user_devices ud ON ud.user_id = u.id 
+                 AND ud.id = (
+                     SELECT ud2.id 
+                     FROM user_devices ud2 
+                     WHERE ud2.user_id = u.id AND ud2.is_active = 1 
+                     ORDER BY ud2.last_used_at DESC 
+                     LIMIT 1
+                 )
+             WHERE (u.is_deleted = 0 OR u.is_deleted IS NULL)
+             ORDER BY u.created_at DESC`
         );
-        const results = [];
-        for (const r of rows) {
-            try {
-                const details = await this.getPublicDetails(fromBinaryUUID(r.id));
-                if (details) results.push(details);
-            } catch (e) {
-                // ignore individual failures but log
-                console.warn('getAllPublicDetails: failed for', r.id, e.message);
-            }
-        }
-        return results;
+
+        return rows.map(r => ({
+            id: fromBinaryUUID(r.id),
+            full_name: r.full_name,
+            email: r.email,
+            mobile: r.mobile,
+            referral_code: r.referral_code || null,
+            status: r.status,
+            is_verified: r.is_verified || 0,
+            email_verified_at: r.email_verified_at || null,
+            last_activity_at: r.last_activity_at,
+            created_at: r.created_at,
+            updated_at: r.updated_at,
+            profile: {
+                gender: r.gender || null,
+                date_of_birth: r.date_of_birth || null,
+                address_line1: r.address_line1 || null,
+                address_line2: r.address_line2 || null,
+                city: r.city || null,
+                state: r.state || null,
+                country: r.country || null,
+                postal_code: r.postal_code || null,
+                profile_image_url: r.profile_image_url || null
+            },
+            device: (r.device_name || r.fcm_token || r.device_id_raw) ? {
+                id: r.device_id_raw ? fromBinaryUUID(r.device_id_raw) : null,
+                fcm_token: r.fcm_token || null,
+                device_name: r.device_name || null,
+                device_id: r.device_id || null,
+                is_active: r.device_is_active,
+                last_used_at: r.device_last_used_at,
+                brand: r.brand || null,
+                model: r.model || null,
+                manufacturer: r.manufacturer || null,
+                androidVersion: r.android_version || null,
+                ram_size: r.ram_size || null,
+            } : null,
+            referrer_id: null,
+            referred_count: 0
+        }));
     },
 
     /**

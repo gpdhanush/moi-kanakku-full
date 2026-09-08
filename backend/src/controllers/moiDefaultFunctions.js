@@ -2,27 +2,37 @@ const Model = require("../models/moiDefaultFunctions");
 const TransactionFunctionModel = require("../models/transactionFunctions");
 const User = require("../models/user");
 const { validateUuid, sendUuidError } = require("../helpers/idParams");
+const cache = require("../utils/cache");
 
 exports.controller = {
   // Return all global default functions
   list: async (req, res) => {
     try {
+      const cacheKey = "defaults:list";
+      const cachedList = cache.get(cacheKey);
+      if (cachedList) {
+        return res.status(200).json(cachedList);
+      }
+
       const functions = await Model.readAll();
 
       if (!functions || functions.length === 0) {
         return res.status(404).json({
           responseType: "F",
-          responseValue: { message: "வழு வகைகள் எதுவும் கிடைக்கவில்லை." },
+          responseValue: { message: "No function types found." },
         });
       }
 
       const transformed = functions.map((f) => ({ id: f.id, name: f.name }));
 
-      return res.status(200).json({
+      const response = {
         responseType: "S",
         count: transformed.length,
         responseValue: transformed,
-      });
+      };
+      cache.set(cacheKey, response, cache.TTL.DEFAULTS);
+
+      return res.status(200).json(response);
     } catch (error) {
       return res.status(500).json({
         responseType: "F",
@@ -42,7 +52,7 @@ exports.controller = {
       if (!func) {
         return res.status(404).json({
           responseType: "F",
-          responseValue: { message: "குறிப்பிடப்பட்ட விழா வகை இல்லை!" },
+          responseValue: { message: "Specified event type not found!" },
         });
       }
 
@@ -71,6 +81,8 @@ exports.controller = {
         });
 
       const result = await Model.create(name);
+      cache.del("defaults:list");
+      cache.delByPrefix("dropdown:functions:");
       return res.status(201).json({
         responseType: "S",
         responseValue: {
@@ -92,7 +104,7 @@ exports.controller = {
       if (!id || !name) {
         return res.status(400).json({
           responseType: "F",
-          responseValue: { message: "தவறான தரவுகள்." },
+          responseValue: { message: "Invalid data." },
         });
       }
       const idCheck = validateUuid(id, 'id');
@@ -107,6 +119,8 @@ exports.controller = {
       }
       const success = await Model.update(id, name);
       if (success) {
+        cache.del("defaults:list");
+        cache.delByPrefix("dropdown:functions:");
         return res.status(200).json({
           responseType: "S",
           responseValue: { message: "Updated successfully." },
@@ -146,6 +160,8 @@ exports.controller = {
       }
       const success = await Model.delete(id);
       if (success) {
+        cache.del("defaults:list");
+        cache.delByPrefix("dropdown:functions:");
         return res.status(200).json({
           responseType: "S",
           responseValue: { message: "Deleted successfully." },
@@ -177,6 +193,12 @@ exports.controller = {
       const idCheck = validateUuid(userId, 'userId');
       if (!idCheck.ok) return sendUuidError(res, idCheck.message);
 
+      const cacheKey = `dropdown:functions:${userId}`;
+      const cachedDropdown = cache.get(cacheKey);
+      if (cachedDropdown) {
+        return res.status(200).json(cachedDropdown);
+      }
+
       const user = await User.findById(userId);
       if (!user) {
         return res.status(404).json({
@@ -206,10 +228,13 @@ exports.controller = {
       // sort alphabetically by name
       combinedList.sort((a, b) => a.name.localeCompare(b.name));
 
-      return res.status(200).json({
+      const response = {
         responseType: "S",
         responseValue: combinedList,
-      });
+      };
+      cache.set(cacheKey, response, cache.TTL.DEFAULTS);
+
+      return res.status(200).json(response);
     } catch (error) {
       return res.status(500).json({
         responseType: "F",

@@ -47,7 +47,7 @@ exports.controller = {
               return res.status(400).json({
                 responseType: "F",
                 responseValue: {
-                  message: "கோப்பு அளவு மிகப் பெரியது! அதிகபட்ச அளவு 5MB.",
+                  message: "File size is too large! Maximum limit is 5MB.",
                 },
               });
             }
@@ -56,7 +56,7 @@ exports.controller = {
                 responseType: "F",
                 responseValue: {
                   message:
-                    'எதிர்பாராத புலம். கோப்பு பதிவேற்றத்திற்கு "file" என்ற புலப் பெயரைப் பயன்படுத்தவும்.',
+                    'Unexpected field. Use "file" field name for file upload.',
                 },
               });
             }
@@ -67,7 +67,7 @@ exports.controller = {
               responseType: "F",
               responseValue: {
                 message:
-                  'எதிர்பாராத புலம். form-data இல் கோப்பு பதிவேற்றத்திற்கு "file" என்ற புலப் பெயரைப் பயன்படுத்தவும்.',
+                  'Unexpected field. Use "file" field name for file upload in form-data.',
               },
             });
           }
@@ -84,7 +84,7 @@ exports.controller = {
             .status(400)
             .json({
               responseType: "F",
-              responseValue: { message: "கோப்பு பதிவேற்றப்படவில்லை!" },
+              responseValue: { message: "File was not uploaded!" },
             });
         }
 
@@ -104,7 +104,7 @@ exports.controller = {
             .status(400)
             .json({
               responseType: "F",
-              responseValue: { message: "பயனர் ஐடி தேவையானது!" },
+              responseValue: { message: "User ID is required!" },
             });
         }
 
@@ -129,7 +129,7 @@ exports.controller = {
             .status(400)
             .json({
               responseType: "F",
-              responseValue: { message: "பாதை தேவையானது!" },
+              responseValue: { message: "Path is required!" },
             });
         }
 
@@ -163,7 +163,7 @@ exports.controller = {
           logger.error("Temp file not found:", tempFilePath);
           return res.status(500).json({
             responseType: "F",
-            responseValue: { message: "விவரங்கள் எதுவும் கிடைக்கவில்லை." },
+            responseValue: { message: "File not found." },
           });
         }
 
@@ -177,7 +177,7 @@ exports.controller = {
             return res.status(500).json({
               responseType: "F",
               responseValue: {
-                message: "கோப்பு வெற்றிகரமாக சேமிக்கப்படவில்லை!",
+                message: "File was not saved successfully!",
               },
             });
           }
@@ -202,7 +202,7 @@ exports.controller = {
           return res.status(500).json({
             responseType: "F",
             responseValue: {
-              message: `கோப்பை சேமிக்க முடியவில்லை: ${moveError.message}`,
+              message: `Could not save file: ${moveError.message}`,
             },
           });
         }
@@ -225,7 +225,7 @@ exports.controller = {
         return res.status(400).json({
           responseType: "F",
           responseValue: {
-            message: "பயனர் ஐடி, பாதை மற்றும் கோப்பு பெயர் தேவையானவை!",
+            message: "User ID, path, and filename are required!",
           },
         });
       }
@@ -248,7 +248,7 @@ exports.controller = {
 
       return res.status(200).json({
         responseType: "S",
-        responseValue: { message: "கோப்பு வெற்றிகரமாக நீக்கப்பட்டது!" },
+        responseValue: { message: "File deleted successfully!" },
       });
     } catch (error) {
       return res.status(500).json({
@@ -266,7 +266,7 @@ exports.controller = {
         return res.status(400).json({
           responseType: "F",
           responseValue: {
-            message: "பயனர் ஐடி, பாதை மற்றும் கோப்பு பெயர் தேவையானவை!",
+            message: "User ID, path, and filename are required!",
           },
         });
       }
@@ -288,7 +288,7 @@ exports.controller = {
       if (!fs.existsSync(fullFilePath)) {
         return res.status(404).json({
           responseType: "F",
-          responseValue: { message: "فائل نہیں ملی." },
+          responseValue: { message: "File not found." },
         });
       }
 
@@ -308,7 +308,7 @@ exports.controller = {
         if (!res.headersSent) {
           res.status(500).json({
             responseType: "F",
-            responseValue: { message: "கோப்பு வழங்க முடியவில்லை!" },
+            responseValue: { message: "Could not serve file!" },
           });
         }
       });

@@ -25,7 +25,7 @@ exports.controller = {
             const type = String(req.body.type || 'GENERAL').toUpperCase();
 
             if (!userId || !message) {
-                return res.status(400).json({ responseType: "F", responseValue: { message: "பயனர் ID மற்றும் செய்தி தேவை!" } });
+                return res.status(400).json({ responseType: "F", responseValue: { message: "User ID and message are required!" } });
             }
 
             const idCheck = validateUuid(userId, 'userId');
@@ -40,7 +40,7 @@ exports.controller = {
 
             const user = await User.findById(userId);
             if (!user) {
-                return res.status(404).json({ responseType: "F", responseValue: { message: "குறிப்பிடப்பட்ட பயனர் இல்லை!" } });
+                return res.status(404).json({ responseType: "F", responseValue: { message: "Specified user not found!" } });
             }
 
             const payload = {
@@ -56,8 +56,8 @@ exports.controller = {
                     try {
                         await sendPushNotification({
                             userId,
-                            title: 'புதிய கருத்து சமர்ப்பிக்கப்பட்டது',
-                            body: 'உங்கள் கருத்து வெற்றிகரமாக சமர்ப்பிக்கப்பட்டது. நாங்கள் விரைவில் மதிப்பாய்வு செய்வோம்.',
+                            title: 'New Feedback Submitted',
+                            body: 'Your feedback has been successfully submitted. We will review it shortly.',
                             token: user.um_notification_token,
                             type: NotificationType.GENERAL
                         });
@@ -73,12 +73,12 @@ exports.controller = {
                 return res.status(200).json({
                     responseType: "S",
                     responseValue: {
-                        message: "உங்கள் தரவு வெற்றிகரமாக சேமிக்கப்பட்டது.",
+                        message: "Data saved successfully.",
                         id: query.insertId
                     }
                 });
             } else {
-                return res.status(404).json({ responseType: "F", responseValue: { message: "தரவு சேமிப்பு தோல்வியடைந்தது. தயவுசெய்து பின்னர் மீண்டும் முயற்சிக்கவும்." } });
+                return res.status(404).json({ responseType: "F", responseValue: { message: "Failed to save data. Please try again later." } });
             }
         } catch (error) {
             return res.status(500).json({ responseType: "F", responseValue: { message: error.toString() } });
@@ -91,7 +91,7 @@ exports.controller = {
             const type = req.body.type ? String(req.body.type).toUpperCase() : null;
             
             if (!userId) {
-                return res.status(400).json({ responseType: "F", responseValue: { message: "பயனர் ID தேவை!" } });
+                return res.status(400).json({ responseType: "F", responseValue: { message: "User ID is required!" } });
             }
 
             const idCheck = validateUuid(userId, 'userId');
@@ -113,7 +113,7 @@ exports.controller = {
 
             const user = await User.findById(userId);
             if (!user) {
-                return res.status(404).json({ responseType: "F", responseValue: { message: "குறிப்பிடப்பட்ட பயனர் இல்லை!" } });
+                return res.status(404).json({ responseType: "F", responseValue: { message: "Specified user not found!" } });
             }
 
             const feedbacks = await Model.readAll(userId, { status, type });

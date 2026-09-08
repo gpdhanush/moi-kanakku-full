@@ -123,13 +123,13 @@ const Model = {
         }
 
         if (startDate) {
-            query += ` AND DATE(t.transaction_date) >= ?`;
-            params.push(startDate);
+            query += ` AND t.transaction_date >= ?`;
+            params.push(startDate.includes(' ') || startDate.length > 10 ? startDate : `${startDate} 00:00:00`);
         }
 
         if (endDate) {
-            query += ` AND DATE(t.transaction_date) <= ?`;
-            params.push(endDate);
+            query += ` AND t.transaction_date <= ?`;
+            params.push(endDate.includes(' ') || endDate.length > 10 ? endDate : `${endDate} 23:59:59`);
         }
 
         query += ` ORDER BY t.transaction_date DESC`;
@@ -224,13 +224,13 @@ const Model = {
         }
 
         if (startDate) {
-            query += ` AND DATE(t.transaction_date) >= ?`;
-            params.push(startDate);
+            query += ` AND t.transaction_date >= ?`;
+            params.push(startDate.includes(' ') || startDate.length > 10 ? startDate : `${startDate} 00:00:00`);
         }
 
         if (endDate) {
-            query += ` AND DATE(t.transaction_date) <= ?`;
-            params.push(endDate);
+            query += ` AND t.transaction_date <= ?`;
+            params.push(endDate.includes(' ') || endDate.length > 10 ? endDate : `${endDate} 23:59:59`);
         }
 
         if (search) {

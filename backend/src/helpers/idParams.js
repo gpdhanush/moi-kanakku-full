@@ -1,13 +1,13 @@
 const { isLegacyNumericId } = require('./uuid');
 
-const INVALID_ID_MESSAGE = 'செல்லுபடியாகாத ID. எண் ID மட்டும் அனுமதிக்கப்படுகிறது (எ.கா. 2, 29).';
+const INVALID_ID_MESSAGE = 'Invalid ID. Only numeric IDs are allowed (e.g. 2, 29).';
 
 /**
  * Validate numeric entity IDs (bigint auto-increment).
  */
 function validateUuid(value, fieldName = 'id') {
     if (value == null || String(value).trim() === '') {
-        return { ok: false, message: `${fieldName} தேவை.` };
+        return { ok: false, message: `${fieldName} is required.` };
     }
 
     const str = String(value).trim();

@@ -60,7 +60,7 @@ exports.controller = {
             if (!user) {
                 return res.status(404).json({ 
                     responseType: "F", 
-                    responseValue: { message: "குறிப்பிடப்பட்ட பயனர் இல்லை!" } 
+                    responseValue: { message: "Specified user not found!" } 
                 });
             }
 
@@ -107,7 +107,7 @@ exports.controller = {
             if (!userId) {
                 return res.status(401).json({ 
                     responseType: "F", 
-                    responseValue: { message: "பயனர் ID தேவை!" } 
+                    responseValue: { message: "User ID is required!" } 
                 });
             }
 
@@ -119,7 +119,7 @@ exports.controller = {
             if (!user) {
                 return res.status(404).json({ 
                     responseType: "F", 
-                    responseValue: { message: "குறிப்பிடப்பட்ட பயனர் இல்லை!" } 
+                    responseValue: { message: "Specified user not found!" } 
                 });
             }
 
@@ -132,7 +132,7 @@ exports.controller = {
                 return res.status(400).json({ 
                     responseType: "F", 
                     responseValue: { 
-                        message: "தலைப்பு, தேதி மற்றும் இடம் அவசியம்!" 
+                        message: "Title, date, and location are required!" 
                     } 
                 });
             }
@@ -167,7 +167,7 @@ exports.controller = {
                 return res.status(201).json({ 
                     responseType: "S", 
                     responseValue: { 
-                        message: "உங்கள் தரவு வெற்றிகரமாக சேமிக்கப்பட்டது.",
+                        message: "Data saved successfully.",
                         id: query.insertId 
                     } 
                 });
@@ -175,7 +175,7 @@ exports.controller = {
                 return res.status(400).json({ 
                     responseType: "F", 
                     responseValue: { 
-                        message: "தரவு சேமிப்பு தோல்வியடைந்தது. தயவுசெய்து பின்னர் மீண்டும் முயற்சிக்கவும்." 
+                        message: "Failed to save data. Please try again later." 
                     } 
                 });
             }
@@ -201,7 +201,7 @@ exports.controller = {
             if (!functionId) {
                 return res.status(400).json({ 
                     responseType: "F", 
-                    responseValue: { message: "செயல்பாட்டு ID அவசியம்!" } 
+                    responseValue: { message: "Function ID is required!" } 
                 });
             }
 
@@ -213,7 +213,7 @@ exports.controller = {
             if (!existingFunction) {
                 return res.status(404).json({ 
                     responseType: "F", 
-                    responseValue: { message: "குறிப்பிடப்பட்ட பதிவுகள் இல்லை!" } 
+                    responseValue: { message: "Specified records not found!" } 
                 });
             }
 
@@ -221,7 +221,7 @@ exports.controller = {
             if (existingFunction.user_id !== userId) {
                 return res.status(403).json({ 
                     responseType: "F", 
-                    responseValue: { message: "இந்த செயல்பாட்டை புதுப்பிக்க உங்களுக்கு அனுமதி இல்லை!" } 
+                    responseValue: { message: "You do not have permission to update this function!" } 
                 });
             }
 
@@ -256,13 +256,13 @@ exports.controller = {
             if (query && query.affectedRows > 0) {
                 return res.status(200).json({ 
                     responseType: "S", 
-                    responseValue: { message: "உங்கள் தரவு வெற்றிகரமாக புதுப்பிக்கப்பட்டது." } 
+                    responseValue: { message: "Data updated successfully." } 
                 });
             } else {
                 return res.status(400).json({ 
                     responseType: "F", 
                     responseValue: { 
-                        message: "தரவு புதுப்பித்தல் தோல்வியடைந்தது. தயவுசெய்து பின்னர் மீண்டும் முயற்சிக்கவும்." 
+                        message: "Failed to update data. Please try again later." 
                     } 
                 });
             }
@@ -287,7 +287,7 @@ exports.controller = {
             if (!id) {
                 return res.status(400).json({ 
                     responseType: "F", 
-                    responseValue: { message: "செயல்பாட்டு ID அவசியம்!" } 
+                    responseValue: { message: "Function ID is required!" } 
                 });
             }
 
@@ -299,7 +299,7 @@ exports.controller = {
             if (!existingFunction) {
                 return res.status(404).json({ 
                     responseType: "F", 
-                    responseValue: { message: 'குறிப்பிடப்பட்ட பதிவுகள் இல்லை!' } 
+                    responseValue: { message: 'Specified records not found!' } 
                 });
             }
 
@@ -307,7 +307,7 @@ exports.controller = {
             if (existingFunction.user_id !== userId) {
                 return res.status(403).json({ 
                     responseType: "F", 
-                    responseValue: { message: "இந்த செயல்பாட்டை நீக்க உங்களுக்கு அனுமதி இல்லை!" } 
+                    responseValue: { message: "You do not have permission to delete this function!" } 
                 });
             }
 
@@ -317,12 +317,12 @@ exports.controller = {
             if (del && del.affectedRows > 0) {
                 return res.status(200).json({ 
                     responseType: "S", 
-                    responseValue: { message: "பொருள் வெற்றிகரமாக நீக்கப்பட்டது." } 
+                    responseValue: { message: "Item deleted successfully." } 
                 });
             } else {
                 return res.status(400).json({ 
                     responseType: "F", 
-                    responseValue: { message: "இந்த பதிவுகளை நீக்க முடியவில்லை!" } 
+                    responseValue: { message: "Could not delete these records!" } 
                 });
             }
         } catch (error) {
@@ -347,7 +347,7 @@ exports.controller = {
             if (!id) {
                 return res.status(400).json({ 
                     responseType: "F", 
-                    responseValue: { message: "செயல்பாட்டு ID அவசியம்!" } 
+                    responseValue: { message: "Function ID is required!" } 
                 });
             }
 
@@ -357,7 +357,7 @@ exports.controller = {
             if (!status) {
                 return res.status(400).json({ 
                     responseType: "F", 
-                    responseValue: { message: "நிலை அவசியம்!" } 
+                    responseValue: { message: "Status is required!" } 
                 });
             }
 
@@ -367,7 +367,7 @@ exports.controller = {
                 return res.status(400).json({ 
                     responseType: "F", 
                     responseValue: { 
-                        message: `தவறான நிலை! அனுமதிக்கப்பட்ட மதிப்புகள்: ${VALID_STATUSES.join(', ')}` 
+                        message: `Invalid status! Allowed values: ${VALID_STATUSES.join(', ')}` 
                     } 
                 });
             }
@@ -377,7 +377,7 @@ exports.controller = {
             if (!existingFunction) {
                 return res.status(404).json({ 
                     responseType: "F", 
-                    responseValue: { message: "குறிப்பிடப்பட்ட பதிவுகள் இல்லை!" } 
+                    responseValue: { message: "Specified records not found!" } 
                 });
             }
 
@@ -385,7 +385,7 @@ exports.controller = {
             if (existingFunction.user_id !== userId) {
                 return res.status(403).json({ 
                     responseType: "F", 
-                    responseValue: { message: "இந்த செயல்பாட்டை புதுப்பிக்க உங்களுக்கு அனுமதி இல்லை!" } 
+                    responseValue: { message: "You do not have permission to update this function!" } 
                 });
             }
 
@@ -395,13 +395,13 @@ exports.controller = {
             if (query && query.affectedRows > 0) {
                 return res.status(200).json({ 
                     responseType: "S", 
-                    responseValue: { message: "நிலை வெற்றிகரமாக புதுப்பிக்கப்பட்டது." } 
+                    responseValue: { message: "Status updated successfully." } 
                 });
             } else {
                 return res.status(400).json({ 
                     responseType: "F", 
                     responseValue: { 
-                        message: "நிலை புதுப்பித்தல் தோல்வியடைந்தது. தயவுசெய்து பின்னர் மீண்டும் முயற்சிக்கவும்." 
+                        message: "Failed to update status. Please try again later." 
                     } 
                 });
             }

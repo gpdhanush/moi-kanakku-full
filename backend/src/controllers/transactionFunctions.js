@@ -16,7 +16,7 @@ exports.controller = {
             if (!userId || !functionName) {
                 return res.status(400).json({
                     responseType: "F",
-                    responseValue: { message: "தேவையான தரவுகள் வழங்கப்படவில்லை." }
+                    responseValue: { message: "Required fields are missing." }
                 });
             }
 
@@ -28,7 +28,7 @@ exports.controller = {
             if (!user) {
                 return res.status(404).json({
                     responseType: "F",
-                    responseValue: { message: "குறிப்பிடப்பட்ட பயனர் இல்லை!" }
+                    responseValue: { message: "Specified user not found!" }
                 });
             }
 
@@ -46,7 +46,7 @@ exports.controller = {
             return res.status(201).json({
                 responseType: "S",
                 responseValue: {
-                    message: "நிகழ்வு வெற்றிகரமாக உருவாக்கப்பட்டது.",
+                    message: "Event created successfully.",
                     functionId: result.insertId
                 }
             });
@@ -70,7 +70,7 @@ exports.controller = {
             if (!userId) {
                 return res.status(400).json({
                     responseType: "F",
-                    responseValue: { message: "பயனர் ID தேவை!" }
+                    responseValue: { message: "User ID is required!" }
                 });
             }
 
@@ -82,7 +82,7 @@ exports.controller = {
             if (!user) {
                 return res.status(404).json({
                     responseType: "F",
-                    responseValue: { message: "குறிப்பிடப்பட்ட பயனர் இல்லை!" }
+                    responseValue: { message: "Specified user not found!" }
                 });
             }
 
@@ -97,7 +97,7 @@ exports.controller = {
             if (functions.length == 0) {
                 return res.status(404).json({ 
                     responseType: "F", 
-                    responseValue: { message: 'விவரங்கள் எதுவும் கிடைக்கவில்லை.' } 
+                    responseValue: { message: 'No details found.' } 
                 });
             }
             return res.status(200).json({
@@ -161,7 +161,7 @@ exports.controller = {
             if (!functionId) {
                 return res.status(400).json({
                     responseType: "F",
-                    responseValue: { message: "நிகழ்வு ID தேவை!" }
+                    responseValue: { message: "Event ID is required!" }
                 });
             }
 
@@ -173,7 +173,7 @@ exports.controller = {
             if (!func) {
                 return res.status(404).json({
                     responseType: "F",
-                    responseValue: { message: "நிகழ்வு கிடைக்கவில்லை!" }
+                    responseValue: { message: "Event not found!" }
                 });
             }
 
@@ -201,7 +201,7 @@ exports.controller = {
             if (!functionId || !functionName) {
                 return res.status(400).json({
                     responseType: "F",
-                    responseValue: { message: "தேவையான தரவுகள் வழங்கப்படவில்லை." }
+                    responseValue: { message: "Required fields are missing." }
                 });
             }
 
@@ -213,7 +213,7 @@ exports.controller = {
             if (!func) {
                 return res.status(404).json({
                     responseType: "F",
-                    responseValue: { message: "நிகழ்வு கிடைக்கவில்லை!" }
+                    responseValue: { message: "Event not found!" }
                 });
             }
 
@@ -230,12 +230,12 @@ exports.controller = {
             if (success) {
                 return res.status(200).json({
                     responseType: "S",
-                    responseValue: { message: "நிகழ்வு வெற்றிகரமாக புதுப்பிக்கப்பட்டது." }
+                    responseValue: { message: "Event updated successfully." }
                 });
             } else {
                 return res.status(500).json({
                     responseType: "F",
-                    responseValue: { message: "நிகழ்வு புதுப்பித்தல் தோல்வியடைந்தது!" }
+                    responseValue: { message: "Failed to update event!" }
                 });
             }
         } catch (error) {
@@ -258,7 +258,7 @@ exports.controller = {
             if (!functionId) {
                 return res.status(400).json({
                     responseType: "F",
-                    responseValue: { message: "நிகழ்வு ID தேவை!" }
+                    responseValue: { message: "Event ID is required!" }
                 });
             }
 
@@ -270,7 +270,7 @@ exports.controller = {
             if (!func) {
                 return res.status(404).json({
                     responseType: "F",
-                    responseValue: { message: "நிகழ்வு கிடைக்கவில்லை!" }
+                    responseValue: { message: "Event not found!" }
                 });
             }
 
@@ -279,12 +279,12 @@ exports.controller = {
             if (success) {
                 return res.status(200).json({
                     responseType: "S",
-                    responseValue: { message: "நிகழ்வு வெற்றிகரமாக நீக்கப்பட்டது." }
+                    responseValue: { message: "Event deleted successfully." }
                 });
             } else {
                 return res.status(500).json({
                     responseType: "F",
-                    responseValue: { message: "நிகழ்வு நீக்குதல் தோல்வியடைந்தது!" }
+                    responseValue: { message: "Failed to delete event!" }
                 });
             }
         } catch (error) {

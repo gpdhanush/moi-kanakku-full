@@ -77,13 +77,13 @@ const handleMulterErrors = (err, req, res, next) => {
         if (err.code === 'LIMIT_FILE_SIZE') {
             return res.status(400).json({
                 responseType: "F",
-                responseValue: { message: 'கோப்பு மிக பெரியது! 10 MB வரை மட்டுமே அனுமதிக்கப்படுகிறது.' }
+                responseValue: { message: 'File is too large! Maximum limit is 10 MB.' }
             });
         }
     } else if (err && err.message) {
         return res.status(400).json({
             responseType: "F",
-            responseValue: { message: `கோப்பு பிழை: ${err.message}` }
+            responseValue: { message: `File error: ${err.message}` }
         });
     }
     next();

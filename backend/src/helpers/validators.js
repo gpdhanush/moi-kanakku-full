@@ -36,16 +36,16 @@ function validatePassword(password) {
     };
 
     if (!password || password.length < 8) {
-        result.errors.push('கடவுச்சொல் குறைந்தது 8 characters இல் இருக்க வேண்டும்');
+        result.errors.push('Password must be at least 8 characters long');
     }
     if (!/[A-Z]/.test(password)) {
-        result.errors.push('கடவுச்சொல்லில் குறைந்தது ஒரு uppercase letter இருக்க வேண்டும்');
+        result.errors.push('Password must contain at least one uppercase letter');
     }
     if (!/[a-z]/.test(password)) {
-        result.errors.push('கடவுச்சொல்லில் குறைந்தது ஒரு lowercase letter இருக்க வேண்டும்');
+        result.errors.push('Password must contain at least one lowercase letter');
     }
     if (!/[0-9]/.test(password)) {
-        result.errors.push('கடவுச்சொல்லில் குறைந்தது ஒரு number இருக்க வேண்டும்');
+        result.errors.push('Password must contain at least one number');
     }
 
     result.isValid = result.errors.length === 0;
@@ -111,19 +111,19 @@ function validateUserCreate(payload) {
     };
 
     if (!payload.name || !isValidName(payload.name)) {
-        result.errors.push('பெயர் குறைந்தது 2 characters மற்றும் அதிகபட்சம் 120 characters இல் இருக்க வேண்டும்');
+        result.errors.push('Name must be between 2 and 120 characters long');
     }
 
     if (!payload.email || !isValidEmail(payload.email)) {
-        result.errors.push('செல்லுபடியாகும் மின்னஞ்சல் address தேவை');
+        result.errors.push('Valid email address is required');
     }
 
     if (!payload.mobile || !isValidMobile(payload.mobile)) {
-        result.errors.push('செல்லுபடியாகும் மொபைல் எண் தேவை');
+        result.errors.push('Valid mobile number is required');
     }
 
     if (!payload.password) {
-        result.errors.push('கடவுச்சொல் தேவை');
+        result.errors.push('Password is required');
     } else {
         const passwordValidation = validatePassword(payload.password);
         if (!passwordValidation.isValid) {
@@ -147,19 +147,19 @@ function validateUserUpdate(payload) {
     };
 
     if (!payload.id || !isValidUUID(payload.id)) {
-        result.errors.push('செல்லுபடியாகும் பயனர் ID தேவை');
+        result.errors.push('Valid user ID is required');
     }
 
     if (payload.name && !isValidName(payload.name)) {
-        result.errors.push('பெயர் குறைந்தது 2 characters மற்றும் அதிகபட்சம் 120 characters இல் இருக்க வேண்டும்');
+        result.errors.push('Name must be between 2 and 120 characters long');
     }
 
     if (payload.email && !isValidEmail(payload.email)) {
-        result.errors.push('செல்லுபடியாகும் மின்னஞ்சல் address தேவை');
+        result.errors.push('Valid email address is required');
     }
 
     if (payload.mobile && !isValidMobile(payload.mobile)) {
-        result.errors.push('செல்லுபடியாகும் மொபைல் எண் தேவை');
+        result.errors.push('Valid mobile number is required');
     }
 
     result.isValid = result.errors.length === 0;

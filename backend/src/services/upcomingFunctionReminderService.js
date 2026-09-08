@@ -56,10 +56,10 @@ async function sendUpcomingFunctionReminders() {
 
     let sentCount = 0;
     for (const [userId, functions] of functionsByUser) {
-        const title = 'நாளைய நிகழ்வு நினைவூட்டல்';
+        const title = 'Tomorrow Event Reminder';
         const body = [...functions.values()]
             .map(upcomingFunction => {
-                const location = upcomingFunction.location ? ` இடம்: ${upcomingFunction.location}` : '';
+                const location = upcomingFunction.location ? ` Location: ${upcomingFunction.location}` : '';
                 return `${upcomingFunction.title}${location}`;
             })
             .join('\n');

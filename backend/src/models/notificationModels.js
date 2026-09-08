@@ -53,6 +53,41 @@ const Notification = {
     },
 
     /**
+     * Create multiple notification records in a single query
+     * @param {Array<Object>} notificationsList - Array of { userId, title, body, type }
+     * @returns {Promise} Result of batch operation
+     */
+    async createBulk(notificationsList) {
+        if (!Array.isArray(notificationsList) || notificationsList.length === 0) {
+            return { affectedRows: 0 };
+        }
+
+        const idMode = await getDbIdMode(db);
+        const isUuid = idMode === 'uuid';
+
+        const valueRows = [];
+        const params = [];
+
+        for (const item of notificationsList) {
+            const type = item.type || NotificationType.GENERAL;
+            if (isUuid) {
+                const id = generateUUID();
+                valueRows.push('(?, ?, ?, ?, ?, 0, CURRENT_TIMESTAMP)');
+                params.push(toBinaryUUID(id), toBinaryUUID(item.userId), item.title, item.body, type);
+            } else {
+                valueRows.push('(?, ?, ?, ?, 0, CURRENT_TIMESTAMP)');
+                params.push(toBinaryUUID(item.userId), item.title, item.body, type);
+            }
+        }
+
+        const columns = isUuid ? 'id, user_id, title, body, type, is_read, created_at' : 'user_id, title, body, type, is_read, created_at';
+        const query = `INSERT INTO notifications (${columns}) VALUES ${valueRows.join(', ')}`;
+        
+        const [result] = await db.query(query, params);
+        return result;
+    },
+
+    /**
      * Get all notifications for a specific user (with pagination)
      * @param {string} userId - The user ID (UUID)
      * @param {number} limit - Number of notifications to return

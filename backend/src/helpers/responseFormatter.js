@@ -10,7 +10,7 @@
  * @param {number} statusCode - HTTP status code
  * @returns {Object} Formatted response
  */
-function successResponse(data = null, message = "தரவு வெற்றிகரமாக பெறப்பட்டது", statusCode = 200) {
+function successResponse(data = null, message = "Data retrieved successfully", statusCode = 200) {
     return {
         statusCode,
         responseType: "S",
@@ -28,7 +28,7 @@ function successResponse(data = null, message = "தரவு வெற்றி
  * @param {*} details - Additional error details
  * @returns {Object} Formatted response
  */
-function errorResponse(message = "ஏதாவது பிழை ஏற்பட்டது", statusCode = 500, details = null) {
+function errorResponse(message = "An error occurred", statusCode = 500, details = null) {
     return {
         statusCode,
         responseType: "F",
@@ -48,7 +48,7 @@ function errorResponse(message = "ஏதாவது பிழை ஏற்ப�
  * @param {string} message - Success message
  * @returns {Object} Formatted response
  */
-function listResponse(items = [], total = 0, page = 1, limit = 10, message = "தரவு வெற்றிகரமாக பெறப்பட்டது") {
+function listResponse(items = [], total = 0, page = 1, limit = 10, message = "Data retrieved successfully") {
     const totalPages = Math.ceil(total / limit);
     
     return {
@@ -79,7 +79,7 @@ function validationErrorResponse(errors = []) {
         statusCode: 400,
         responseType: "F",
         responseValue: {
-            message: "சரிபார்ப்பு தோல்வி",
+            message: "Validation failed",
             errors
         }
     };
@@ -90,7 +90,7 @@ function validationErrorResponse(errors = []) {
  * @param {string} message - Error message
  * @returns {Object} Formatted response
  */
-function authenticationErrorResponse(message = "அங்கீகாரம் தோல்வி") {
+function authenticationErrorResponse(message = "Authentication failed") {
     return {
         statusCode: 401,
         responseType: "F",
@@ -105,7 +105,7 @@ function authenticationErrorResponse(message = "அங்கீகாரம் �
  * @param {string} message - Error message
  * @returns {Object} Formatted response
  */
-function authorizationErrorResponse(message = "அனுமதி மறுக்கப்பட்டது") {
+function authorizationErrorResponse(message = "Permission denied") {
     return {
         statusCode: 403,
         responseType: "F",
@@ -120,12 +120,12 @@ function authorizationErrorResponse(message = "அனுமதி மறுக�
  * @param {string} resource - Resource type
  * @returns {Object} Formatted response
  */
-function notFoundResponse(resource = "வளம்") {
+function notFoundResponse(resource = "Resource") {
     return {
         statusCode: 404,
         responseType: "F",
         responseValue: {
-            message: `${resource} கண்டுபிடிக்கப்படவில்லை`
+            message: `${resource} not found`
         }
     };
 }
@@ -135,12 +135,12 @@ function notFoundResponse(resource = "வளம்") {
  * @param {string} field - Field name
  * @returns {Object} Formatted response
  */
-function duplicateEntryResponse(field = "நுழைவு") {
+function duplicateEntryResponse(field = "Entry") {
     return {
         statusCode: 409,
         responseType: "F",
         responseValue: {
-            message: `${field} ஏற்கனவே உள்ளது`
+            message: `${field} already exists`
         }
     };
 }
@@ -150,7 +150,7 @@ function duplicateEntryResponse(field = "நுழைவு") {
  * @param {string} message - Error message
  * @returns {Object} Formatted response
  */
-function databaseErrorResponse(message = "தரவுத்தளம் பிழை") {
+function databaseErrorResponse(message = "Database error") {
     return {
         statusCode: 500,
         responseType: "F",
@@ -166,7 +166,7 @@ function databaseErrorResponse(message = "தரவுத்தளம் பி�
  * @returns {Object} Formatted response
  */
 function serverErrorResponse(error) {
-    const message = error?.message || "சேவையகம் பிழை";
+    const message = error?.message || "Internal server error";
     
     return {
         statusCode: 500,

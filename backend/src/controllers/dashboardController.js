@@ -1,5 +1,6 @@
 const db = require('../config/database');
 const logger = require('../config/logger');
+const cache = require('../utils/cache');
 
 exports.controller = {
     /**
@@ -8,14 +9,18 @@ exports.controller = {
      */
     getDashboard: async (req, res) => {
         try {
-            // Execute all count queries in parallel
+            const cacheKey = 'dashboard:stats';
+            const cachedDashboard = cache.get(cacheKey);
+            if (cachedDashboard) {
+                return res.status(200).json(cachedDashboard);
+            }
+
+            // Execute optimized, consolidated count queries in parallel
             const [
                 usersResult,
                 personsResult,
                 transactionFunctionsResult,
-                transactionsResult,
-                investTransactionsResult,
-                returnTransactionsResult,
+                transactionsSummaryResult,
                 notificationsResult,
                 feedbacksResult,
                 defaultFunctionsResult,
@@ -31,16 +36,13 @@ exports.controller = {
                 // Total transaction functions
                 db.query('SELECT COUNT(*) as count FROM transaction_functions'),
                 
-                // Total transactions
-                db.query('SELECT COUNT(*) as count FROM transactions WHERE is_deleted = 0 OR is_deleted IS NULL'),
-                
-                // Total invest transactions
-                db.query(`SELECT COUNT(*) as count FROM transactions 
-                         WHERE type = 'invest' AND (is_deleted = 0 OR is_deleted IS NULL)`),
-                
-                // Total return transactions
-                db.query(`SELECT COUNT(*) as count FROM transactions 
-                         WHERE type = 'return' AND (is_deleted = 0 OR is_deleted IS NULL)`),
+                // Consolidated transactions summary (Total, Invest, Return in a single query)
+                db.query(`SELECT 
+                            COUNT(*) as total_count,
+                            SUM(CASE WHEN type = 'invest' THEN 1 ELSE 0 END) as invest_count,
+                            SUM(CASE WHEN type = 'return' THEN 1 ELSE 0 END) as return_count
+                         FROM transactions 
+                         WHERE is_deleted = 0 OR is_deleted IS NULL`),
                 
                 // Notification counts (total, read, unread)
                 db.query(`SELECT 
@@ -63,6 +65,8 @@ exports.controller = {
                 db.query('SELECT COUNT(*) as count FROM user_devices WHERE is_deleted = 0 OR is_deleted IS NULL')
             ]);
 
+            const transStats = transactionsSummaryResult[0][0] || {};
+
             // Parse results - Simple format with title and count only
             const dashboard = [
                 {
@@ -79,15 +83,15 @@ exports.controller = {
                 },
                 {
                     title: "Total Transactions",
-                    count: transactionsResult[0][0]?.count || 0
+                    count: Number(transStats.total_count) || 0
                 },
                 {
                     title: "Total Invest Transactions",
-                    count: investTransactionsResult[0][0]?.count || 0
+                    count: Number(transStats.invest_count) || 0
                 },
                 {
                     title: "Total Return Transactions",
-                    count: returnTransactionsResult[0][0]?.count || 0
+                    count: Number(transStats.return_count) || 0
                 },
                 {
                     title: "Total Notifications",
@@ -121,10 +125,12 @@ exports.controller = {
 
             logger.info('Dashboard statistics retrieved successfully');
             
-            return res.status(200).json({
+            const response = {
                 responseType: "S",
                 responseValue: dashboard
-            });
+            };
+            cache.set(cacheKey, response, cache.TTL.DASHBOARD);
+            return res.status(200).json(response);
         } catch (error) {
             logger.error('Error fetching dashboard statistics:', error);
             return res.status(500).json({
@@ -139,25 +145,30 @@ exports.controller = {
      */
     getDashboardDetailed: async (req, res) => {
         try {
-            // Execute all queries in parallel
+            const cacheKey = 'dashboard:detailed';
+            const cachedDetailed = cache.get(cacheKey);
+            if (cachedDetailed) {
+                return res.status(200).json(cachedDetailed);
+            }
+
+            // Execute optimized, consolidated count queries in parallel
             const [
-                usersResult,
+                usersSummaryResult,
                 personsResult,
                 transactionFunctionsResult,
-                transactionsResult,
-                investTransactionsResult,
-                returnTransactionsResult,
+                transactionsSummaryResult,
                 notificationsResult,
                 feedbacksResult,
                 defaultFunctionsResult,
                 upcomingFunctionsResult,
-                userDevicesResult,
-                activeDevicesResult,
-                recentUsersResult,
-                recentTransactionsResult
+                userDevicesSummaryResult
             ] = await Promise.all([
-                // Total users
-                db.query('SELECT COUNT(*) as count FROM users WHERE is_deleted = 0 OR is_deleted IS NULL'),
+                // Users summary (Total & 7-day recent)
+                db.query(`SELECT 
+                            COUNT(*) as count,
+                            SUM(CASE WHEN created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY) THEN 1 ELSE 0 END) as recent_7days
+                          FROM users 
+                          WHERE is_deleted = 0 OR is_deleted IS NULL`),
                 
                 // Total persons
                 db.query('SELECT COUNT(*) as count FROM persons'),
@@ -165,18 +176,17 @@ exports.controller = {
                 // Total transaction functions
                 db.query('SELECT COUNT(*) as count FROM transaction_functions'),
                 
-                // Total transactions
-                db.query('SELECT COUNT(*) as count FROM transactions WHERE is_deleted = 0 OR is_deleted IS NULL'),
-                
-                // Total invest transactions (with amount)
-                db.query(`SELECT COUNT(*) as count, SUM(amount) as total_amount 
+                // Consolidated transactions summary (Total, Invest, Return, Amounts, & Recent 7-day metrics in 1 query)
+                db.query(`SELECT 
+                            COUNT(*) as total_count,
+                            SUM(CASE WHEN type = 'invest' THEN 1 ELSE 0 END) as invest_count,
+                            SUM(CASE WHEN type = 'invest' THEN amount ELSE 0 END) as invest_total_amount,
+                            SUM(CASE WHEN type = 'return' THEN 1 ELSE 0 END) as return_count,
+                            SUM(CASE WHEN type = 'return' THEN amount ELSE 0 END) as return_total_amount,
+                            SUM(CASE WHEN created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY) THEN 1 ELSE 0 END) as recent_7days_count,
+                            SUM(CASE WHEN created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY) THEN amount ELSE 0 END) as recent_7days_amount
                          FROM transactions 
-                         WHERE type = 'invest' AND (is_deleted = 0 OR is_deleted IS NULL)`),
-                
-                // Total return transactions (with amount)
-                db.query(`SELECT COUNT(*) as count, SUM(amount) as total_amount 
-                         FROM transactions 
-                         WHERE type = 'return' AND (is_deleted = 0 OR is_deleted IS NULL)`),
+                         WHERE is_deleted = 0 OR is_deleted IS NULL`),
                 
                 // Notification counts (total, read, unread)
                 db.query(`SELECT 
@@ -195,29 +205,24 @@ exports.controller = {
                 // Total upcoming functions
                 db.query('SELECT COUNT(*) as count FROM upcoming_functions'),
                 
-                // Total user devices
-                db.query('SELECT COUNT(*) as count FROM user_devices WHERE is_deleted = 0 OR is_deleted IS NULL'),
-                
-                // Active user devices (last 24 hours)
-                db.query(`SELECT COUNT(*) as count FROM user_devices 
-                         WHERE is_active = 1 AND last_used_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR)`),
-                
-                // Recent users (last 7 days)
-                db.query(`SELECT COUNT(*) as count FROM users 
-                         WHERE created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)`),
-                
-                // Recent transactions (last 7 days)
-                db.query(`SELECT COUNT(*) as count, SUM(amount) as total_amount 
-                         FROM transactions 
-                         WHERE created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)`)
+                // User devices summary (Total & Active 24h)
+                db.query(`SELECT 
+                            COUNT(*) as count,
+                            SUM(CASE WHEN is_active = 1 AND last_used_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR) THEN 1 ELSE 0 END) as active_24h
+                          FROM user_devices 
+                          WHERE is_deleted = 0 OR is_deleted IS NULL`)
             ]);
+
+            const usersStats = usersSummaryResult[0][0] || {};
+            const transStats = transactionsSummaryResult[0][0] || {};
+            const deviceStats = userDevicesSummaryResult[0][0] || {};
 
             // Parse results
             const dashboard = [
                 {
                     title: "Total Users",
-                    count: usersResult[0][0]?.count || 0,
-                    recent_7days: recentUsersResult[0][0]?.count || 0
+                    count: Number(usersStats.count) || 0,
+                    recent_7days: Number(usersStats.recent_7days) || 0
                 },
                 {
                     title: "Total Persons",
@@ -229,21 +234,21 @@ exports.controller = {
                 },
                 {
                     title: "Total Transactions",
-                    count: transactionsResult[0][0]?.count || 0,
+                    count: Number(transStats.total_count) || 0,
                     recent_7days: {
-                        count: recentTransactionsResult[0][0]?.count || 0,
-                        total_amount: recentTransactionsResult[0][0]?.total_amount || 0
+                        count: Number(transStats.recent_7days_count) || 0,
+                        total_amount: Number(transStats.recent_7days_amount) || 0
                     }
                 },
                 {
                     title: "Total Invest Transactions",
-                    count: investTransactionsResult[0][0]?.count || 0,
-                    total_amount: investTransactionsResult[0][0]?.total_amount || 0
+                    count: Number(transStats.invest_count) || 0,
+                    total_amount: Number(transStats.invest_total_amount) || 0
                 },
                 {
                     title: "Total Return Transactions",
-                    count: returnTransactionsResult[0][0]?.count || 0,
-                    total_amount: returnTransactionsResult[0][0]?.total_amount || 0
+                    count: Number(transStats.return_count) || 0,
+                    total_amount: Number(transStats.return_total_amount) || 0
                 },
                 {
                     title: "Total Notifications",
@@ -265,17 +270,19 @@ exports.controller = {
                 },
                 {
                     title: "Total User Devices",
-                    count: userDevicesResult[0][0]?.count || 0,
-                    active_24h: activeDevicesResult[0][0]?.count || 0
+                    count: Number(deviceStats.count) || 0,
+                    active_24h: Number(deviceStats.active_24h) || 0
                 }
             ];
 
             logger.info('Detailed dashboard statistics retrieved successfully');
             
-            return res.status(200).json({
+            const response = {
                 responseType: "S",
                 responseValue: dashboard
-            });
+            };
+            cache.set(cacheKey, response, cache.TTL.DASHBOARD);
+            return res.status(200).json(response);
         } catch (error) {
             logger.error('Error fetching detailed dashboard statistics:', error);
             return res.status(500).json({
