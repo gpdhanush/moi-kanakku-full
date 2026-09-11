@@ -2,7 +2,7 @@ name: moi
 description: "A new Flutter project."
 publish_to: "none"
 
-version: 4.0.9+51 # ANDROID PLAY STORE VERSION
+version: 5.0.1+52 # ANDROID PLAY STORE VERSION
 
 environment:
   sdk: ^3.8.0

@@ -33,6 +33,7 @@ const String certificatePinningFailureMessage =
 const Map<String, Set<String>> apiCertificatePins = {
   'moi-api.floatwalktiruppur.in': {
     'sFRLMLlp/cJS7YS6qm5GwEiGg55Ieq6mSB6cxqiY+f8=',
+    'P6KOaeZukbY4Ww/GCWU/2eJHPnDpbwxcH3s41XL38i8=',
   },
 };
 
