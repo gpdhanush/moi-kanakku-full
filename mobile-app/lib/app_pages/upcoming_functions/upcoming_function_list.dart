@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:moi/app_configs/index.dart';
 import 'package:moi/app_services/upcoming_function_services.dart';
 import 'package:moi/app_themes/index.dart';
 import 'package:moi/app_utils/app_widgets/app_no_data_found.dart';
-import 'package:moi/app_utils/app_widgets/custom_action_sheet.dart';
 import 'package:moi/app_utils/index.dart';
 import 'package:moi/app_utils/app_providers/language_provider.dart';
 import 'package:moi/app_pages/upcoming_functions/models/upcoming_function_model.dart';
@@ -402,13 +402,13 @@ class _UpcomingFunctionListState extends State<UpcomingFunctionList> {
   void _showFunctionSheet(UpcomingFunction function) {
     final colorScheme = Theme.of(context).colorScheme;
     final languageProvider = context.read<LanguageProvider>();
-    showCustomActionSheet(
+    showMoiActionSheet(
       context: context,
       title: languageProvider.tr('common.chooseAction'),
       titleColor: colorScheme.primary,
       actions: [
         ActionSheetItem(
-          icon: Icons.visibility_outlined,
+          hugeIcon: HugeIcons.strokeRoundedView,
           title: languageProvider.tr('common.viewDetails'),
           color: colorScheme.primary,
           onPressed: (context) async {
@@ -417,16 +417,16 @@ class _UpcomingFunctionListState extends State<UpcomingFunctionList> {
           },
         ),
         ActionSheetItem(
-          icon: Icons.change_circle_outlined,
+          hugeIcon: HugeIcons.strokeRoundedRefresh,
           title: languageProvider.tr('upcomingFunctions.changeStatus'),
-          color: Colors.orange,
+          color: AppColors.accentAmber,
           onPressed: (context) async {
             Navigator.pop(context);
             _showStatusChangeDialog(function);
           },
         ),
         ActionSheetItem(
-          icon: Icons.edit_outlined,
+          hugeIcon: HugeIcons.strokeRoundedPencilEdit02,
           title: languageProvider.tr('common.edit'),
           color: colorScheme.primary,
           onPressed: (context) async {
@@ -435,18 +435,18 @@ class _UpcomingFunctionListState extends State<UpcomingFunctionList> {
           },
         ),
         ActionSheetItem(
-          icon: Icons.delete_outlined,
+          hugeIcon: HugeIcons.strokeRoundedDelete02,
           title: languageProvider.tr('common.delete'),
-          color: Colors.redAccent,
+          isDestructive: true,
           onPressed: (context) async {
             Navigator.pop(context);
             _confirmDelete(function, searchHistory.indexOf(function));
           },
         ),
         ActionSheetItem(
-          icon: Icons.cancel_outlined,
+          hugeIcon: HugeIcons.strokeRoundedCancel01,
           title: languageProvider.tr('common.cancel'),
-          color: colorScheme.primary,
+          isCancel: true,
           onPressed: (context) async {
             Navigator.pop(context);
           },

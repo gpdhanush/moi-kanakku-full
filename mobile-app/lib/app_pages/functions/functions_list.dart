@@ -1,13 +1,14 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:moi/app_configs/index.dart';
 import 'package:moi/app_services/index.dart';
 import 'package:moi/app_storages/secure_storages.dart';
-import 'package:moi/app_utils/app_widgets/app_no_data_found.dart';
-import 'package:moi/app_utils/app_widgets/moi_list_item.dart';
-import 'package:moi/app_utils/index.dart';
+import 'package:moi/app_themes/index.dart';
 import 'package:moi/app_utils/app_providers/language_provider.dart';
-import 'package:moi/app_utils/app_widgets/custom_action_sheet.dart';
-import 'dart:async';
+import 'package:moi/app_utils/index.dart';
 import 'package:provider/provider.dart';
 
 class FunctionsList extends StatefulWidget {
@@ -18,20 +19,17 @@ class FunctionsList extends StatefulWidget {
 }
 
 class _FunctionsListState extends State<FunctionsList> {
-  // Services and storage instances
   final AlertServices alertServices = AlertServices();
   final SecureStorageService storage = SecureStorageService();
   final FunctionServices services = FunctionServices();
   final MoiServices moiServices = MoiServices();
 
-  // Data lists
   List functionList = [];
   List searchHistory = [];
   List user = [];
   final TextEditingController searchController = TextEditingController();
-
-  // Search debounce
   Timer? _debounce;
+  bool _isLoading = true;
 
   @override
   void initState() {
@@ -40,13 +38,16 @@ class _FunctionsListState extends State<FunctionsList> {
     searchController.addListener(searchListener);
   }
 
-  // Fetches user functions from the service
-  Future<void> getUserFunctions() async {
+  Future<void> getUserFunctions({bool showLoading = true}) async {
+    if (showLoading && mounted) {
+      setState(() => _isLoading = true);
+    }
     user = [await storage.get(AppVariables.userInformation)];
     String userId = user[0]['id'].toString();
     final response = await services.getUserFunctions({"userId": userId});
     if (mounted) {
       setState(() {
+        _isLoading = false;
         if (response != null && response['responseType'] == "S") {
           functionList = response['responseValue'];
           searchHistory = response['responseValue'];
@@ -55,6 +56,9 @@ class _FunctionsListState extends State<FunctionsList> {
           functionList = [];
         }
       });
+      if (searchController.text.isNotEmpty) {
+        search(searchController.text);
+      }
     }
   }
 
@@ -66,7 +70,6 @@ class _FunctionsListState extends State<FunctionsList> {
     super.dispose();
   }
 
-  // Listener for search input changes with debouncing
   void searchListener() {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
     _debounce = Timer(const Duration(milliseconds: 500), () {
@@ -74,7 +77,6 @@ class _FunctionsListState extends State<FunctionsList> {
     });
   }
 
-  // Filters the function list based on the search input
   void search(String value) {
     if (!mounted) return;
 
@@ -94,41 +96,80 @@ class _FunctionsListState extends State<FunctionsList> {
     });
   }
 
+  String _resolveImageUrl(dynamic function) {
+    final raw = function['imageUrl']?.toString().trim() ?? '';
+    if (raw.isEmpty) return '';
+    if (raw.startsWith('http://') || raw.startsWith('https://')) return raw;
+    return '$appImageUrl/${raw.replaceFirst(RegExp(r'^/+'), '')}';
+  }
+
+  void _goHome() {
+    Navigator.pushNamedAndRemoveUntil(context, "home", (r) => false);
+  }
+
   @override
   Widget build(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
+
     return Consumer<LanguageProvider>(
       builder: (context, languageProvider, _) {
         return PopScope(
           canPop: false,
           onPopInvokedWithResult: (didPop, result) {
-            if (didPop) {
-              return;
-            }
-            Navigator.pushNamedAndRemoveUntil(context, "home", (r) => false);
+            if (didPop) return;
+            _goHome();
           },
           child: Scaffold(
-            appBar: AppBarWidget(
+            backgroundColor: AppColors.background,
+            appBar: _FunctionsAppHeader(
               title:
                   '${languageProvider.tr('functions.title')} (${functionList.length})',
-              action: [],
+              onBack: _goHome,
             ),
-            body: functionList.isEmpty
-                ? const AppNoDataFound(showSecond: true)
-                : mainContent(languageProvider),
+            body: _isLoading && functionList.isEmpty
+                ? const Center(
+                    child: CircularProgressIndicator(strokeWidth: 2.5),
+                  )
+                : functionList.isEmpty
+                ? _NoFunctionsState(
+                    primary: primary,
+                    title: languageProvider.tr('functions.noFunctions'),
+                    subtitle: languageProvider.tr('functions.noFunctionsHint'),
+                    actionLabel: languageProvider.tr('functions.addFunction'),
+                    onAdd: () async {
+                      await Navigator.pushNamed(
+                        context,
+                        "add-edit-functions",
+                        arguments: [],
+                      );
+                      if (mounted) {
+                        await getUserFunctions(showLoading: false);
+                      }
+                    },
+                  )
+                : mainContent(languageProvider, primary),
             floatingActionButton: FloatingActionButton(
-              onPressed: () {
-                Navigator.pushNamed(
+              onPressed: () async {
+                await Navigator.pushNamed(
                   context,
                   "add-edit-functions",
                   arguments: [],
                 );
+                if (mounted) await getUserFunctions(showLoading: false);
               },
+              elevation: 2,
+              highlightElevation: 3,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(14),
               ),
-              backgroundColor: Theme.of(context).colorScheme.primary,
+              backgroundColor: primary,
               tooltip: languageProvider.tr('functions.addFunction'),
-              child: const Icon(Icons.add_outlined, color: Colors.white),
+              child: const HugeIcon(
+                icon: HugeIcons.strokeRoundedAdd01,
+                color: Colors.white,
+                size: 24,
+                strokeWidth: 2,
+              ),
             ),
           ),
         );
@@ -136,149 +177,82 @@ class _FunctionsListState extends State<FunctionsList> {
     );
   }
 
-  // Main content widget displaying the list of functions
-  Widget mainContent(LanguageProvider languageProvider) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Column(
-        children: [
-          const SizedBox(height: 14),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
-            decoration: BoxDecoration(
-              color: colorScheme.primary.withValues(alpha: 0.07),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: colorScheme.primary.withValues(alpha: 0.12),
-              ),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 38,
-                  height: 38,
-                  decoration: BoxDecoration(
-                    color: colorScheme.primary.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(11),
-                  ),
-                  child: Icon(
-                    Icons.celebration_outlined,
-                    color: colorScheme.primary,
-                    size: 21,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    languageProvider.tr('functions.title'),
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ),
-                Text(
-                  '${functionList.length}',
-                  style: TextStyle(
-                    color: colorScheme.primary,
-                    fontFamily: 'Inter',
-                    fontSize: 18,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 12),
-          SizedBox(
-            height: 52,
-            child: SearchWidget(
+  Widget mainContent(LanguageProvider languageProvider, Color primary) {
+    return MoiRefreshIndicator(
+      onRefresh: () => getUserFunctions(showLoading: false),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.page),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: AppSpacing.sm),
+            _SearchField(
               controller: searchController,
               hintText: languageProvider.tr('functions.search'),
+              primary: primary,
             ),
-          ),
-          const SizedBox(height: 14),
-          if (searchHistory.isEmpty)
-            Expanded(
-              child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
+            const SizedBox(height: AppSpacing.sm),
+            if (searchHistory.isEmpty)
+              Expanded(
+                child: ListView(
+                  physics: const AlwaysScrollableScrollPhysics(
+                    parent: BouncingScrollPhysics(),
+                  ),
                   children: [
-                    Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: colorScheme.primary.withValues(alpha: 0.1),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        Icons.search_off_outlined,
-                        size: 64,
-                        color: colorScheme.primary.withValues(alpha: 0.6),
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    Text(
-                      languageProvider.tr('functions.noFunctions'),
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        color: colorScheme.onSurface,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      languageProvider.tr('functions.tryAdjustSearch'),
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
+                    SizedBox(
+                      height: MediaQuery.sizeOf(context).height * 0.35,
+                      child: _EmptySearchState(
+                        primary: primary,
+                        title: languageProvider.tr('functions.noFunctions'),
+                        subtitle: languageProvider.tr(
+                          'functions.tryAdjustSearch',
+                        ),
                       ),
                     ),
                   ],
                 ),
+              )
+            else
+              Expanded(
+                child: ListView.separated(
+                  physics: const AlwaysScrollableScrollPhysics(
+                    parent: BouncingScrollPhysics(),
+                  ),
+                  padding: const EdgeInsets.only(bottom: 88),
+                  itemCount: searchHistory.length,
+                  separatorBuilder: (_, _) =>
+                      const SizedBox(height: AppSpacing.sm),
+                  itemBuilder: (context, index) {
+                    final function = searchHistory[index];
+                    final name =
+                        function['functionName']?.toString().trim() ?? '-';
+                    return _FunctionRow(
+                      primary: primary,
+                      title: name.toUpperCase(),
+                      dateDay: formatFunctionDateWithDay(
+                        function['functionDate']?.toString(),
+                      ),
+                      imageUrl: _resolveImageUrl(function),
+                      onTap: () => showSheet(context, [function]),
+                    );
+                  },
+                ),
               ),
-            )
-          else
-            Expanded(
-              child: ListView.builder(
-                physics: const BouncingScrollPhysics(),
-                itemCount: searchHistory.length,
-                itemBuilder: (context, index) {
-                  final function = searchHistory[index];
-                  return MoiListItem(
-                    leadingIcon: Icons.celebration_outlined,
-                    accentColor: colorScheme.primary,
-                    title:
-                        function['functionName']?.toString().toTitleCase() ??
-                        '-',
-                    subtitle: formatFunctionDate(
-                      function['functionDate']?.toString(),
-                    ),
-                    onTap: () => showSheet(context, [function]),
-                    trailing: Icon(
-                      Icons.arrow_forward_rounded,
-                      size: 19,
-                      color: colorScheme.onSurfaceVariant,
-                    ),
-                  );
-                },
-              ),
-            ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
-  // Deletes a function record
   void deleteRecord(String id) async {
     final response = await services.deleteUserBaseFunctions(id.toString());
     if (response != null && response['responseType'] == "S") {
       String msg = response['responseValue']['message'].toString();
       alertServices.successToast(msg);
-      getUserFunctions();
+      getUserFunctions(showLoading: false);
     }
   }
 
-  // Displays an action sheet with options for the selected function
   void showSheet(BuildContext context, List data) {
     final colorScheme = Theme.of(context).colorScheme;
     final languageProvider = Provider.of<LanguageProvider>(
@@ -286,14 +260,13 @@ class _FunctionsListState extends State<FunctionsList> {
       listen: false,
     );
 
-    showCustomActionSheet(
+    showMoiActionSheet(
       context: context,
-      // title: languageProvider.tr('functions.selectOption'),
-      title: "",
+      title: languageProvider.tr('common.chooseAction'),
       titleColor: colorScheme.primary,
       actions: [
         ActionSheetItem(
-          icon: Icons.visibility_outlined,
+          hugeIcon: HugeIcons.strokeRoundedView,
           title: languageProvider.tr('functions.viewDetails'),
           color: colorScheme.primary,
           onPressed: (context) async {
@@ -306,22 +279,23 @@ class _FunctionsListState extends State<FunctionsList> {
           },
         ),
         ActionSheetItem(
-          icon: Icons.edit_outlined,
+          hugeIcon: HugeIcons.strokeRoundedPencilEdit02,
           title: languageProvider.tr('functions.editFunction'),
           color: colorScheme.primary,
           onPressed: (context) async {
             Navigator.pop(context);
-            Navigator.pushNamed(
+            await Navigator.pushNamed(
               context,
               "add-edit-functions",
               arguments: [data[0]],
             );
+            if (mounted) await getUserFunctions(showLoading: false);
           },
         ),
         ActionSheetItem(
-          icon: Icons.delete_outlined,
+          hugeIcon: HugeIcons.strokeRoundedDelete02,
           title: languageProvider.tr('functions.deleteFunction'),
-          color: Colors.redAccent,
+          isDestructive: true,
           onPressed: (context) async {
             Navigator.pop(context);
             bool? confirmDelete = await alertServices.confirmAlert(
@@ -335,14 +309,648 @@ class _FunctionsListState extends State<FunctionsList> {
           },
         ),
         ActionSheetItem(
-          icon: Icons.close_outlined,
+          hugeIcon: HugeIcons.strokeRoundedCancel01,
           title: languageProvider.tr('common.cancel'),
-          color: colorScheme.primary,
+          isCancel: true,
           onPressed: (context) async {
             Navigator.pop(context);
           },
         ),
       ],
+    );
+  }
+}
+
+class _FunctionsAppHeader extends StatelessWidget
+    implements PreferredSizeWidget {
+  final String title;
+  final VoidCallback onBack;
+
+  const _FunctionsAppHeader({required this.title, required this.onBack});
+
+  @override
+  Size get preferredSize => const Size.fromHeight(64);
+
+  @override
+  Widget build(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return AppBar(
+      toolbarHeight: preferredSize.height,
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      surfaceTintColor: Colors.transparent,
+      backgroundColor: Colors.transparent,
+      centerTitle: true,
+      automaticallyImplyLeading: false,
+      titleSpacing: 0,
+      systemOverlayStyle: SystemUiOverlayStyle.light.copyWith(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+        statusBarBrightness: Brightness.dark,
+        systemNavigationBarColor: isDark ? Colors.black : Colors.white,
+        systemNavigationBarIconBrightness: isDark
+            ? Brightness.light
+            : Brightness.dark,
+      ),
+      flexibleSpace: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              primary,
+              Color.lerp(primary, const Color(0xff0A3D8F), 0.35)!,
+            ],
+          ),
+          borderRadius: const BorderRadius.only(
+            bottomLeft: Radius.circular(22),
+            bottomRight: Radius.circular(22),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: primary.withValues(alpha: 0.28),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: Stack(
+          children: [
+            Positioned(
+              top: -28,
+              right: -18,
+              child: Container(
+                width: 100,
+                height: 100,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withValues(alpha: 0.08),
+                ),
+              ),
+            ),
+            Positioned(
+              bottom: -36,
+              left: 48,
+              child: Container(
+                width: 90,
+                height: 90,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withValues(alpha: 0.06),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.only(
+          bottomLeft: Radius.circular(22),
+          bottomRight: Radius.circular(22),
+        ),
+      ),
+      leadingWidth: 54,
+      leading: Padding(
+        padding: const EdgeInsets.only(left: 10),
+        child: Center(
+          child: Material(
+            color: Colors.white.withValues(alpha: 0.14),
+            shape: const CircleBorder(),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: onBack,
+              customBorder: const CircleBorder(),
+              child: const SizedBox(
+                width: 42,
+                height: 42,
+                child: Center(
+                  child: HugeIcon(
+                    icon: HugeIcons.strokeRoundedArrowLeft01,
+                    color: Colors.white,
+                    size: 22,
+                    strokeWidth: 1.9,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+      title: Text(
+        title,
+        style: AppTypography.sectionTitle.copyWith(
+          color: Colors.white,
+          fontSize: 18,
+          fontWeight: FontWeight.w700,
+          letterSpacing: -0.3,
+          height: 1.1,
+        ),
+      ),
+      actions: const [SizedBox(width: 54)],
+    );
+  }
+}
+
+class _SearchField extends StatelessWidget {
+  final TextEditingController controller;
+  final String hintText;
+  final Color primary;
+
+  const _SearchField({
+    required this.controller,
+    required this.hintText,
+    required this.primary,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 48,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xffE4E4E7)),
+        boxShadow: AppShadows.soft,
+      ),
+      alignment: Alignment.center,
+      child: TextField(
+        controller: controller,
+        style: AppTypography.body.copyWith(
+          color: AppColors.textPrimary,
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
+        ),
+        cursorColor: primary,
+        decoration: InputDecoration(
+          hintText: hintText,
+          hintStyle: AppTypography.body.copyWith(
+            color: const Color(0xffA1A1AA),
+            fontSize: 14,
+          ),
+          border: InputBorder.none,
+          isDense: true,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 14,
+            vertical: 12,
+          ),
+          prefixIcon: Padding(
+            padding: const EdgeInsets.only(left: 12, right: 8),
+            child: HugeIcon(
+              icon: HugeIcons.strokeRoundedSearch01,
+              color: const Color(0xff71717A),
+              size: 18,
+              strokeWidth: 1.9,
+            ),
+          ),
+          prefixIconConstraints: const BoxConstraints(
+            minWidth: 40,
+            minHeight: 24,
+          ),
+          suffixIcon: ValueListenableBuilder<TextEditingValue>(
+            valueListenable: controller,
+            builder: (context, value, _) {
+              if (value.text.isEmpty) return const SizedBox.shrink();
+              return IconButton(
+                onPressed: controller.clear,
+                icon: HugeIcon(
+                  icon: HugeIcons.strokeRoundedCancel01,
+                  color: const Color(0xffA1A1AA),
+                  size: 16,
+                  strokeWidth: 1.9,
+                ),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _NoFunctionsState extends StatefulWidget {
+  final Color primary;
+  final String title;
+  final String subtitle;
+  final String actionLabel;
+  final VoidCallback onAdd;
+
+  const _NoFunctionsState({
+    required this.primary,
+    required this.title,
+    required this.subtitle,
+    required this.actionLabel,
+    required this.onAdd,
+  });
+
+  @override
+  State<_NoFunctionsState> createState() => _NoFunctionsStateState();
+}
+
+class _NoFunctionsStateState extends State<_NoFunctionsState>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _fade;
+  late final Animation<Offset> _slide;
+  late final Animation<double> _scale;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 650),
+    );
+    _fade = CurvedAnimation(parent: _controller, curve: Curves.easeOut);
+    _slide = Tween<Offset>(
+      begin: const Offset(0, 0.08),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
+    _scale = Tween<double>(
+      begin: 0.92,
+      end: 1,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutBack));
+    _controller.forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
+
+    Widget content = Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            ScaleTransition(
+              scale: reduceMotion ? const AlwaysStoppedAnimation(1) : _scale,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Container(
+                    width: 120,
+                    height: 120,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: widget.primary.withValues(alpha: 0.06),
+                    ),
+                  ),
+                  Container(
+                    width: 88,
+                    height: 88,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(color: const Color(0xffE4E4E7)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: widget.primary.withValues(alpha: 0.12),
+                          blurRadius: 20,
+                          offset: const Offset(0, 8),
+                        ),
+                        BoxShadow(
+                          color: const Color(
+                            0xff09090B,
+                          ).withValues(alpha: 0.04),
+                          blurRadius: 4,
+                          offset: const Offset(0, 1),
+                        ),
+                      ],
+                    ),
+                    alignment: Alignment.center,
+                    child: HugeIcon(
+                      icon: HugeIcons.strokeRoundedWedding,
+                      color: widget.primary,
+                      size: 34,
+                      strokeWidth: 1.7,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 22),
+            Text(
+              widget.title,
+              textAlign: TextAlign.center,
+              style: AppTypography.sectionTitle.copyWith(
+                color: const Color(0xff18181B),
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                letterSpacing: -0.3,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              widget.subtitle,
+              textAlign: TextAlign.center,
+              style: AppTypography.body.copyWith(
+                color: const Color(0xff71717A),
+                fontSize: 14,
+                height: 1.45,
+              ),
+            ),
+            const SizedBox(height: 22),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 280),
+              child: SizedBox(
+                width: double.infinity,
+                child: Material(
+                  color: widget.primary,
+                  borderRadius: BorderRadius.circular(12),
+                  child: InkWell(
+                    onTap: widget.onAdd,
+                    borderRadius: BorderRadius.circular(12),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 13),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const HugeIcon(
+                            icon: HugeIcons.strokeRoundedAdd01,
+                            color: Colors.white,
+                            size: 18,
+                            strokeWidth: 2,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            widget.actionLabel,
+                            style: AppTypography.label.copyWith(
+                              color: Colors.white,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (reduceMotion) return content;
+
+    return FadeTransition(
+      opacity: _fade,
+      child: SlideTransition(position: _slide, child: content),
+    );
+  }
+}
+
+class _EmptySearchState extends StatefulWidget {
+  final Color primary;
+  final String title;
+  final String subtitle;
+
+  const _EmptySearchState({
+    required this.primary,
+    required this.title,
+    required this.subtitle,
+  });
+
+  @override
+  State<_EmptySearchState> createState() => _EmptySearchStateState();
+}
+
+class _EmptySearchStateState extends State<_EmptySearchState>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _fade;
+  late final Animation<double> _scale;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    );
+    _fade = CurvedAnimation(parent: _controller, curve: Curves.easeOut);
+    _scale = Tween<double>(
+      begin: 0.9,
+      end: 1,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutBack));
+    _controller.forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
+
+    Widget content = Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 28),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Container(
+              width: 88,
+              height: 88,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: const Color(0xffE4E4E7)),
+                boxShadow: [
+                  BoxShadow(
+                    color: widget.primary.withValues(alpha: 0.1),
+                    blurRadius: 16,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+              ),
+              alignment: Alignment.center,
+              child: HugeIcon(
+                icon: HugeIcons.strokeRoundedSearchRemove,
+                color: widget.primary.withValues(alpha: 0.8),
+                size: 30,
+                strokeWidth: 1.8,
+              ),
+            ),
+            const SizedBox(height: 18),
+            Text(
+              widget.title,
+              textAlign: TextAlign.center,
+              style: AppTypography.sectionTitle.copyWith(
+                color: const Color(0xff18181B),
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              widget.subtitle,
+              textAlign: TextAlign.center,
+              style: AppTypography.body.copyWith(
+                color: const Color(0xff71717A),
+                fontSize: 13,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (reduceMotion) return content;
+
+    return FadeTransition(
+      opacity: _fade,
+      child: ScaleTransition(scale: _scale, child: content),
+    );
+  }
+}
+
+class _FunctionRow extends StatelessWidget {
+  final Color primary;
+  final String title;
+  final String dateDay;
+  final String imageUrl;
+  final VoidCallback onTap;
+
+  const _FunctionRow({
+    required this.primary,
+    required this.title,
+    required this.dateDay,
+    required this.imageUrl,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        splashColor: primary.withValues(alpha: 0.06),
+        highlightColor: primary.withValues(alpha: 0.03),
+        child: Ink(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: const Color(0xffE4E4E7)),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xff09090B).withValues(alpha: 0.05),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+              BoxShadow(
+                color: const Color(0xff09090B).withValues(alpha: 0.03),
+                blurRadius: 2,
+                offset: const Offset(0, 1),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              _Leading(primary: primary, imageUrl: imageUrl),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTypography.label.copyWith(
+                        color: const Color(0xff18181B),
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -0.1,
+                      ),
+                    ),
+                    if (dateDay.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        dateDay,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTypography.body.copyWith(
+                          fontSize: 12,
+                          color: const Color(0xff71717A),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              const SizedBox(width: 10),
+              HugeIcon(
+                icon: HugeIcons.strokeRoundedArrowRight01,
+                color: const Color(0xffA1A1AA),
+                size: 18,
+                strokeWidth: 1.9,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _Leading extends StatelessWidget {
+  final Color primary;
+  final String imageUrl;
+
+  const _Leading({required this.primary, required this.imageUrl});
+
+  Widget _placeholder() {
+    return Container(
+      decoration: BoxDecoration(
+        color: primary.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      alignment: Alignment.center,
+      child: HugeIcon(
+        icon: HugeIcons.strokeRoundedWedding,
+        color: primary,
+        size: 22,
+        strokeWidth: 1.7,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 48,
+      height: 48,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(14),
+        color: imageUrl.isEmpty ? primary.withValues(alpha: 0.1) : null,
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: imageUrl.isEmpty
+          ? _placeholder()
+          : Image.network(
+              imageUrl,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) => _placeholder(),
+            ),
     );
   }
 }

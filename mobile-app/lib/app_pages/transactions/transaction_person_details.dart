@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:moi/app_configs/index.dart';
 import 'package:moi/app_models/index.dart';
 import 'package:moi/app_storages/secure_storages.dart';
 import 'package:moi/app_services/index.dart';
-import 'package:moi/app_utils/app_widgets/custom_action_sheet.dart';
 import 'package:moi/app_utils/app_widgets/moi_list_item.dart';
 import 'package:intl/intl.dart';
 import 'package:moi/app_utils/index.dart';
@@ -246,14 +246,15 @@ class _TransactionPersonDetailsState extends State<TransactionPersonDetails> {
 
   void _showTransactionSheet(Map<String, dynamic> transaction) {
     final colorScheme = Theme.of(context).colorScheme;
-    showCustomActionSheet(
+    final languageProvider = context.read<LanguageProvider>();
+    showMoiActionSheet(
       context: context,
-      title: context.read<LanguageProvider>().tr('common.chooseAction'),
+      title: languageProvider.tr('common.chooseAction'),
       titleColor: colorScheme.primary,
       actions: [
         ActionSheetItem(
-          icon: Icons.visibility_outlined,
-          title: context.read<LanguageProvider>().tr('common.viewDetails'),
+          hugeIcon: HugeIcons.strokeRoundedView,
+          title: languageProvider.tr('common.viewDetails'),
           color: colorScheme.primary,
           onPressed: (context) async {
             Navigator.pop(context);
@@ -261,8 +262,8 @@ class _TransactionPersonDetailsState extends State<TransactionPersonDetails> {
           },
         ),
         ActionSheetItem(
-          icon: Icons.edit_outlined,
-          title: context.read<LanguageProvider>().tr('common.edit'),
+          hugeIcon: HugeIcons.strokeRoundedPencilEdit02,
+          title: languageProvider.tr('common.edit'),
           color: colorScheme.primary,
           onPressed: (context) async {
             Navigator.pop(context);
@@ -270,18 +271,18 @@ class _TransactionPersonDetailsState extends State<TransactionPersonDetails> {
           },
         ),
         ActionSheetItem(
-          icon: Icons.delete_outlined,
-          title: context.read<LanguageProvider>().tr('common.delete'),
-          color: Colors.redAccent,
+          hugeIcon: HugeIcons.strokeRoundedDelete02,
+          title: languageProvider.tr('common.delete'),
+          isDestructive: true,
           onPressed: (context) async {
             Navigator.pop(context);
             _confirmDeleteTransaction(transaction);
           },
         ),
         ActionSheetItem(
-          icon: Icons.cancel_outlined,
-          title: context.read<LanguageProvider>().tr('common.cancel'),
-          color: colorScheme.primary,
+          hugeIcon: HugeIcons.strokeRoundedCancel01,
+          title: languageProvider.tr('common.cancel'),
+          isCancel: true,
           onPressed: (context) async {
             Navigator.pop(context);
           },

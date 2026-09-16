@@ -325,6 +325,7 @@
     "functionDeleted": "Function deleted successfully",
     "deleteConfirmation": "Are you sure you want to delete this function?",
     "noFunctions": "No functions found",
+    "noFunctionsHint": "Add your first function to start tracking moi.",
     "tryAdjustSearch": "Try adjusting your search",
     "search": "Search functions...",
     "errorFetchingMoi": "Error fetching moi records",

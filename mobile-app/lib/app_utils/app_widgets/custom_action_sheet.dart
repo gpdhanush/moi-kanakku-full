@@ -1,71 +1,290 @@
-import 'package:adaptive_action_sheet/adaptive_action_sheet.dart';
 import 'package:flutter/material.dart';
+import 'package:hugeicons/hugeicons.dart';
+import 'package:moi/app_themes/index.dart';
 
-/// Reusable action sheet item model
+/// Menu row for [showMoiActionSheet] / [showCustomActionSheet].
 class ActionSheetItem {
-  final IconData icon;
+  final IconData? icon;
+  final List<List<dynamic>>? hugeIcon;
   final String title;
-  final Color color;
+  final Color? color;
+  final bool isDestructive;
+  final bool isCancel;
   final Future<void> Function(BuildContext) onPressed;
 
   ActionSheetItem({
-    required this.icon,
+    this.icon,
+    this.hugeIcon,
     required this.title,
-    required this.color,
+    this.color,
+    this.isDestructive = false,
+    this.isCancel = false,
     required this.onPressed,
-  });
+  }) : assert(
+         isCancel || icon != null || hugeIcon != null,
+         'Provide either icon or hugeIcon for non-cancel actions',
+       );
 }
 
-/// Show custom styled action sheet with consistent design
-void showCustomActionSheet({
+/// Backward-compatible alias.
+Future<void> showCustomActionSheet({
   required BuildContext context,
-  required String title,
+  String title = '',
+  String? subtitle,
   required List<ActionSheetItem> actions,
   Color? titleColor,
 }) {
-  showAdaptiveActionSheet(
+  return showMoiActionSheet(
     context: context,
-    androidBorderRadius: 10,
-    actions: actions
-        .map(
-          (item) => _buildActionSheetItem(
-            context: context,
-            icon: item.icon,
-            title: item.title,
-            color: item.color,
-            onPressed: item.onPressed,
-          ),
-        )
-        .toList(),
+    title: title,
+    subtitle: subtitle,
+    actions: actions,
+    titleColor: titleColor,
   );
 }
 
-/// Helper method to build individual action sheet items
-BottomSheetAction _buildActionSheetItem({
+/// Modern Tailwind-style action bottom sheet used by list pages.
+Future<void> showMoiActionSheet({
   required BuildContext context,
-  required IconData icon,
-  required String title,
-  required Color color,
-  required Future<void> Function(BuildContext) onPressed,
+  String title = '',
+  String? subtitle,
+  required List<ActionSheetItem> actions,
+  Color? titleColor,
 }) {
-  return BottomSheetAction(
-    leading: Container(
-      padding: const EdgeInsets.all(6),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(5),
-      ),
-      child: Icon(icon, color: color, size: 18),
-    ),
-    title: Text(
-      title,
-      style: TextStyle(
-        fontFamily: 'Inter',
-        fontWeight: FontWeight.w600,
-        fontSize: 14,
-        color: color == Colors.redAccent ? color : Colors.black87,
-      ),
-    ),
-    onPressed: onPressed,
+  final primary = titleColor ?? Theme.of(context).colorScheme.primary;
+  final menuActions = actions.where((a) => !a.isCancel).toList();
+  ActionSheetItem? cancelAction;
+  for (final action in actions) {
+    if (action.isCancel) {
+      cancelAction = action;
+      break;
+    }
+  }
+
+  return showModalBottomSheet<void>(
+    context: context,
+    backgroundColor: Colors.transparent,
+    isScrollControlled: true,
+    barrierColor: Colors.black.withValues(alpha: 0.45),
+    builder: (sheetContext) {
+      return _MoiActionSheetShell(
+        title: title,
+        subtitle: subtitle,
+        primary: primary,
+        menuActions: menuActions,
+        cancelAction: cancelAction,
+      );
+    },
   );
+}
+
+class _MoiActionSheetShell extends StatelessWidget {
+  final String title;
+  final String? subtitle;
+  final Color primary;
+  final List<ActionSheetItem> menuActions;
+  final ActionSheetItem? cancelAction;
+
+  const _MoiActionSheetShell({
+    required this.title,
+    required this.subtitle,
+    required this.primary,
+    required this.menuActions,
+    required this.cancelAction,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final bottomInset = MediaQuery.paddingOf(context).bottom;
+
+    return Padding(
+      padding: EdgeInsets.only(bottom: bottomInset > 0 ? 0 : 8),
+      child: Container(
+        margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: const Color(0xffE4E4E7)),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xff09090B).withValues(alpha: 0.12),
+              blurRadius: 28,
+              offset: const Offset(0, 10),
+            ),
+          ],
+        ),
+        child: SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: const Color(0xffE4E4E7),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                ),
+                if (title.trim().isNotEmpty) ...[
+                  const SizedBox(height: 16),
+                  Text(
+                    title,
+                    textAlign: TextAlign.center,
+                    style: AppTypography.sectionTitle.copyWith(
+                      color: primary,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -0.2,
+                    ),
+                  ),
+                ],
+                if (subtitle != null && subtitle!.trim().isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle!,
+                    textAlign: TextAlign.center,
+                    style: AppTypography.body.copyWith(
+                      color: const Color(0xff71717A),
+                      fontSize: 13,
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 14),
+                ...List.generate(menuActions.length, (index) {
+                  final item = menuActions[index];
+                  return Padding(
+                    padding: EdgeInsets.only(
+                      bottom: index == menuActions.length - 1 ? 0 : 8,
+                    ),
+                    child: _MoiActionSheetTile(
+                      item: item,
+                      primary: primary,
+                      onTap: () => item.onPressed(context),
+                    ),
+                  );
+                }),
+                if (cancelAction != null) ...[
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: Material(
+                      color: const Color(0xffF4F4F5),
+                      borderRadius: BorderRadius.circular(14),
+                      child: InkWell(
+                        onTap: () => cancelAction!.onPressed(context),
+                        borderRadius: BorderRadius.circular(14),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          child: Text(
+                            cancelAction!.title,
+                            textAlign: TextAlign.center,
+                            style: AppTypography.label.copyWith(
+                              color: const Color(0xff3F3F46),
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _MoiActionSheetTile extends StatelessWidget {
+  final ActionSheetItem item;
+  final Color primary;
+  final VoidCallback onTap;
+
+  const _MoiActionSheetTile({
+    required this.item,
+    required this.primary,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final accent = item.isDestructive
+        ? AppColors.moiGiven
+        : (item.color ?? primary);
+    final soft = item.isDestructive
+        ? AppColors.moiGivenSoft
+        : accent.withValues(alpha: 0.1);
+    final titleColor = item.isDestructive
+        ? AppColors.moiGiven
+        : const Color(0xff18181B);
+
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        splashColor: accent.withValues(alpha: 0.08),
+        highlightColor: accent.withValues(alpha: 0.04),
+        child: Ink(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: item.isDestructive
+                  ? AppColors.moiGiven.withValues(alpha: 0.22)
+                  : const Color(0xffE4E4E7),
+            ),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: soft,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                alignment: Alignment.center,
+                child: item.hugeIcon != null
+                    ? HugeIcon(
+                        icon: item.hugeIcon!,
+                        color: accent,
+                        size: 20,
+                        strokeWidth: 1.8,
+                      )
+                    : Icon(item.icon, color: accent, size: 20),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  item.title,
+                  style: AppTypography.label.copyWith(
+                    color: titleColor,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -0.1,
+                  ),
+                ),
+              ),
+              HugeIcon(
+                icon: HugeIcons.strokeRoundedArrowRight01,
+                color: item.isDestructive
+                    ? AppColors.moiGiven.withValues(alpha: 0.55)
+                    : const Color(0xffA1A1AA),
+                size: 16,
+                strokeWidth: 1.9,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
