@@ -17,9 +17,16 @@ import { LazyRoute } from "./components/LazyRoute";
 import { ENV_CONFIG } from "./lib/config";
 import { applyThemeColor, getThemeColor } from "./lib/settingsPrefs";
 
+import { ProtectedRoute } from "./components/ProtectedRoute";
+
 const Login = lazy(() => import("./pages/Login"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
+const Franchises = lazy(() => import("./pages/Franchises"));
+const FranchiseCustomers = lazy(() => import("./pages/FranchiseCustomers"));
+const FranchiseStaff = lazy(() => import("./pages/FranchiseStaff"));
+const FranchiseFunctions = lazy(() => import("./pages/FranchiseFunctions"));
+const FranchiseReports = lazy(() => import("./pages/FranchiseReports"));
 const UsersMaster = lazy(() => import("./pages/UsersMaster"));
 const UserDetail = lazy(() => import("./pages/UserDetail"));
 const Transactions = lazy(() => import("./pages/Transactions"));
@@ -61,15 +68,118 @@ const AppContent = () => {
         />
         <Route path="/mfa/verify" element={<LazyRoute><MFAVerify /></LazyRoute>} />
         <Route element={<AdminLayout />}>
-          <Route path="/dashboard" element={<LazyRoute><Dashboard /></LazyRoute>} />
-          <Route path="/users" element={<LazyRoute><UsersMaster /></LazyRoute>} />
-          <Route path="/users/:userId" element={<LazyRoute><UserDetail /></LazyRoute>} />
-          <Route path="/transactions" element={<LazyRoute><Transactions /></LazyRoute>} />
-          <Route path="/feedback" element={<LazyRoute><Feedback /></LazyRoute>} />
-          <Route path="/notifications" element={<LazyRoute><Notifications /></LazyRoute>} />
-          <Route path="/user-otps" element={<LazyRoute><UserOtps /></LazyRoute>} />
-          <Route path="/settings" element={<LazyRoute><Settings /></LazyRoute>} />
-          <Route path="/mfa/setup" element={<LazyRoute><MFASetup /></LazyRoute>} />
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute allowedRoles={["SUPER_ADMIN", "FRANCHISE_ADMIN", "FRANCHISE_STAFF"]}>
+                <LazyRoute><Dashboard /></LazyRoute>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/franchises"
+            element={
+              <ProtectedRoute allowedRoles={["SUPER_ADMIN", "FRANCHISE_ADMIN"]}>
+                <LazyRoute><Franchises /></LazyRoute>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/franchise/customers"
+            element={
+              <ProtectedRoute allowedRoles={["FRANCHISE_ADMIN"]}>
+                <LazyRoute><FranchiseCustomers /></LazyRoute>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/franchise/staff"
+            element={
+              <ProtectedRoute allowedRoles={["FRANCHISE_ADMIN"]}>
+                <LazyRoute><FranchiseStaff /></LazyRoute>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/franchise/functions"
+            element={
+              <ProtectedRoute allowedRoles={["FRANCHISE_ADMIN", "FRANCHISE_STAFF"]}>
+                <LazyRoute><FranchiseFunctions /></LazyRoute>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/franchise/reports"
+            element={
+              <ProtectedRoute allowedRoles={["FRANCHISE_ADMIN"]}>
+                <LazyRoute><FranchiseReports /></LazyRoute>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/users"
+            element={
+              <ProtectedRoute allowedRoles={["SUPER_ADMIN"]}>
+                <LazyRoute><UsersMaster /></LazyRoute>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/users/:userId"
+            element={
+              <ProtectedRoute allowedRoles={["SUPER_ADMIN"]}>
+                <LazyRoute><UserDetail /></LazyRoute>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/transactions"
+            element={
+              <ProtectedRoute allowedRoles={["SUPER_ADMIN"]}>
+                <LazyRoute><Transactions /></LazyRoute>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/feedback"
+            element={
+              <ProtectedRoute allowedRoles={["SUPER_ADMIN"]}>
+                <LazyRoute><Feedback /></LazyRoute>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/notifications"
+            element={
+              <ProtectedRoute allowedRoles={["SUPER_ADMIN"]}>
+                <LazyRoute><Notifications /></LazyRoute>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/user-otps"
+            element={
+              <ProtectedRoute allowedRoles={["SUPER_ADMIN"]}>
+                <LazyRoute><UserOtps /></LazyRoute>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/settings"
+            element={
+              <ProtectedRoute allowedRoles={["SUPER_ADMIN", "FRANCHISE_ADMIN", "FRANCHISE_STAFF"]}>
+                <LazyRoute><Settings /></LazyRoute>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/mfa/setup"
+            element={
+              <ProtectedRoute allowedRoles={["SUPER_ADMIN", "FRANCHISE_ADMIN", "FRANCHISE_STAFF"]}>
+                <LazyRoute><MFASetup /></LazyRoute>
+              </ProtectedRoute>
+            }
+          />
         </Route>
         <Route path="*" element={<LazyRoute><NotFound /></LazyRoute>} />
       </Routes>

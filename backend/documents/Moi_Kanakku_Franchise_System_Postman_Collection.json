@@ -1,0 +1,884 @@
+{
+  "info": {
+    "name": "Moi Kanakku - Franchise Management & Backend APIs",
+    "description": "Complete Postman v2.1.0 Collection for Moi Kanakku Backend including Super Admin, Franchise Admin, Staff, Customer, and User Authentication APIs.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000/apis",
+      "type": "string"
+    },
+    {
+      "key": "adminToken",
+      "value": "YOUR_ADMIN_JWT_TOKEN",
+      "type": "string"
+    },
+    {
+      "key": "userToken",
+      "value": "YOUR_USER_JWT_TOKEN",
+      "type": "string"
+    },
+    {
+      "key": "franchiseId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "functionId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "customerUserId",
+      "value": "2",
+      "type": "string"
+    },
+    {
+      "key": "staffUserId",
+      "value": "3",
+      "type": "string"
+    },
+    {
+      "key": "transactionId",
+      "value": "1",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Authentication",
+      "item": [
+        {
+          "name": "Admin Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identifier\": \"agprakash406@gmail.com\",\n  \"password\": \"AdminPassword123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/admin/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "admin", "login"]
+            },
+            "description": "Authenticates Admin / Super Admin and returns JWT token + franchise_context."
+          }
+        },
+        {
+          "name": "User / Staff / Customer Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identifier\": \"7845456609\",\n  \"password\": \"UserPassword123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "login"]
+            },
+            "description": "Authenticates Direct User, Staff, or Customer and returns JWT token + franchise_context."
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Super Admin APIs",
+      "item": [
+        {
+          "name": "Create Franchise Branch",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Chennai Main Branch\",\n  \"code\": \"CHN01\",\n  \"mobile\": \"9876543210\",\n  \"email\": \"chennai@moikanakku.com\",\n  \"address\": \"123 Mount Road\",\n  \"city\": \"Chennai\",\n  \"state\": \"Tamil Nadu\",\n  \"pincode\": \"600002\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/franchises/super-admin",
+              "host": ["{{baseUrl}}"],
+              "path": ["franchises", "super-admin"]
+            }
+          }
+        },
+        {
+          "name": "List All Franchises",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/franchises/super-admin?limit=20&offset=0&search=",
+              "host": ["{{baseUrl}}"],
+              "path": ["franchises", "super-admin"],
+              "query": [
+                { "key": "limit", "value": "20" },
+                { "key": "offset", "value": "0" },
+                { "key": "search", "value": "" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Franchise Details & Metrics",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/franchises/super-admin/{{franchiseId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["franchises", "super-admin", "{{franchiseId}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Franchise Details",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Chennai Main Branch Updated\",\n  \"mobile\": \"9876543211\",\n  \"city\": \"Chennai\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/franchises/super-admin/{{franchiseId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["franchises", "super-admin", "{{franchiseId}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Franchise Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"ACTIVE\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/franchises/super-admin/{{franchiseId}}/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["franchises", "super-admin", "{{franchiseId}}", "status"]
+            }
+          }
+        },
+        {
+          "name": "Assign Admin to Franchise",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"adminId\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/franchises/super-admin/{{franchiseId}}/admins",
+              "host": ["{{baseUrl}}"],
+              "path": ["franchises", "super-admin", "{{franchiseId}}", "admins"]
+            }
+          }
+        },
+        {
+          "name": "Remove Admin from Franchise",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/franchises/super-admin/{{franchiseId}}/admins/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["franchises", "super-admin", "{{franchiseId}}", "admins", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Franchise Admin APIs",
+      "item": [
+        {
+          "name": "Get Franchise Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/franchises/admin/dashboard",
+              "host": ["{{baseUrl}}"],
+              "path": ["franchises", "admin", "dashboard"]
+            }
+          }
+        },
+        {
+          "name": "List Branch Customers",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/franchises/admin/customers?limit=50&offset=0",
+              "host": ["{{baseUrl}}"],
+              "path": ["franchises", "admin", "customers"],
+              "query": [
+                { "key": "limit", "value": "50" },
+                { "key": "offset", "value": "0" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Search Existing Users for Customer Linking",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/franchises/admin/customers/search-user?search=784",
+              "host": ["{{baseUrl}}"],
+              "path": ["franchises", "admin", "customers", "search-user"],
+              "query": [
+                { "key": "search", "value": "784" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Link Existing User as Customer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": 2,\n  \"customerCode\": \"CUST001\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/franchises/admin/customers/link-user",
+              "host": ["{{baseUrl}}"],
+              "path": ["franchises", "admin", "customers", "link-user"]
+            }
+          }
+        },
+        {
+          "name": "Create New Customer Account",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"full_name\": \"Karthik Raja\",\n  \"email\": \"karthik@gmail.com\",\n  \"mobile\": \"9876500001\",\n  \"password\": \"CustomerPass123\",\n  \"customerCode\": \"CUST002\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/franchises/admin/customers/create",
+              "host": ["{{baseUrl}}"],
+              "path": ["franchises", "admin", "customers", "create"]
+            }
+          }
+        },
+        {
+          "name": "Update Customer Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"ACTIVE\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/franchises/admin/customers/{{customerUserId}}/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["franchises", "admin", "customers", "{{customerUserId}}", "status"]
+            }
+          }
+        },
+        {
+          "name": "List Branch Staff",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/franchises/admin/staff",
+              "host": ["{{baseUrl}}"],
+              "path": ["franchises", "admin", "staff"]
+            }
+          }
+        },
+        {
+          "name": "Add Existing User as Staff",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": 3\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/franchises/admin/staff",
+              "host": ["{{baseUrl}}"],
+              "path": ["franchises", "admin", "staff"]
+            }
+          }
+        },
+        {
+          "name": "Create New Staff Account",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"full_name\": \"Senthil Kumar\",\n  \"email\": \"senthil@moikanakku.com\",\n  \"mobile\": \"9876500002\",\n  \"password\": \"StaffPass123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/franchises/admin/staff/create",
+              "host": ["{{baseUrl}}"],
+              "path": ["franchises", "admin", "staff", "create"]
+            }
+          }
+        },
+        {
+          "name": "Update Staff Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"ACTIVE\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/franchises/admin/staff/{{staffUserId}}/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["franchises", "admin", "staff", "{{staffUserId}}", "status"]
+            }
+          }
+        },
+        {
+          "name": "List Branch Functions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/franchises/admin/functions",
+              "host": ["{{baseUrl}}"],
+              "path": ["franchises", "admin", "functions"]
+            }
+          }
+        },
+        {
+          "name": "Create Franchise Function for Customer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerUserId\": 2,\n  \"function_name\": \"Kumar Marriage\",\n  \"function_date\": \"2026-10-15\",\n  \"location\": \"Sridevi Mahal, Chennai\",\n  \"notes\": \"Marriage Function\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/franchises/admin/functions",
+              "host": ["{{baseUrl}}"],
+              "path": ["franchises", "admin", "functions"]
+            }
+          }
+        },
+        {
+          "name": "Assign Staff Permissions for Function",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"staffUserId\": 3,\n  \"functionId\": 1,\n  \"permissions\": {\n    \"can_view\": 1,\n    \"can_add_customer\": 1,\n    \"can_edit_customer\": 0,\n    \"can_add_transaction\": 1,\n    \"can_edit_transaction\": 0,\n    \"can_delete_transaction\": 0,\n    \"can_view_report\": 1\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/franchises/admin/staff-permissions",
+              "host": ["{{baseUrl}}"],
+              "path": ["franchises", "admin", "staff-permissions"]
+            }
+          }
+        },
+        {
+          "name": "Revoke Staff Access from Function",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"staffUserId\": 3,\n  \"functionId\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/franchises/admin/staff-permissions",
+              "host": ["{{baseUrl}}"],
+              "path": ["franchises", "admin", "staff-permissions"]
+            }
+          }
+        },
+        {
+          "name": "View Franchise Branch Reports",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/franchises/admin/reports",
+              "host": ["{{baseUrl}}"],
+              "path": ["franchises", "admin", "reports"]
+            }
+          }
+        },
+        {
+          "name": "View Audit Logs",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/franchises/admin/audit-logs?limit=50&offset=0",
+              "host": ["{{baseUrl}}"],
+              "path": ["franchises", "admin", "audit-logs"],
+              "query": [
+                { "key": "limit", "value": "50" },
+                { "key": "offset", "value": "0" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Franchise Staff APIs",
+      "item": [
+        {
+          "name": "Get Staff Assigned Functions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{userToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/franchises/staff/functions",
+              "host": ["{{baseUrl}}"],
+              "path": ["franchises", "staff", "functions"]
+            }
+          }
+        },
+        {
+          "name": "Get Function Details (can_view)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{userToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/franchises/staff/functions/{{functionId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["franchises", "staff", "functions", "{{functionId}}"]
+            }
+          }
+        },
+        {
+          "name": "Get Function Persons (can_view)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{userToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/franchises/staff/functions/{{functionId}}/persons",
+              "host": ["{{baseUrl}}"],
+              "path": ["franchises", "staff", "functions", "{{functionId}}", "persons"]
+            }
+          }
+        },
+        {
+          "name": "Add Person for Function (can_add_customer)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{userToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"first_name\": \"Murugan\",\n  \"last_name\": \"V\",\n  \"mobile\": \"9876543212\",\n  \"city\": \"Madurai\",\n  \"occupation\": \"Engineer\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/franchises/staff/functions/{{functionId}}/persons",
+              "host": ["{{baseUrl}}"],
+              "path": ["franchises", "staff", "functions", "{{functionId}}", "persons"]
+            }
+          }
+        },
+        {
+          "name": "Record Transaction (can_add_transaction)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{userToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 5001.00,\n  \"type\": \"RETURN\",\n  \"first_name\": \"Murugan\",\n  \"last_name\": \"V\",\n  \"city\": \"Madurai\",\n  \"notes\": \"Moi gift cash\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/franchises/staff/functions/{{functionId}}/transactions",
+              "host": ["{{baseUrl}}"],
+              "path": ["franchises", "staff", "functions", "{{functionId}}", "transactions"]
+            }
+          }
+        },
+        {
+          "name": "Edit Transaction (can_edit_transaction)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{userToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 5001.00,\n  \"notes\": \"Updated gift cash\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/franchises/staff/functions/{{functionId}}/transactions/{{transactionId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["franchises", "staff", "functions", "{{functionId}}", "transactions", "{{transactionId}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Transaction (can_delete_transaction)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{userToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/franchises/staff/functions/{{functionId}}/transactions/{{transactionId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["franchises", "staff", "functions", "{{functionId}}", "transactions", "{{transactionId}}"]
+            }
+          }
+        },
+        {
+          "name": "List Function Transactions (can_view)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{userToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/franchises/staff/functions/{{functionId}}/transactions?limit=50&offset=0",
+              "host": ["{{baseUrl}}"],
+              "path": ["franchises", "staff", "functions", "{{functionId}}", "transactions"],
+              "query": [
+                { "key": "limit", "value": "50" },
+                { "key": "offset", "value": "0" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Function Summary Report (can_view_report)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{userToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/franchises/staff/functions/{{functionId}}/reports",
+              "host": ["{{baseUrl}}"],
+              "path": ["franchises", "staff", "functions", "{{functionId}}", "reports"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Franchise Customer APIs",
+      "item": [
+        {
+          "name": "Get Customer Profile & Status",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{userToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/franchises/customer/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["franchises", "customer", "me"]
+            }
+          }
+        },
+        {
+          "name": "Get Customer Franchise Functions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{userToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/franchises/customer/functions",
+              "host": ["{{baseUrl}}"],
+              "path": ["franchises", "customer", "functions"]
+            }
+          }
+        },
+        {
+          "name": "Get Customer Function Summary",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{userToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/franchises/customer/functions/{{functionId}}/summary",
+              "host": ["{{baseUrl}}"],
+              "path": ["franchises", "customer", "functions", "{{functionId}}", "summary"]
+            }
+          }
+        },
+        {
+          "name": "Get Customer Function Transactions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{userToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/franchises/customer/functions/{{functionId}}/transactions?limit=50&offset=0",
+              "host": ["{{baseUrl}}"],
+              "path": ["franchises", "customer", "functions", "{{functionId}}", "transactions"],
+              "query": [
+                { "key": "limit", "value": "50" },
+                { "key": "offset", "value": "0" }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -11,12 +11,18 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
+  Building2,
+  UserCheck,
+  UserCog,
+  Calendar,
+  FileText,
+  BadgeCheck,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { getCurrentUser, clearAuth } from "@/lib/auth";
+import { getCurrentUser, clearAuth, getUserRole, getFranchiseContext } from "@/lib/auth";
 import { APP_LOGO_SRC } from "@/components/Logo";
 import { ENV_CONFIG } from "@/lib/config";
 import {
@@ -30,14 +36,20 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-const menuItems = [
-  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { name: "Users Master", href: "/users", icon: Users },
-  { name: "Transactions", href: "/transactions", icon: ArrowLeftRight },
-  { name: "Feedback", href: "/feedback", icon: MessageSquare },
-  { name: "Notifications", href: "/notifications", icon: Bell },
-  { name: "User OTPs", href: "/user-otps", icon: KeyRound },
-  { name: "Settings", href: "/settings", icon: Settings },
+const allMenuItems = [
+  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard, roles: ["SUPER_ADMIN", "FRANCHISE_ADMIN", "FRANCHISE_STAFF"] },
+  { name: "Franchises", href: "/franchises", icon: Building2, roles: ["SUPER_ADMIN"] },
+  { name: "Branch Overview", href: "/franchises", icon: Building2, roles: ["FRANCHISE_ADMIN"] },
+  { name: "Customers", href: "/franchise/customers", icon: UserCheck, roles: ["FRANCHISE_ADMIN"] },
+  { name: "Staff & Access", href: "/franchise/staff", icon: UserCog, roles: ["FRANCHISE_ADMIN"] },
+  { name: "Functions / Events", href: "/franchise/functions", icon: Calendar, roles: ["FRANCHISE_ADMIN", "FRANCHISE_STAFF"] },
+  { name: "Branch Reports", href: "/franchise/reports", icon: FileText, roles: ["FRANCHISE_ADMIN"] },
+  { name: "Users Master", href: "/users", icon: Users, roles: ["SUPER_ADMIN"] },
+  { name: "Transactions", href: "/transactions", icon: ArrowLeftRight, roles: ["SUPER_ADMIN"] },
+  { name: "Feedback", href: "/feedback", icon: MessageSquare, roles: ["SUPER_ADMIN"] },
+  { name: "Notifications", href: "/notifications", icon: Bell, roles: ["SUPER_ADMIN"] },
+  { name: "User OTPs", href: "/user-otps", icon: KeyRound, roles: ["SUPER_ADMIN"] },
+  { name: "Settings", href: "/settings", icon: Settings, roles: ["SUPER_ADMIN", "FRANCHISE_ADMIN", "FRANCHISE_STAFF"] },
 ];
 
 function formatLastLogin(value?: string | null): string {
@@ -72,6 +84,8 @@ export function AdminSidebar({ collapsed, onCollapsedChange }: AdminSidebarProps
   const [userTick, setUserTick] = useState(0);
 
   const currentUser = getCurrentUser();
+  const userRole = getUserRole(currentUser);
+  const franchiseContext = getFranchiseContext(currentUser);
   const userName = currentUser?.name || "Admin";
   const userInitials = userName
     .split(" ")
@@ -82,6 +96,8 @@ export function AdminSidebar({ collapsed, onCollapsedChange }: AdminSidebarProps
   const lastLoginLabel = formatLastLogin(currentUser?.last_login) !== "—"
     ? formatLastLogin(currentUser?.last_login)
     : formatLastLogin(now.toISOString());
+
+  const menuItems = allMenuItems.filter((item) => item.roles.includes(userRole));
 
   useEffect(() => {
     const timer = setInterval(() => setNow(new Date()), 60_000);
@@ -107,6 +123,14 @@ export function AdminSidebar({ collapsed, onCollapsedChange }: AdminSidebarProps
     await clearAuth();
     queryClient.clear();
     navigate("/login");
+  };
+
+  const getRoleBadgeLabel = () => {
+    if (userRole === "SUPER_ADMIN") return "Super Admin";
+    const branchName = franchiseContext?.franchise_name ? ` (${franchiseContext.franchise_name})` : "";
+    if (userRole === "FRANCHISE_ADMIN") return `Franchise Admin${branchName}`;
+    if (userRole === "FRANCHISE_STAFF") return `Franchise Staff${branchName}`;
+    return userRole;
   };
 
   return (
@@ -177,10 +201,16 @@ export function AdminSidebar({ collapsed, onCollapsedChange }: AdminSidebarProps
                 <p className="truncate text-sm font-semibold uppercase tracking-wide">
                   {userName}
                 </p>
-                <p className="mt-0.5 flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <span className="h-1.5 w-1.5 rounded-full bg-status-success" />
-                  {lastLoginLabel}
-                </p>
+                <div className="mt-0.5 flex flex-col gap-0.5 text-xs text-muted-foreground">
+                  <span className="inline-flex items-center gap-1 font-medium text-primary text-[11px] truncate">
+                    <BadgeCheck className="h-3 w-3 shrink-0" />
+                    {getRoleBadgeLabel()}
+                  </span>
+                  <span className="flex items-center gap-1.5 text-[10px]">
+                    <span className="h-1.5 w-1.5 rounded-full bg-status-success shrink-0" />
+                    {lastLoginLabel}
+                  </span>
+                </div>
               </div>
             )}
           </div>

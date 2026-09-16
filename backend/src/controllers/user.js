@@ -3,6 +3,7 @@ const User = require("../models/user");
 const Admin = require("../models/admin");
 const MFA = require("../models/mfaModel");
 const SessionModel = require("../models/sessions");
+const FranchiseModel = require("../models/franchiseModel");
 const bcrypt = require("bcryptjs");
 const crypto = require("crypto");
 const tokenService = require("../middlewares/tokenService");
@@ -189,6 +190,37 @@ exports.userController = {
         fcm_token: user.notification_token || null,
         token: jwtToken,
       };
+
+      try {
+        const staffRec = await FranchiseModel.findStaffByUserId(userID);
+        if (staffRec) {
+          response.franchise_context = {
+            role: "FRANCHISE_STAFF",
+            franchise_id: staffRec.franchise_id,
+            franchise_name: staffRec.franchise_name,
+            franchise_code: staffRec.franchise_code,
+          };
+        } else {
+          const custRec = await FranchiseModel.findCustomerByUserId(userID);
+          if (custRec) {
+            response.franchise_context = {
+              role: "FRANCHISE_CUSTOMER",
+              franchise_id: custRec.franchise_id,
+              franchise_name: custRec.franchise_name,
+              franchise_code: custRec.franchise_code,
+              customer_code: custRec.customer_code,
+            };
+          } else {
+            response.franchise_context = {
+              role: "DIRECT_USER",
+              franchise_id: null,
+            };
+          }
+        }
+      } catch (fErr) {
+        logger.warn("Error attaching franchise context on user login:", fErr);
+        response.franchise_context = { role: "DIRECT_USER", franchise_id: null };
+      }
 
       // Update last login timestamp
       await User.updateLastLogin(userID);
@@ -1467,6 +1499,26 @@ exports.userController = {
         created_at: user.created_at,
         token: jwtToken,
       };
+
+      try {
+        const faRec = await FranchiseModel.findFranchiseAdminByAdminId(userID);
+        if (faRec) {
+          response.franchise_context = {
+            role: "FRANCHISE_ADMIN",
+            franchise_id: faRec.franchise_id,
+            franchise_name: faRec.franchise_name,
+            franchise_code: faRec.franchise_code,
+          };
+        } else {
+          response.franchise_context = {
+            role: "SUPER_ADMIN",
+            franchise_id: null,
+          };
+        }
+      } catch (fErr) {
+        logger.warn("Error attaching franchise context on admin login:", fErr);
+        response.franchise_context = { role: "SUPER_ADMIN", franchise_id: null };
+      }
 
       return res
         .status(200)

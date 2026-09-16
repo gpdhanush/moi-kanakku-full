@@ -8,6 +8,16 @@ export interface MoiApiResponse<T> {
   responseMessage?: string;
 }
 
+export interface FranchiseContext {
+  role: 'SUPER_ADMIN' | 'FRANCHISE_ADMIN' | 'FRANCHISE_STAFF' | 'FRANCHISE_CUSTOMER' | 'DIRECT_USER' | string;
+  franchise_id?: number | null;
+  franchise_name?: string;
+  franchise_code?: string;
+  customer_code?: string;
+  adminId?: number;
+  userId?: number;
+}
+
 export interface AdminUser {
   status: string;
   id: string;
@@ -17,6 +27,7 @@ export interface AdminUser {
   last_login: string;
   profile_image: string | null;
   token: string;
+  franchise_context?: FranchiseContext;
 }
 
 export interface LoginResult {
@@ -80,6 +91,8 @@ type LoginApiUser = {
   account_type?: string;
   accountType?: string;
   message?: string;
+  franchise_context?: FranchiseContext;
+  franchiseContext?: FranchiseContext;
 };
 
 function extractMessage(
@@ -107,6 +120,7 @@ function normalizeUser(value: LoginApiUser): AdminUser {
     last_login: value.last_login_at || value.last_login || '',
     profile_image: value.profile_image ?? null,
     token,
+    franchise_context: value.franchise_context || value.franchiseContext,
   };
 }
 

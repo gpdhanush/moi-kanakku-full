@@ -56,6 +56,33 @@ export function isAuthenticated(): boolean {
   return !!(getAuthToken() && getCurrentUser());
 }
 
+export function getFranchiseContext(user = getCurrentUser()) {
+  if (!user) return null;
+  return user.franchise_context || user.franchiseContext || null;
+}
+
+export function getUserRole(user = getCurrentUser()): 'SUPER_ADMIN' | 'FRANCHISE_ADMIN' | 'FRANCHISE_STAFF' | 'FRANCHISE_CUSTOMER' | 'DIRECT_USER' {
+  if (!user) return 'SUPER_ADMIN';
+  const ctx = getFranchiseContext(user);
+  if (ctx && ctx.role) {
+    return ctx.role as any;
+  }
+  return 'SUPER_ADMIN';
+}
+
+export function isSuperAdmin(user = getCurrentUser()): boolean {
+  return getUserRole(user) === 'SUPER_ADMIN';
+}
+
+export function isFranchiseAdmin(user = getCurrentUser()): boolean {
+  const role = getUserRole(user);
+  return role === 'SUPER_ADMIN' || role === 'FRANCHISE_ADMIN';
+}
+
+export function isFranchiseStaff(user = getCurrentUser()): boolean {
+  return getUserRole(user) === 'FRANCHISE_STAFF';
+}
+
 export function setMfaPendingLogin(payload: MfaPendingLogin): void {
   try {
     sessionStorage.setItem(MFA_PENDING_KEY, JSON.stringify(payload));
