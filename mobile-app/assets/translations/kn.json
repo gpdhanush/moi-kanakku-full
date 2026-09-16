@@ -364,7 +364,18 @@
     "accountRestored": "Account restored successfully",
     "restoreFailed": "Failed to restore account",
     "invalidOtp": "Invalid OTP. Please try again.",
-    "otpResent": "OTP resent successfully"
+    "otpResent": "OTP resent successfully",
+    "passwordSecureHint": "ಅಕ್ಷರಗಳು, ಸಂಖ್ಯೆಗಳು ಮತ್ತು ಚಿಹ್ನೆಯೊಂದಿಗೆ ಬಲವಾದ ಪಾಸ್‌ವರ್ಡ್ ಬಳಸಿ.",
+    "passwordNeedUpper": "ಕನಿಷ್ಠ ಒಂದು ದೊಡ್ಡ ಅಕ್ಷರ ಬೇಕು",
+    "passwordNeedLower": "ಕನಿಷ್ಠ ಒಂದು ಸಣ್ಣ ಅಕ್ಷರ ಬೇಕು",
+    "passwordNeedNumber": "ಕನಿಷ್ಠ ಒಂದು ಸಂಖ್ಯೆ ಬೇಕು",
+    "passwordNeedSpecial": "ಕನಿಷ್ಠ ಒಂದು ವಿಶೇಷ ಅಕ್ಷರ ಬೇಕು (!@#$%^&*)",
+    "passwordRuleMin": "ಕನಿಷ್ಠ 8 ಅಕ್ಷರಗಳು",
+    "passwordRuleUpper": "ಒಂದು ದೊಡ್ಡ ಅಕ್ಷರ (A-Z)",
+    "passwordRuleLower": "ಒಂದು ಸಣ್ಣ ಅಕ್ಷರ (a-z)",
+    "passwordRuleNumber": "ಒಂದು ಸಂಖ್ಯೆ (0-9)",
+    "passwordRuleSpecial": "ಒಂದು ವಿಶೇಷ ಅಕ್ಷರ (!@#$%)",
+    "passwordSameAsOld": "ಹೊಸ ಪಾಸ್‌ವರ್ಡ್ ಹಳೆಯದರಿಂದ ಭಿನ್ನವಾಗಿರಬೇಕು"
   },
   "permissions": {
     "title": "Permissions Required",

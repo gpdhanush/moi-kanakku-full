@@ -394,7 +394,18 @@
     "accountRestored": "Account restored successfully",
     "restoreFailed": "Failed to restore account",
     "invalidOtp": "Invalid OTP. Please try again.",
-    "otpResent": "OTP resent successfully"
+    "otpResent": "OTP resent successfully",
+    "passwordSecureHint": "അക്ഷരങ്ങൾ, അക്കങ്ങൾ, ചിഹ്നം എന്നിവയുള്ള ശക്തമായ പാസ്‌വേഡ് ഉപയോഗിക്കുക.",
+    "passwordNeedUpper": "കുറഞ്ഞത് ഒരു വലിയക്ഷരം ആവശ്യമാണ്",
+    "passwordNeedLower": "കുറഞ്ഞത് ഒരു ചെറിയക്ഷരം ആവശ്യമാണ്",
+    "passwordNeedNumber": "കുറഞ്ഞത് ഒരു അക്കം ആവശ്യമാണ്",
+    "passwordNeedSpecial": "കുറഞ്ഞത് ഒരു പ്രത്യേക അക്ഷരം ആവശ്യമാണ് (!@#$%^&*)",
+    "passwordRuleMin": "കുറഞ്ഞത് 8 അക്ഷരങ്ങൾ",
+    "passwordRuleUpper": "ഒരു വലിയക്ഷരം (A-Z)",
+    "passwordRuleLower": "ഒരു ചെറിയക്ഷരം (a-z)",
+    "passwordRuleNumber": "ഒരു അക്കം (0-9)",
+    "passwordRuleSpecial": "ഒരു പ്രത്യേക അക്ഷരം (!@#$%)",
+    "passwordSameAsOld": "പുതിയ പാസ്‌വേഡ് പഴയതിൽ നിന്ന് വ്യത്യസ്തമായിരിക്കണം"
   },
   "permissions": {
     "title": "Permissions Required",

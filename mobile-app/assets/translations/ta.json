@@ -546,7 +546,18 @@
     "accountRestored": "கணக்கு வெற்றிகரமாக மீட்டெடுக்கப்பட்டது",
     "restoreFailed": "கணக்கை மீட்டெடுப்பதில் தோல்வி",
     "invalidOtp": "தவறான OTP. மீண்டும் முயற்சிக்கவும்.",
-    "otpResent": "OTP மீண்டும் அனுப்பப்பட்டது"
+    "otpResent": "OTP மீண்டும் அனுப்பப்பட்டது",
+    "passwordSecureHint": "எழுத்துகள், எண்கள் மற்றும் சின்னத்துடன் வலுவான கடவுச்சொல்லைப் பயன்படுத்தவும்.",
+    "passwordNeedUpper": "குறைந்தது ஒரு பெரிய எழுத்து தேவை",
+    "passwordNeedLower": "குறைந்தது ஒரு சிறிய எழுத்து தேவை",
+    "passwordNeedNumber": "குறைந்தது ஒரு எண் தேவை",
+    "passwordNeedSpecial": "குறைந்தது ஒரு சிறப்பு எழுத்து தேவை (!@#$%^&*)",
+    "passwordRuleMin": "குறைந்தது 8 எழுத்துக்கள்",
+    "passwordRuleUpper": "ஒரு பெரிய எழுத்து (A-Z)",
+    "passwordRuleLower": "ஒரு சிறிய எழுத்து (a-z)",
+    "passwordRuleNumber": "ஒரு எண் (0-9)",
+    "passwordRuleSpecial": "ஒரு சிறப்பு எழுத்து (!@#$%)",
+    "passwordSameAsOld": "புதிய கடவுச்சொல் பழையதிலிருந்து வேறுபட்டிருக்க வேண்டும்"
   },
   "permissions": {
     "title": "அனுமதிகள் தேவை",

@@ -1,5 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
@@ -9,6 +11,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:moi/app_configs/index.dart';
 import 'package:moi/app_services/user_services.dart';
 import 'package:moi/app_storages/secure_storages.dart';
+import 'package:moi/app_themes/index.dart';
 import 'package:moi/app_utils/index.dart';
 import 'package:moi/app_utils/app_forms/custom_dropdown.dart';
 import 'package:moi/app_utils/app_providers/language_provider.dart';
@@ -247,67 +250,65 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
     return Consumer<LanguageProvider>(
       builder: (context, languageProvider, _) {
         return Scaffold(
-          appBar: AppBarWidget(
-            title: languageProvider.tr('profile.title'),
-            action: const [],
+          backgroundColor: AppColors.background,
+          appBar: _ProfileAppHeader(
+            title: languageProvider.tr('profile.title').toUpperCase(),
+            onBack: () => Navigator.pop(context),
           ),
-          backgroundColor: colorScheme.surfaceContainerHighest.withValues(
-            alpha: 0.3,
-          ),
-          body: Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  colorScheme.primary.withValues(alpha: 0.05),
-                  colorScheme.surface,
-                ],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-              ),
+          body: SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.page,
+              AppSpacing.md,
+              AppSpacing.page,
+              AppSpacing.xxl,
             ),
-            child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              child: SafeArea(
-                child: Form(
-                  key: _formKey,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        _buildProfileHeader(languageProvider),
-                        const SizedBox(height: 20),
-                        _buildPersonalInfoCard(
-                          theme,
-                          colorScheme,
-                          languageProvider,
-                        ),
-                        const SizedBox(height: 20),
-                        _buildAddressInfoCard(
-                          theme,
-                          colorScheme,
-                          languageProvider,
-                        ),
-                        const SizedBox(height: 20),
-                        _buildAccountActionsSection(
-                          theme,
-                          colorScheme,
-                          languageProvider,
-                        ),
-                        const SizedBox(height: 30),
-                      ],
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _buildProfileHeader(languageProvider),
+                  const SizedBox(height: AppSpacing.md),
+                  Text(
+                    languageProvider.tr('profile.personalInformation'),
+                    style: AppTypography.label.copyWith(
+                      color: AppColors.textPrimary,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
-                ),
+                  const SizedBox(height: AppSpacing.sm),
+                  _buildPersonalInfoCard(
+                    Theme.of(context),
+                    Theme.of(context).colorScheme,
+                    languageProvider,
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  Text(
+                    languageProvider.tr('profile.address'),
+                    style: AppTypography.label.copyWith(
+                      color: AppColors.textPrimary,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  _buildAddressInfoCard(
+                    Theme.of(context),
+                    Theme.of(context).colorScheme,
+                    languageProvider,
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  _buildAccountActionsSection(
+                    Theme.of(context),
+                    Theme.of(context).colorScheme,
+                    languageProvider,
+                  ),
+                ],
               ),
             ),
           ),
@@ -318,28 +319,28 @@ class _ProfilePageState extends State<ProfilePage> {
 
   // Profile Header Card
   Widget _buildProfileHeader(LanguageProvider languageProvider) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final primary = Theme.of(context).colorScheme.primary;
+    final deep = Color.lerp(primary, const Color(0xff0A3D8F), 0.28)!;
+    final soft = Color.lerp(primary, Colors.white, 0.22)!;
 
     return Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(18),
         gradient: LinearGradient(
-          colors: [colorScheme.primary, colorScheme.primaryContainer],
+          colors: [primary, soft, deep],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         boxShadow: [
           BoxShadow(
-            color: colorScheme.primary.withValues(alpha: 0.3),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
+            color: primary.withValues(alpha: 0.28),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
       child: Stack(
         children: [
-          // Decorative circles
           Positioned(
             top: -20,
             right: -20,
@@ -364,9 +365,8 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
             ),
           ),
-          // Content
           Padding(
-            padding: const EdgeInsets.all(12.0),
+            padding: const EdgeInsets.all(16),
             child: Row(
               children: [
                 GestureDetector(
@@ -387,54 +387,50 @@ class _ProfilePageState extends State<ProfilePage> {
                               : const AssetImage(AppImages.profileImage),
                         ),
                       ),
-                      // Edit icon overlay
                       Positioned(
                         bottom: 0,
                         right: 0,
                         child: Container(
-                          width: 24,
-                          height: 24,
+                          width: 26,
+                          height: 26,
                           decoration: BoxDecoration(
                             color: Colors.white,
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: colorScheme.primary,
-                              width: 2,
-                            ),
+                            borderRadius: BorderRadius.circular(8),
                           ),
-                          child: Icon(
-                            Icons.edit_outlined,
-                            color: colorScheme.primary,
+                          alignment: Alignment.center,
+                          child: HugeIcon(
+                            icon: HugeIcons.strokeRoundedPencilEdit02,
+                            color: primary,
                             size: 14,
+                            strokeWidth: 1.8,
                           ),
                         ),
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(width: 20),
+                const SizedBox(width: 16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         languageProvider.tr('profile.name'),
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: Colors.white.withValues(alpha: 0.9),
-                          fontFamily: 'Inter',
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
+                        style: AppTypography.body.copyWith(
+                          color: Colors.white.withValues(alpha: 0.82),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: 4),
                       Text(
-                        _user?["name"]?.toString() ??
-                            languageProvider.tr('profile.user'),
-                        style: theme.textTheme.headlineSmall?.copyWith(
+                        (_user?["name"]?.toString() ??
+                                languageProvider.tr('profile.user'))
+                            .toUpperCase(),
+                        style: AppTypography.sectionTitle.copyWith(
                           color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontFamily: 'Inter',
-                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 17,
                           height: 1.2,
                         ),
                         maxLines: 2,
@@ -443,10 +439,9 @@ class _ProfilePageState extends State<ProfilePage> {
                       const SizedBox(height: 4),
                       Text(
                         _user?["email"]?.toString() ?? '',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: Colors.white.withValues(alpha: 0.9),
-                          fontFamily: 'Inter',
-                          fontSize: 14,
+                        style: AppTypography.body.copyWith(
+                          color: Colors.white.withValues(alpha: 0.85),
+                          fontSize: 13,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -468,16 +463,17 @@ class _ProfilePageState extends State<ProfilePage> {
     ColorScheme colorScheme,
     LanguageProvider languageProvider,
   ) {
-    return Card(
-      elevation: 4,
-      shadowColor: colorScheme.primary.withValues(alpha: 0.1),
-      // shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: AppShadows.soft,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
             // Name input field
             TextFormWidget(
               title: languageProvider.tr('profile.name'),
@@ -530,7 +526,6 @@ class _ProfilePageState extends State<ProfilePage> {
               enabled: false,
             ),
           ],
-        ),
       ),
     );
   }
@@ -615,60 +610,87 @@ class _ProfilePageState extends State<ProfilePage> {
     ColorScheme colorScheme,
     LanguageProvider languageProvider,
   ) {
+    final primary = colorScheme.primary;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Update Button
-        SizedBox(
-          width: double.infinity,
-          height: 54,
-          child: AppButton(
-            title: languageProvider.tr('profile.updateProfile'),
-            onPressed: _updateDetails,
-          ),
-        ),
-        const SizedBox(height: 20),
-        Divider(
-          color: colorScheme.primary.withValues(alpha: 0.8),
-          thickness: 1,
-          indent: 0.5,
-          endIndent: 0.5,
-        ),
-        // const SizedBox(height: 20),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-          child: Text(
-            languageProvider.tr('profile.accountActions'),
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-              fontFamily: 'Inter',
-              color: colorScheme.primary,
+        Material(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(14),
+          child: InkWell(
+            onTap: _updateDetails,
+            borderRadius: BorderRadius.circular(14),
+            child: Ink(
+              height: 52,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(14),
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    primary,
+                    Color.lerp(primary, const Color(0xff0A3D8F), 0.28)!,
+                  ],
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: primary.withValues(alpha: 0.28),
+                    blurRadius: 14,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+              ),
+              child: Center(
+                child: Text(
+                  languageProvider.tr('profile.updateProfile'),
+                  style: AppTypography.label.copyWith(
+                    color: Colors.white,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
             ),
           ),
         ),
-        const SizedBox(height: 8),
-        // Change password option
+        const SizedBox(height: AppSpacing.lg),
+        Text(
+          languageProvider.tr('profile.accountActions'),
+          style: AppTypography.label.copyWith(
+            color: AppColors.textPrimary,
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.sm),
         _buildActionCard(
-          theme: theme,
-          colorScheme: colorScheme,
-          icon: Icons.lock_outline,
+          icon: HugeIcons.strokeRoundedLockPassword,
           title: languageProvider.tr('auth.changePassword'),
-          color: colorScheme.primary,
+          subtitle: languageProvider.tr('auth.passwordMinLength'),
+          iconBg: primary.withValues(alpha: 0.1),
+          iconColor: primary,
           onTap: () => Navigator.pushNamed(context, "change-password"),
         ),
-        const SizedBox(height: 12),
-        // Delete account option
+        const SizedBox(height: AppSpacing.sm),
         _buildActionCard(
-          theme: theme,
-          colorScheme: colorScheme,
-          icon: Icons.delete_outline_outlined,
+          icon: HugeIcons.strokeRoundedDelete02,
           title: languageProvider.tr('profile.deleteAccount'),
-          color: Colors.red,
-          backgroundColor: Colors.red.shade50,
+          subtitle: languageProvider.tr('profile.deleteAccountConfirmation'),
+          iconBg: AppColors.moiGivenSoft,
+          iconColor: AppColors.moiGiven,
+          isDestructive: true,
           onTap: () async {
-            bool? confirm = await _alertServices.confirmAlert(
-              context,
-              languageProvider.tr('profile.deleteAccountConfirmation'),
+            final confirm = await showMoiConfirmSheet(
+              context: context,
+              title: languageProvider.tr('profile.deleteAccount'),
+              message: languageProvider.tr(
+                'profile.deleteAccountConfirmation',
+              ),
+              confirmLabel: languageProvider.tr('common.yes'),
+              cancelLabel: languageProvider.tr('common.no'),
+              icon: HugeIcons.strokeRoundedDelete02,
+              isDestructive: true,
             );
             if (confirm == true) {
               deleteUser();
@@ -681,50 +703,80 @@ class _ProfilePageState extends State<ProfilePage> {
 
   // Action Card Widget
   Widget _buildActionCard({
-    required ThemeData theme,
-    required ColorScheme colorScheme,
-    required IconData icon,
+    required List<List<dynamic>> icon,
     required String title,
-    required Color color,
-    Color? backgroundColor,
+    required String subtitle,
+    required Color iconBg,
+    required Color iconColor,
     required VoidCallback onTap,
+    bool isDestructive = false,
   }) {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(5),
-        side: BorderSide(color: color.withValues(alpha: 0.3), width: 1.5),
-      ),
-      color: backgroundColor,
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(14),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(5),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        borderRadius: BorderRadius.circular(14),
+        child: Ink(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            boxShadow: AppShadows.soft,
+          ),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Container(
-                padding: EdgeInsets.zero,
+                width: 40,
+                height: 40,
                 decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.1),
+                  color: iconBg,
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(icon, color: color, size: 24),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Text(
-                  title,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    fontFamily: 'Inter',
-                    fontWeight: FontWeight.w600,
-                    color: color,
-                  ),
+                alignment: Alignment.center,
+                child: HugeIcon(
+                  icon: icon,
+                  color: iconColor,
+                  size: 18,
+                  strokeWidth: 1.8,
                 ),
               ),
-              Icon(Icons.chevron_right_outlined, color: color, size: 24),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: AppTypography.label.copyWith(
+                        color: isDestructive
+                            ? AppColors.moiGiven
+                            : AppColors.textPrimary,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTypography.body.copyWith(
+                        color: AppColors.textSecondary,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              HugeIcon(
+                icon: HugeIcons.strokeRoundedArrowRight01,
+                color: isDestructive
+                    ? AppColors.moiGiven.withValues(alpha: 0.55)
+                    : const Color(0xffA1A1AA),
+                size: 16,
+                strokeWidth: 1.9,
+              ),
             ],
           ),
         ),
@@ -1168,15 +1220,17 @@ class _ProfilePageState extends State<ProfilePage> {
     ColorScheme colorScheme,
     LanguageProvider languageProvider,
   ) {
-    return Card(
-      elevation: 4,
-      // shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: AppShadows.soft,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
             // Text(
             //   "முகவரி விவரங்கள்",
             //   style: theme.textTheme.titleMedium?.copyWith(
@@ -1245,8 +1299,111 @@ class _ProfilePageState extends State<ProfilePage> {
               ],
             ),
           ],
+      ),
+    );
+  }
+}
+
+class _ProfileAppHeader extends StatelessWidget implements PreferredSizeWidget {
+  final String title;
+  final VoidCallback onBack;
+
+  const _ProfileAppHeader({required this.title, required this.onBack});
+
+  @override
+  Size get preferredSize => const Size.fromHeight(72);
+
+  @override
+  Widget build(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return AppBar(
+      toolbarHeight: preferredSize.height,
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      surfaceTintColor: Colors.transparent,
+      backgroundColor: Colors.transparent,
+      centerTitle: true,
+      automaticallyImplyLeading: false,
+      titleSpacing: 0,
+      systemOverlayStyle: SystemUiOverlayStyle.light.copyWith(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+        statusBarBrightness: Brightness.dark,
+        systemNavigationBarColor: isDark ? Colors.black : Colors.white,
+        systemNavigationBarIconBrightness:
+            isDark ? Brightness.light : Brightness.dark,
+      ),
+      flexibleSpace: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              primary,
+              Color.lerp(primary, const Color(0xff0A3D8F), 0.35)!,
+            ],
+          ),
+          borderRadius: const BorderRadius.only(
+            bottomLeft: Radius.circular(22),
+            bottomRight: Radius.circular(22),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: primary.withValues(alpha: 0.28),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
+            ),
+          ],
         ),
       ),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.only(
+          bottomLeft: Radius.circular(22),
+          bottomRight: Radius.circular(22),
+        ),
+      ),
+      leadingWidth: 54,
+      leading: Padding(
+        padding: const EdgeInsets.only(left: 10),
+        child: Center(
+          child: Material(
+            color: Colors.white.withValues(alpha: 0.14),
+            shape: const CircleBorder(),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: onBack,
+              customBorder: const CircleBorder(),
+              child: const SizedBox(
+                width: 42,
+                height: 42,
+                child: Center(
+                  child: HugeIcon(
+                    icon: HugeIcons.strokeRoundedArrowLeft01,
+                    color: Colors.white,
+                    size: 22,
+                    strokeWidth: 1.9,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+      title: Text(
+        title,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        textAlign: TextAlign.center,
+        style: AppTypography.sectionTitle.copyWith(
+          color: Colors.white,
+          fontSize: 16,
+          fontWeight: FontWeight.w700,
+          letterSpacing: -0.2,
+        ),
+      ),
+      actions: const [SizedBox(width: 54)],
     );
   }
 }
