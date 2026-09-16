@@ -279,7 +279,10 @@
     "contactUs": "தொடர்பு கொள்ளவும்",
     "logout": "வெளியேறு",
     "logoutConfirmation": "நீங்கள் வெளியேற விரும்புகிறீர்களா?",
-    "guestUser": "விருந்தினர் பயனர்"
+    "guestUser": "விருந்தினர் பயனர்",
+    "sectionMain": "முதன்மை",
+    "sectionAccount": "கணக்கு",
+    "sectionSupport": "ஆதரவு"
   },
   "functionDetails": {
     "title": "விழா விவரங்கள்",

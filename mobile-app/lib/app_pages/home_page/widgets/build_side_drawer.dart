@@ -28,7 +28,7 @@ class BuildSideDrawer extends StatelessWidget {
     bool isLogout = false,
   }) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.only(bottom: 6),
       child: DrawerWidget(
         icon: icon,
         title: title,
@@ -38,150 +38,57 @@ class BuildSideDrawer extends StatelessWidget {
     );
   }
 
+  Widget _sectionLabel(String label) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(4, 2, 4, 4),
+      child: Text(
+        label.toUpperCase(),
+        style: AppTypography.chip.copyWith(
+          color: const Color(0xff71717A), // zinc-500
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.6,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final primary = Theme.of(context).colorScheme.primary;
+    final width = MediaQuery.sizeOf(context).width;
+    final drawerWidth = (width * 0.82).clamp(280.0, 340.0);
 
     return Consumer<LanguageProvider>(
       builder: (context, languageProvider, child) {
-        return Drawer(
-          backgroundColor: AppColors.background,
-          shape: const RoundedRectangleBorder(),
-          elevation: 0,
-          child: ListView(
-            padding: EdgeInsets.zero,
-            children: [
-              Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      colorScheme.primary,
-                      colorScheme.primary.withValues(alpha: 0.85),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                ),
-                child: Stack(
-                  children: [
-                    // Background pattern - decorative circles
-                    Positioned(
-                      top: -30,
-                      right: -30,
-                      child: Container(
-                        width: 120,
-                        height: 120,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.white.withValues(alpha: 0.1),
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      bottom: -40,
-                      left: -40,
-                      child: Container(
-                        width: 140,
-                        height: 140,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.white.withValues(alpha: 0.08),
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      top: 60,
-                      left: -20,
-                      child: Container(
-                        width: 80,
-                        height: 80,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.white.withValues(alpha: 0.06),
-                        ),
-                      ),
-                    ),
-                    // Content
-                    SafeArea(
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(10, 12, 10, 12),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            // Logo with container
-                            Container(
-                              padding: const EdgeInsets.all(0),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.2),
-                                borderRadius: BorderRadius.circular(16),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.1),
-                                    blurRadius: 8,
-                                    offset: const Offset(0, 2),
-                                  ),
-                                ],
-                              ),
-                              child: Image.asset(
-                                AppImages.appLogoImage,
-                                height: 50,
-                              ),
-                            ),
+        final name = userDetails.isNotEmpty
+            ? userDetails[0]['name'].toString()
+            : languageProvider.tr('menu.guestUser');
 
-                            const SizedBox(height: 8),
-                            // User name with icon
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(6),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withValues(alpha: 0.2),
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: const HugeIcon(
-                                    icon: HugeIcons.strokeRoundedUser,
-                                    color: Colors.white,
-                                    size: 18,
-                                    strokeWidth: 1.8,
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Flexible(
-                                  child: Text(
-                                    userDetails.isNotEmpty
-                                        ? userDetails[0]['name'].toString()
-                                        : languageProvider.tr('menu.guestUser'),
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontFamily: 'Inter',
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w700,
-                                      letterSpacing: 0,
-                                    ),
-                                    textAlign: TextAlign.center,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+        return Drawer(
+          width: drawerWidth,
+          backgroundColor: const Color(0xffFAFAFA), // zinc-50
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.only(
+              topRight: Radius.circular(20),
+              bottomRight: Radius.circular(20),
+            ),
+          ),
+          elevation: 0,
+          child: Column(
+            children: [
+              _DrawerHeader(
+                primary: primary,
+                name: name,
+                user: userDetails.isNotEmpty
+                    ? Map<String, dynamic>.from(userDetails[0] as Map)
+                    : null,
               ),
-              const SizedBox(height: 8),
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
-                ),
-                child: Column(
+              Expanded(
+                child: ListView(
+                  padding: const EdgeInsets.fromLTRB(14, 8, 14, 12),
                   children: [
+                    _sectionLabel(languageProvider.tr('menu.sectionMain')),
                     _buildMenuItem(
                       context: context,
                       icon: HugeIcons.strokeRoundedWedding,
@@ -190,7 +97,6 @@ class BuildSideDrawer extends StatelessWidget {
                         Navigator.popAndPushNamed(context, "functions-list");
                       },
                     ),
-
                     _buildMenuItem(
                       context: context,
                       icon: HugeIcons.strokeRoundedAnalytics01,
@@ -202,7 +108,6 @@ class BuildSideDrawer extends StatelessWidget {
                         );
                       },
                     ),
-
                     _buildMenuItem(
                       context: context,
                       icon: HugeIcons.strokeRoundedCalendar01,
@@ -214,7 +119,8 @@ class BuildSideDrawer extends StatelessWidget {
                         );
                       },
                     ),
-
+                    const SizedBox(height: 10),
+                    _sectionLabel(languageProvider.tr('menu.sectionAccount')),
                     _buildMenuItem(
                       context: context,
                       icon: HugeIcons.strokeRoundedUserCircle02,
@@ -239,6 +145,8 @@ class BuildSideDrawer extends StatelessWidget {
                         Navigator.popAndPushNamed(context, "feedbacks");
                       },
                     ),
+                    const SizedBox(height: 10),
+                    _sectionLabel(languageProvider.tr('menu.sectionSupport')),
                     _buildMenuItem(
                       context: context,
                       icon: HugeIcons.strokeRoundedStar,
@@ -266,6 +174,7 @@ class BuildSideDrawer extends StatelessWidget {
                         Navigator.popAndPushNamed(context, "contact_us");
                       },
                     ),
+                    const SizedBox(height: 10),
                     _buildMenuItem(
                       context: context,
                       icon: HugeIcons.strokeRoundedLogout01,
@@ -283,7 +192,6 @@ class BuildSideDrawer extends StatelessWidget {
     );
   }
 
-  // Handle user logout
   Future<void> logoutApp(BuildContext context) async {
     SecureStorageService secureStorage = SecureStorageService();
     AlertServices alertServices = AlertServices();
@@ -300,10 +208,8 @@ class BuildSideDrawer extends StatelessWidget {
       if (!context.mounted) return;
 
       try {
-        // Get user ID from secure storage
         final userData = await secureStorage.get(AppVariables.userInformation);
         if (userData != null && userData['id'] != null) {
-          // Call logout API
           final response = await userServices.logout({
             "userId": userData['id'].toString(),
           });
@@ -316,15 +222,12 @@ class BuildSideDrawer extends StatelessWidget {
         }
       } catch (e) {
         printContent('Error calling logout API: $e');
-        // Continue with logout even if API call fails
       }
 
       if (!context.mounted) return;
 
-      // Clear local storage and user provider
       await secureStorage.clearSessionData();
 
-      // Clear UserProvider if available
       if (context.mounted) {
         try {
           final userProvider = Provider.of<UserProvider>(
@@ -342,3 +245,188 @@ class BuildSideDrawer extends StatelessWidget {
     }
   }
 }
+
+class _DrawerHeader extends StatelessWidget {
+  final Color primary;
+  final String name;
+  final Map<String, dynamic>? user;
+
+  const _DrawerHeader({
+    required this.primary,
+    required this.name,
+    required this.user,
+  });
+
+  String _resolveProfileImageUrl() {
+    if (user == null) return '';
+    final path = (user!['profile_image_url'] ?? user!['profile_image'])
+            ?.toString()
+            .trim() ??
+        '';
+    if (path.isEmpty) return '';
+    if (path.startsWith('http://') || path.startsWith('https://')) {
+      return path;
+    }
+    return '$appImageUrl/${path.replaceFirst(RegExp(r'^/+'), '')}';
+  }
+
+  String get _subtitle {
+    final email = user?['email']?.toString().trim() ?? '';
+    if (email.isNotEmpty) return email;
+    final phone = user?['phone']?.toString().trim() ??
+        user?['mobile']?.toString().trim() ??
+        '';
+    return phone;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final imageUrl = _resolveProfileImageUrl();
+    final subtitle = _subtitle;
+    final initial = name.isNotEmpty ? name[0].toUpperCase() : 'U';
+
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            primary,
+            Color.lerp(primary, const Color(0xff0A3D8F), 0.35)!,
+          ],
+        ),
+        borderRadius: const BorderRadius.only(
+          topRight: Radius.circular(20),
+        ),
+      ),
+      child: Stack(
+        children: [
+          Positioned(
+            top: -36,
+            right: -28,
+            child: Container(
+              width: 120,
+              height: 120,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.12),
+                  width: 18,
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: -40,
+            left: -24,
+            child: Container(
+              width: 100,
+              height: 100,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withValues(alpha: 0.07),
+              ),
+            ),
+          ),
+          SafeArea(
+            bottom: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+              child: Row(
+                children: [
+                  Container(
+                    width: 58,
+                    height: 58,
+                    padding: const EdgeInsets.all(2.5),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.55),
+                        width: 1.5,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.15),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: ClipOval(
+                      child: imageUrl.isEmpty
+                          ? Container(
+                              color: Colors.white.withValues(alpha: 0.2),
+                              alignment: Alignment.center,
+                              child: Text(
+                                initial,
+                                style: AppTypography.sectionTitle.copyWith(
+                                  color: Colors.white,
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            )
+                          : Image.network(
+                              imageUrl,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(
+                                  color: Colors.white.withValues(alpha: 0.2),
+                                  alignment: Alignment.center,
+                                  child: Text(
+                                    initial,
+                                    style: AppTypography.sectionTitle.copyWith(
+                                      color: Colors.white,
+                                      fontSize: 22,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          name,
+                          style: AppTypography.sectionTitle.copyWith(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: -0.3,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        if (subtitle.isNotEmpty) ...[
+                          const SizedBox(height: 3),
+                          Text(
+                            subtitle,
+                            style: AppTypography.body.copyWith(
+                              color: Colors.white.withValues(alpha: 0.78),
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+

@@ -279,7 +279,10 @@
     "contactUs": "Contact Us",
     "logout": "Logout",
     "logoutConfirmation": "Do you want to logout?",
-    "guestUser": "Guest User"
+    "guestUser": "Guest User",
+    "sectionMain": "Main",
+    "sectionAccount": "Account",
+    "sectionSupport": "Support"
   },
   "functionDetails": {
     "title": "Function Details",

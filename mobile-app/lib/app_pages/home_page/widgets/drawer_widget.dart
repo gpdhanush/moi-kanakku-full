@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:moi/app_themes/index.dart';
 
+/// Tailwind-style drawer row: soft surface, ring border, theme accent.
 class DrawerWidget extends StatelessWidget {
   final List<List<dynamic>> icon;
   final String title;
@@ -18,57 +19,81 @@ class DrawerWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final iconColor = isLogout ? AppColors.moiGiven : AppColors.primary;
-    final textColor = isLogout ? AppColors.moiGiven : AppColors.textPrimary;
-    final accentColor = isLogout ? AppColors.moiGiven : AppColors.primary;
+    final primary = Theme.of(context).colorScheme.primary;
+    final accent = isLogout ? AppColors.moiGiven : primary;
+    final surface = isLogout
+        ? AppColors.moiGivenSoft
+        : const Color(0xffFFFFFF);
+    final border = isLogout
+        ? AppColors.moiGiven.withValues(alpha: 0.22)
+        : const Color(0xffE4E4E7); // zinc-200
+    final titleColor =
+        isLogout ? AppColors.moiGiven : const Color(0xff18181B); // zinc-900
 
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTab,
-        borderRadius: AppRadius.mdAll,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+        borderRadius: BorderRadius.circular(12),
+        splashColor: accent.withValues(alpha: 0.08),
+        highlightColor: accent.withValues(alpha: 0.04),
+        child: Ink(
           decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: AppRadius.mdAll,
-            border: Border.all(color: AppColors.borderSubtle),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 38,
-                height: 38,
-                decoration: BoxDecoration(
-                  color: accentColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                alignment: Alignment.center,
-                child: HugeIcon(
-                  icon: icon,
-                  color: iconColor,
-                  size: 20,
-                  strokeWidth: 1.8,
-                ),
-              ),
-              const SizedBox(width: 13),
-              Expanded(
-                child: Text(
-                  title,
-                  style: AppTypography.label.copyWith(
-                    color: textColor,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-              HugeIcon(
-                icon: HugeIcons.strokeRoundedArrowRight01,
-                color: AppColors.textSecondary.withValues(alpha: 0.7),
-                size: 18,
-                strokeWidth: 1.8,
+            color: surface,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: border, width: 1),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xff09090B).withValues(alpha: 0.04),
+                blurRadius: 2,
+                offset: const Offset(0, 1),
               ),
             ],
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            child: Row(
+              children: [
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: accent.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: accent.withValues(alpha: 0.14),
+                    ),
+                  ),
+                  alignment: Alignment.center,
+                  child: HugeIcon(
+                    icon: icon,
+                    color: accent,
+                    size: 18,
+                    strokeWidth: 1.9,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: AppTypography.label.copyWith(
+                      color: titleColor,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: -0.1,
+                    ),
+                  ),
+                ),
+                HugeIcon(
+                  icon: HugeIcons.strokeRoundedArrowRight01,
+                  color: isLogout
+                      ? AppColors.moiGiven.withValues(alpha: 0.55)
+                      : const Color(0xffA1A1AA), // zinc-400
+                  size: 16,
+                  strokeWidth: 1.9,
+                ),
+              ],
+            ),
           ),
         ),
       ),
