@@ -120,6 +120,9 @@
   "home": {
     "title": "ಮುಖಪುಟ",
     "welcome": "ಸ್ವಾಗತ",
+    "goodMorning": "ಶುಭೋದಯ",
+    "goodAfternoon": "ಶುಭ ಮಧ್ಯಾಹ್ನ",
+    "goodEvening": "ಶುಭ ಸಂಜೆ",
     "lastLogin": "ಕೊನೆಯ ಲಾಗಿನ್",
     "netBalance": "ನಿವ್ವಳ ಬಾಕಿ",
     "positiveBalance": "ಧನಾತ್ಮಕ ಬಾಕಿ",
@@ -133,7 +136,7 @@
     "exportedSuccessfully": "ಯಶಸ್ವಿಯಾಗಿ ರಫ್ತು ಮಾಡಲಾಗಿದೆ",
     "fetchTransactionsFailed": "ವಹಿವಾಟುಗಳನ್ನು ಪಡೆಯಲು ವಿಫಲವಾಗಿದೆ",
     "exportError": "ಡೇಟಾ ರಫ್ತು ಮಾಡುವಲ್ಲಿ ದೋಷ",
-    "fetchDataError": "ಡೇಟಾ ಪಡೆಯುವಲ್ಲಿ ದೋಷ. ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.", "startupError": "ಪ್ರಾರಂಭಿಸುವಾಗ ದೋಷ ಸಂಭವಿಸಿದೆ. ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.", "notifications": "ಅಧಿಸೂಚನೆಗಳು", "notAvailable": "ಲಭ್ಯವಿಲ್ಲ", "invalidDate": "ಅಮಾನ್ಯ ದಿನಾಂಕ", "functionTotals": "ಸಮಾರಂಭವಾರು ಒಟ್ಟುಗಳು", "noFunctionTotals": "ಸಮಾರಂಭದ ಒಟ್ಟುಗಳು ಲಭ್ಯವಿಲ್ಲ"
+    "fetchDataError": "ಡೇಟಾ ಪಡೆಯುವಲ್ಲಿ ದೋಷ. ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.", "startupError": "ಪ್ರಾರಂಭಿಸುವಾಗ ದೋಷ ಸಂಭವಿಸಿದೆ. ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.", "notifications": "ಅಧಿಸೂಚನೆಗಳು", "notAvailable": "ಲಭ್ಯವಿಲ್ಲ", "invalidDate": "ಅಮಾನ್ಯ ದಿನಾಂಕ", "functionTotals": "ಸಮಾರಂಭವಾರು ಒಟ್ಟುಗಳು", "mostActiveFunctions": "ಅತ್ಯಂತ ಸಕ್ರಿಯ ಸಮಾರಂಭಗಳು", "noFunctionTotals": "ಸಮಾರಂಭದ ಒಟ್ಟುಗಳು ಲಭ್ಯವಿಲ್ಲ", "viewAll": "ಎಲ್ಲವನ್ನೂ ನೋಡಿ", "myFunctions": "ನನ್ನ ಸಮಾರಂಭಗಳು", "addFunction": "ಸಮಾರಂಭ ಸೇರಿಸಿ", "upcomingFunctions": "ಮುಂಬರುವ ಸಮಾರಂಭಗಳು", "tagline": "ನಿಮ್ಮ ಸಮಾರಂಭಗಳನ್ನು ಸುವ್ಯವಸ್ಥಿತವಾಗಿ ಇರಿಸಿ!", "totalMoiBalance": "ಒಟ್ಟು ಮೊಯ್ ಬಾಕಿ", "totalReceivedAmount": "ಸ್ವೀಕರಿಸಿದ ಒಟ್ಟು ಮೊತ್ತ", "totalGivenAmount": "ನೀಡಿದ ಒಟ್ಟು ಮೊತ್ತ", "manageYourFunctions": "ಸಮಾರಂಭಗಳನ್ನು ನಿರ್ವಹಿಸಿ", "createNewFunction": "ಹೊಸ ಸಮಾರಂಭ ಸೇರಿಸಿ", "moiOverview": "ಮೊಯ್ ಅವಲೋಕನ", "viewReports": "ವರದಿಗಳು ಮತ್ತು ಅಂಕಿಅಂಶಗಳು", "checkScheduledEvents": "ನಿಗದಿತ ಕಾರ್ಯಕ್ರಮಗಳನ್ನು ನೋಡಿ", "stayOnTop": "ಸಮಾರಂಭಗಳನ್ನು ಒಂದೇ ಕಡೆ ನೋಡಿ", "stayOnTopBody": "ಮುಂಬರುವ ಸಮಾರಂಭಗಳು ಮತ್ತು ಕೊಡುಗೆಗಳನ್ನು ಒಂದೇ ಸ್ಥಳದಲ್ಲಿ ನಿರ್ವಹಿಸಿ.", "viewUpcoming": "ಮುಂಬರುವವು", "seeAll": "ಎಲ್ಲಾ", "navHome": "ಮುಖಪುಟ", "navFunctions": "ಸಮಾರಂಭಗಳು", "navTransactions": "ವಹಿವಾಟುಗಳು", "navReports": "ವರದಿಗಳು", "navProfile": "ಪ್ರೊಫೈಲ್", "navUpcoming": "ಮುಂಬರುವ", "navMore": "ಇನ್ನಷ್ಟು", "moreSubtitle": "ಖಾತೆ, ಉಪಕರಣಗಳು ಮತ್ತು ಆದ್ಯತೆಗಳು", "moreSupport": "ಬೆಂಬಲ", "moreSupportHint": "ಮಾರ್ಗದರ್ಶನ ಮತ್ತು ಸಹಾಯ", "moreContactHint": "ನಮ್ಮನ್ನು ಸಂಪರ್ಕಿಸಿ", "moreRateHint": "ನಿಮ್ಮ ಅನುಭವವನ್ನು ಹಂಚಿಕೊಳ್ಳಿ", "morePreferences": "ಆದ್ಯತೆಗಳು", "morePreferencesHint": "ಪ್ರೊಫೈಲ್ ಮತ್ತು ಆ್ಯಪ್ ಸೆಟಪ್", "moreProfileHint": "ವೈಯಕ್ತಿಕ ಮಾಹಿತಿ", "moreSettingsHint": "ಭಾಷೆ, ಥೀಮ್ ಮತ್ತು ಭದ್ರತೆ"
   },
   "menu": {
     "functions": "ನನ್ನ ಸಮಾರಂಭಗಳು",

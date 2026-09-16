@@ -2,6 +2,7 @@ const db = require('../config/database');
 const crypto = require('crypto');
 const { generateUUID, toBinaryUUID, fromBinaryUUID } = require('../helpers/uuid');
 const { getDbIdMode } = require('../helpers/dbIdMode');
+const logger = require('../config/logger');
 
 /**
  * LOGIN SECURITY FEATURE STATUS
@@ -29,6 +30,39 @@ function generateReferralCode() {
         code += chars[bytes[i] % chars.length];
     }
     return code;
+}
+
+function clipDeviceField(value, max) {
+    if (value == null || value === '') return null;
+    const text = String(value).trim();
+    if (!text) return null;
+    return text.length > max ? text.slice(0, max) : text;
+}
+
+function normalizeDevicePayload(device = {}) {
+    return {
+        device_id: clipDeviceField(device.device_id, 500) || 'unknown',
+        device_name: clipDeviceField(device.device_name, 150),
+        brand: clipDeviceField(device.brand, 255),
+        manufacturer: clipDeviceField(device.manufacturer, 255),
+        model: clipDeviceField(device.model, 255),
+        ram_size: clipDeviceField(device.ram_size, 10),
+        fcm_token: clipDeviceField(device.fcm_token, 255) || '',
+        android_version: clipDeviceField(device.android_version, 64),
+    };
+}
+
+function hasDeviceDetails(device = {}) {
+    return Boolean(
+        clipDeviceField(device.device_id, 500) ||
+        clipDeviceField(device.device_name, 150) ||
+        clipDeviceField(device.brand, 255) ||
+        clipDeviceField(device.manufacturer, 255) ||
+        clipDeviceField(device.model, 255) ||
+        clipDeviceField(device.ram_size, 10) ||
+        clipDeviceField(device.fcm_token, 255) ||
+        clipDeviceField(device.android_version, 64)
+    );
 }
 
 const User = {
@@ -323,53 +357,19 @@ const User = {
             `INSERT INTO user_profiles (user_id, city) VALUES (?, ?)`,
             [userIdForFk, city || null]
         );
-        if (fcm_token) {
-            await db.query(
-                `
-                    INSERT INTO user_devices (
-                    user_id,
-                    device_name,
-                    device_id,
-                    brand,
-                    manufacturer,
-                    model,
-                    ram_size,
-                    fcm_token,
-                    android_version,
-                    is_active,
-                    last_used_at,
-                    is_deleted,
-                    deleted_at
-                    )
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, 0, NULL)
-                    ON DUPLICATE KEY UPDATE
-                    last_used_at = VALUES(last_used_at),
-                    is_active = 1,
-                    is_deleted = 0,
-                    deleted_at = NULL,
-                    updated_at = CURRENT_TIMESTAMP,
-
-                    device_name = COALESCE(VALUES(device_name), device_name),
-                    brand = COALESCE(VALUES(brand), brand),
-                    manufacturer = COALESCE(VALUES(manufacturer), manufacturer),
-                    model = COALESCE(VALUES(model), model),
-                    ram_size = COALESCE(VALUES(ram_size), ram_size),
-                    android_version = COALESCE(VALUES(android_version), android_version),
-                    fcm_token = COALESCE(VALUES(fcm_token), fcm_token)
-    `,
-                [
-                    userIdForFk,
-                    device_name ?? null,
-                    device_id ?? null,
-                    brand ?? null,
-                    manufacturer ?? null,
-                    model ?? null,
-                    ram_size ?? null,
-                    fcm_token,
-                    android_version ?? null,
-                    now
-                ]
-            );
+        try {
+            await User.upsertUserDevice(userIdForFk, {
+                fcm_token,
+                device_name,
+                device_id,
+                brand,
+                manufacturer,
+                model,
+                ram_size,
+                android_version,
+            });
+        } catch (deviceErr) {
+            logger.error('Failed to save device during user create:', deviceErr);
         }
         return { insertId: String(userId) };
     },
@@ -462,53 +462,20 @@ const User = {
                 );
             }
 
-            // Update user_devices table if fcm_token provided
-            if (fcm_token) {
-                await db.query(
-                    `
-    INSERT INTO user_devices (
-      user_id,
-      device_name,
-      device_id,
-      brand,
-      manufacturer,
-      model,
-      ram_size,
-      fcm_token,
-      android_version,
-      is_active,
-      last_used_at,
-      is_deleted,
-      deleted_at
-    )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, CURRENT_TIMESTAMP, 0, NULL)
-    ON DUPLICATE KEY UPDATE
-      last_used_at = CURRENT_TIMESTAMP,
-      is_active = 1,
-      is_deleted = 0,
-      deleted_at = NULL,
-      updated_at = CURRENT_TIMESTAMP,
-
-      device_name = COALESCE(VALUES(device_name), device_name),
-      brand = COALESCE(VALUES(brand), brand),
-      model = COALESCE(VALUES(model), model),
-      manufacturer = COALESCE(VALUES(manufacturer), manufacturer),
-      ram_size = COALESCE(VALUES(ram_size), ram_size),
-      android_version = COALESCE(VALUES(android_version), android_version),
-      fcm_token = COALESCE(VALUES(fcm_token), fcm_token)
-    `,
-                    [
-                        idBin,
-                        device_name ?? null,
-                        device_id ?? null,
-                        brand ?? null,
-                        manufacturer ?? null,
-                        model ?? null,
-                        ram_size ?? null,
-                        fcm_token,
-                        android_version ?? null
-                    ]
-                );
+            // Save/update device details even when FCM token is not yet available
+            try {
+                await User.upsertUserDevice(idBin, {
+                    fcm_token,
+                    device_name,
+                    device_id,
+                    brand,
+                    manufacturer,
+                    model,
+                    ram_size,
+                    android_version,
+                });
+            } catch (deviceErr) {
+                logger.error('Failed to save device during user update:', deviceErr);
             }
 
             return { success: true };
@@ -590,41 +557,74 @@ const User = {
         return result;
     },
 
-    async updateToken(userId, device_id, token, device_name = null, brand = null, manufacturer = null, model = null, android_version = null, ram_size = null) {
-        // Keep only one active device per user: delete all existing, then insert new
-        const idBin = toBinaryUUID(userId);
-        await db.query(`DELETE FROM user_devices WHERE user_id = ?`, [idBin]);
-        const [result] = await db.query(
-            `INSERT INTO user_devices (
-        user_id,
-        device_name,
-        device_id,
-        brand,
-        manufacturer,
-        model,
-        ram_size,
-        fcm_token,
-        android_version,
-        is_active,
-        last_used_at,
-        is_deleted,
-        deleted_at
-      )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, CURRENT_TIMESTAMP, 0, NULL)
-      `,
-            [
-                idBin,
-                device_name ?? null,
+    async upsertUserDevice(userIdForFk, device = {}) {
+        if (!hasDeviceDetails(device)) {
+            return { skipped: true };
+        }
+
+        const normalized = normalizeDevicePayload(device);
+        const now = new Date();
+        await db.query(
+            `
+            INSERT INTO user_devices (
+                user_id,
+                device_name,
                 device_id,
-                brand ?? null,
-                manufacturer ?? null,
-                model ?? null,
-                ram_size ?? null,
-                token,
-                android_version ?? null
+                brand,
+                manufacturer,
+                model,
+                ram_size,
+                fcm_token,
+                android_version,
+                is_active,
+                last_used_at,
+                is_deleted,
+                deleted_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, 0, NULL)
+            ON DUPLICATE KEY UPDATE
+                last_used_at = VALUES(last_used_at),
+                is_active = 1,
+                is_deleted = 0,
+                deleted_at = NULL,
+                updated_at = CURRENT_TIMESTAMP,
+                device_name = COALESCE(NULLIF(VALUES(device_name), ''), device_name),
+                brand = COALESCE(NULLIF(VALUES(brand), ''), brand),
+                manufacturer = COALESCE(NULLIF(VALUES(manufacturer), ''), manufacturer),
+                model = COALESCE(NULLIF(VALUES(model), ''), model),
+                ram_size = COALESCE(NULLIF(VALUES(ram_size), ''), ram_size),
+                android_version = COALESCE(NULLIF(VALUES(android_version), ''), android_version),
+                fcm_token = COALESCE(NULLIF(VALUES(fcm_token), ''), fcm_token),
+                device_id = IF(VALUES(device_id) = 'unknown', device_id, VALUES(device_id))
+            `,
+            [
+                userIdForFk,
+                normalized.device_name,
+                normalized.device_id,
+                normalized.brand,
+                normalized.manufacturer,
+                normalized.model,
+                normalized.ram_size,
+                normalized.fcm_token,
+                normalized.android_version,
+                now,
             ]
         );
-        return result;
+        return { skipped: false };
+    },
+
+    async updateToken(userId, device_id, token, device_name = null, brand = null, manufacturer = null, model = null, android_version = null, ram_size = null) {
+        const idBin = toBinaryUUID(userId);
+        return User.upsertUserDevice(idBin, {
+            device_id,
+            fcm_token: token,
+            device_name,
+            brand,
+            manufacturer,
+            model,
+            android_version,
+            ram_size,
+        });
     },
 
     /**
@@ -894,7 +894,7 @@ const User = {
         );
         const profile = pRows[0] || {};
 
-        // Fetch only the most recently used active device (if any)
+        // Fetch the most recently used device, including inactive ones
         const [dRows] = await db.query(
             `SELECT id,
                     fcm_token,
@@ -909,8 +909,8 @@ const User = {
                     android_version,
                     ram_size
              FROM user_devices
-             WHERE user_id = ? AND is_active = 1
-             ORDER BY last_used_at DESC
+             WHERE user_id = ? AND (is_deleted = 0 OR is_deleted IS NULL)
+             ORDER BY last_used_at DESC, created_at DESC
              LIMIT 1`,
             [idBin]
         );
@@ -983,8 +983,9 @@ const User = {
                  AND ud.id = (
                      SELECT ud2.id 
                      FROM user_devices ud2 
-                     WHERE ud2.user_id = u.id AND ud2.is_active = 1 
-                     ORDER BY ud2.last_used_at DESC 
+                     WHERE ud2.user_id = u.id
+                       AND (ud2.is_deleted = 0 OR ud2.is_deleted IS NULL)
+                     ORDER BY ud2.last_used_at DESC, ud2.created_at DESC 
                      LIMIT 1
                  )
              WHERE (u.is_deleted = 0 OR u.is_deleted IS NULL)

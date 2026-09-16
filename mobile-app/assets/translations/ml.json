@@ -141,6 +141,9 @@
   "home": {
     "title": "ഹോം",
     "welcome": "സ്വാഗതം",
+    "goodMorning": "സുപ്രഭാതം",
+    "goodAfternoon": "ശുഭ മധ്യാഹ്നം",
+    "goodEvening": "ശുഭ സന്ധ്യ",
     "lastLogin": "അവസാനം ലോഗിൻ ചെയ്തത്",
     "netBalance": "മൊത്തം ബാലൻസ്",
     "positiveBalance": "പോസിറ്റീവ് ബാലൻസ്",
@@ -154,7 +157,7 @@
     "exportedSuccessfully": "വിജയകരമായി എക്സ്പോർട്ട് ചെയ്തു",
     "fetchTransactionsFailed": "ഇടപാടുകൾ ലഭ്യമാക്കാൻ കഴിഞ്ഞില്ല",
     "exportError": "ഡാറ്റ എക്സ്പോർട്ട് ചെയ്യുന്നതിൽ പിശക്",
-    "fetchDataError": "ഡാറ്റ ലഭ്യമാക്കുന്നതിൽ പിശക്. വീണ്ടും ശ്രമിക്കുക.", "startupError": "ആരംഭിക്കുന്നതിനിടെ പിശക് സംഭവിച്ചു. വീണ്ടും ശ്രമിക്കുക.", "notifications": "അറിയിപ്പുകൾ", "notAvailable": "ലഭ്യമല്ല", "invalidDate": "അസാധുവായ തീയതി", "functionTotals": "ചടങ്ങ് അടിസ്ഥാനത്തിലുള്ള ആകെ തുകകൾ", "noFunctionTotals": "ചടങ്ങുകളുടെ ആകെ തുകകൾ ലഭ്യമല്ല"
+    "fetchDataError": "ഡാറ്റ ലഭ്യമാക്കുന്നതിൽ പിശക്. വീണ്ടും ശ്രമിക്കുക.", "startupError": "ആരംഭിക്കുന്നതിനിടെ പിശക് സംഭവിച്ചു. വീണ്ടും ശ്രമിക്കുക.", "notifications": "അറിയിപ്പുകൾ", "notAvailable": "ലഭ്യമല്ല", "invalidDate": "അസാധുവായ തീയതി", "functionTotals": "ചടങ്ങ് അടിസ്ഥാനത്തിലുള്ള ആകെ തുകകൾ", "mostActiveFunctions": "ഏറ്റവും സജീവമായ ചടങ്ങുകൾ", "noFunctionTotals": "ചടങ്ങുകളുടെ ആകെ തുകകൾ ലഭ്യമല്ല", "viewAll": "എല്ലാം കാണുക", "myFunctions": "എന്റെ ചടങ്ങുകൾ", "addFunction": "ചടങ്ങ് ചേർക്കുക", "upcomingFunctions": "വരാനിരിക്കുന്ന ചടങ്ങുകൾ", "tagline": "നിങ്ങളുടെ ചടങ്ങുകൾ ക്രമമായി സൂക്ഷിക്കാം!", "totalMoiBalance": "മൊത്തം മൊയ് ബാലൻസ്", "totalReceivedAmount": "ലഭിച്ച മൊത്തം തുക", "totalGivenAmount": "നൽകിയ മൊത്തം തുക", "manageYourFunctions": "ചടങ്ങുകൾ നിയന്ത്രിക്കുക", "createNewFunction": "പുതിയ ചടങ്ങ് ചേർക്കുക", "moiOverview": "മൊയ് അവലോകനം", "viewReports": "റിപ്പോർട്ടുകളും സ്ഥിതിവിവരക്കണക്കുകളും", "checkScheduledEvents": "ഷെഡ്യൂൾ ചെയ്ത ഇവന്റുകൾ കാണുക", "stayOnTop": "ചടങ്ങുകൾ ഒറ്റയിടത്ത് കാണുക", "stayOnTopBody": "വരാനിരിക്കുന്ന ചടങ്ങുകളും സംഭാവനകളും ഒരിടത്ത് നിയന്ത്രിക്കുക.", "viewUpcoming": "വരാനിരിക്കുന്നവ", "seeAll": "എല്ലാം", "navHome": "ഹോം", "navFunctions": "ചടങ്ങുകൾ", "navTransactions": "ഇടപാടുകൾ", "navReports": "റിപ്പോർട്ടുകൾ", "navProfile": "പ്രൊഫൈൽ", "navUpcoming": "വരാനിരിക്കുന്നവ", "navMore": "കൂടുതൽ", "moreSubtitle": "അക്കൗണ്ട്, ടൂളുകൾ, ക്രമീകരണങ്ങൾ", "moreSupport": "സപ്പോർട്ട്", "moreSupportHint": "ഗൈഡുകളും സഹായവും", "moreContactHint": "ഞങ്ങളെ ബന്ധപ്പെടുക", "moreRateHint": "നിങ്ങളുടെ അനുഭവം പങ്കിടുക", "morePreferences": "ക്രമീകരണങ്ങൾ", "morePreferencesHint": "പ്രൊഫൈലും ആപ്പ് സെറ്റപ്പും", "moreProfileHint": "വ്യക്തിഗത വിവരങ്ങൾ", "moreSettingsHint": "ഭാഷ, തീം, സുരക്ഷ"
   },
   "menu": {
     "functions": "എന്റെ ചടങ്ങുകൾ",

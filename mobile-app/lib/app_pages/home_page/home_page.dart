@@ -263,59 +263,17 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget bodyContentWidget() {
-    int netBalance = totalAmount - totalMOAmount;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final netBalance = totalAmount - totalMOAmount;
+
     return Scaffold(
+      backgroundColor: isDark
+          ? theme.scaffoldBackgroundColor
+          : const Color(0xFFF4F7FB),
       appBar: AppBarWidget(
-        title: '',
-        action: [
-          IconButton(
-            icon: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                const Icon(
-                  Icons.notifications_outlined,
-                  color: Colors.white,
-                  size: 26,
-                ),
-                if (_unreadNotificationCount > 0)
-                  Positioned(
-                    right: -2,
-                    top: -2,
-                    child: Container(
-                      constraints: const BoxConstraints(minWidth: 18),
-                      height: 18,
-                      padding: const EdgeInsets.symmetric(horizontal: 4),
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: Colors.redAccent,
-                        borderRadius: BorderRadius.circular(9),
-                        border: Border.all(color: Colors.white, width: 1.5),
-                      ),
-                      child: Text(
-                        _unreadNotificationCount > 99
-                            ? '99+'
-                            : '$_unreadNotificationCount',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                          height: 1,
-                        ),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-            onPressed: () async {
-              await Navigator.pushNamed(context, "notifications");
-              // Refresh notification status when returning from notifications page
-              if (mounted) {
-                await checkNotificationStatus();
-              }
-            },
-            tooltip: context.read<LanguageProvider>().tr('home.notifications'),
-          ),
-        ],
+        title: context.watch<LanguageProvider>().tr('home.title'),
+        action: [_buildNotificationAction()],
       ),
       drawer: Consumer<UserProvider>(
         builder: (context, userProvider, _) {
@@ -326,35 +284,35 @@ class _HomePageState extends State<HomePage> {
         },
       ),
       body: RefreshIndicator(
+        color: theme.colorScheme.primary,
         onRefresh: () async {
           await Future.wait([
             getTotalAmount(showLoading: false),
             _loadFunctionSummaries(),
+            checkNotificationStatus(),
           ]);
         },
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.symmetric(horizontal: 15),
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
           child: Consumer<LanguageProvider>(
             builder: (context, languageProvider, _) {
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SizedBox(height: 20),
                   _buildWelcomeHeader(),
                   const SizedBox(height: 16),
-                  _buildTransactionNote(context, languageProvider),
-                  const SizedBox(height: 16),
-
-                  // Net Balance Summary Card
                   _buildNetBalanceCard(netBalance),
-                  const SizedBox(height: 16),
-
-                  // Main Amount Cards Row
+                  const SizedBox(height: 14),
                   Row(
                     children: [
                       Expanded(
-                        child: GestureDetector(
+                        child: _buildAmountCard(
+                          context: context,
+                          title: languageProvider.tr('moi.moiIn'),
+                          amount: totalAmount,
+                          icon: Icons.south_west_rounded,
+                          color: const Color(0xFF1B9E4B),
                           onTap: () {
                             Navigator.pushNamed(
                               context,
@@ -362,18 +320,16 @@ class _HomePageState extends State<HomePage> {
                               arguments: {'type': 'INVEST'},
                             );
                           },
-                          child: _buildAmountCard(
-                            context: context,
-                            title: languageProvider.tr('moi.moiIn'),
-                            amount: totalAmount,
-                            icon: Icons.arrow_downward_outlined,
-                            color: Colors.green,
-                          ),
                         ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
-                        child: GestureDetector(
+                        child: _buildAmountCard(
+                          context: context,
+                          title: languageProvider.tr('moi.moiOut'),
+                          amount: totalMOAmount,
+                          icon: Icons.north_east_rounded,
+                          color: const Color(0xFFE23D4D),
                           onTap: () {
                             Navigator.pushNamed(
                               context,
@@ -381,23 +337,16 @@ class _HomePageState extends State<HomePage> {
                               arguments: {'type': 'RETURN'},
                             );
                           },
-                          child: _buildAmountCard(
-                            context: context,
-                            title: languageProvider.tr('moi.moiOut'),
-                            amount: totalMOAmount,
-                            icon: Icons.arrow_upward_outlined,
-                            color: Colors.red,
-                          ),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16.0),
-                  const Divider(thickness: 1, height: 2),
-                  const SizedBox(height: 16.0),
-
-                  // Function totals section
+                  const SizedBox(height: 22),
+                  _buildQuickActions(languageProvider),
+                  const SizedBox(height: 22),
                   _buildFunctionSummaries(context, languageProvider),
+                  const SizedBox(height: 16),
+                  _buildTransactionNote(context, languageProvider),
                 ],
               );
             },
@@ -407,7 +356,63 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // Welcome Header Widget
+  Widget _buildNotificationAction() {
+    return IconButton(
+      icon: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.16),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.notifications_outlined,
+              color: Colors.white,
+              size: 22,
+            ),
+          ),
+          if (_unreadNotificationCount > 0)
+            Positioned(
+              right: -1,
+              top: -1,
+              child: Container(
+                constraints: const BoxConstraints(minWidth: 18),
+                height: 18,
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFF4D4F),
+                  borderRadius: BorderRadius.circular(9),
+                  border: Border.all(color: Colors.white, width: 1.5),
+                ),
+                child: Text(
+                  _unreadNotificationCount > 99
+                      ? '99+'
+                      : '$_unreadNotificationCount',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    height: 1,
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+      onPressed: () async {
+        await Navigator.pushNamed(context, "notifications");
+        if (mounted) {
+          await checkNotificationStatus();
+        }
+      },
+      tooltip: context.read<LanguageProvider>().tr('home.notifications'),
+    );
+  }
+
   Widget _buildWelcomeHeader() {
     return Consumer2<UserProvider, LanguageProvider>(
       builder: (context, userProvider, languageProvider, _) {
@@ -432,183 +437,293 @@ class _HomePageState extends State<HomePage> {
                   profileImagePath.startsWith('https://')
             ? profileImagePath
             : '$appImageUrl/${profileImagePath.replaceFirst(RegExp(r'^/+'), '')}';
+        final displayName = _displayName(userName);
 
-        return Container(
-          width: double.infinity,
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 15),
-          decoration: BoxDecoration(
-            color: theme.colorScheme.surfaceContainerHighest,
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(
-              color: theme.colorScheme.outline.withValues(alpha: 0.12),
+        return Row(
+          children: [
+            _buildProfileAvatar(
+              name: displayName,
+              imageUrl: profileImageUrl,
+              colorScheme: theme.colorScheme,
             ),
-          ),
-          child: Row(
-            children: [
-              ClipOval(
-                child: profileImageUrl.isEmpty
-                    ? Container(
-                        width: 48,
-                        height: 48,
-                        color: theme.colorScheme.primary,
-                        child: const Icon(
-                          Icons.account_balance_wallet_outlined,
-                          color: Colors.white,
-                          size: 23,
-                        ),
-                      )
-                    : Image.network(
-                        profileImageUrl,
-                        width: 48,
-                        height: 48,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            width: 48,
-                            height: 48,
-                            color: theme.colorScheme.primary,
-                            child: const Icon(
-                              Icons.account_balance_wallet_outlined,
-                              color: Colors.white,
-                              size: 23,
-                            ),
-                          );
-                        },
-                      ),
-              ),
-              const SizedBox(width: 13),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '${languageProvider.tr('home.welcome')}, ${userName.toUpperCase()}.',
-                      style: theme.textTheme.bodyLarge?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 12,
-                        color: theme.colorScheme.onSurface,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    languageProvider.tr(_greetingKey()),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                      fontWeight: FontWeight.w500,
                     ),
-                    const SizedBox(height: 5),
-                    Text(
-                      '${languageProvider.tr('home.lastLogin')}: ${getLastLoginTime(lastLogin)}',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    displayName,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 18,
+                      height: 1.2,
+                      color: theme.colorScheme.onSurface,
                     ),
-                  ],
-                ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '${languageProvider.tr('home.lastLogin')}: ${getLastLoginTime(lastLogin)}',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                      fontSize: 11,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         );
       },
     );
   }
 
-  // Net Balance Card Widget
-  Widget _buildNetBalanceCard(int netBalance) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final languageProvider = context.read<LanguageProvider>();
+  Widget _buildProfileAvatar({
+    required String name,
+    required String imageUrl,
+    required ColorScheme colorScheme,
+  }) {
+    final letter = name.isNotEmpty ? name.characters.first.toUpperCase() : 'U';
+    final fallback = Container(
+      width: 54,
+      height: 54,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            colorScheme.primary,
+            colorScheme.primary.withValues(alpha: 0.75),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: Text(
+        letter,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 22,
+          fontWeight: FontWeight.w800,
+        ),
+      ),
+    );
 
     return Container(
+      width: 54,
+      height: 54,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(4),
+        shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
             color: colorScheme.primary.withValues(alpha: 0.22),
-            blurRadius: 18,
-            offset: const Offset(0, 8),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
-      child: Card(
-        margin: EdgeInsets.zero,
-        elevation: 0,
-        color: colorScheme.primary,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(4),
-          onTap: () async {
-            final result = await Navigator.pushNamed(
-              context,
-              "transaction-dashboard",
-            );
-            if (result == true) {
-              await _refreshAfterNavigation();
-            }
-          },
-          child: Container(
-            width: double.infinity,
-            padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  colorScheme.primary,
-                  colorScheme.primary.withValues(alpha: 0.82),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+      child: ClipOval(
+        child: imageUrl.isEmpty
+            ? fallback
+            : Image.network(
+                imageUrl,
+                width: 54,
+                height: 54,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) => fallback,
               ),
-              borderRadius: BorderRadius.circular(4),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+      ),
+    );
+  }
+
+  Widget _buildNetBalanceCard(int netBalance) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final languageProvider = context.read<LanguageProvider>();
+    final isPositive = netBalance >= 0;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(22),
+        onTap: () async {
+          final result = await Navigator.pushNamed(
+            context,
+            "transaction-dashboard",
+          );
+          if (result == true) {
+            await _refreshAfterNavigation();
+          }
+        },
+        child: Ink(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(22),
+            gradient: LinearGradient(
+              colors: [
+                colorScheme.primary,
+                Color.lerp(colorScheme.primary, const Color(0xFF042A63), 0.42)!,
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            boxShadow: [
+              BoxShadow(
+                color: colorScheme.primary.withValues(alpha: 0.28),
+                blurRadius: 22,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(22),
+            child: Stack(
               children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        languageProvider.tr('home.netBalance'),
-                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          color: Colors.white.withValues(alpha: 0.88),
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+                Positioned(
+                  top: -36,
+                  right: -24,
+                  child: Container(
+                    width: 130,
+                    height: 130,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white.withValues(alpha: 0.08),
                     ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                Text(
-                  '₹ ${numberFormat(netBalance.abs())}',
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 1,
-                  style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                    color: Colors.white,
-                    fontFamily: 'Arimo',
-                    fontWeight: FontWeight.w700,
-                    fontSize: 30,
-                    letterSpacing: 0,
                   ),
                 ),
-                const SizedBox(height: 10),
-                Container(
-                  height: 1,
-                  color: Colors.white.withValues(alpha: 0.18),
+                Positioned(
+                  bottom: -48,
+                  left: -20,
+                  child: Container(
+                    width: 140,
+                    height: 140,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white.withValues(alpha: 0.06),
+                    ),
+                  ),
                 ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        languageProvider.tr('home.viewTransactions'),
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Colors.white.withValues(alpha: 0.78),
-                          fontWeight: FontWeight.w500,
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            width: 38,
+                            height: 38,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.16),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(
+                              Icons.account_balance_wallet_outlined,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              languageProvider.tr('home.netBalance'),
+                              style: Theme.of(context).textTheme.titleSmall
+                                  ?.copyWith(
+                                    color: Colors.white.withValues(alpha: 0.9),
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 5,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.16),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              languageProvider.tr(
+                                isPositive
+                                    ? 'home.positiveBalance'
+                                    : 'home.negativeBalance',
+                              ),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 18),
+                      Text(
+                        '₹ ${numberFormat(netBalance.abs())}',
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                        style: Theme.of(context).textTheme.displaySmall
+                            ?.copyWith(
+                              color: Colors.white,
+                              fontFamily: 'Arimo',
+                              fontWeight: FontWeight.w800,
+                              fontSize: 32,
+                              letterSpacing: -0.6,
+                              height: 1,
+                            ),
+                      ),
+                      const SizedBox(height: 16),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 10,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                languageProvider.tr('home.viewTransactions'),
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(
+                                      color: Colors.white.withValues(
+                                        alpha: 0.92,
+                                      ),
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                              ),
+                            ),
+                            Container(
+                              width: 28,
+                              height: 28,
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.18),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.arrow_forward_rounded,
+                                color: Colors.white,
+                                size: 16,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                    ),
-                    Icon(
-                      Icons.arrow_forward_rounded,
-                      color: Colors.white.withValues(alpha: 0.85),
-                      size: 19,
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -618,58 +733,199 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // Amount Card Widget
   Widget _buildAmountCard({
     required BuildContext context,
     required String title,
     required int amount,
     required IconData icon,
     required Color color,
+    VoidCallback? onTap,
   }) {
-    return Card(
-      margin: EdgeInsets.zero,
-      elevation: 2,
-      color: Theme.of(context).colorScheme.surface,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Material(
+      color: Colors.transparent,
       child: InkWell(
-        borderRadius: BorderRadius.circular(5),
-        child: Container(
-          padding: const EdgeInsets.fromLTRB(14, 14, 12, 15),
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(18),
+        child: Ink(
+          padding: const EdgeInsets.fromLTRB(14, 14, 12, 14),
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                color.withValues(alpha: 0.1),
-                color.withValues(alpha: 0.05),
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(5),
-            border: Border.all(color: color.withValues(alpha: 0.25)),
+            color: isDark ? theme.colorScheme.surface : Colors.white,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: color.withValues(alpha: 0.14)),
+            boxShadow: [
+              BoxShadow(
+                color: color.withValues(alpha: isDark ? 0.12 : 0.08),
+                blurRadius: 16,
+                offset: const Offset(0, 6),
+              ),
+            ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(11),
+                ),
+                child: Icon(icon, color: color, size: 18),
+              ),
+              const SizedBox(height: 12),
               Text(
                 title,
                 style: TextStyle(
-                  fontSize: 13,
+                  fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
-              const SizedBox(height: 5),
+              const SizedBox(height: 4),
               Text(
                 '₹ ${numberFormat(amount)}',
                 style: TextStyle(
-                  fontSize: 17,
+                  fontSize: 16,
                   color: color,
                   fontFamily: "Arimo",
-                  fontWeight: FontWeight.w700,
+                  fontWeight: FontWeight.w800,
                 ),
                 overflow: TextOverflow.ellipsis,
                 maxLines: 1,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildQuickActions(LanguageProvider languageProvider) {
+    final theme = Theme.of(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          languageProvider.tr('home.quickActions'),
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        const SizedBox(height: 12),
+        GridView.count(
+          crossAxisCount: 2,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          mainAxisSpacing: 10,
+          crossAxisSpacing: 10,
+          childAspectRatio: 2.2,
+          children: [
+            _buildQuickActionTile(
+              icon: Icons.celebration_outlined,
+              label: languageProvider.tr('home.myFunctions'),
+              color: theme.colorScheme.primary,
+              onTap: () {
+                Navigator.pushNamed(context, 'functions-list');
+              },
+            ),
+            _buildQuickActionTile(
+              icon: Icons.add_rounded,
+              label: languageProvider.tr('home.addFunction'),
+              color: const Color(0xFF1B9E4B),
+              onTap: () async {
+                await Navigator.pushNamed(
+                  context,
+                  'add-edit-functions',
+                  arguments: [],
+                );
+                if (mounted) {
+                  await _refreshAfterNavigation();
+                }
+              },
+            ),
+            _buildQuickActionTile(
+              icon: Icons.bar_chart_rounded,
+              label: languageProvider.tr('menu.moiDashboard'),
+              color: const Color(0xFFE5672F),
+              onTap: () async {
+                final result = await Navigator.pushNamed(
+                  context,
+                  'transaction-dashboard',
+                );
+                if (result == true) {
+                  await _refreshAfterNavigation();
+                }
+              },
+            ),
+            _buildQuickActionTile(
+              icon: Icons.event_available_outlined,
+              label: languageProvider.tr('home.upcomingFunctions'),
+              color: const Color(0xFF5C2292),
+              onTap: () {
+                Navigator.pushNamed(context, 'upcoming-function-list');
+              },
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildQuickActionTile({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(18),
+        child: Ink(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          decoration: BoxDecoration(
+            color: isDark ? theme.colorScheme.surface : Colors.white,
+            borderRadius: BorderRadius.circular(18),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: isDark ? 0.18 : 0.05),
+                blurRadius: 14,
+                offset: const Offset(0, 5),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(13),
+                ),
+                child: Icon(icon, color: color, size: 21),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  label,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: theme.colorScheme.onSurface,
+                    fontWeight: FontWeight.w700,
+                    height: 1.25,
+                    fontSize: 12,
+                  ),
+                ),
               ),
             ],
           ),
@@ -683,6 +939,9 @@ class _HomePageState extends State<HomePage> {
     LanguageProvider languageProvider,
   ) {
     final colorScheme = Theme.of(context).colorScheme;
+    const visibleCount = 6;
+    final visibleSummaries = _functionSummaries.take(visibleCount).toList();
+    final hasMore = _functionSummaries.length > visibleCount;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -690,56 +949,117 @@ class _HomePageState extends State<HomePage> {
         Row(
           children: [
             Expanded(
-              child: Text(
-                languageProvider.tr('home.functionTotals'),
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  color: colorScheme.onSurface,
-                ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    languageProvider.tr('home.functionTotals'),
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      color: colorScheme.onSurface,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    languageProvider.tr('home.mostActiveFunctions'),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
               ),
             ),
+            if (hasMore)
+              TextButton(
+                onPressed: () {
+                  Navigator.pushNamed(context, 'functions-list');
+                },
+                child: Text(languageProvider.tr('home.viewAll')),
+              ),
           ],
         ),
-        const SizedBox(height: 4),
-        Text(
-          'Most active functions',
-          style: Theme.of(
-            context,
-          ).textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
-        ),
-        const SizedBox(height: 14),
+        const SizedBox(height: 12),
         if (_isLoadingFunctionSummaries && _functionSummaries.isEmpty)
-          const Center(
-            child: Padding(
-              padding: EdgeInsets.all(20),
-              child: CircularProgressIndicator(),
-            ),
-          )
+          ...List.generate(3, (index) => _buildFunctionSummarySkeleton())
         else if (_functionSummaries.isEmpty)
-          Text(
-            languageProvider.tr('home.noFunctionTotals'),
-            style: Theme.of(context).textTheme.bodySmall,
-          )
+          _buildEmptyFunctionsState(languageProvider)
         else
-          ..._functionSummaries.asMap().entries.map(
-            (entry) => _buildFunctionSummaryCard(context, entry.value),
+          ...visibleSummaries.asMap().entries.map(
+            (entry) =>
+                _buildFunctionSummaryCard(context, entry.value, entry.key),
           ),
       ],
+    );
+  }
+
+  Widget _buildEmptyFunctionsState(LanguageProvider languageProvider) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 22),
+      decoration: BoxDecoration(
+        color: isDark ? theme.colorScheme.surface : Colors.white,
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Column(
+        children: [
+          Container(
+            width: 52,
+            height: 52,
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primary.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.celebration_outlined,
+              color: theme.colorScheme.primary,
+              size: 26,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            languageProvider.tr('home.noFunctionTotals'),
+            textAlign: TextAlign.center,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFunctionSummarySkeleton() {
+    final theme = Theme.of(context);
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      height: 72,
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(16),
+      ),
     );
   }
 
   Widget _buildFunctionSummaryCard(
     BuildContext context,
     Map<String, dynamic> summary,
+    int index,
   ) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final invest = summary['invest'] as double? ?? 0;
+    final name = summary['name']?.toString() ?? '-';
+    final accent = _functionAccent(index);
+    final letter = name.isNotEmpty ? name.characters.first.toUpperCase() : 'F';
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 9),
+      margin: const EdgeInsets.only(bottom: 10),
       child: Material(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(5),
+        color: isDark ? theme.colorScheme.surface : Colors.white,
+        borderRadius: BorderRadius.circular(16),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: () => Navigator.pushNamed(
@@ -747,66 +1067,84 @@ class _HomePageState extends State<HomePage> {
             'view-functions-list',
             arguments: [summary['function']],
           ),
-          child: Container(
-            padding: const EdgeInsets.fromLTRB(12, 12, 13, 12),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(5),
-              border: Border.all(
-                color: colorScheme.primary.withValues(alpha: 0.56),
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: colorScheme.shadow.withValues(alpha: 0.05),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
             child: Row(
               children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: accent.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Text(
+                    letter,
+                    style: TextStyle(
+                      color: accent,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        summary['name']?.toString() ?? '-',
+                        name,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        style: theme.textTheme.titleSmall?.copyWith(
                           fontWeight: FontWeight.w800,
                         ),
                       ),
-                      const SizedBox(height: 3),
-                      Text(
-                        summary['date']?.toString() ?? '-',
-                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: colorScheme.onSurfaceVariant,
-                        ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.calendar_today_outlined,
+                            size: 12,
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                          const SizedBox(width: 5),
+                          Flexible(
+                            child: Text(
+                              summary['date']?.toString() ?? '-',
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 8),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
                       '₹ ${_numberFormatter.format(invest)}',
                       style: TextStyle(
-                        // color: colorScheme.primary,
-                        color: invest >= 0 ? Colors.green : Colors.red,
+                        color: invest >= 0
+                            ? const Color(0xFF1B9E4B)
+                            : const Color(0xFFE23D4D),
                         fontFamily: 'Arimo',
                         fontWeight: FontWeight.w800,
                         fontSize: 14,
                       ),
                     ),
-                    // const SizedBox(height: 7),
-                    // Icon(
-                    //   Icons.arrow_forward_rounded,
-                    //   size: 17,
-                    //   color: colorScheme.onSurfaceVariant,
-                    // ),
+                    const SizedBox(height: 4),
+                    Icon(
+                      Icons.chevron_right_rounded,
+                      size: 18,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
                   ],
                 ),
               ],
@@ -872,6 +1210,11 @@ class _HomePageState extends State<HomePage> {
       );
 
       if (mounted) {
+        summaries.sort((a, b) {
+          final aAmt = (a['invest'] as num?)?.toDouble() ?? 0;
+          final bAmt = (b['invest'] as num?)?.toDouble() ?? 0;
+          return bAmt.compareTo(aAmt);
+        });
         setState(() => _functionSummaries = summaries);
       }
     } finally {
@@ -883,36 +1226,77 @@ class _HomePageState extends State<HomePage> {
     BuildContext context,
     LanguageProvider languageProvider,
   ) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.fromLTRB(14, 13, 14, 13),
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: colorScheme.outline.withValues(alpha: 0.18)),
+        color: isDark
+            ? colorScheme.surface
+            : colorScheme.primary.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: colorScheme.primary.withValues(alpha: 0.12)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            Icons.verified_user_outlined,
-            size: 21,
-            color: colorScheme.primary,
+          Container(
+            width: 34,
+            height: 34,
+            decoration: BoxDecoration(
+              color: colorScheme.primary.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(
+              Icons.picture_as_pdf_outlined,
+              size: 18,
+              color: colorScheme.primary,
+            ),
           ),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
               languageProvider.tr('home.transactionNote'),
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              style: theme.textTheme.bodySmall?.copyWith(
                 color: colorScheme.onSurfaceVariant,
-                height: 1.4,
+                height: 1.45,
               ),
             ),
           ),
         ],
       ),
     );
+  }
+
+  String _greetingKey() {
+    final hour = DateTime.now().hour;
+    if (hour < 12) return 'home.goodMorning';
+    if (hour < 17) return 'home.goodAfternoon';
+    return 'home.goodEvening';
+  }
+
+  String _displayName(String name) {
+    final trimmed = name.trim();
+    if (trimmed.isEmpty) return 'User';
+    return trimmed
+        .split(RegExp(r'\s+'))
+        .map((part) => part.toCapitalized())
+        .join(' ');
+  }
+
+  Color _functionAccent(int index) {
+    const palette = [
+      Color(0xFF075BCB),
+      Color(0xFF009C3B),
+      Color(0xFFE5672F),
+      Color(0xFF5C2292),
+      Color(0xFF13D0C1),
+      Color(0xFFD23156),
+    ];
+    return palette[index % palette.length];
   }
 
   /// HANDLE BACK BUTTON EXIT
@@ -981,7 +1365,7 @@ class _HomePageState extends State<HomePage> {
     }
     try {
       DateTime dateTime = DateTime.parse(time).toLocal();
-      return DateFormat("dd-MMM-yyyy hh:mm:ss a").format(dateTime);
+      return DateFormat("dd MMM yyyy · hh:mm a").format(dateTime);
     } catch (e) {
       debugPrint('Error parsing last login time: $e');
       return context.read<LanguageProvider>().tr('home.invalidDate');

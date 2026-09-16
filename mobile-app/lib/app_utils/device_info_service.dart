@@ -1,5 +1,6 @@
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
 import 'package:moi/app_models/device_info_model.dart';
 
 class DeviceService {
@@ -7,8 +8,12 @@ class DeviceService {
     final DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
     final AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
 
-    /// GET FIREBASE DEVICE TOKEN
-    String deviceToken = await FirebaseMessaging.instance.getToken() ?? "";
+    String deviceToken = "";
+    try {
+      deviceToken = await FirebaseMessaging.instance.getToken() ?? "";
+    } catch (e) {
+      debugPrint('Error getting FCM token: $e');
+    }
 
     return DeviceInfoModel(
       device_id: androidInfo.id,

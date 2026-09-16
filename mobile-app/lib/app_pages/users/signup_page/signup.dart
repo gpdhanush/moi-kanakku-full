@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:moi/app_configs/index.dart';
 import 'package:moi/app_pages/users/models/login_model.dart';
 import 'package:moi/app_services/user_services.dart';
@@ -358,9 +357,7 @@ class _SignupState extends State<Signup> {
 
   // Method to handle form submission
   void submitForm() async {
-    // Get FCM token
     try {
-      String? fcmToken = await FirebaseMessaging.instance.getToken();
       final device = await DeviceService.getDeviceInfo();
       requestModel.device_id = device.device_id;
       requestModel.device_name = device.device_name;
@@ -369,16 +366,14 @@ class _SignupState extends State<Signup> {
       requestModel.manufacturer = device.manufacturer;
       requestModel.android_version = device.android_version;
       requestModel.ram_size = device.ram_size;
-      if (fcmToken != null) {
-        await secureStorage.saveNotificationToken(fcmToken);
-        requestModel.fcm_token = fcmToken;
-      } else {
-        requestModel.fcm_token = "";
+      requestModel.fcm_token = device.token ?? "";
+      if (requestModel.fcm_token != null &&
+          requestModel.fcm_token!.isNotEmpty) {
+        await secureStorage.saveNotificationToken(requestModel.fcm_token!);
       }
     } catch (e) {
-      // Handle error getting FCM token
-      printContent("Error getting FCM token: $e");
-      requestModel.fcm_token = "";
+      printContent("Error getting device info: $e");
+      requestModel.fcm_token = requestModel.fcm_token ?? "";
     }
     printDirect(requestModel.toJson().toString());
     var response = await userServices.signup(jsonEncode(requestModel.toJson()));
