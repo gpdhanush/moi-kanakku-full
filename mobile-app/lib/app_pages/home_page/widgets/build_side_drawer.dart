@@ -6,9 +6,9 @@ import 'package:moi/app_pages/home_page/widgets/drawer_widget.dart';
 import 'package:moi/app_services/user_services.dart';
 import 'package:moi/app_storages/secure_storages.dart';
 import 'package:moi/app_themes/index.dart';
-import 'package:moi/app_utils/app_global/alert_services.dart';
 import 'package:moi/app_utils/app_providers/user_provider.dart';
 import 'package:moi/app_utils/app_providers/language_provider.dart';
+import 'package:moi/app_utils/app_widgets/custom_action_sheet.dart';
 import 'package:provider/provider.dart';
 
 class BuildSideDrawer extends StatelessWidget {
@@ -180,7 +180,7 @@ class BuildSideDrawer extends StatelessWidget {
                       icon: HugeIcons.strokeRoundedLogout01,
                       title: languageProvider.tr('menu.logout'),
                       isLogout: true,
-                      onTap: () => logoutApp(context),
+                      onTap: () => _onLogoutTap(context),
                     ),
                   ],
                 ),
@@ -192,57 +192,76 @@ class BuildSideDrawer extends StatelessWidget {
     );
   }
 
-  Future<void> logoutApp(BuildContext context) async {
-    SecureStorageService secureStorage = SecureStorageService();
-    AlertServices alertServices = AlertServices();
-    UserServices userServices = UserServices();
+  Future<void> _onLogoutTap(BuildContext drawerContext) async {
+    final scaffoldContext = Scaffold.maybeOf(drawerContext)?.context;
     final languageProvider = Provider.of<LanguageProvider>(
-      context,
+      drawerContext,
       listen: false,
     );
 
-    String msg = languageProvider.tr('menu.logoutConfirmation');
-    bool? confirm = await alertServices.confirmAlert(context, msg);
+    // Close drawer first, then show confirmation on the page underneath.
+    Navigator.of(drawerContext).pop();
 
-    if (confirm != null && confirm) {
-      if (!context.mounted) return;
+    final hostContext = scaffoldContext ?? drawerContext;
+    await Future<void>.delayed(const Duration(milliseconds: 120));
+    if (!hostContext.mounted) return;
 
-      try {
-        final userData = await secureStorage.get(AppVariables.userInformation);
-        if (userData != null && userData['id'] != null) {
-          final response = await userServices.logout({
-            "userId": userData['id'].toString(),
-          });
+    final confirm = await showMoiConfirmSheet(
+      context: hostContext,
+      title: languageProvider.tr('menu.logout'),
+      message: languageProvider.tr('menu.logoutConfirmation'),
+      confirmLabel: languageProvider.tr('common.yes'),
+      cancelLabel: languageProvider.tr('common.no'),
+      icon: HugeIcons.strokeRoundedLogout01,
+      isDestructive: true,
+    );
 
-          if (response != null && response['responseType'] == 'S') {
-            printContent('Logout API successful');
-          } else {
-            printContent('Logout API failed, but continuing with local logout');
-          }
-        }
-      } catch (e) {
-        printContent('Error calling logout API: $e');
-      }
-
-      if (!context.mounted) return;
-
-      await secureStorage.clearSessionData();
-
-      if (context.mounted) {
-        try {
-          final userProvider = Provider.of<UserProvider>(
-            context,
-            listen: false,
-          );
-          await userProvider.clearUserData();
-        } catch (e) {
-          printContent('UserProvider not available: $e');
-        }
-      }
-
-      if (!context.mounted) return;
-      Navigator.pushNamedAndRemoveUntil(context, "login", (route) => false);
+    if (confirm == true && hostContext.mounted) {
+      await logoutApp(hostContext);
     }
+  }
+
+  Future<void> logoutApp(BuildContext context) async {
+    SecureStorageService secureStorage = SecureStorageService();
+    UserServices userServices = UserServices();
+
+    if (!context.mounted) return;
+
+    try {
+      final userData = await secureStorage.get(AppVariables.userInformation);
+      if (userData != null && userData['id'] != null) {
+        final response = await userServices.logout({
+          "userId": userData['id'].toString(),
+        });
+
+        if (response != null && response['responseType'] == 'S') {
+          printContent('Logout API successful');
+        } else {
+          printContent('Logout API failed, but continuing with local logout');
+        }
+      }
+    } catch (e) {
+      printContent('Error calling logout API: $e');
+    }
+
+    if (!context.mounted) return;
+
+    await secureStorage.clearSessionData();
+
+    if (context.mounted) {
+      try {
+        final userProvider = Provider.of<UserProvider>(
+          context,
+          listen: false,
+        );
+        await userProvider.clearUserData();
+      } catch (e) {
+        printContent('UserProvider not available: $e');
+      }
+    }
+
+    if (!context.mounted) return;
+    Navigator.pushNamedAndRemoveUntil(context, "login", (route) => false);
   }
 }
 

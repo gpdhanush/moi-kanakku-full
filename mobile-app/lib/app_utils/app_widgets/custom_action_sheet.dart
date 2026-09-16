@@ -288,3 +288,192 @@ class _MoiActionSheetTile extends StatelessWidget {
     );
   }
 }
+
+/// Modern confirmation bottom sheet. Returns `true` / `false` / `null` (dismiss).
+Future<bool?> showMoiConfirmSheet({
+  required BuildContext context,
+  required String title,
+  required String message,
+  required String confirmLabel,
+  required String cancelLabel,
+  List<List<dynamic>> icon = HugeIcons.strokeRoundedLogout01,
+  bool isDestructive = false,
+}) {
+  final primary = Theme.of(context).colorScheme.primary;
+  final accent = isDestructive ? AppColors.moiGiven : primary;
+  final soft = isDestructive
+      ? AppColors.moiGivenSoft
+      : primary.withValues(alpha: 0.1);
+
+  return showModalBottomSheet<bool>(
+    context: context,
+    backgroundColor: Colors.transparent,
+    isScrollControlled: true,
+    barrierColor: Colors.black.withValues(alpha: 0.45),
+    builder: (sheetContext) {
+      final bottomInset = MediaQuery.paddingOf(sheetContext).bottom;
+
+      return Padding(
+        padding: EdgeInsets.only(bottom: bottomInset > 0 ? 0 : 8),
+        child: Container(
+          margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: const Color(0xffE4E4E7)),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xff09090B).withValues(alpha: 0.12),
+                blurRadius: 28,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
+          child: SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 10, 20, 18),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: const Color(0xffE4E4E7),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Container(
+                    width: 64,
+                    height: 64,
+                    decoration: BoxDecoration(
+                      color: soft,
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    alignment: Alignment.center,
+                    child: HugeIcon(
+                      icon: icon,
+                      color: accent,
+                      size: 28,
+                      strokeWidth: 1.8,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    title,
+                    textAlign: TextAlign.center,
+                    style: AppTypography.sectionTitle.copyWith(
+                      color: AppColors.textPrimary,
+                      fontSize: 17,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -0.2,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    message,
+                    textAlign: TextAlign.center,
+                    style: AppTypography.body.copyWith(
+                      color: const Color(0xff71717A),
+                      fontSize: 14,
+                      height: 1.4,
+                    ),
+                  ),
+                  const SizedBox(height: 22),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Material(
+                          color: const Color(0xffF4F4F5),
+                          borderRadius: BorderRadius.circular(14),
+                          child: InkWell(
+                            onTap: () =>
+                                Navigator.of(sheetContext).pop(false),
+                            borderRadius: BorderRadius.circular(14),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              child: Text(
+                                cancelLabel,
+                                textAlign: TextAlign.center,
+                                style: AppTypography.label.copyWith(
+                                  color: const Color(0xff3F3F46),
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Material(
+                          color: Colors.transparent,
+                          borderRadius: BorderRadius.circular(14),
+                          child: InkWell(
+                            onTap: () =>
+                                Navigator.of(sheetContext).pop(true),
+                            borderRadius: BorderRadius.circular(14),
+                            child: Ink(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(14),
+                                gradient: LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: isDestructive
+                                      ? [
+                                          AppColors.moiGiven,
+                                          Color.lerp(
+                                            AppColors.moiGiven,
+                                            const Color(0xff9F1239),
+                                            0.25,
+                                          )!,
+                                        ]
+                                      : [
+                                          primary,
+                                          Color.lerp(
+                                            primary,
+                                            const Color(0xff0A3D8F),
+                                            0.28,
+                                          )!,
+                                        ],
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: accent.withValues(alpha: 0.28),
+                                    blurRadius: 12,
+                                    offset: const Offset(0, 5),
+                                  ),
+                                ],
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 14,
+                                ),
+                                child: Text(
+                                  confirmLabel,
+                                  textAlign: TextAlign.center,
+                                  style: AppTypography.label.copyWith(
+                                    color: Colors.white,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    },
+  );
+}
