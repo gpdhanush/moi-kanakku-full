@@ -184,7 +184,7 @@ class _FeedbacksState extends State<Feedbacks> {
         title: context.read<LanguageProvider>().tr('feedback.title'),
         action: [],
       ),
-      body: RefreshIndicator(
+      body: MoiRefreshIndicator(
         onRefresh: _loadPreviousFeedbacks,
         child: SingleChildScrollView(
           controller: _scrollController,

@@ -52,7 +52,7 @@ class _NotificationListPageState extends State<NotificationListPage> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _notifications.isEmpty
-          ? RefreshIndicator(
+          ? MoiRefreshIndicator(
               onRefresh: _refreshNotifications,
               child: SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
@@ -62,7 +62,7 @@ class _NotificationListPageState extends State<NotificationListPage> {
                 ),
               ),
             )
-          : RefreshIndicator(
+          : MoiRefreshIndicator(
               onRefresh: _refreshNotifications,
               child: ListView.builder(
                 padding: const EdgeInsets.all(16),
@@ -118,14 +118,14 @@ class _NotificationListPageState extends State<NotificationListPage> {
               ),
               content: Text(
                 languageProvider.tr('notifications.deleteMessage'),
-                style: TextStyle(fontFamily: 'appFontFamily'),
+                style: TextStyle(fontFamily: 'Inter'),
               ),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(false),
                   child: Text(
                     languageProvider.tr('common.cancel'),
-                    style: TextStyle(fontFamily: 'appFontFamily'),
+                    style: TextStyle(fontFamily: 'Inter'),
                   ),
                 ),
                 ElevatedButton(
@@ -139,7 +139,7 @@ class _NotificationListPageState extends State<NotificationListPage> {
                   ),
                   child: Text(
                     languageProvider.tr('common.delete'),
-                    style: TextStyle(fontFamily: 'appFontFamily'),
+                    style: TextStyle(fontFamily: 'Inter'),
                   ),
                 ),
               ],
@@ -503,7 +503,7 @@ class _NotificationListPageState extends State<NotificationListPage> {
             SnackBar(
               content: Text(
                 languageProvider.tr('notifications.markedAllRead'),
-                style: TextStyle(fontFamily: 'appFontFamily'),
+                style: TextStyle(fontFamily: 'Inter'),
               ),
               backgroundColor: Colors.green,
               behavior: SnackBarBehavior.floating,
@@ -519,7 +519,7 @@ class _NotificationListPageState extends State<NotificationListPage> {
           SnackBar(
             content: Text(
               languageProvider.tr('notifications.markAllReadError'),
-              style: TextStyle(fontFamily: 'appFontFamily'),
+              style: TextStyle(fontFamily: 'Inter'),
             ),
             backgroundColor: Colors.red,
             behavior: SnackBarBehavior.floating,
@@ -554,7 +554,7 @@ class _NotificationListPageState extends State<NotificationListPage> {
             SnackBar(
               content: Text(
                 languageProvider.tr('notifications.deleted'),
-                style: TextStyle(fontFamily: 'appFontFamily'),
+                style: TextStyle(fontFamily: 'Inter'),
               ),
               backgroundColor: Colors.green,
               behavior: SnackBarBehavior.floating,
@@ -588,7 +588,7 @@ class _NotificationListPageState extends State<NotificationListPage> {
             SnackBar(
               content: Text(
                 languageProvider.tr('notifications.deleteError'),
-                style: TextStyle(fontFamily: 'appFontFamily'),
+                style: TextStyle(fontFamily: 'Inter'),
               ),
               backgroundColor: Colors.red,
               behavior: SnackBarBehavior.floating,
@@ -610,7 +610,7 @@ class _NotificationListPageState extends State<NotificationListPage> {
           SnackBar(
             content: Text(
               languageProvider.tr('common.error'),
-              style: TextStyle(fontFamily: 'appFontFamily'),
+              style: TextStyle(fontFamily: 'Inter'),
             ),
             backgroundColor: Colors.red,
             behavior: SnackBarBehavior.floating,

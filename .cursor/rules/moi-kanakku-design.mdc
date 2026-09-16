@@ -1,0 +1,154 @@
+---
+description: Moi Kanakku brand and UI design system
+globs:
+  - "lib/**/*.dart"
+alwaysApply: true
+---
+
+# Moi Kanakku Design System
+
+App name:
+
+Moi Kanakku
+
+Purpose:
+
+A mobile application for managing functions, moi contributions,
+received/given amounts, function records, upcoming functions,
+and related financial tracking.
+
+## Brand Personality
+
+The application should feel:
+
+- Trustworthy
+- Simple
+- Friendly
+- Modern
+- Premium
+- Family-oriented
+- Organized
+- Connected to Indian functions and celebrations
+
+## Brand Color
+
+Use the existing MK blue as the primary brand color.
+
+Do not randomly introduce additional primary colors.
+
+Supporting colors may include:
+
+- White
+- Very light blue
+- Soft gray
+- Green for received/positive amounts
+- Red/coral for given amounts
+- Subtle festive accents
+
+## Financial Information
+
+Use clear visual distinction:
+
+Moi Received
+→ Green
+
+Moi Given
+→ Red/coral
+
+Net Positive Balance
+→ Green indicator
+
+Negative balance
+→ Red indicator
+
+Never rely only on color.
+
+## Cards
+
+Prefer:
+
+- 16–24px radius
+- clean backgrounds
+- subtle borders
+- very soft shadows
+- comfortable internal spacing
+
+Avoid overly rounded cartoon-like cards.
+
+## Home Screen
+
+The Home screen should prioritize:
+
+1. Greeting
+2. Net balance
+3. Moi received / given
+4. Quick actions
+5. Upcoming functions
+6. Function-wise totals
+
+Important information must be visible without excessive scrolling.
+
+## Login Screen
+
+Hero image:
+
+Use the supplied Indian wedding image.
+
+Hero should occupy approximately 30% of the screen.
+
+Login content should occupy approximately 70%.
+
+Login fields:
+
+Do NOT display separate labels.
+
+Use:
+
+"Enter your email address"
+
+"Enter your password"
+
+Do NOT include:
+
+- Remember Me
+- Google login
+- Apple login
+- Other social login
+
+Include:
+
+- Forgot Password?
+- Login
+- Create a new account
+
+The login form must remain the primary focus.
+
+## Content
+
+Use simple, human-friendly wording.
+
+Avoid unnecessary marketing language.
+
+Prefer:
+
+"View all transactions"
+
+"Add Function"
+
+"Upcoming Functions"
+
+"Moi Overview"
+
+"Create a new account"
+
+"Forgot Password?"
+
+## Mobile First
+
+Design primarily for Android portrait screens.
+
+Moto G96 should be treated as a key reference device.
+
+Never assume a particular pixel resolution.
+
+Use responsive constraints instead.

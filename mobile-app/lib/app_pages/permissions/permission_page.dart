@@ -239,7 +239,7 @@ class _PermissionPageState extends State<PermissionPage> {
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 20.0,
-                    fontFamily: "tamilFont",
+                    fontFamily: 'Inter',
                     color: Colors.white,
                     height: 1.2,
                   ),
@@ -252,7 +252,7 @@ class _PermissionPageState extends State<PermissionPage> {
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 13.0,
-                    fontFamily: "tamilFont",
+                    fontFamily: 'Inter',
                     color: Colors.white.withValues(alpha: 0.9),
                     height: 1.4,
                   ),
@@ -289,7 +289,7 @@ class _PermissionPageState extends State<PermissionPage> {
                           color: Colors.white,
                           fontSize: 12.0,
                           fontWeight: FontWeight.w600,
-                          fontFamily: "tamilFont",
+                          fontFamily: 'Inter',
                         ),
                       ),
                     ],
@@ -413,7 +413,7 @@ class _PermissionPageState extends State<PermissionPage> {
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 15.0,
-                            fontFamily: "tamilFont",
+                            fontFamily: 'Inter',
                             color: colorScheme.onSurface,
                           ),
                         ),
@@ -425,7 +425,7 @@ class _PermissionPageState extends State<PermissionPage> {
                     permission.description,
                     style: TextStyle(
                       fontSize: 12.5,
-                      fontFamily: "tamilFont",
+                      fontFamily: 'Inter',
                       color: colorScheme.onSurfaceVariant,
                       height: 1.3,
                     ),
@@ -605,7 +605,7 @@ class _PermissionPageState extends State<PermissionPage> {
                           style: const TextStyle(
                             fontSize: 16.0,
                             fontWeight: FontWeight.bold,
-                            fontFamily: "tamilFont",
+                            fontFamily: 'Inter',
                           ),
                         ),
                         const SizedBox(width: 8.0),
@@ -633,7 +633,7 @@ class _PermissionPageState extends State<PermissionPage> {
                 style: TextStyle(
                   color: colorScheme.onSurfaceVariant,
                   fontSize: 14.0,
-                  fontFamily: "tamilFont",
+                  fontFamily: 'Inter',
                   fontWeight: FontWeight.w600,
                   decoration: TextDecoration.underline,
                 ),

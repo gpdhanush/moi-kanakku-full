@@ -409,7 +409,7 @@ class _FunctionTransactionListState extends State<FunctionTransactionList> {
                           style: TextStyle(
                             fontSize: 12,
                             color: isDark ? Colors.white70 : Colors.black54,
-                            fontFamily: 'englishFont',
+                            fontFamily: 'Inter',
                           ),
                         ),
                       ],
@@ -464,7 +464,7 @@ class _FunctionTransactionListState extends State<FunctionTransactionList> {
                       fontSize: 15,
                       fontWeight: FontWeight.bold,
                       color: color,
-                      fontFamily: 'Arimo',
+                      fontFamily: 'Inter',
                     ),
                   ),
                 ],

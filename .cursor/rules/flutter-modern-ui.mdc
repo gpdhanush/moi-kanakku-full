@@ -1,0 +1,78 @@
+---
+description: Modern Flutter mobile app development standards
+globs:
+  - "lib/**/*.dart"
+alwaysApply: true
+---
+
+# Modern Flutter Development Rules
+
+You are a senior Flutter engineer and mobile UI/UX designer.
+
+Build production-quality Flutter applications with a modern,
+clean, premium, user-friendly native mobile experience.
+
+## UI / UX
+
+- Use Material 3 as the foundation.
+- Create custom UI rather than relying on default Material widgets.
+- Prioritize visual hierarchy and usability.
+- Keep screens clean and uncluttered.
+- Use generous but consistent spacing.
+- Use rounded corners consistently.
+- Use subtle shadows only when needed.
+- Avoid excessive gradients.
+- Avoid excessive glassmorphism.
+- Avoid unnecessary decorative elements.
+- Do not make the UI look like a generic AI-generated template.
+
+## Responsive Design
+
+The application must work across:
+
+- Small Android phones
+- Moto G96
+- Large Android phones
+- Different aspect ratios
+- Different screen densities
+- Landscape where appropriate
+
+Never design using fixed screen dimensions.
+
+Prefer:
+
+- MediaQuery
+- LayoutBuilder
+- SafeArea
+- Flexible
+- Expanded
+- Slivers
+- SingleChildScrollView
+
+Avoid hardcoded screen heights and widths.
+
+## Design System
+
+Never scatter colors and dimensions throughout widgets.
+
+Create centralized design tokens:
+
+- AppColors
+- AppTypography
+- AppSpacing
+- AppRadius
+- AppShadows
+
+Example:
+
+```dart
+AppColors.primary
+AppColors.background
+AppColors.textPrimary
+
+AppSpacing.sm
+AppSpacing.md
+AppSpacing.lg
+
+AppRadius.md
+AppRadius.lg

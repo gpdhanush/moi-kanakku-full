@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:hugeicons/hugeicons.dart';
+import 'package:moi/app_themes/index.dart';
 
 class DrawerWidget extends StatelessWidget {
-  final IconData icon;
+  final List<List<dynamic>> icon;
   final String title;
   final GestureTapCallback onTab;
   final bool isLogout;
@@ -16,21 +18,21 @@ class DrawerWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final iconColor = isLogout ? Colors.redAccent : colorScheme.primary;
-    final textColor = isLogout ? Colors.redAccent : colorScheme.onSurface;
-    final accentColor = isLogout ? Colors.redAccent : colorScheme.primary;
+    final iconColor = isLogout ? AppColors.moiGiven : AppColors.primary;
+    final textColor = isLogout ? AppColors.moiGiven : AppColors.textPrimary;
+    final accentColor = isLogout ? AppColors.moiGiven : AppColors.primary;
 
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTab,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: AppRadius.mdAll,
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
           decoration: BoxDecoration(
-            color: colorScheme.surface.withValues(alpha: 0.7),
-            borderRadius: BorderRadius.circular(12),
+            color: AppColors.surface,
+            borderRadius: AppRadius.mdAll,
+            border: Border.all(color: AppColors.borderSubtle),
           ),
           child: Row(
             children: [
@@ -41,22 +43,30 @@ class DrawerWidget extends StatelessWidget {
                   color: accentColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(icon, color: iconColor, size: 20),
+                alignment: Alignment.center,
+                child: HugeIcon(
+                  icon: icon,
+                  color: iconColor,
+                  size: 20,
+                  strokeWidth: 1.8,
+                ),
               ),
               const SizedBox(width: 13),
               Expanded(
                 child: Text(
                   title,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  style: AppTypography.label.copyWith(
                     color: textColor,
-                    fontWeight: FontWeight.w700,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
-              Icon(
-                Icons.chevron_right_rounded,
-                color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
-                size: 21,
+              HugeIcon(
+                icon: HugeIcons.strokeRoundedArrowRight01,
+                color: AppColors.textSecondary.withValues(alpha: 0.7),
+                size: 18,
+                strokeWidth: 1.8,
               ),
             ],
           ),

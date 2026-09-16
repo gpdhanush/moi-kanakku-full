@@ -93,7 +93,7 @@ class _LoginPageState extends State<LoginPage> {
           style: theme.textTheme.bodyLarge?.copyWith(
             fontWeight: FontWeight.bold,
             fontSize: 24.0,
-            fontFamily: 'tamilFont',
+            fontFamily: 'Inter',
           ),
         ),
         SizedBox(height: 8),

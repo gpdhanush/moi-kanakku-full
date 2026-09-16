@@ -70,7 +70,7 @@ class CardWidget extends StatelessWidget {
                             ?.copyWith(
                               color: Colors.black87,
                               fontWeight: FontWeight.bold,
-                              fontFamily: "englishFont",
+                              fontFamily: 'Inter',
                             ),
                       ),
                       const SizedBox(height: 4),
@@ -79,7 +79,7 @@ class CardWidget extends StatelessWidget {
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: Colors.black54,
                           fontWeight: FontWeight.w500,
-                          fontFamily: "englishFont",
+                          fontFamily: 'Inter',
                         ),
                       ),
                     ],

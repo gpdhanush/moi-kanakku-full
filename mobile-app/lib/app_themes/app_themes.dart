@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
-import 'index.dart';
+import 'app_colors.dart';
+import 'app_custom_themes.dart';
 
 class AppThemes {
-  static const String englishFontFamily = 'Arimo';
-  static const String tamilFontFamily = 'Arimo';
+  /// Primary UI font — Google Inter.
+  static String get englishFontFamily =>
+      GoogleFonts.inter().fontFamily ?? 'Inter';
+
+  /// Tamil script fallback (Inter does not cover Tamil glyphs).
+  static const String tamilFontFamily = 'NotoSansTamil';
 
   // Responsive breakpoints
   static const double mobileBreakpoint = 480;
@@ -21,32 +27,28 @@ class AppThemes {
   }
 
   /// Clamp font sizes to ensure readability
-  /// Prevents text from becoming too small or too large
   static double clampFontSize(double size) {
-    const double minFontSize = 10.0; // Minimum readable size
-    const double maxFontSize = 34.0; // Maximum practical size
+    const double minFontSize = 10.0;
+    const double maxFontSize = 34.0;
     return size.clamp(minFontSize, maxFontSize);
   }
 
-  /// Get responsive scale factor based on screen width
   static double getResponsiveScale(double screenWidth) {
     if (screenWidth < mobileBreakpoint) {
-      return 0.85; // Mobile small
+      return 0.85;
     } else if (screenWidth < tabletBreakpoint) {
-      return 0.95; // Mobile/Tablet
+      return 0.95;
     } else if (screenWidth < desktopBreakpoint) {
-      return 1.0; // Tablet/Desktop
+      return 1.0;
     } else {
-      return 1.1; // Large desktop
+      return 1.1;
     }
   }
 
-  /// Get responsive font size
   static double getResponsiveFontSize(double baseSizeEn, double screenWidth) {
     return baseSizeEn * getResponsiveScale(screenWidth);
   }
 
-  /// Get device type based on screen width
   static String getDeviceType(double screenWidth) {
     if (screenWidth < mobileBreakpoint) {
       return 'mobile_small';
@@ -59,7 +61,12 @@ class AppThemes {
     }
   }
 
-  /// Apply responsive sizing to any TextStyle
+  static String fontFamilyForLanguage(String languageCode) {
+    return languageCode.toLowerCase() == 'ta'
+        ? tamilFontFamily
+        : englishFontFamily;
+  }
+
   static TextStyle makeResponsive(
     TextStyle style,
     double screenWidth, {
@@ -71,10 +78,9 @@ class AppThemes {
     final responsiveSize =
         getResponsiveFontSize(style.fontSize!, screenWidth) + delta;
 
-    final isTamil = languageCode.toLowerCase() != 'en';
     return style.copyWith(
       fontSize: responsiveSize,
-      fontFamily: isTamil ? tamilFontFamily : englishFontFamily,
+      fontFamily: fontFamilyForLanguage(languageCode),
     );
   }
 
@@ -83,17 +89,17 @@ class AppThemes {
     String languageCode,
     bool isDark,
   ) {
-    // final delta = _fontDelta(languageCode);
     final textColor = isDark ? Colors.white : AppColors.text;
+    final family = fontFamilyForLanguage(languageCode);
+    final isTamil = languageCode.toLowerCase() == 'ta';
 
     TextStyle? mapStyle(TextStyle? style) {
       if (style == null) return null;
 
-      final isTamil = languageCode.toLowerCase() != 'en';
       final fontSize = clampFontSize((style.fontSize ?? 14) + 0);
 
       return style.copyWith(
-        fontFamily: isTamil ? tamilFontFamily : englishFontFamily,
+        fontFamily: family,
         fontSize: fontSize,
         fontWeight: isTamil
             ? ((style.fontWeight ?? FontWeight.w500).value >=
@@ -124,13 +130,25 @@ class AppThemes {
     );
   }
 
+  static TextTheme _interBaseTextTheme(bool isDark) {
+    final base = isDark
+        ? ThemeData(brightness: Brightness.dark, useMaterial3: true).textTheme
+        : ThemeData(brightness: Brightness.light, useMaterial3: true).textTheme;
+    return GoogleFonts.interTextTheme(base);
+  }
+
   static ThemeData buildTheme({
     required Color seedColor,
     required bool isDark,
     required String languageCode,
   }) {
     final brightness = isDark ? Brightness.dark : Brightness.light;
-    final base = isDark ? darkTheme : lightTheme;
+    final base = isDark ? _buildDarkTheme() : _buildLightTheme();
+    final interTheme = _textThemeWithLanguage(
+      _interBaseTextTheme(isDark),
+      languageCode,
+      isDark,
+    );
 
     return base.copyWith(
       scaffoldBackgroundColor: isDark ? Colors.grey[900] : Colors.white,
@@ -141,9 +159,15 @@ class AppThemes {
         secondary: AppColors.brandGreen,
         tertiary: AppColors.brandBlue,
       ),
-      textTheme: _textThemeWithLanguage(base.textTheme, languageCode, isDark),
+      textTheme: interTheme,
+      primaryTextTheme: interTheme,
       appBarTheme: base.appBarTheme.copyWith(
         backgroundColor: isDark ? Colors.grey[900] : seedColor,
+        titleTextStyle: GoogleFonts.inter(
+          fontSize: 18,
+          fontWeight: FontWeight.w600,
+          color: Colors.white,
+        ),
       ),
     );
   }
@@ -160,286 +184,128 @@ class AppThemes {
     );
   }
 
-  static ThemeData lightTheme = ThemeData.light(useMaterial3: true).copyWith(
-    scaffoldBackgroundColor: Colors.white,
-    colorScheme: ColorScheme.fromSeed(
-      seedColor: Colors.blueAccent,
-      brightness: Brightness.light,
-      primary: AppColors.primary,
-      secondary: AppColors.brandGreen,
-      tertiary: AppColors.brandBlue,
-    ),
-    // colorScheme: ColorScheme.light(
-    //   surface: Colors.white,
-    //   primary: AppColors.primary,
-    //   secondary: Colors.white60,
-    // ),
-    textTheme: TextTheme(
-      // Display styles (largest)
-      displayLarge: AppTextStyles.headline1.copyWith(
-        fontFamily: englishFontFamily,
-        fontSize: 57,
-      ),
-      displayMedium: AppTextStyles.headline1.copyWith(
-        fontFamily: englishFontFamily,
-        fontSize: 45,
-      ),
-      displaySmall: AppTextStyles.headline1.copyWith(
-        fontFamily: englishFontFamily,
-        fontSize: 36,
-      ),
-      // Headline styles
-      headlineLarge: AppTextStyles.headline1.copyWith(
-        fontFamily: englishFontFamily,
-        fontSize: 32,
-      ),
-      headlineMedium: AppTextStyles.headline2.copyWith(
-        fontFamily: englishFontFamily,
-        fontSize: 28,
-        fontWeight: FontWeight.w700,
-      ),
-      headlineSmall: AppTextStyles.headline2.copyWith(
-        fontFamily: englishFontFamily,
-        fontSize: 24,
-        fontWeight: FontWeight.w600,
-      ),
-      // Title styles
-      titleLarge: AppTextStyles.headline2.copyWith(
-        fontFamily: englishFontFamily,
-        fontSize: 22,
-        fontWeight: FontWeight.w600,
-      ),
-      titleMedium: AppTextStyles.bodyText.copyWith(
-        fontFamily: englishFontFamily,
-        fontSize: 16,
-        fontWeight: FontWeight.w600,
-        color: AppColors.text,
-      ),
-      titleSmall: AppTextStyles.bodyText.copyWith(
-        fontFamily: englishFontFamily,
-        fontSize: 14,
-        fontWeight: FontWeight.w600,
-        color: AppColors.text,
-      ),
-      // Body styles
-      bodyLarge: AppTextStyles.bodyText.copyWith(
-        fontFamily: englishFontFamily,
-        fontSize: 16,
-        fontWeight: FontWeight.w400,
-        color: AppColors.text,
-      ),
-      bodyMedium: AppTextStyles.bodyText.copyWith(
-        fontFamily: englishFontFamily,
-        fontSize: 14,
-        fontWeight: FontWeight.w400,
-        color: AppColors.text,
-      ),
-      bodySmall: AppTextStyles.bodyText.copyWith(
-        fontFamily: englishFontFamily,
-        fontSize: 12,
-        fontWeight: FontWeight.w400,
-        color: AppColors.text,
-      ),
-      // Label styles (smallest)
-      labelLarge: AppTextStyles.button.copyWith(
-        fontFamily: englishFontFamily,
-        fontSize: 14,
-        fontWeight: FontWeight.w600,
-        color: Colors.white,
-      ),
-      labelMedium: AppTextStyles.button.copyWith(
-        fontFamily: englishFontFamily,
-        fontSize: 12,
-        fontWeight: FontWeight.w500,
-        color: Colors.white,
-      ),
-      labelSmall: AppTextStyles.button.copyWith(
-        fontFamily: englishFontFamily,
-        fontSize: 11,
-        fontWeight: FontWeight.w500,
-        color: Colors.white,
-      ),
-    ),
-    appBarTheme: const AppBarTheme(
-      backgroundColor: AppColors.primary,
-      elevation: 0,
-      titleTextStyle: AppTextStyles.headline2,
-    ),
-    textSelectionTheme: TextSelectionThemeData(
-      cursorColor: AppColors.primary,
-      selectionColor: AppColors.primary.withAlpha(200),
-      selectionHandleColor: AppColors.primary,
-    ),
-    elevatedButtonTheme: ElevatedButtonThemeData(
-      style: ElevatedButton.styleFrom(
-        textStyle: AppTextStyles.buttonStyle,
-        elevation: 0,
-        foregroundColor: Colors.white,
-        backgroundColor: AppColors.primary,
-        disabledForegroundColor: AppColors.gray,
-        disabledBackgroundColor: AppColors.primary.withAlpha(130),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
-      ),
-    ),
-    textButtonTheme: TextButtonThemeData(
-      style: TextButton.styleFrom(
-        elevation: 0,
-        foregroundColor: AppColors.primary,
-        textStyle: AppTextStyles.textButtonStyle,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
-      ),
-    ),
-    datePickerTheme: DatePickerThemeData(
-      headerBackgroundColor: AppColors.primary,
-      headerForegroundColor: Colors.white,
-      surfaceTintColor: Colors.white,
-      elevation: 5,
-      dayStyle: TextStyle(fontWeight: FontWeight.bold),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
-      todayBorder: BorderSide(color: AppColors.primary),
-      confirmButtonStyle: ButtonStyle(
-        backgroundColor: WidgetStatePropertyAll(AppColors.primary),
-        foregroundColor: WidgetStatePropertyAll(Colors.white),
-        textStyle: WidgetStatePropertyAll(
-          TextStyle(decoration: TextDecoration.none),
-        ),
-      ),
-      cancelButtonStyle: ButtonStyle(
-        backgroundColor: WidgetStatePropertyAll(Colors.redAccent),
-        foregroundColor: WidgetStatePropertyAll(Colors.white),
-        textStyle: WidgetStatePropertyAll(
-          TextStyle(decoration: TextDecoration.none),
-        ),
-      ),
-      dayOverlayColor: WidgetStatePropertyAll(AppColors.primary),
-      dayForegroundColor: WidgetStateProperty.resolveWith((states) {
-        if (states.contains(WidgetState.selected)) {
-          return Colors.white;
-        }
-        return Colors.black;
-      }),
-      dayBackgroundColor: WidgetStateProperty.resolveWith((states) {
-        if (states.contains(WidgetState.selected)) {
-          return AppColors.primary;
-        }
-        return Colors.transparent;
-      }),
-      todayBackgroundColor: WidgetStateProperty.resolveWith((states) {
-        if (!states.contains(WidgetState.selected)) {
-          return Colors.transparent;
-        }
-        return AppColors.primary;
-      }),
-      todayForegroundColor: WidgetStateProperty.resolveWith((states) {
-        if (!states.contains(WidgetState.selected)) {
-          return Colors.black;
-        }
-        return Colors.white;
-      }),
-    ),
-  );
+  static ThemeData get lightTheme => _buildLightTheme();
+  static ThemeData get darkTheme => _buildDarkTheme();
 
-  static ThemeData darkTheme = ThemeData.dark(useMaterial3: true).copyWith(
-    scaffoldBackgroundColor: Colors.grey[900],
-    colorScheme: ColorScheme.fromSeed(
-      seedColor: Colors.blueAccent,
-      brightness: Brightness.dark,
-      primary: AppColors.brandBlue,
-      secondary: AppColors.brandGreen,
-      tertiary: AppColors.brandBlue,
-    ),
-    textTheme: TextTheme(
-      // Display styles (largest)
-      displayLarge: AppTextStyles.headline1.copyWith(
-        fontFamily: englishFontFamily,
-        fontSize: 57,
-        color: Colors.white,
+  static ThemeData _buildLightTheme() {
+    final inter = GoogleFonts.interTextTheme(
+      ThemeData.light(useMaterial3: true).textTheme,
+    );
+
+    return ThemeData.light(useMaterial3: true).copyWith(
+      scaffoldBackgroundColor: Colors.white,
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: Colors.blueAccent,
+        brightness: Brightness.light,
+        primary: AppColors.primary,
+        secondary: AppColors.brandGreen,
+        tertiary: AppColors.brandBlue,
       ),
-      displayMedium: AppTextStyles.headline1.copyWith(
-        fontFamily: englishFontFamily,
-        fontSize: 45,
-        color: Colors.white,
+      textTheme: inter,
+      primaryTextTheme: inter,
+      appBarTheme: AppBarTheme(
+        backgroundColor: AppColors.primary,
+        elevation: 0,
+        titleTextStyle: GoogleFonts.inter(
+          fontSize: 18,
+          fontWeight: FontWeight.w600,
+          color: Colors.white,
+        ),
       ),
-      displaySmall: AppTextStyles.headline1.copyWith(
-        fontFamily: englishFontFamily,
-        fontSize: 36,
-        color: Colors.white,
+      textSelectionTheme: TextSelectionThemeData(
+        cursorColor: AppColors.primary,
+        selectionColor: AppColors.primary.withAlpha(200),
+        selectionHandleColor: AppColors.primary,
       ),
-      // Headline styles
-      headlineLarge: AppTextStyles.headline1.copyWith(
-        fontFamily: englishFontFamily,
-        fontSize: 32,
-        color: Colors.white,
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          textStyle: AppTextStyles.buttonStyle,
+          elevation: 0,
+          foregroundColor: Colors.white,
+          backgroundColor: AppColors.primary,
+          disabledForegroundColor: AppColors.gray,
+          disabledBackgroundColor: AppColors.primary.withAlpha(130),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
+        ),
       ),
-      headlineMedium: AppTextStyles.headline2.copyWith(
-        fontFamily: englishFontFamily,
-        fontSize: 28,
-        fontWeight: FontWeight.w700,
-        color: Colors.white,
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          elevation: 0,
+          foregroundColor: AppColors.primary,
+          textStyle: AppTextStyles.textButtonStyle,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
+        ),
       ),
-      headlineSmall: AppTextStyles.headline2.copyWith(
-        fontFamily: englishFontFamily,
-        fontSize: 24,
-        fontWeight: FontWeight.w600,
-        color: Colors.white,
+      datePickerTheme: DatePickerThemeData(
+        headerBackgroundColor: AppColors.primary,
+        headerForegroundColor: Colors.white,
+        surfaceTintColor: Colors.white,
+        elevation: 5,
+        dayStyle: GoogleFonts.inter(fontWeight: FontWeight.bold),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
+        todayBorder: const BorderSide(color: AppColors.primary),
+        confirmButtonStyle: ButtonStyle(
+          backgroundColor: const WidgetStatePropertyAll(AppColors.primary),
+          foregroundColor: const WidgetStatePropertyAll(Colors.white),
+          textStyle: WidgetStatePropertyAll(
+            GoogleFonts.inter(decoration: TextDecoration.none),
+          ),
+        ),
+        cancelButtonStyle: ButtonStyle(
+          backgroundColor: const WidgetStatePropertyAll(Colors.redAccent),
+          foregroundColor: const WidgetStatePropertyAll(Colors.white),
+          textStyle: WidgetStatePropertyAll(
+            GoogleFonts.inter(decoration: TextDecoration.none),
+          ),
+        ),
+        dayOverlayColor: const WidgetStatePropertyAll(AppColors.primary),
+        dayForegroundColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return Colors.white;
+          }
+          return Colors.black;
+        }),
+        dayBackgroundColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return AppColors.primary;
+          }
+          return Colors.transparent;
+        }),
+        todayBackgroundColor: WidgetStateProperty.resolveWith((states) {
+          if (!states.contains(WidgetState.selected)) {
+            return Colors.transparent;
+          }
+          return AppColors.primary;
+        }),
+        todayForegroundColor: WidgetStateProperty.resolveWith((states) {
+          if (!states.contains(WidgetState.selected)) {
+            return Colors.black;
+          }
+          return Colors.white;
+        }),
       ),
-      // Title styles
-      titleLarge: AppTextStyles.headline2.copyWith(
-        fontFamily: englishFontFamily,
-        fontSize: 22,
-        fontWeight: FontWeight.w600,
-        color: Colors.white,
+    );
+  }
+
+  static ThemeData _buildDarkTheme() {
+    final inter = GoogleFonts.interTextTheme(
+      ThemeData.dark(useMaterial3: true).textTheme,
+    );
+
+    return ThemeData.dark(useMaterial3: true).copyWith(
+      scaffoldBackgroundColor: Colors.grey[900],
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: Colors.blueAccent,
+        brightness: Brightness.dark,
+        primary: AppColors.brandBlue,
+        secondary: AppColors.brandGreen,
+        tertiary: AppColors.brandBlue,
       ),
-      titleMedium: AppTextStyles.bodyText.copyWith(
-        fontFamily: englishFontFamily,
-        fontSize: 16,
-        fontWeight: FontWeight.w600,
-        color: Colors.white,
+      textTheme: inter.apply(bodyColor: Colors.white, displayColor: Colors.white),
+      primaryTextTheme: inter.apply(
+        bodyColor: Colors.white,
+        displayColor: Colors.white,
       ),
-      titleSmall: AppTextStyles.bodyText.copyWith(
-        fontFamily: englishFontFamily,
-        fontSize: 14,
-        fontWeight: FontWeight.w600,
-        color: Colors.white,
-      ),
-      // Body styles
-      bodyLarge: AppTextStyles.bodyText.copyWith(
-        fontFamily: englishFontFamily,
-        fontSize: 16,
-        fontWeight: FontWeight.w400,
-        color: Colors.white,
-      ),
-      bodyMedium: AppTextStyles.bodyText.copyWith(
-        fontFamily: englishFontFamily,
-        fontSize: 14,
-        fontWeight: FontWeight.w400,
-        color: Colors.white,
-      ),
-      bodySmall: AppTextStyles.bodyText.copyWith(
-        fontFamily: englishFontFamily,
-        fontSize: 12,
-        fontWeight: FontWeight.w400,
-        color: Colors.white,
-      ),
-      // Label styles (smallest)
-      labelLarge: AppTextStyles.button.copyWith(
-        fontFamily: englishFontFamily,
-        fontSize: 14,
-        fontWeight: FontWeight.w600,
-        color: Colors.white,
-      ),
-      labelMedium: AppTextStyles.button.copyWith(
-        fontFamily: englishFontFamily,
-        fontSize: 12,
-        fontWeight: FontWeight.w500,
-        color: Colors.white,
-      ),
-      labelSmall: AppTextStyles.button.copyWith(
-        fontFamily: englishFontFamily,
-        fontSize: 11,
-        fontWeight: FontWeight.w500,
-        color: Colors.white,
-      ),
-    ),
-  );
+    );
+  }
 }

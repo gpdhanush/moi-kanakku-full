@@ -128,13 +128,13 @@ class AlertServices {
                 // fontSize: 22,
                 fontWeight: FontWeight.bold,
                 decoration: TextDecoration.none,
-                fontFamily: "appFontFamily",
+                fontFamily: 'Inter',
               ),
             ),
             content: Text(
               content,
               style: theme.textTheme.bodySmall?.copyWith(
-                fontFamily: "appFontFamily",
+                fontFamily: 'Inter',
                 fontWeight: FontWeight.normal,
                 decoration: TextDecoration.none,
               ),
@@ -146,7 +146,7 @@ class AlertServices {
                   style: theme.textTheme.bodySmall?.copyWith(
                     // fontSize: 16,
                     color: Colors.redAccent,
-                    fontFamily: "appFontFamily",
+                    fontFamily: 'Inter',
                     fontWeight: FontWeight.bold,
                     decoration: TextDecoration.none,
                   ),
@@ -164,7 +164,7 @@ class AlertServices {
               //     "ஆம்",
               //     style: theme.textTheme.bodySmall?.copyWith(
               //       // fontSize: 16,
-              //       fontFamily: "appFontFamily",
+              //       fontFamily: 'Inter',
               //       fontWeight: FontWeight.bold,
               //       decoration: TextDecoration.none,
               //       color: theme.primaryColor,

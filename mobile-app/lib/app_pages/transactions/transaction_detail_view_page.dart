@@ -276,7 +276,7 @@ class _TransactionDetailViewPageState extends State<TransactionDetailViewPage> {
               fontSize: 28,
               fontWeight: FontWeight.w800,
               color: accentColor,
-              fontFamily: 'Arimo',
+              fontFamily: 'Inter',
             ),
           ),
         ],

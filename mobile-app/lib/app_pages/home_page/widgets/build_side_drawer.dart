@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:in_app_review/in_app_review.dart';
 import 'package:moi/app_configs/index.dart';
 import 'package:moi/app_pages/home_page/widgets/drawer_widget.dart';
 import 'package:moi/app_services/user_services.dart';
 import 'package:moi/app_storages/secure_storages.dart';
+import 'package:moi/app_themes/index.dart';
 import 'package:moi/app_utils/app_global/alert_services.dart';
 import 'package:moi/app_utils/app_providers/user_provider.dart';
 import 'package:moi/app_utils/app_providers/language_provider.dart';
@@ -20,7 +22,7 @@ class BuildSideDrawer extends StatelessWidget {
 
   Widget _buildMenuItem({
     required BuildContext context,
-    required IconData icon,
+    required List<List<dynamic>> icon,
     required String title,
     required VoidCallback onTap,
     bool isLogout = false,
@@ -43,7 +45,7 @@ class BuildSideDrawer extends StatelessWidget {
     return Consumer<LanguageProvider>(
       builder: (context, languageProvider, child) {
         return Drawer(
-          backgroundColor: Colors.grey.shade50,
+          backgroundColor: AppColors.background,
           shape: const RoundedRectangleBorder(),
           elevation: 0,
           child: ListView(
@@ -138,10 +140,11 @@ class BuildSideDrawer extends StatelessWidget {
                                     color: Colors.white.withValues(alpha: 0.2),
                                     borderRadius: BorderRadius.circular(8),
                                   ),
-                                  child: const Icon(
-                                    Icons.person_outlined,
+                                  child: const HugeIcon(
+                                    icon: HugeIcons.strokeRoundedUser,
                                     color: Colors.white,
                                     size: 18,
+                                    strokeWidth: 1.8,
                                   ),
                                 ),
                                 const SizedBox(width: 8),
@@ -152,7 +155,7 @@ class BuildSideDrawer extends StatelessWidget {
                                         : languageProvider.tr('menu.guestUser'),
                                     style: const TextStyle(
                                       color: Colors.white,
-                                      fontFamily: "ProximaNova",
+                                      fontFamily: 'Inter',
                                       fontSize: 18,
                                       fontWeight: FontWeight.w700,
                                       letterSpacing: 0,
@@ -181,7 +184,7 @@ class BuildSideDrawer extends StatelessWidget {
                   children: [
                     _buildMenuItem(
                       context: context,
-                      icon: Icons.celebration_outlined,
+                      icon: HugeIcons.strokeRoundedWedding,
                       title: languageProvider.tr('menu.functions'),
                       onTap: () {
                         Navigator.popAndPushNamed(context, "functions-list");
@@ -190,7 +193,7 @@ class BuildSideDrawer extends StatelessWidget {
 
                     _buildMenuItem(
                       context: context,
-                      icon: Icons.bar_chart_outlined,
+                      icon: HugeIcons.strokeRoundedAnalytics01,
                       title: languageProvider.tr('menu.moiDashboard'),
                       onTap: () {
                         Navigator.popAndPushNamed(
@@ -202,7 +205,7 @@ class BuildSideDrawer extends StatelessWidget {
 
                     _buildMenuItem(
                       context: context,
-                      icon: Icons.celebration_outlined,
+                      icon: HugeIcons.strokeRoundedCalendar01,
                       title: languageProvider.tr('menu.upcomingFunctions'),
                       onTap: () {
                         Navigator.popAndPushNamed(
@@ -214,7 +217,7 @@ class BuildSideDrawer extends StatelessWidget {
 
                     _buildMenuItem(
                       context: context,
-                      icon: Icons.account_circle_outlined,
+                      icon: HugeIcons.strokeRoundedUserCircle02,
                       title: languageProvider.tr('menu.profile'),
                       onTap: () {
                         Navigator.popAndPushNamed(context, "profile");
@@ -222,7 +225,7 @@ class BuildSideDrawer extends StatelessWidget {
                     ),
                     _buildMenuItem(
                       context: context,
-                      icon: Icons.settings_outlined,
+                      icon: HugeIcons.strokeRoundedSettings01,
                       title: languageProvider.tr('menu.settings'),
                       onTap: () {
                         Navigator.popAndPushNamed(context, "settings");
@@ -230,23 +233,15 @@ class BuildSideDrawer extends StatelessWidget {
                     ),
                     _buildMenuItem(
                       context: context,
-                      icon: Icons.feedback_outlined,
+                      icon: HugeIcons.strokeRoundedComment01,
                       title: languageProvider.tr('menu.feedbacks'),
                       onTap: () {
                         Navigator.popAndPushNamed(context, "feedbacks");
                       },
                     ),
-                    // _buildMenuItem(
-                    //   context: context,
-                    //   icon: Icons.local_offer_outlined,
-                    //   title: languageProvider.tr('menu.specialOffers'),
-                    //   onTap: () {
-                    //     Navigator.popAndPushNamed(context, "promotion");
-                    //   },
-                    // ),
                     _buildMenuItem(
                       context: context,
-                      icon: Icons.star_border_outlined,
+                      icon: HugeIcons.strokeRoundedStar,
                       title: languageProvider.tr('menu.rateUs'),
                       onTap: () async {
                         Navigator.pop(context);
@@ -265,7 +260,7 @@ class BuildSideDrawer extends StatelessWidget {
                     ),
                     _buildMenuItem(
                       context: context,
-                      icon: Icons.contact_phone_outlined,
+                      icon: HugeIcons.strokeRoundedContact,
                       title: languageProvider.tr('menu.contactUs'),
                       onTap: () {
                         Navigator.popAndPushNamed(context, "contact_us");
@@ -273,7 +268,7 @@ class BuildSideDrawer extends StatelessWidget {
                     ),
                     _buildMenuItem(
                       context: context,
-                      icon: Icons.exit_to_app_outlined,
+                      icon: HugeIcons.strokeRoundedLogout01,
                       title: languageProvider.tr('menu.logout'),
                       isLogout: true,
                       onTap: () => logoutApp(context),

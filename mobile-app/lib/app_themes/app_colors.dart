@@ -13,6 +13,27 @@ class AppColors {
   static const Color primaryOption8 = Color(0xff5c2292);
   static const Color primaryOption9 = Color(0xff6374db);
 
+  /// Moi Kanakku semantic financial colors
+  static const Color moiReceived = Color(0xff1B8A4A);
+  static const Color moiGiven = Color(0xffD64550);
+  static const Color moiReceivedSoft = Color(0xffECFDF3);
+  static const Color moiGivenSoft = Color(0xffFEF2F2);
+  static const Color moiReceivedMid = Color(0xff34C759);
+  static const Color moiGivenMid = Color(0xffFF6B6B);
+  static const Color accentAmber = Color(0xffF59E0B);
+  static const Color accentAmberSoft = Color(0xffFFF7ED);
+  static const Color accentViolet = Color(0xff7C3AED);
+  static const Color accentVioletSoft = Color(0xffF5F3FF);
+  static const Color primarySoft = Color(0xffDBEAFE);
+  static const Color primaryMid = Color(0xff3B82F6);
+  /// Soft colorful canvas
+  static const Color background = Color(0xffF3F7FF);
+  static const Color surface = Color(0xffffffff);
+  static const Color surfaceBlue = Color(0xffEAF2FF);
+  static const Color borderSubtle = Color(0xffD6E4F7);
+  static const Color textPrimary = Color(0xff0F172A);
+  static const Color textSecondary = Color(0xff64748B);
+
   static const Color white = Color(0xffffffff);
   static const Color white50 = Color(0x88ffffff);
   static const Color grayDark = Color(0xffeaeaea);

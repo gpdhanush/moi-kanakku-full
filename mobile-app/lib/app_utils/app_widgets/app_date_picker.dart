@@ -92,7 +92,7 @@ class AppDatePicker {
               // style: TextButton.styleFrom(
               //   foregroundColor: colorScheme.primary,
               //   textStyle: TextStyle(
-              //     fontFamily: 'englishFont',
+              //     fontFamily: 'Inter',
               //     fontSize: 15,
               //     fontWeight: FontWeight.w600,
               //   ),
@@ -111,7 +111,7 @@ class AppDatePicker {
             //     foregroundColor: Colors.white,
             //     elevation: 0,
             //     textStyle: TextStyle(
-            //       fontFamily: 'englishFont',
+            //       fontFamily: 'Inter',
             //       fontSize: 15,
             //       fontWeight: FontWeight.w600,
             //     ),

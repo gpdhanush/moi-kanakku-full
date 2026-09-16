@@ -186,7 +186,7 @@ class _TransactionPersonDetailsState extends State<TransactionPersonDetails> {
           style: TextStyle(
             fontSize: 16,
             color: Colors.grey,
-            fontFamily: 'Roboto',
+            fontFamily: 'Inter',
           ),
         ),
       );

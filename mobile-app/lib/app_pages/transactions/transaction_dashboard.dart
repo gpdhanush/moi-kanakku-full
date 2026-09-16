@@ -224,7 +224,7 @@ class _TransactionDashboardState extends State<TransactionDashboard> {
   }
 
   Widget _buildBody(LanguageProvider languageProvider) {
-    return RefreshIndicator(
+    return MoiRefreshIndicator(
       onRefresh: fetchPersonLists,
       child: CustomScrollView(
         controller: _scrollController,
@@ -457,7 +457,7 @@ class _TransactionDashboardState extends State<TransactionDashboard> {
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                   color: colorScheme.primary,
-                  fontFamily: 'RobotoBold',
+                  fontFamily: 'Inter',
                 ),
               ),
             ],

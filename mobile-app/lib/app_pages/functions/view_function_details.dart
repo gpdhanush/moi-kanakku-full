@@ -304,7 +304,7 @@ class _ViewFunctionDetailsState extends State<ViewFunctionDetails> {
                               fontSize: 23,
                               fontWeight: FontWeight.w800,
                               color: color,
-                              fontFamily: 'Arimo',
+                              fontFamily: 'Inter',
                             ),
                           ),
                         ],

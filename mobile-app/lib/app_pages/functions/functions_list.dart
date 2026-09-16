@@ -183,7 +183,7 @@ class _FunctionsListState extends State<FunctionsList> {
                   '${functionList.length}',
                   style: TextStyle(
                     color: colorScheme.primary,
-                    fontFamily: 'Arimo',
+                    fontFamily: 'Inter',
                     fontSize: 18,
                     fontWeight: FontWeight.w800,
                   ),

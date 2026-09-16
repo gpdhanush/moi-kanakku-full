@@ -298,7 +298,7 @@ class _UpcomingFunctionListState extends State<UpcomingFunctionList> {
                             fontSize: 11,
                             fontWeight: FontWeight.w700,
                             color: Colors.white,
-                            fontFamily: 'englishFont',
+                            fontFamily: 'Inter',
                           ),
                         ),
                       ),

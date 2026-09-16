@@ -288,7 +288,7 @@ class _SettingsState extends State<Settings> {
                       style: TextStyle(
                         color: isDark ? Colors.grey.shade200 : Colors.black87,
                         fontSize: 15,
-                        fontFamily: "appFontFamily",
+                        fontFamily: 'Inter',
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -400,7 +400,7 @@ class _SettingsState extends State<Settings> {
   //       style: TextStyle(
   //         color: Colors.black,
   //         fontSize: 16,
-  //         fontFamily: "appFontFamily",
+  //         fontFamily: 'Inter',
   //         fontWeight: FontWeight.normal,
   //       ),
   //     ),

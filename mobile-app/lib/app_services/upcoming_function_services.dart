@@ -5,13 +5,13 @@ class UpcomingFunctionServices {
   final Connection connection = Connection();
 
   // List all upcoming functions for authenticated user
-  Future<dynamic> getUpcomingFunctions() async {
+  Future<dynamic> getUpcomingFunctions({bool showLoading = true}) async {
     String url = '$appBaseUri/upcoming-functions/list';
     return await connection.postData(
       url,
       {},
       useToken: true,
-      showLoading: true,
+      showLoading: showLoading,
     );
   }
 

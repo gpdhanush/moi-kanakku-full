@@ -60,7 +60,7 @@ BottomSheetAction _buildActionSheetItem({
     title: Text(
       title,
       style: TextStyle(
-        fontFamily: "appFontFamily",
+        fontFamily: 'Inter',
         fontWeight: FontWeight.w600,
         fontSize: 14,
         color: color == Colors.redAccent ? color : Colors.black87,

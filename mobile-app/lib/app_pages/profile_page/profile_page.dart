@@ -421,7 +421,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         languageProvider.tr('profile.name'),
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: Colors.white.withValues(alpha: 0.9),
-                          fontFamily: "appFontFamily",
+                          fontFamily: 'Inter',
                           fontSize: 16,
                           fontWeight: FontWeight.w500,
                         ),
@@ -433,7 +433,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         style: theme.textTheme.headlineSmall?.copyWith(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
-                          fontFamily: "appFontFamily",
+                          fontFamily: 'Inter',
                           fontSize: 18,
                           height: 1.2,
                         ),
@@ -445,7 +445,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         _user?["email"]?.toString() ?? '',
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: Colors.white.withValues(alpha: 0.9),
-                          fontFamily: "appFontFamily",
+                          fontFamily: 'Inter',
                           fontSize: 14,
                         ),
                         maxLines: 1,
@@ -641,7 +641,7 @@ class _ProfilePageState extends State<ProfilePage> {
             languageProvider.tr('profile.accountActions'),
             style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.bold,
-              fontFamily: "appFontFamily",
+              fontFamily: 'Inter',
               color: colorScheme.primary,
             ),
           ),
@@ -718,7 +718,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 child: Text(
                   title,
                   style: theme.textTheme.bodySmall?.copyWith(
-                    fontFamily: "appFontFamily",
+                    fontFamily: 'Inter',
                     fontWeight: FontWeight.w600,
                     color: color,
                   ),
@@ -1181,7 +1181,7 @@ class _ProfilePageState extends State<ProfilePage> {
             //   "முகவரி விவரங்கள்",
             //   style: theme.textTheme.titleMedium?.copyWith(
             //     fontWeight: FontWeight.bold,
-            //     fontFamily: "appFontFamily",
+            //     fontFamily: 'Inter',
             //     color: colorScheme.primary,
             //   ),
             // ),

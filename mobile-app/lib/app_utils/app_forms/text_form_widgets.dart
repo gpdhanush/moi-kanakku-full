@@ -124,7 +124,7 @@ class TextFormWidget extends StatelessWidget {
             fontSize: 14,
             fontWeight: FontWeight.w600,
             overflow: TextOverflow.clip,
-            fontFamily: "englishFont",
+            fontFamily: 'Inter',
             // fontFamily: theme.textTheme.bodySmall?.fontFamily,
           ),
           decoration: decoration ?? customDecoration(context),

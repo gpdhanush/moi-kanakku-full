@@ -268,7 +268,7 @@ class _AllTransactionsPageState extends State<AllTransactionsPage> {
                                 '₹ ${_formatAmount(amount)}',
                                 style: TextStyle(
                                   color: accent,
-                                  fontFamily: 'Arimo',
+                                  fontFamily: 'Inter',
                                   fontWeight: FontWeight.w800,
                                   fontSize: 15,
                                 ),
@@ -331,7 +331,7 @@ class _AllTransactionsPageState extends State<AllTransactionsPage> {
                 Text(
                   '₹ ${_formatAmount(total)}',
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontFamily: 'Arimo',
+                    fontFamily: 'Inter',
                     fontWeight: FontWeight.w700,
                     color: colorScheme.primary,
                   ),
