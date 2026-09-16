@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image_cropper/image_cropper.dart';
@@ -11,6 +12,7 @@ import 'package:path/path.dart' as path;
 import 'package:moi/app_configs/index.dart';
 import 'package:moi/app_services/index.dart';
 import 'package:moi/app_storages/secure_storages.dart';
+import 'package:moi/app_themes/index.dart';
 import 'package:moi/app_utils/index.dart';
 import 'package:moi/app_utils/app_providers/language_provider.dart';
 import 'package:moi/app_utils/app_widgets/image_picker_bottom_sheet.dart';
@@ -27,7 +29,6 @@ class AddEditFunctions extends StatefulWidget {
 }
 
 class _AddEditFunctionsState extends State<AddEditFunctions> {
-  // Initialize services and controllers
   final SecureStorageService _storage = SecureStorageService();
   final AlertServices _alertServices = AlertServices();
   final FunctionRequest _requestModel = FunctionRequest();
@@ -38,12 +39,11 @@ class _AddEditFunctionsState extends State<AddEditFunctions> {
   final TextEditingController _placeController = TextEditingController();
   final TextEditingController _notesController = TextEditingController();
 
-  // Image upload state
   final ImagePicker _imagePicker = ImagePicker();
   File? _functionImage;
-  String? _existingImageUrl; // full URL for display
-  String? _uploadedImageUrl; // raw path returned by server
-  String? _initialImagePath; // raw path from server when editing
+  String? _existingImageUrl;
+  String? _uploadedImageUrl;
+  String? _initialImagePath;
 
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
@@ -58,7 +58,6 @@ class _AddEditFunctionsState extends State<AddEditFunctions> {
     }
   }
 
-  // Set initial field values if data is provided
   void setFieldValue() {
     var i = widget.data[0];
     final rawDate = i['functionDate'].toString();
@@ -83,10 +82,9 @@ class _AddEditFunctionsState extends State<AddEditFunctions> {
     if (_notesController.text.toLowerCase() == 'null') {
       _notesController.text = '';
     }
-    // existing image (if backend sends it)
     final imageUrl = i['imageUrl']?.toString().trim() ?? '';
     if (imageUrl.isNotEmpty) {
-      _initialImagePath = imageUrl; // raw response value for saving
+      _initialImagePath = imageUrl;
       _existingImageUrl = imageUrl.startsWith('http')
           ? imageUrl
           : "$appImageUrl/$imageUrl";
@@ -97,88 +95,115 @@ class _AddEditFunctionsState extends State<AddEditFunctions> {
   Widget build(BuildContext context) {
     return Consumer<LanguageProvider>(
       builder: (context, languageProvider, _) {
+        final primary = Theme.of(context).colorScheme.primary;
+        final headerTitle = languageProvider.tr(
+          isEditing ? 'functions.editFunction' : 'functions.addFunction',
+        );
+
         return Scaffold(
-          backgroundColor: Colors.grey.shade50,
-          appBar: AppBarWidget(
-            title: languageProvider.tr('functions.title'),
-            action: [],
+          backgroundColor: AppColors.background,
+          appBar: _FormAppHeader(
+            title: headerTitle.toUpperCase(),
+            onBack: () => Navigator.pop(context),
           ),
-          body: Material(
-            child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    children: [
-                      const SizedBox(height: 20),
-                      _buildTextFormWidget(
-                        title: languageProvider.tr('functions.functionName'),
-                        controller: _functionNameController,
-                        required: true,
-                        enableMic: true,
-                        maxLength: 100,
-                        inputFormatters: _nameInputFormatters(),
-                        validator: _mandatoryValidator(
-                          languageProvider.tr('functions.functionName'),
-                          languageProvider,
+          body: Column(
+            children: [
+              Expanded(
+                child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.page,
+                    AppSpacing.md,
+                    AppSpacing.page,
+                    AppSpacing.lg,
+                  ),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _FormSectionCard(
+                          children: [
+                            _buildTextFormWidget(
+                              title: languageProvider.tr(
+                                'functions.functionName',
+                              ),
+                              controller: _functionNameController,
+                              required: true,
+                              enableMic: true,
+                              maxLength: 100,
+                              inputFormatters: _nameInputFormatters(),
+                              validator: _mandatoryValidator(
+                                languageProvider.tr('functions.functionName'),
+                                languageProvider,
+                              ),
+                              onSaved: (value) =>
+                                  _requestModel.functionName = value,
+                            ),
+                            const SizedBox(height: AppSpacing.md),
+                            _buildTextFormWidget(
+                              title: languageProvider.tr('functions.date'),
+                              controller: _dateController,
+                              required: true,
+                              focusNode: AlwaysDisabledFocusNode(),
+                              onTap: () => _selectDate(context),
+                              validator: _mandatoryValidator(
+                                languageProvider.tr('functions.date'),
+                                languageProvider,
+                              ),
+                              onSaved: (value) => _requestModel.date = value,
+                            ),
+                            const SizedBox(height: AppSpacing.md),
+                            _buildTextFormWidget(
+                              title: languageProvider.tr('functions.location'),
+                              enableMic: true,
+                              controller: _placeController,
+                              inputFormatters: _nameInputFormatters(),
+                              onSaved: (value) =>
+                                  _requestModel.nativePlace = value,
+                            ),
+                            const SizedBox(height: AppSpacing.md),
+                            _buildTextFormWidget(
+                              title: languageProvider.tr('functions.notes'),
+                              enableMic: true,
+                              controller: _notesController,
+                              inputFormatters: _nameInputFormatters(),
+                              onSaved: (value) =>
+                                  _requestModel.nativePlace = value,
+                            ),
+                          ],
                         ),
-                        onSaved: (value) => _requestModel.functionName = value,
-                      ),
-                      const SizedBox(height: 16),
-                      _buildTextFormWidget(
-                        title: languageProvider.tr('functions.date'),
-                        controller: _dateController,
-                        required: true,
-                        focusNode: AlwaysDisabledFocusNode(),
-                        onTap: () => _selectDate(context),
-                        validator: _mandatoryValidator(
-                          languageProvider.tr('functions.date'),
-                          languageProvider,
-                        ),
-                        onSaved: (value) => _requestModel.date = value,
-                      ),
-                      const SizedBox(height: 16),
-
-                      _buildTextFormWidget(
-                        title: languageProvider.tr('functions.location'),
-                        enableMic: true,
-                        controller: _placeController,
-                        inputFormatters: _nameInputFormatters(),
-                        onSaved: (value) => _requestModel.nativePlace = value,
-                      ),
-                      const SizedBox(height: 16),
-
-                      _buildTextFormWidget(
-                        title: languageProvider.tr('functions.notes'),
-                        enableMic: true,
-                        controller: _notesController,
-                        inputFormatters: _nameInputFormatters(),
-                        onSaved: (value) => _requestModel.nativePlace = value,
-                      ),
-                      const SizedBox(height: 16),
-                      _buildImageUploadWidget(),
-                      const SizedBox(height: 32),
-                      AppButton(
-                        title: isEditing
-                            ? languageProvider.tr('functions.updateFunction')
-                            : languageProvider.tr('common.save'),
-                        onPressed: _onSubmit,
-                      ),
-                      const SizedBox(height: 32),
-                    ],
+                        const SizedBox(height: AppSpacing.md),
+                        _buildImageUploadWidget(primary),
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
+              SafeArea(
+                top: false,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.page,
+                    0,
+                    AppSpacing.page,
+                    AppSpacing.md,
+                  ),
+                  child: _PrimaryActionButton(
+                    title: isEditing
+                        ? languageProvider.tr('home.updateFunction')
+                        : languageProvider.tr('common.save'),
+                    onPressed: _onSubmit,
+                  ),
+                ),
+              ),
+            ],
           ),
         );
       },
     );
   }
 
-  // Helper method to build text form widgets
   Widget _buildTextFormWidget({
     required String title,
     required TextEditingController controller,
@@ -206,14 +231,12 @@ class _AddEditFunctionsState extends State<AddEditFunctions> {
     );
   }
 
-  // Input formatters to restrict unwanted characters
   List<TextInputFormatter> _nameInputFormatters() {
     return [
       FilteringTextInputFormatter.deny(RegExp(r'[0-9!@#\\$%^&*(),.?":{}|<>]')),
     ];
   }
 
-  // Validator to ensure fields are not empty
   String? Function(dynamic) _mandatoryValidator(
     String fieldName,
     LanguageProvider languageProvider,
@@ -226,19 +249,14 @@ class _AddEditFunctionsState extends State<AddEditFunctions> {
     };
   }
 
-  // Date picker for selecting function date
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await AppDatePicker.pick(
       context,
       initialDate: _selectedDate,
       allowFutureDates: false,
       firstDate: DateTime(DateTime.now().year - 50),
-      // lastDate: DateTime(DateTime.now().year + 50),
       barrierColor: Colors.black54,
       lastDate: DateTime.now(),
-      // locale: Provider.of<LanguageProvider>(context, listen: false).isTamil
-      // ? const Locale("ta", "IN")
-      // : const Locale("en", "US"),
     );
 
     if (picked != null && picked != _selectedDate) {
@@ -249,7 +267,6 @@ class _AddEditFunctionsState extends State<AddEditFunctions> {
     }
   }
 
-  // Handle form submission
   void _onSubmit() {
     if (_formKey.currentState?.validate() ?? false) {
       _formKey.currentState?.save();
@@ -258,7 +275,6 @@ class _AddEditFunctionsState extends State<AddEditFunctions> {
     }
   }
 
-  // Save or update function details
   void _saveUpdateFunctions() async {
     final user = await _storage.get(AppVariables.userInformation);
 
@@ -268,7 +284,6 @@ class _AddEditFunctionsState extends State<AddEditFunctions> {
     if (isEditing) {
       id = widget.data[0]['id'].toString();
     }
-    // determine which image path should be sent (only relative/raw path)
     String imagePathToSend = '';
     if (_uploadedImageUrl != null && _uploadedImageUrl!.isNotEmpty) {
       imagePathToSend = _uploadedImageUrl!;
@@ -307,7 +322,6 @@ class _AddEditFunctionsState extends State<AddEditFunctions> {
     }
   }
 
-  // Convert date format for API
   String _convertDate(String inputDate) {
     try {
       final parsedDate = AppDatePicker.parseDisplay(inputDate);
@@ -317,14 +331,11 @@ class _AddEditFunctionsState extends State<AddEditFunctions> {
     }
   }
 
-  // -------------------- image upload helpers --------------------
-
-  Widget _buildImageUploadWidget() {
+  Widget _buildImageUploadWidget(Color primary) {
     final languageProvider = Provider.of<LanguageProvider>(
       context,
       listen: false,
     );
-    final colorScheme = Theme.of(context).colorScheme;
     final bool hasImage =
         _functionImage != null ||
         _existingImageUrl != null ||
@@ -335,80 +346,111 @@ class _AddEditFunctionsState extends State<AddEditFunctions> {
       children: [
         Text(
           languageProvider.tr('functions.image'),
-          style: Theme.of(
-            context,
-          ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.normal),
-          // style: TextStyle(fontSize: 14, color: Colors.black87),
+          style: AppTypography.label.copyWith(
+            color: AppColors.textPrimary,
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
+          ),
         ),
-        const SizedBox(height: 8),
-        GestureDetector(
-          onTap: hasImage ? _showImageOptions : _showImagePickerOptions,
-          child: Container(
-            height: 200,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: colorScheme.primary.withValues(alpha: 0.3),
-                width: 1.5,
+        const SizedBox(height: AppSpacing.sm),
+        Material(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          child: InkWell(
+            onTap: hasImage ? _showImageOptions : _showImagePickerOptions,
+            borderRadius: BorderRadius.circular(16),
+            child: Ink(
+              height: 200,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: AppShadows.soft,
               ),
-            ),
-            child: hasImage
-                ? Stack(
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: _functionImage != null
-                            ? Image.file(
-                                _functionImage!,
-                                fit: BoxFit.cover,
-                                width: double.infinity,
-                                height: double.infinity,
-                              )
-                            : (_existingImageUrl != null &&
-                                  _existingImageUrl!.isNotEmpty)
-                            ? Image.network(
-                                _existingImageUrl!,
-                                fit: BoxFit.cover,
-                                width: double.infinity,
-                                height: double.infinity,
-                                errorBuilder: (context, error, stackTrace) =>
-                                    _buildPlaceholder(colorScheme),
-                              )
-                            : _buildPlaceholder(colorScheme),
-                      ),
-                      Positioned(
-                        top: 8,
-                        right: 8,
-                        child: Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            color: Colors.black.withValues(alpha: 0.6),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.edit_outlined,
-                            color: Colors.white,
-                            size: 18,
+              child: hasImage
+                  ? Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(16),
+                          child: _functionImage != null
+                              ? Image.file(
+                                  _functionImage!,
+                                  fit: BoxFit.cover,
+                                  width: double.infinity,
+                                  height: double.infinity,
+                                )
+                              : (_existingImageUrl != null &&
+                                    _existingImageUrl!.isNotEmpty)
+                              ? Image.network(
+                                  _existingImageUrl!,
+                                  fit: BoxFit.cover,
+                                  width: double.infinity,
+                                  height: double.infinity,
+                                  errorBuilder: (context, error, stackTrace) =>
+                                      _buildPlaceholder(primary),
+                                )
+                              : _buildPlaceholder(primary),
+                        ),
+                        Positioned(
+                          top: 10,
+                          right: 10,
+                          child: Container(
+                            width: 34,
+                            height: 34,
+                            decoration: BoxDecoration(
+                              color: Colors.black.withValues(alpha: 0.45),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            alignment: Alignment.center,
+                            child: const HugeIcon(
+                              icon: HugeIcons.strokeRoundedPencilEdit02,
+                              color: Colors.white,
+                              size: 16,
+                              strokeWidth: 1.8,
+                            ),
                           ),
                         ),
-                      ),
-                    ],
-                  )
-                : _buildPlaceholder(colorScheme),
+                      ],
+                    )
+                  : _buildPlaceholder(primary),
+            ),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildPlaceholder(ColorScheme colorScheme) {
+  Widget _buildPlaceholder(Color primary) {
     return Center(
-      child: Icon(
-        Icons.camera_alt_outlined,
-        size: 48,
-        color: colorScheme.primary.withValues(alpha: 0.3),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              color: primary.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            alignment: Alignment.center,
+            child: HugeIcon(
+              icon: HugeIcons.strokeRoundedCamera01,
+              color: primary.withValues(alpha: 0.85),
+              size: 24,
+              strokeWidth: 1.8,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            context.read<LanguageProvider>().tr('functions.selectImage'),
+            style: AppTypography.body.copyWith(
+              color: AppColors.textSecondary,
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -551,12 +593,10 @@ class _AddEditFunctionsState extends State<AddEditFunctions> {
         ],
       );
       if (croppedFile == null) return null;
-      // compress the cropped image before returning
       final compressed = await _compressImage(croppedFile.path);
       if (compressed != null) {
         return compressed;
       }
-      // fallback to original cropped file if compression failed
       return File(croppedFile.path);
     } catch (e) {
       printContent("Error cropping image: $e");
@@ -626,7 +666,6 @@ class _AddEditFunctionsState extends State<AddEditFunctions> {
             languageProvider.tr('functions.imageUploadSuccess') ??
                 "Image uploaded successfully",
           );
-          // delete local cache
           if (await imageFile.exists()) {
             // ignore: body_might_complete_normally_catch_error
             await imageFile.delete().catchError((_) {});
@@ -667,5 +706,184 @@ class _AddEditFunctionsState extends State<AddEditFunctions> {
     _placeController.dispose();
     _notesController.dispose();
     super.dispose();
+  }
+}
+
+class _FormAppHeader extends StatelessWidget implements PreferredSizeWidget {
+  final String title;
+  final VoidCallback onBack;
+
+  const _FormAppHeader({required this.title, required this.onBack});
+
+  @override
+  Size get preferredSize => const Size.fromHeight(72);
+
+  @override
+  Widget build(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return AppBar(
+      toolbarHeight: preferredSize.height,
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      surfaceTintColor: Colors.transparent,
+      backgroundColor: Colors.transparent,
+      centerTitle: true,
+      automaticallyImplyLeading: false,
+      titleSpacing: 0,
+      systemOverlayStyle: SystemUiOverlayStyle.light.copyWith(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+        statusBarBrightness: Brightness.dark,
+        systemNavigationBarColor: isDark ? Colors.black : Colors.white,
+        systemNavigationBarIconBrightness:
+            isDark ? Brightness.light : Brightness.dark,
+      ),
+      flexibleSpace: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              primary,
+              Color.lerp(primary, const Color(0xff0A3D8F), 0.35)!,
+            ],
+          ),
+          borderRadius: const BorderRadius.only(
+            bottomLeft: Radius.circular(22),
+            bottomRight: Radius.circular(22),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: primary.withValues(alpha: 0.28),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+      ),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.only(
+          bottomLeft: Radius.circular(22),
+          bottomRight: Radius.circular(22),
+        ),
+      ),
+      leadingWidth: 54,
+      leading: Padding(
+        padding: const EdgeInsets.only(left: 10),
+        child: Center(
+          child: Material(
+            color: Colors.white.withValues(alpha: 0.14),
+            shape: const CircleBorder(),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: onBack,
+              customBorder: const CircleBorder(),
+              child: const SizedBox(
+                width: 42,
+                height: 42,
+                child: Center(
+                  child: HugeIcon(
+                    icon: HugeIcons.strokeRoundedArrowLeft01,
+                    color: Colors.white,
+                    size: 22,
+                    strokeWidth: 1.9,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+      title: Text(
+        title,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        textAlign: TextAlign.center,
+        style: AppTypography.sectionTitle.copyWith(
+          color: Colors.white,
+          fontSize: 16,
+          fontWeight: FontWeight.w700,
+          letterSpacing: -0.2,
+        ),
+      ),
+      actions: const [SizedBox(width: 54)],
+    );
+  }
+}
+
+class _FormSectionCard extends StatelessWidget {
+  final List<Widget> children;
+
+  const _FormSectionCard({required this.children});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(14, 16, 14, 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: AppShadows.soft,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: children,
+      ),
+    );
+  }
+}
+
+class _PrimaryActionButton extends StatelessWidget {
+  final String title;
+  final VoidCallback onPressed;
+
+  const _PrimaryActionButton({required this.title, required this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
+
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(14),
+        child: Ink(
+          height: 52,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                primary,
+                Color.lerp(primary, const Color(0xff0A3D8F), 0.28)!,
+              ],
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: primary.withValues(alpha: 0.28),
+                blurRadius: 14,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          child: Center(
+            child: Text(
+              title,
+              style: AppTypography.label.copyWith(
+                color: Colors.white,
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
