@@ -280,21 +280,21 @@ class _HomePageState extends State<HomePage> {
           );
         },
       ),
-      body: MoiRefreshIndicator(
-        onRefresh: () async {
-          await Future.wait([
-            getTotalAmount(showLoading: false),
-            _loadFunctionSummaries(),
-            _loadUpcomingFunctions(),
-          ]);
-        },
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final horizontalPad = constraints.maxWidth >= 480
-                ? AppSpacing.xl
-                : AppSpacing.page;
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final horizontalPad = constraints.maxWidth >= 480
+              ? AppSpacing.xl
+              : AppSpacing.page;
 
-            return Consumer<LanguageProvider>(
+          return MoiRefreshIndicator(
+            onRefresh: () async {
+              await Future.wait([
+                getTotalAmount(showLoading: false),
+                _loadFunctionSummaries(),
+                _loadUpcomingFunctions(),
+              ]);
+            },
+            child: Consumer<LanguageProvider>(
               builder: (context, languageProvider, _) {
                 return Stack(
                   children: [
@@ -435,9 +435,9 @@ class _HomePageState extends State<HomePage> {
                   ],
                 );
               },
-            );
-          },
-        ),
+            ),
+          );
+        },
       ),
     );
   }

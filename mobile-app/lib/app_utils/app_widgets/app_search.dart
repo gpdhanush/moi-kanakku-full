@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:permission_handler/permission_handler.dart';
+import 'package:hugeicons/hugeicons.dart';
+import 'package:moi/app_themes/index.dart';
 import 'package:moi/app_utils/app_providers/language_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:provider/provider.dart';
 import 'package:speech_to_text/speech_recognition_error.dart';
 import 'package:speech_to_text/speech_to_text.dart';
-import 'package:provider/provider.dart';
 
-/// A search widget with optional speech-to-text functionality
+/// Modern search field with speech-to-text mic support.
 class SearchWidget extends StatefulWidget {
   final String? hintText;
   final TextEditingController? controller;
@@ -46,12 +48,9 @@ class _SearchWidgetState extends State<SearchWidget> {
   }
 
   void _onTextChanged() {
-    if (mounted) {
-      setState(() {});
-    }
+    if (mounted) setState(() {});
   }
 
-  /// Initialize speech recognition
   Future<void> _initializeSpeech() async {
     if (_initializing) return;
     _initializing = true;
@@ -102,7 +101,6 @@ class _SearchWidgetState extends State<SearchWidget> {
     }
   }
 
-  /// Resolves the best supported localeId for speech-to-text
   String? _resolveLocaleId(String desiredLocaleId) {
     if (_availableLocales.isEmpty) return null;
 
@@ -120,15 +118,12 @@ class _SearchWidgetState extends State<SearchWidget> {
     return _availableLocales.first.localeId;
   }
 
-  /// Starts listening for speech input and updates the controller with recognized words
   Future<void> _startListening() async {
     if (!_isInitialized) {
       await _initializeSpeech();
     }
 
-    if (!_isInitialized || widget.controller == null) {
-      return;
-    }
+    if (!_isInitialized || widget.controller == null) return;
 
     final voiceCode = context.read<LanguageProvider>().voiceLanguageCode;
     final localeId = _resolveLocaleId(voiceCode);
@@ -164,7 +159,6 @@ class _SearchWidgetState extends State<SearchWidget> {
     }
   }
 
-  /// Stops listening for speech input
   void _stopListening() {
     if (_isListening) {
       _speech.stop();
@@ -176,7 +170,6 @@ class _SearchWidgetState extends State<SearchWidget> {
     }
   }
 
-  /// Toggle speech listening
   void _toggleListening() {
     FocusScope.of(context).unfocus();
     if (_isListening) {
@@ -186,82 +179,102 @@ class _SearchWidgetState extends State<SearchWidget> {
     }
   }
 
+  void _clearText() {
+    if (_isListening) _stopListening();
+    widget.controller?.clear();
+    FocusScope.of(context).unfocus();
+  }
+
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final primary = Theme.of(context).colorScheme.primary;
     final hasText = widget.controller?.text.isNotEmpty ?? false;
+    final extraTrailing = widget.trailing?.toList() ?? const <Widget>[];
 
-    return SearchBar(
-      controller: widget.controller,
-      shadowColor: WidgetStateProperty.all(
-        colorScheme.primary.withValues(alpha: 0.1),
+    return Container(
+      height: 48,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: AppShadows.soft,
       ),
-      elevation: WidgetStateProperty.all(0),
-      shape: WidgetStateProperty.all(
-        RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
-      ),
-      side: WidgetStateProperty.all(
-        BorderSide(
-          color: colorScheme.primary.withValues(alpha: 0.3),
-          width: 1.5,
-        ),
-      ),
-      hintText: widget.hintText ?? "Search...",
-      hintStyle: WidgetStateProperty.all(
-        TextStyle(
+      alignment: Alignment.center,
+      child: TextField(
+        controller: widget.controller,
+        style: AppTypography.body.copyWith(
+          color: AppColors.textPrimary,
           fontSize: 14,
           fontWeight: FontWeight.w500,
-          color: Colors.grey.shade600,
         ),
-      ),
-      textStyle: WidgetStateProperty.all(
-        const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-      ),
-      autoFocus: false,
-      leading: Padding(
-        padding: const EdgeInsets.only(left: 8),
-        child: Icon(
-          Icons.search_outlined,
-          color: colorScheme.primary,
-          size: 22,
-        ),
-      ),
-      trailing: [
-        if (hasText)
-          IconButton(
-            onPressed: () {
-              // Stop listening if still active
-              if (_isListening) {
-                _stopListening();
-              }
-              widget.controller?.clear();
-              FocusScope.of(context).unfocus();
-            },
-            icon: Icon(
-              Icons.close_outlined,
-              color: Colors.grey.shade600,
-              size: 20,
-            ),
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
-          )
-        else if (_isInitialized)
-          IconButton(
-            onPressed: _toggleListening,
-            icon: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 200),
-              child: Icon(
-                _isListening ? Icons.mic_outlined : Icons.mic_none_outlined,
-                key: ValueKey(_isListening),
-                color: _isListening ? Colors.redAccent : colorScheme.primary,
-                size: 20,
-              ),
-            ),
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+        cursorColor: primary,
+        textInputAction: TextInputAction.search,
+        decoration: InputDecoration(
+          hintText: widget.hintText ?? 'Search...',
+          hintStyle: AppTypography.body.copyWith(
+            color: const Color(0xffA1A1AA),
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
           ),
-      ],
+          border: InputBorder.none,
+          isDense: true,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 4,
+            vertical: 12,
+          ),
+          prefixIcon: Padding(
+            padding: const EdgeInsets.only(left: 12, right: 8),
+            child: HugeIcon(
+              icon: HugeIcons.strokeRoundedSearch01,
+              color: const Color(0xff71717A),
+              size: 18,
+              strokeWidth: 1.9,
+            ),
+          ),
+          prefixIconConstraints: const BoxConstraints(
+            minWidth: 42,
+            minHeight: 24,
+          ),
+          suffixIcon: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ...extraTrailing,
+              if (hasText)
+                IconButton(
+                  onPressed: _clearText,
+                  tooltip: 'Clear',
+                  icon: HugeIcon(
+                    icon: HugeIcons.strokeRoundedCancel01,
+                    color: const Color(0xffA1A1AA),
+                    size: 16,
+                    strokeWidth: 1.9,
+                  ),
+                )
+              else if (_isInitialized)
+                IconButton(
+                  onPressed: _toggleListening,
+                  tooltip: _isListening ? 'Stop' : 'Voice search',
+                  icon: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 200),
+                    child: HugeIcon(
+                      key: ValueKey(_isListening),
+                      icon: _isListening
+                          ? HugeIcons.strokeRoundedMic02
+                          : HugeIcons.strokeRoundedMic01,
+                      color: _isListening ? AppColors.moiGiven : primary,
+                      size: 18,
+                      strokeWidth: 1.9,
+                    ),
+                  ),
+                ),
+              const SizedBox(width: 4),
+            ],
+          ),
+          suffixIconConstraints: const BoxConstraints(
+            minWidth: 48,
+            minHeight: 40,
+          ),
+        ),
+      ),
     );
   }
 }

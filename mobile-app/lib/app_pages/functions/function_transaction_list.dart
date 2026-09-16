@@ -1,13 +1,17 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:intl/intl.dart';
 import 'package:moi/app_configs/index.dart';
 import 'package:moi/app_services/index.dart';
 import 'package:moi/app_services/export_service.dart';
 import 'package:moi/app_storages/secure_storages.dart';
+import 'package:moi/app_themes/index.dart';
 import 'package:moi/app_utils/index.dart';
 import 'package:moi/app_utils/app_providers/language_provider.dart';
 import 'package:provider/provider.dart';
-import 'dart:async';
 
 class FunctionTransactionList extends StatefulWidget {
   final dynamic functionData;
@@ -27,12 +31,20 @@ class _FunctionTransactionListState extends State<FunctionTransactionList> {
   List<dynamic> transactionList = [];
   List<dynamic> searchHistory = [];
   bool isLoading = true;
-  double totalInvest = 0.0;
-  double totalReturn = 0.0;
 
-  // Search
   final TextEditingController searchController = TextEditingController();
   Timer? _debounce;
+
+  String get _functionName {
+    final name = widget.functionData['functionName']?.toString().trim() ?? '';
+    return name.isEmpty ? '—' : name;
+  }
+
+  String get _functionDateSubtitle {
+    final raw = widget.functionData['functionDate']?.toString();
+    final formatted = formatFunctionDateWithDay(raw);
+    return formatted.isEmpty ? '' : formatted.toUpperCase();
+  }
 
   @override
   void initState() {
@@ -49,7 +61,6 @@ class _FunctionTransactionListState extends State<FunctionTransactionList> {
     super.dispose();
   }
 
-  // Listener for search input changes with debouncing
   void searchListener() {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
     _debounce = Timer(const Duration(milliseconds: 500), () {
@@ -57,7 +68,6 @@ class _FunctionTransactionListState extends State<FunctionTransactionList> {
     });
   }
 
-  // Filters the transaction list based on the search input
   void search(String value) {
     if (!mounted) return;
 
@@ -70,12 +80,15 @@ class _FunctionTransactionListState extends State<FunctionTransactionList> {
             final date =
                 element['transactionDate']?.toString().toLowerCase() ?? '';
             final notes = element['notes']?.toString().toLowerCase() ?? '';
+            final city =
+                element['person']?['city']?.toString().toLowerCase() ?? '';
             final amount = element['amount']?.toString().toLowerCase() ?? '';
             final input = value.toLowerCase();
 
             return personName.contains(input) ||
                 date.contains(input) ||
                 notes.contains(input) ||
+                city.contains(input) ||
                 amount.contains(input);
           }).toList();
 
@@ -84,21 +97,18 @@ class _FunctionTransactionListState extends State<FunctionTransactionList> {
     });
   }
 
-  // Export function transactions to PDF
   Future<void> _exportFunctionTransactionsPdf() async {
     try {
-      // Show loading
       showDialog(
         context: context,
         barrierDismissible: false,
         builder: (_) => const Center(child: CircularProgressIndicator()),
       );
 
-      // Get user details
       final user = await storage.get(AppVariables.userInformation);
 
       if (!mounted) return;
-      Navigator.pop(context); // Hide loading
+      Navigator.pop(context);
 
       if (user == null) {
         alertServices.errorToast(
@@ -109,13 +119,12 @@ class _FunctionTransactionListState extends State<FunctionTransactionList> {
         return;
       }
 
-      // Use ExportService to export
       final functionName =
           widget.functionData['functionName']?.toString().replaceAll(
-            RegExp(r'[^a-zA-Z0-9]'),
-            '_',
-          ) ??
-          'Transactions';
+                RegExp(r'[^a-zA-Z0-9]'),
+                '_',
+              ) ??
+              'Transactions';
       final fileName = "Moi_${functionName}_Transactions.pdf";
 
       await ExportService.exportTransactionsToPdf(
@@ -142,13 +151,15 @@ class _FunctionTransactionListState extends State<FunctionTransactionList> {
     }
   }
 
-  Future<void> _loadTransactions() async {
-    setState(() => isLoading = true);
+  Future<void> _loadTransactions({bool showLoading = true}) async {
+    if (showLoading && mounted) {
+      setState(() => isLoading = true);
+    }
 
     try {
       final user = await storage.get(AppVariables.userInformation);
       if (user == null) {
-        setState(() => isLoading = false);
+        if (mounted) setState(() => isLoading = false);
         return;
       }
 
@@ -163,33 +174,33 @@ class _FunctionTransactionListState extends State<FunctionTransactionList> {
       if (mounted) {
         if (response != null && response['responseType'] == "S") {
           List transactions = response['responseValue'] ?? [];
-
-          // Calculate totals
-          double invest = 0.0;
-          double returnAmt = 0.0;
-
-          for (var transaction in transactions) {
-            try {
-              String type = transaction['type']?.toString().toUpperCase() ?? '';
-              double amount = double.parse(
-                transaction['amount']?.toString() ?? '0',
-              );
-
-              if (type == 'INVEST') {
-                invest += amount;
-              } else if (type == 'RETURN') {
-                returnAmt += amount;
-              }
-            } catch (e) {
-              // Skip invalid amounts
-            }
-          }
+          final query = searchController.text;
 
           setState(() {
             transactionList = transactions;
-            searchHistory = transactions;
-            totalInvest = invest;
-            totalReturn = returnAmt;
+            searchHistory = query.isEmpty
+                ? transactions
+                : transactions.where((element) {
+                    final personName =
+                        "${element['person']?['firstName']?.toString() ?? ''} ${element['person']?['lastName']?.toString() ?? ''}"
+                            .toLowerCase();
+                    final date =
+                        element['transactionDate']?.toString().toLowerCase() ??
+                            '';
+                    final notes =
+                        element['notes']?.toString().toLowerCase() ?? '';
+                    final city =
+                        element['person']?['city']?.toString().toLowerCase() ??
+                            '';
+                    final amount =
+                        element['amount']?.toString().toLowerCase() ?? '';
+                    final input = query.toLowerCase();
+                    return personName.contains(input) ||
+                        date.contains(input) ||
+                        notes.contains(input) ||
+                        city.contains(input) ||
+                        amount.contains(input);
+                  }).toList();
             isLoading = false;
           });
         } else {
@@ -217,115 +228,272 @@ class _FunctionTransactionListState extends State<FunctionTransactionList> {
     return _formatter.format(amount);
   }
 
-  String _formatDate(String? dateStr) {
-    if (dateStr == null || dateStr.isEmpty) return '-';
-    try {
-      final date = DateTime.parse(dateStr);
-      return DateFormat('dd-MMM-yyyy').format(date);
-    } catch (e) {
-      return dateStr;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    // final colorScheme = Theme.of(context).colorScheme;
-    // final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primary = Theme.of(context).colorScheme.primary;
+    final languageProvider = context.watch<LanguageProvider>();
 
     return Scaffold(
-      appBar: AppBarWidget(
-        title:
-            widget.functionData['functionName']?.toString() ??
-            context.read<LanguageProvider>().tr('transactionList.title'),
-        action: [
-          IconButton(
-            icon: const Icon(
-              Icons.picture_as_pdf_outlined,
-              color: Colors.white,
-              size: 26,
-            ),
-            onPressed: () => _exportFunctionTransactionsPdf(),
-            tooltip: context.read<LanguageProvider>().tr(
-              'transactionList.exportPdf',
-            ),
-          ),
-        ],
+      backgroundColor: AppColors.background,
+      appBar: _FunctionListHeader(
+        title: _functionName.toUpperCase(),
+        subtitle: _functionDateSubtitle,
+        exportTooltip: languageProvider.tr('transactionList.exportPdf'),
+        onBack: () => Navigator.pop(context),
+        onExport: _exportFunctionTransactionsPdf,
       ),
       body: isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator(strokeWidth: 2.5))
           : Column(
               children: [
-                // _buildSummaryHeader(
-                //   Theme.of(context).colorScheme,
-                //   Theme.of(context).brightness == Brightness.dark,
-                // ),
-                const SizedBox(height: 16),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
-                  child: SizedBox(
-                    height: 52,
-                    child: SearchWidget(
-                      controller: searchController,
-                      hintText: context.read<LanguageProvider>().tr(
-                        'transactionList.search',
-                      ),
-                    ),
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.page,
+                    AppSpacing.sm,
+                    AppSpacing.page,
+                    0,
+                  ),
+                  child: SearchWidget(
+                    controller: searchController,
+                    hintText: languageProvider.tr('transactionList.search'),
                   ),
                 ),
+                const SizedBox(height: AppSpacing.sm),
                 Expanded(
                   child: searchHistory.isEmpty
-                      ? Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.receipt_long_outlined,
-                                size: 64,
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.primary.withValues(alpha: 0.3),
-                              ),
-                              const SizedBox(height: 16),
-                              Text(
-                                context.read<LanguageProvider>().tr(
+                      ? CustomScrollView(
+                          physics: const BouncingScrollPhysics(),
+                          slivers: [
+                            SliverFillRemaining(
+                              hasScrollBody: false,
+                              child: MoiEmptyState(
+                                title: languageProvider.tr(
                                   'transactionList.empty',
                                 ),
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: Theme.of(context).colorScheme.primary,
+                                subtitle: languageProvider.tr(
+                                  'transactionList.emptyHint',
                                 ),
+                                icon: HugeIcons.strokeRoundedInvoice01,
+                                accentColor: primary,
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
                         )
-                      : _buildTransactionList(
-                          Theme.of(context).colorScheme,
-                          Theme.of(context).brightness == Brightness.dark,
+                      : ListView.separated(
+                          physics: const BouncingScrollPhysics(),
+                          padding: const EdgeInsets.fromLTRB(
+                            AppSpacing.page,
+                            0,
+                            AppSpacing.page,
+                            24,
+                          ),
+                          itemCount: searchHistory.length,
+                          separatorBuilder: (_, _) =>
+                              const SizedBox(height: 8),
+                          itemBuilder: (context, index) {
+                            return _TransactionCard(
+                              transaction: searchHistory[index],
+                              formatAmount: _formatAmount,
+                              unknownLabel: languageProvider.tr(
+                                'transactionList.unknown',
+                              ),
+                              onTap: () {
+                                Navigator.pushNamed(
+                                  context,
+                                  'transaction-detail-view',
+                                  arguments: searchHistory[index],
+                                );
+                              },
+                            );
+                          },
                         ),
                 ),
               ],
             ),
     );
   }
+}
 
-  Widget _buildTransactionList(ColorScheme colorScheme, bool isDark) {
-    return ListView.builder(
-      physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-      itemCount: searchHistory.length,
-      itemBuilder: (context, index) {
-        final transaction = searchHistory[index];
-        return _buildTransactionCard(transaction, colorScheme, isDark);
-      },
+class _FunctionListHeader extends StatelessWidget
+    implements PreferredSizeWidget {
+  final String title;
+  final String subtitle;
+  final String exportTooltip;
+  final VoidCallback onBack;
+  final VoidCallback onExport;
+
+  const _FunctionListHeader({
+    required this.title,
+    required this.subtitle,
+    required this.exportTooltip,
+    required this.onBack,
+    required this.onExport,
+  });
+
+  @override
+  Size get preferredSize => const Size.fromHeight(72);
+
+  @override
+  Widget build(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return AppBar(
+      toolbarHeight: preferredSize.height,
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      surfaceTintColor: Colors.transparent,
+      backgroundColor: Colors.transparent,
+      centerTitle: true,
+      automaticallyImplyLeading: false,
+      titleSpacing: 0,
+      systemOverlayStyle: SystemUiOverlayStyle.light.copyWith(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+        statusBarBrightness: Brightness.dark,
+        systemNavigationBarColor: isDark ? Colors.black : Colors.white,
+        systemNavigationBarIconBrightness:
+            isDark ? Brightness.light : Brightness.dark,
+      ),
+      flexibleSpace: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              primary,
+              Color.lerp(primary, const Color(0xff0A3D8F), 0.35)!,
+            ],
+          ),
+          borderRadius: const BorderRadius.only(
+            bottomLeft: Radius.circular(22),
+            bottomRight: Radius.circular(22),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: primary.withValues(alpha: 0.28),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+      ),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.only(
+          bottomLeft: Radius.circular(22),
+          bottomRight: Radius.circular(22),
+        ),
+      ),
+      leadingWidth: 54,
+      leading: Padding(
+        padding: const EdgeInsets.only(left: 10),
+        child: Center(
+          child: Material(
+            color: Colors.white.withValues(alpha: 0.14),
+            shape: const CircleBorder(),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: onBack,
+              customBorder: const CircleBorder(),
+              child: const SizedBox(
+                width: 42,
+                height: 42,
+                child: Center(
+                  child: HugeIcon(
+                    icon: HugeIcons.strokeRoundedArrowLeft01,
+                    color: Colors.white,
+                    size: 22,
+                    strokeWidth: 1.9,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+      title: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+            style: AppTypography.sectionTitle.copyWith(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              letterSpacing: -0.2,
+              height: 1.15,
+            ),
+          ),
+          if (subtitle.isNotEmpty) ...[
+            const SizedBox(height: 2),
+            Text(
+              subtitle,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: AppTypography.body.copyWith(
+                color: Colors.white.withValues(alpha: 0.82),
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                height: 1.1,
+              ),
+            ),
+          ],
+        ],
+      ),
+      actions: [
+        Padding(
+          padding: const EdgeInsets.only(right: 10),
+          child: Center(
+            child: Tooltip(
+              message: exportTooltip,
+              child: Material(
+                color: Colors.white.withValues(alpha: 0.14),
+                shape: const CircleBorder(),
+                clipBehavior: Clip.antiAlias,
+                child: InkWell(
+                  onTap: onExport,
+                  customBorder: const CircleBorder(),
+                  child: const SizedBox(
+                    width: 42,
+                    height: 42,
+                    child: Center(
+                      child: HugeIcon(
+                        icon: HugeIcons.strokeRoundedPdf02,
+                        color: Colors.white,
+                        size: 20,
+                        strokeWidth: 1.9,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
+}
 
-  Widget _buildTransactionCard(
-    dynamic transaction,
-    ColorScheme colorScheme,
-    bool isDark,
-  ) {
+class _TransactionCard extends StatelessWidget {
+  final dynamic transaction;
+  final String Function(double) formatAmount;
+  final String unknownLabel;
+  final VoidCallback onTap;
+
+  const _TransactionCard({
+    required this.transaction,
+    required this.formatAmount,
+    required this.unknownLabel,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     final type = transaction['type']?.toString().toUpperCase() ?? '';
     final isInvest = type == 'INVEST';
     final amount =
@@ -333,141 +501,90 @@ class _FunctionTransactionListState extends State<FunctionTransactionList> {
     final personName =
         "${transaction['person']?['firstName']?.toString() ?? ''} ${transaction['person']?['lastName']?.toString().toTitleCase() ?? ''}"
             .trim();
-    final date = _formatDate(transaction['transactionDate']?.toString());
-    final notes = transaction['notes']?.toString() ?? '';
+    final city = transaction['person']?['city']?.toString().trim() ?? '';
+    final accent = isInvest ? AppColors.moiReceived : AppColors.moiGiven;
+    final soft =
+        isInvest ? AppColors.moiReceivedSoft : AppColors.moiGivenSoft;
 
-    final color = isInvest ? Colors.green : Colors.redAccent;
-    // final icon = isInvest
-    //     ? Icons.arrow_downward_outlined
-    //     : Icons.arrow_upward_outlined;
-
-    return Card(
-      margin: const EdgeInsets.only(bottom: 10),
-      elevation: 0,
-      color: isDark ? colorScheme.surfaceContainerHighest : Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(14),
-        side: BorderSide(color: colorScheme.outline.withValues(alpha: 0.12)),
-      ),
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(14),
       child: InkWell(
+        onTap: onTap,
         borderRadius: BorderRadius.circular(14),
-        onTap: () {
-          Navigator.pushNamed(
-            context,
-            'transaction-detail-view',
-            arguments: transaction,
-          );
-        },
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(12, 13, 14, 13),
+        child: Ink(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            boxShadow: AppShadows.soft,
+          ),
           child: Row(
             children: [
-              /// MODERN CIRCLE ICON
-              // Container(
-              //   width: 42,
-              //   height: 42,
-              //   decoration: BoxDecoration(
-              //     shape: BoxShape.circle,
-              //     color: color.withAlpha(30),
-              //   ),
-              //   child: Icon(icon, color: color, size: 21),
-              // ),
-
-              // const SizedBox(width: 5),
-
-              /// DETAILS
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: soft,
+                  borderRadius: BorderRadius.circular(11),
+                ),
+                alignment: Alignment.center,
+                child: HugeIcon(
+                  icon: HugeIcons.strokeRoundedUser,
+                  color: accent,
+                  size: 18,
+                  strokeWidth: 1.9,
+                ),
+              ),
+              const SizedBox(width: 10),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       personName.isEmpty
-                          ? context.read<LanguageProvider>().tr(
-                              'transactionList.unknown',
-                            )
-                          : personName,
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: isDark ? Colors.white : Colors.black87,
-                      ),
+                          ? unknownLabel
+                          : personName.toUpperCase(),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
+                      style: AppTypography.label.copyWith(
+                        color: AppColors.textPrimary,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -0.1,
+                      ),
                     ),
-                    const SizedBox(height: 6),
-
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.calendar_month_outlined,
-                          size: 12,
-                          color: color.withValues(alpha: 0.75),
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          date,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: isDark ? Colors.white70 : Colors.black54,
-                            fontFamily: 'Inter',
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    if (notes.isNotEmpty) ...[
-                      const SizedBox(height: 6),
+                    if (city.isNotEmpty) ...[
+                      const SizedBox(height: 3),
                       Text(
-                        notes,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: isDark ? Colors.white60 : Colors.black54,
-                          fontStyle: FontStyle.italic,
-                        ),
-                        maxLines: 2,
+                        city.toUpperCase(),
+                        maxLines: 1,
                         overflow: TextOverflow.ellipsis,
+                        style: AppTypography.body.copyWith(
+                          fontSize: 12,
+                          color: AppColors.textSecondary,
+                        ),
                       ),
                     ],
                   ],
                 ),
               ),
-
-              const SizedBox(width: 10),
-
-              /// AMOUNT SECTION
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  // Container(
-                  //   padding: const EdgeInsets.symmetric(
-                  //     horizontal: 10,
-                  //     vertical: 4,
-                  //   ),
-                  //   decoration: BoxDecoration(
-                  //     color: color.withAlpha(30),
-                  //     border: Border.all(color: color.withAlpha(100)),
-                  //     borderRadius: BorderRadius.circular(50),
-                  //   ),
-                  //   child: Text(
-                  //     isInvest ? 'வந்த மொய்' : 'செய்த மொய்',
-                  //     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  //       color: color,
-                  //       fontWeight: FontWeight.normal,
-                  //       fontSize: 9,
-                  //     ),
-                  //   ),
-                  // ),
-                  // const SizedBox(height: 8),
-                  Text(
-                    '₹ ${_formatAmount(amount)}',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                      color: color,
-                      fontFamily: 'Inter',
-                    ),
-                  ),
-                ],
+              const SizedBox(width: 8),
+              Text(
+                '₹ ${formatAmount(amount)}',
+                style: AppTypography.amountMedium.copyWith(
+                  color: accent,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -0.2,
+                ),
+              ),
+              const SizedBox(width: 4),
+              HugeIcon(
+                icon: HugeIcons.strokeRoundedArrowRight01,
+                color: const Color(0xffA1A1AA),
+                size: 15,
+                strokeWidth: 1.9,
               ),
             ],
           ),

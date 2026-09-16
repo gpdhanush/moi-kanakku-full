@@ -184,24 +184,21 @@ class _FeedbacksState extends State<Feedbacks> {
         title: context.read<LanguageProvider>().tr('feedback.title'),
         action: [],
       ),
-      body: MoiRefreshIndicator(
-        onRefresh: _loadPreviousFeedbacks,
-        child: SingleChildScrollView(
-          controller: _scrollController,
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.symmetric(horizontal: 15),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 16),
-              // New Feedback Section
-              _buildNewFeedbackSection(colorScheme),
-              const SizedBox(height: 24),
-              // Previous Feedbacks Section
-              _buildPreviousFeedbacksSection(colorScheme),
-              const SizedBox(height: 24),
-            ],
-          ),
+      body: SingleChildScrollView(
+        controller: _scrollController,
+        physics: const BouncingScrollPhysics(),
+        padding: const EdgeInsets.symmetric(horizontal: 15),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 16),
+            // New Feedback Section
+            _buildNewFeedbackSection(colorScheme),
+            const SizedBox(height: 24),
+            // Previous Feedbacks Section
+            _buildPreviousFeedbacksSection(colorScheme),
+            const SizedBox(height: 24),
+          ],
         ),
       ),
     );

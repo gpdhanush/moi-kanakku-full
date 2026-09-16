@@ -11,7 +11,7 @@ class AppCommonSearch extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 45,
+      height: 48,
       width: double.infinity,
       child: SearchWidget(
         controller: controller,

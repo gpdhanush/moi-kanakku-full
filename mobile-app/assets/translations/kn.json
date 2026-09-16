@@ -96,7 +96,7 @@
     "thing": "ವಸ್ತು",
     "notes": "ಟಿಪ್ಪಣಿಗಳು",
     "city": "ನಗರ",
-    "firstName": "ಮೊದಲ ಹೆಸರು",
+    "firstName": "ಮೊದಲ ಹೆಸರು", "name": "ಹೆಸರು",
     "secondName": "ಕೊನೆಯ ಹೆಸರು",
     "mobile": "ಮೊಬೈಲ್ ಸಂಖ್ಯೆ",
     "occupation": "ಉದ್ಯೋಗ",
@@ -261,7 +261,7 @@
     "title": "ವಿಶೇಷ ಕೊಡುಗೆ", "serviceFee": "ಸೇವಾ ಶುಲ್ಕ", "discount": "67% ರಿಯಾಯಿತಿ", "savings": "ನೀವು ₹2,000 ಉಳಿಸುತ್ತೀರಿ!", "featureDigitize": "ಹಳೆಯ ಮೊಯ್ ಪುಸ್ತಕಗಳನ್ನು ಡಿಜಿಟಲ್ ರೂಪಕ್ಕೆ ಪರಿವರ್ತಿಸಿ", "featureOrganize": "ಊರಿನ ಪ್ರಕಾರ ವರ್ಣಮಾಲೆಯಲ್ಲಿ ವ್ಯವಸ್ಥೆ ಮಾಡಿ", "featureSecure": "ಸುರಕ್ಷಿತ ಡಿಜಿಟಲ್ ಸಂಗ್ರಹಣೆ", "featureAccess": "ಯಾವಾಗ ಬೇಕಾದರೂ ಪ್ರವೇಶಿಸಿ", "featuresTitle": "ನಿಮಗೆ ಸಿಗುವುದು:", "contactNow": "ಈಗ ಸಂಪರ್ಕಿಸಿ", "coverage": "ತಮಿಳುನಾಡಿನಾದ್ಯಂತ ಸೇವೆ", "testimonialsTitle": "ನಮ್ಮ ಅನುಭವಗಳು:"
   },
   "transactionList": {
-    "title": "ವಹಿವಾಟುಗಳು", "exportPdf": "PDF ಆಗಿ ರಫ್ತು ಮಾಡಿ", "search": "ಜನರು, ದಿನಾಂಕಗಳು ಅಥವಾ ಮೊತ್ತಗಳನ್ನು ಹುಡುಕಿ", "empty": "ಯಾವುದೇ ವಹಿವಾಟುಗಳಿಲ್ಲ", "received": "ಸ್ವೀಕರಿಸಲಾಗಿದೆ", "given": "ನೀಡಲಾಗಿದೆ", "balance": "ಬಾಕಿ", "unknown": "ಅಜ್ಞಾತ", "userDetailsNotFound": "ಬಳಕೆದಾರರ ವಿವರಗಳು ಕಂಡುಬಂದಿಲ್ಲ", "exportedSuccessfully": "ಯಶಸ್ವಿಯಾಗಿ ರಫ್ತು ಮಾಡಲಾಗಿದೆ", "exportError": "ಡೇಟಾ ರಫ್ತು ಮಾಡುವಲ್ಲಿ ದೋಷ"
+    "title": "ವಹಿವಾಟುಗಳು", "exportPdf": "PDF ಆಗಿ ರಫ್ತು ಮಾಡಿ", "search": "ಜನರು, ದಿನಾಂಕಗಳು ಅಥವಾ ಮೊತ್ತಗಳನ್ನು ಹುಡುಕಿ", "empty": "ಯಾವುದೇ ವಹಿವಾಟುಗಳು ಕಂಡುಬಂದಿಲ್ಲ", "emptyHint": "ನಿಮ್ಮ ಹುಡುಕಾಟವನ್ನು ಬದಲಿಸಿ ಪ್ರಯತ್ನಿಸಿ", "received": "ಸ್ವೀಕರಿಸಲಾಗಿದೆ", "given": "ನೀಡಲಾಗಿದೆ", "balance": "ಬಾಕಿ", "unknown": "ಅಜ್ಞಾತ", "userDetailsNotFound": "ಬಳಕೆದಾರರ ವಿವರಗಳು ಕಂಡುಬಂದಿಲ್ಲ", "exportedSuccessfully": "ಯಶಸ್ವಿಯಾಗಿ ರಫ್ತು ಮಾಡಲಾಗಿದೆ", "exportError": "ಡೇಟಾ ರಫ್ತು ಮಾಡುವಲ್ಲಿ ದೋಷ"
   }
   ,
   "auth": {

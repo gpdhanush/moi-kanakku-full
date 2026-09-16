@@ -1,11 +1,11 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:intl/intl.dart';
 import 'package:moi/app_configs/index.dart';
 import 'package:moi/app_services/index.dart';
 import 'package:moi/app_services/export_service.dart';
 import 'package:moi/app_storages/secure_storages.dart';
-import 'package:moi/app_utils/app_widgets/app_no_data_found.dart';
 import 'package:moi/app_utils/app_widgets/moi_list_item.dart';
 import 'package:moi/app_utils/index.dart';
 import 'package:moi/app_utils/app_providers/language_provider.dart';
@@ -225,7 +225,13 @@ class _AllTransactionsPageState extends State<AllTransactionsPage> {
                 ),
                 Expanded(
                   child: _searchHistory.isEmpty
-                      ? const Center(child: AppNoDataFound(showSecond: false))
+                      ? MoiEmptyState(
+                          title: languageProvider.tr('transactionList.empty'),
+                          subtitle: languageProvider.tr(
+                            'transactionList.emptyHint',
+                          ),
+                          icon: HugeIcons.strokeRoundedInvoice01,
+                        )
                       : ListView.builder(
                           physics: const BouncingScrollPhysics(),
                           padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),

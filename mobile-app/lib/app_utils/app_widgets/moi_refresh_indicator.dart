@@ -23,17 +23,19 @@ class MoiRefreshIndicator extends StatelessWidget {
     return CustomRefreshIndicator(
       onRefresh: onRefresh,
       offsetToArmed: offsetToArmed,
+      // Rebuild only the overlay via AnimatedBuilder; keep the scroll child
+      // stable so nested layout (e.g. home) is not mutated mid-frame.
+      autoRebuild: false,
       builder: (context, child, controller) {
         return AnimatedBuilder(
           animation: controller,
-          builder: (context, _) {
+          child: child,
+          builder: (context, scrollChild) {
             final value = controller.value.clamp(0.0, 1.4);
             final pull = math.min(value, 1.0);
             final loading = controller.isLoading || controller.isComplete;
-            final show = controller.isDragging ||
-                controller.isArmed ||
-                loading;
-
+            final show =
+                controller.isDragging || controller.isArmed || loading;
             final displace = 48.0 * Curves.easeOut.transform(pull);
 
             return Stack(
@@ -42,11 +44,11 @@ class MoiRefreshIndicator extends StatelessWidget {
               children: [
                 Transform.translate(
                   offset: Offset(0, displace),
-                  child: child,
+                  child: scrollChild,
                 ),
                 if (show)
                   Positioned(
-                    top: MediaQuery.paddingOf(context).top + 6,
+                    top: 6,
                     child: _RefreshPill(
                       progress: pull,
                       loading: loading,
@@ -97,7 +99,7 @@ class _RefreshPill extends StatelessWidget {
               color: Colors.white,
               shape: BoxShape.circle,
               border: Border.all(
-                color: const Color(0xffE4E4E7), // zinc-200
+                color: const Color(0xffE4E4E7),
                 width: 1,
               ),
               boxShadow: [
@@ -223,11 +225,7 @@ class _ProgressArcPainter extends CustomPainter {
       ..strokeWidth = 2.6
       ..strokeCap = StrokeCap.round;
 
-    if (!sweepOnly) {
-      canvas.drawCircle(center, radius, track);
-    } else {
-      canvas.drawCircle(center, radius, track);
-    }
+    canvas.drawCircle(center, radius, track);
 
     final sweep = math.pi * 2 * progress.clamp(0.08, 1.0);
     canvas.drawArc(

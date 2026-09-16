@@ -178,68 +178,60 @@ class _FunctionsListState extends State<FunctionsList> {
   }
 
   Widget mainContent(LanguageProvider languageProvider, Color primary) {
-    return MoiRefreshIndicator(
-      onRefresh: () => getUserFunctions(showLoading: false),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.page),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: AppSpacing.sm),
-            _SearchField(
-              controller: searchController,
-              hintText: languageProvider.tr('functions.search'),
-              primary: primary,
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            if (searchHistory.isEmpty)
-              Expanded(
-                child: ListView(
-                  physics: const AlwaysScrollableScrollPhysics(
-                    parent: BouncingScrollPhysics(),
-                  ),
-                  children: [
-                    SizedBox(
-                      height: MediaQuery.sizeOf(context).height * 0.35,
-                      child: _EmptySearchState(
-                        primary: primary,
-                        title: languageProvider.tr('functions.noFunctions'),
-                        subtitle: languageProvider.tr(
-                          'functions.tryAdjustSearch',
-                        ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.page),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: AppSpacing.sm),
+          SearchWidget(
+            controller: searchController,
+            hintText: languageProvider.tr('functions.search'),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          if (searchHistory.isEmpty)
+            Expanded(
+              child: CustomScrollView(
+                physics: const BouncingScrollPhysics(),
+                slivers: [
+                  SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: _EmptySearchState(
+                      primary: primary,
+                      title: languageProvider.tr('functions.noFunctions'),
+                      subtitle: languageProvider.tr(
+                        'functions.tryAdjustSearch',
                       ),
                     ),
-                  ],
-                ),
-              )
-            else
-              Expanded(
-                child: ListView.separated(
-                  physics: const AlwaysScrollableScrollPhysics(
-                    parent: BouncingScrollPhysics(),
                   ),
-                  padding: const EdgeInsets.only(bottom: 88),
-                  itemCount: searchHistory.length,
-                  separatorBuilder: (_, _) =>
-                      const SizedBox(height: AppSpacing.sm),
-                  itemBuilder: (context, index) {
-                    final function = searchHistory[index];
-                    final name =
-                        function['functionName']?.toString().trim() ?? '-';
-                    return _FunctionRow(
-                      primary: primary,
-                      title: name.toUpperCase(),
-                      dateDay: formatFunctionDateWithDay(
-                        function['functionDate']?.toString(),
-                      ),
-                      imageUrl: _resolveImageUrl(function),
-                      onTap: () => showSheet(context, [function]),
-                    );
-                  },
-                ),
+                ],
               ),
-          ],
-        ),
+            )
+          else
+            Expanded(
+              child: ListView.separated(
+                physics: const BouncingScrollPhysics(),
+                padding: const EdgeInsets.only(bottom: 88),
+                itemCount: searchHistory.length,
+                separatorBuilder: (_, _) =>
+                    const SizedBox(height: AppSpacing.sm),
+                itemBuilder: (context, index) {
+                  final function = searchHistory[index];
+                  final name =
+                      function['functionName']?.toString().trim() ?? '-';
+                  return _FunctionRow(
+                    primary: primary,
+                    title: name.toUpperCase(),
+                    dateDay: formatFunctionDateWithDay(
+                      function['functionDate']?.toString(),
+                    ),
+                    imageUrl: _resolveImageUrl(function),
+                    onTap: () => showSheet(context, [function]),
+                  );
+                },
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -449,82 +441,6 @@ class _FunctionsAppHeader extends StatelessWidget
         ),
       ),
       actions: const [SizedBox(width: 54)],
-    );
-  }
-}
-
-class _SearchField extends StatelessWidget {
-  final TextEditingController controller;
-  final String hintText;
-  final Color primary;
-
-  const _SearchField({
-    required this.controller,
-    required this.hintText,
-    required this.primary,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 48,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xffE4E4E7)),
-        boxShadow: AppShadows.soft,
-      ),
-      alignment: Alignment.center,
-      child: TextField(
-        controller: controller,
-        style: AppTypography.body.copyWith(
-          color: AppColors.textPrimary,
-          fontSize: 14,
-          fontWeight: FontWeight.w500,
-        ),
-        cursorColor: primary,
-        decoration: InputDecoration(
-          hintText: hintText,
-          hintStyle: AppTypography.body.copyWith(
-            color: const Color(0xffA1A1AA),
-            fontSize: 14,
-          ),
-          border: InputBorder.none,
-          isDense: true,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 14,
-            vertical: 12,
-          ),
-          prefixIcon: Padding(
-            padding: const EdgeInsets.only(left: 12, right: 8),
-            child: HugeIcon(
-              icon: HugeIcons.strokeRoundedSearch01,
-              color: const Color(0xff71717A),
-              size: 18,
-              strokeWidth: 1.9,
-            ),
-          ),
-          prefixIconConstraints: const BoxConstraints(
-            minWidth: 40,
-            minHeight: 24,
-          ),
-          suffixIcon: ValueListenableBuilder<TextEditingValue>(
-            valueListenable: controller,
-            builder: (context, value, _) {
-              if (value.text.isEmpty) return const SizedBox.shrink();
-              return IconButton(
-                onPressed: controller.clear,
-                icon: HugeIcon(
-                  icon: HugeIcons.strokeRoundedCancel01,
-                  color: const Color(0xffA1A1AA),
-                  size: 16,
-                  strokeWidth: 1.9,
-                ),
-              );
-            },
-          ),
-        ),
-      ),
     );
   }
 }
@@ -760,7 +676,7 @@ class _EmptySearchStateState extends State<_EmptySearchState>
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 28),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Container(

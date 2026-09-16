@@ -52,30 +52,24 @@ class _NotificationListPageState extends State<NotificationListPage> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _notifications.isEmpty
-          ? MoiRefreshIndicator(
-              onRefresh: _refreshNotifications,
-              child: SingleChildScrollView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                child: SizedBox(
-                  height: MediaQuery.of(context).size.height - 200,
-                  child: _buildEmptyState(theme, colorScheme),
-                ),
+          ? SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              child: SizedBox(
+                height: MediaQuery.of(context).size.height - 200,
+                child: _buildEmptyState(theme, colorScheme),
               ),
             )
-          : MoiRefreshIndicator(
-              onRefresh: _refreshNotifications,
-              child: ListView.builder(
-                padding: const EdgeInsets.all(16),
-                itemCount: _notifications.length,
-                itemBuilder: (context, index) {
-                  return _buildDismissibleNotificationCard(
-                    _notifications[index],
-                    theme,
-                    colorScheme,
-                    index,
-                  );
-                },
-              ),
+          : ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: _notifications.length,
+              itemBuilder: (context, index) {
+                return _buildDismissibleNotificationCard(
+                  _notifications[index],
+                  theme,
+                  colorScheme,
+                  index,
+                );
+              },
             ),
     );
   }

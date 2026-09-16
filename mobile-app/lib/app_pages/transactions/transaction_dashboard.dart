@@ -224,30 +224,27 @@ class _TransactionDashboardState extends State<TransactionDashboard> {
   }
 
   Widget _buildBody(LanguageProvider languageProvider) {
-    return MoiRefreshIndicator(
-      onRefresh: fetchPersonLists,
-      child: CustomScrollView(
-        controller: _scrollController,
-        physics: const AlwaysScrollableScrollPhysics(),
-        slivers: [
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Column(
-                children: [
-                  const SizedBox(height: 12),
-                  _buildSearchAndFilter(languageProvider),
-                  const SizedBox(height: 12),
-                  _buildActionButtons(languageProvider),
-                  const SizedBox(height: 12),
-                ],
-              ),
+    return CustomScrollView(
+      controller: _scrollController,
+      physics: const BouncingScrollPhysics(),
+      slivers: [
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Column(
+              children: [
+                const SizedBox(height: 12),
+                _buildSearchAndFilter(languageProvider),
+                const SizedBox(height: 12),
+                _buildActionButtons(languageProvider),
+                const SizedBox(height: 12),
+              ],
             ),
           ),
-          _buildPersonsSliverList(languageProvider),
-          const SliverToBoxAdapter(child: SizedBox(height: 20)),
-        ],
-      ),
+        ),
+        _buildPersonsSliverList(languageProvider),
+        const SliverToBoxAdapter(child: SizedBox(height: 20)),
+      ],
     );
   }
 
@@ -434,34 +431,9 @@ class _TransactionDashboardState extends State<TransactionDashboard> {
     if (filteredPersons.isEmpty && persons.isNotEmpty) {
       return SliverFillRemaining(
         hasScrollBody: false,
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: colorScheme.primary.withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.search_off_outlined,
-                  size: 50,
-                  color: colorScheme.primary.withValues(alpha: 0.6),
-                ),
-              ),
-              const SizedBox(height: 24),
-              Text(
-                languageProvider.tr('transactions.noPersonsFound'),
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: colorScheme.primary,
-                  fontFamily: 'Inter',
-                ),
-              ),
-            ],
-          ),
+        child: MoiEmptyState(
+          title: languageProvider.tr('transactions.noPersonsFound'),
+          subtitle: languageProvider.tr('functions.tryAdjustSearch'),
         ),
       );
     }
