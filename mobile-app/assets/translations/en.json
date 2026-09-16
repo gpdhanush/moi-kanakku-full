@@ -104,8 +104,8 @@
     "personDeleted": "Person deleted successfully",
     "deleteFailed": "Unable to delete person",
     "deleteError": "An error occurred. Please try again",
-    "loadError": "Error loading data"
-    ,"selectFunction": "Please select a function",
+    "loadError": "Error loading data",
+    "selectFunction": "Please select a function",
     "customFunctionRequired": "Custom function is required",
     "amountOrThingRequired": "Enter an amount or an item",
     "saved": "Saved successfully",
@@ -260,7 +260,16 @@
     "contactUs": "Contact Us",
     "rateApp": "Rate App",
     "shareApp": "Share App",
-    "biometricReason": "Unlock Moi Kanakku"
+    "biometricReason": "Unlock Moi Kanakku",
+    "subtitle": "App tools & preferences",
+    "securityHint": "Protect your account",
+    "appearanceHint": "Language and theme",
+    "aboutHint": "App details",
+    "appLockHint": "Fingerprint or face unlock",
+    "languageHint": "Choose app language",
+    "voiceLanguageHint": "Used for voice search",
+    "themeHint": "Choose your preferred color",
+    "accentColor": "Accent color"
   },
   "voiceLanguages": {
     "en": "English",

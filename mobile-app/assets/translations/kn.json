@@ -6,8 +6,8 @@
     "home": "ಮುಖಪುಟ",
     "profile": "ಪ್ರೊಫೈಲ್",
     "settings": "ಸೆಟ್ಟಿಂಗ್‌ಗಳು",
-    "logout": "ಲಾಗ್ ಔಟ್"
-    ,"tryAgain": "ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ",
+    "logout": "ಲಾಗ್ ಔಟ್",
+    "tryAgain": "ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ",
     "confirm": "ದೃಢೀಕರಿಸಿ",
     "yes": "ಹೌದು",
     "no": "ಇಲ್ಲ",
@@ -96,7 +96,8 @@
     "thing": "ವಸ್ತು",
     "notes": "ಟಿಪ್ಪಣಿಗಳು",
     "city": "ನಗರ",
-    "firstName": "ಮೊದಲ ಹೆಸರು", "name": "ಹೆಸರು",
+    "firstName": "ಮೊದಲ ಹೆಸರು",
+    "name": "ಹೆಸರು",
     "secondName": "ಕೊನೆಯ ಹೆಸರು",
     "mobile": "ಮೊಬೈಲ್ ಸಂಖ್ಯೆ",
     "occupation": "ಉದ್ಯೋಗ",
@@ -133,7 +134,13 @@
     "exportedSuccessfully": "ಯಶಸ್ವಿಯಾಗಿ ರಫ್ತು ಮಾಡಲಾಗಿದೆ",
     "fetchTransactionsFailed": "ವಹಿವಾಟುಗಳನ್ನು ಪಡೆಯಲು ವಿಫಲವಾಗಿದೆ",
     "exportError": "ಡೇಟಾ ರಫ್ತು ಮಾಡುವಲ್ಲಿ ದೋಷ",
-    "fetchDataError": "ಡೇಟಾ ಪಡೆಯುವಲ್ಲಿ ದೋಷ. ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.", "startupError": "ಪ್ರಾರಂಭಿಸುವಾಗ ದೋಷ ಸಂಭವಿಸಿದೆ. ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.", "notifications": "ಅಧಿಸೂಚನೆಗಳು", "notAvailable": "ಲಭ್ಯವಿಲ್ಲ", "invalidDate": "ಅಮಾನ್ಯ ದಿನಾಂಕ", "functionTotals": "ಸಮಾರಂಭವಾರು ಒಟ್ಟುಗಳು", "noFunctionTotals": "ಸಮಾರಂಭದ ಒಟ್ಟುಗಳು ಲಭ್ಯವಿಲ್ಲ"
+    "fetchDataError": "ಡೇಟಾ ಪಡೆಯುವಲ್ಲಿ ದೋಷ. ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.",
+    "startupError": "ಪ್ರಾರಂಭಿಸುವಾಗ ದೋಷ ಸಂಭವಿಸಿದೆ. ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.",
+    "notifications": "ಅಧಿಸೂಚನೆಗಳು",
+    "notAvailable": "ಲಭ್ಯವಿಲ್ಲ",
+    "invalidDate": "ಅಮಾನ್ಯ ದಿನಾಂಕ",
+    "functionTotals": "ಸಮಾರಂಭವಾರು ಒಟ್ಟುಗಳು",
+    "noFunctionTotals": "ಸಮಾರಂಭದ ಒಟ್ಟುಗಳು ಲಭ್ಯವಿಲ್ಲ"
   },
   "menu": {
     "functions": "ನನ್ನ ಸಮಾರಂಭಗಳು",
@@ -145,7 +152,8 @@
     "rateUs": "ನಮ್ಮನ್ನು ರೇಟ್ ಮಾಡಿ",
     "contactUs": "ನಮ್ಮನ್ನು ಸಂಪರ್ಕಿಸಿ",
     "logout": "ಲಾಗ್ ಔಟ್",
-    "logoutConfirmation": "ಲಾಗ್ ಔಟ್ ಮಾಡಲು ಬಯಸುವಿರಾ?", "guestUser": "ಅತಿಥಿ ಬಳಕೆದಾರ"
+    "logoutConfirmation": "ಲಾಗ್ ಔಟ್ ಮಾಡಲು ಬಯಸುವಿರಾ?",
+    "guestUser": "ಅತಿಥಿ ಬಳಕೆದಾರ"
   },
   "upcomingFunctions": {
     "title": "ಮುಂಬರುವ ಸಮಾರಂಭಗಳು",
@@ -183,21 +191,16 @@
     "moiOut": "ನೀಡಿದ ಮೊಯ್"
   },
   "settings": {
-    "title": "ಸೆಟ್ಟಿಂಗ್‌ಗಳು",
-    "appInformation": "ಆ್ಯಪ್ ಮಾಹಿತಿ",
-    "appName": "ಆ್ಯಪ್ ಹೆಸರು",
-    "appVersion": "ಆ್ಯಪ್ ಆವೃತ್ತಿ",
-    "security": "ಸುರಕ್ಷತೆ",
-    "appLock": "ಆ್ಯಪ್ ಲಾಕ್",
-    "biometricsEmpty": "ಬಯೋಮೆಟ್ರಿಕ್ ಸೌಲಭ್ಯ ಲಭ್ಯವಿಲ್ಲ",
-    "deviceNotSupported": "ಸಾಧನವು ಬೆಂಬಲಿತವಾಗಿಲ್ಲ",
-    "authenticationUnavailable": "ದೃಢೀಕರಣ ಲಭ್ಯವಿಲ್ಲ",
-    "authenticationFailed": "ದೃಢೀಕರಣ ವಿಫಲವಾಗಿದೆ",
-    "unexpectedError": "ಅನಿರೀಕ್ಷಿತ ದೋಷ ಸಂಭವಿಸಿದೆ",
-    "language": "ಭಾಷೆ",
-    "theme": "ಥೀಮ್ ಬಣ್ಣ",
-    "voiceLanguage": "ಧ್ವನಿ ಇನ್‌ಪುಟ್ ಭಾಷೆ",
-    "deleteAccountConfirmation": "ಈ ಖಾತೆಯಲ್ಲಿರುವ ಎಲ್ಲಾ ಮಾಹಿತಿಯನ್ನು ಶಾಶ್ವತವಾಗಿ ಅಳಿಸಲಾಗುತ್ತದೆ. ಈ ಕ್ರಿಯೆಯನ್ನು ಹಿಂತಿರುಗಿಸಲಾಗುವುದಿಲ್ಲ."
+    "biometricReason": "Moi Kanakku ಅನ್‌ಲಾಕ್ ಮಾಡಿ",
+    "subtitle": "ಅಪ್ಲಿಕೇಶನ್ ಸಾಧನಗಳು ಮತ್ತು ಆದ್ಯತೆಗಳು",
+    "securityHint": "ನಿಮ್ಮ ಖಾತೆಯನ್ನು ರಕ್ಷಿಸಿ",
+    "appearanceHint": "ಭಾಷೆ ಮತ್ತು ಥೀಮ್",
+    "aboutHint": "ಅಪ್ಲಿಕೇಶನ್ ವಿವರಗಳು",
+    "appLockHint": "ಫಿಂಗರ್‌ಪ್ರಿಂಟ್ ಅಥವಾ ಮುಖ ಅನ್‌ಲಾಕ್",
+    "languageHint": "ಅಪ್ಲಿಕೇಶನ್ ಭಾಷೆಯನ್ನು ಆಯ್ಕೆಮಾಡಿ",
+    "voiceLanguageHint": "ಧ್ವನಿ ಹುಡುಕಾಟಕ್ಕೆ ಬಳಸಲಾಗುತ್ತದೆ",
+    "themeHint": "ನಿಮ್ಮ ಇಷ್ಟದ ಬಣ್ಣವನ್ನು ಆಯ್ಕೆಮಾಡಿ",
+    "accentColor": "ಆಕ್ಸೆಂಟ್ ಬಣ್ಣ"
   },
   "voiceLanguages": {
     "en": "ಇಂಗ್ಲಿಷ್",
@@ -248,24 +251,125 @@
     "title": "ಪ್ರೊಫೈಲ್",
     "user": "ಬಳಕೆದಾರ"
   },
-  "settings": {
-    "biometricReason": "Moi Kanakku ಅನ್‌ಲಾಕ್ ಮಾಡಿ"
-  },
   "contacts": {
-    "title": "ಸಂಪರ್ಕಗಳು", "mobileNumber": "ಮೊಬೈಲ್ ಸಂಖ್ಯೆ", "whatsapp": "WhatsApp", "email": "ಇಮೇಲ್", "website": "ವೆಬ್‌ಸೈಟ್", "header": "ಯಾವಾಗ ಬೇಕಾದರೂ ನಿಮಗೆ ಸಹಾಯ ಮಾಡಲು ನಾವು ಇಲ್ಲಿದ್ದೇವೆ.", "workingHours": "ಕೆಲಸದ ಸಮಯ", "mondayToFriday": "ಸೋಮವಾರ - ಶುಕ್ರವಾರ", "morningToNight": "10:00 AM - 8:00 PM", "whatsappNotInstalled": "WhatsApp ಸ್ಥಾಪಿಸಲಾಗಿಲ್ಲ.", "whatsappMessage": "ನಮಸ್ಕಾರ, ನನಗೆ ಸಹಾಯ ಬೇಕಾಗಿದೆ"
+    "title": "ಸಂಪರ್ಕಗಳು",
+    "mobileNumber": "ಮೊಬೈಲ್ ಸಂಖ್ಯೆ",
+    "whatsapp": "WhatsApp",
+    "email": "ಇಮೇಲ್",
+    "website": "ವೆಬ್‌ಸೈಟ್",
+    "header": "ಯಾವಾಗ ಬೇಕಾದರೂ ನಿಮಗೆ ಸಹಾಯ ಮಾಡಲು ನಾವು ಇಲ್ಲಿದ್ದೇವೆ.",
+    "workingHours": "ಕೆಲಸದ ಸಮಯ",
+    "mondayToFriday": "ಸೋಮವಾರ - ಶುಕ್ರವಾರ",
+    "morningToNight": "10:00 AM - 8:00 PM",
+    "whatsappNotInstalled": "WhatsApp ಸ್ಥಾಪಿಸಲಾಗಿಲ್ಲ.",
+    "whatsappMessage": "ನಮಸ್ಕಾರ, ನನಗೆ ಸಹಾಯ ಬೇಕಾಗಿದೆ"
   },
   "feedback": {
-    "title": "ಪ್ರತಿಕ್ರಿಯೆ", "newFeedback": "ಹೊಸ ಪ್ರತಿಕ್ರಿಯೆ", "shareFeedback": "ನಿಮ್ಮ ಪ್ರತಿಕ್ರಿಯೆಯನ್ನು ಹಂಚಿಕೊಳ್ಳಿ", "feedback": "ಪ್ರತಿಕ್ರಿಯೆ", "required": "ಪ್ರತಿಕ್ರಿಯೆ ಅಗತ್ಯವಿದೆ", "previousFeedback": "ಹಿಂದಿನ ಪ್ರತಿಕ್ರಿಯೆಗಳು", "empty": "ಇನ್ನೂ ಪ್ರತಿಕ್ರಿಯೆ ಇಲ್ಲ", "emptyHint": "ನಿಮ್ಮ ಮೊದಲ ಪ್ರತಿಕ್ರಿಯೆ ಸಲ್ಲಿಸಿ", "yourFeedback": "ನಿಮ್ಮ ಪ್ರತಿಕ್ರಿಯೆ", "unknownDate": "ದಿನಾಂಕ ಲಭ್ಯವಿಲ್ಲ", "closed": "ಮುಚ್ಚಲಾಗಿದೆ", "pending": "ಸಕ್ರಿಯ", "open": "ಬಾಕಿಯಿದೆ", "reply": "ಉತ್ತರ", "admin": "ನಿರ್ವಾಹಕರು", "replyPending": "ಉತ್ತರ ನಿರೀಕ್ಷಿಸಲಾಗುತ್ತಿದೆ", "replySoon": "ಶೀಘ್ರದಲ್ಲೇ ಉತ್ತರಿಸಲಾಗುತ್ತದೆ", "today": "ಇಂದು", "yesterday": "ನಿನ್ನೆ", "daysAgo": "ದಿನಗಳ ಹಿಂದೆ", "userInfoMissing": "ಬಳಕೆದಾರರ ಮಾಹಿತಿ ಕಂಡುಬಂದಿಲ್ಲ. ಮತ್ತೆ ಲಾಗಿನ್ ಮಾಡಿ.", "saved": "ಪ್ರತಿಕ್ರಿಯೆ ಯಶಸ್ವಿಯಾಗಿ ಸಲ್ಲಿಸಲಾಗಿದೆ!", "saveFailed": "ದೋಷ ಸಂಭವಿಸಿದೆ. ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ."
+    "title": "ಪ್ರತಿಕ್ರಿಯೆ",
+    "newFeedback": "ಹೊಸ ಪ್ರತಿಕ್ರಿಯೆ",
+    "shareFeedback": "ನಿಮ್ಮ ಪ್ರತಿಕ್ರಿಯೆಯನ್ನು ಹಂಚಿಕೊಳ್ಳಿ",
+    "feedback": "ಪ್ರತಿಕ್ರಿಯೆ",
+    "required": "ಪ್ರತಿಕ್ರಿಯೆ ಅಗತ್ಯವಿದೆ",
+    "previousFeedback": "ಹಿಂದಿನ ಪ್ರತಿಕ್ರಿಯೆಗಳು",
+    "empty": "ಇನ್ನೂ ಪ್ರತಿಕ್ರಿಯೆ ಇಲ್ಲ",
+    "emptyHint": "ನಿಮ್ಮ ಮೊದಲ ಪ್ರತಿಕ್ರಿಯೆ ಸಲ್ಲಿಸಿ",
+    "yourFeedback": "ನಿಮ್ಮ ಪ್ರತಿಕ್ರಿಯೆ",
+    "unknownDate": "ದಿನಾಂಕ ಲಭ್ಯವಿಲ್ಲ",
+    "closed": "ಮುಚ್ಚಲಾಗಿದೆ",
+    "pending": "ಸಕ್ರಿಯ",
+    "open": "ಬಾಕಿಯಿದೆ",
+    "reply": "ಉತ್ತರ",
+    "admin": "ನಿರ್ವಾಹಕರು",
+    "replyPending": "ಉತ್ತರ ನಿರೀಕ್ಷಿಸಲಾಗುತ್ತಿದೆ",
+    "replySoon": "ಶೀಘ್ರದಲ್ಲೇ ಉತ್ತರಿಸಲಾಗುತ್ತದೆ",
+    "today": "ಇಂದು",
+    "yesterday": "ನಿನ್ನೆ",
+    "daysAgo": "ದಿನಗಳ ಹಿಂದೆ",
+    "userInfoMissing": "ಬಳಕೆದಾರರ ಮಾಹಿತಿ ಕಂಡುಬಂದಿಲ್ಲ. ಮತ್ತೆ ಲಾಗಿನ್ ಮಾಡಿ.",
+    "saved": "ಪ್ರತಿಕ್ರಿಯೆ ಯಶಸ್ವಿಯಾಗಿ ಸಲ್ಲಿಸಲಾಗಿದೆ!",
+    "saveFailed": "ದೋಷ ಸಂಭವಿಸಿದೆ. ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ."
   },
   "promotion": {
-    "title": "ವಿಶೇಷ ಕೊಡುಗೆ", "serviceFee": "ಸೇವಾ ಶುಲ್ಕ", "discount": "67% ರಿಯಾಯಿತಿ", "savings": "ನೀವು ₹2,000 ಉಳಿಸುತ್ತೀರಿ!", "featureDigitize": "ಹಳೆಯ ಮೊಯ್ ಪುಸ್ತಕಗಳನ್ನು ಡಿಜಿಟಲ್ ರೂಪಕ್ಕೆ ಪರಿವರ್ತಿಸಿ", "featureOrganize": "ಊರಿನ ಪ್ರಕಾರ ವರ್ಣಮಾಲೆಯಲ್ಲಿ ವ್ಯವಸ್ಥೆ ಮಾಡಿ", "featureSecure": "ಸುರಕ್ಷಿತ ಡಿಜಿಟಲ್ ಸಂಗ್ರಹಣೆ", "featureAccess": "ಯಾವಾಗ ಬೇಕಾದರೂ ಪ್ರವೇಶಿಸಿ", "featuresTitle": "ನಿಮಗೆ ಸಿಗುವುದು:", "contactNow": "ಈಗ ಸಂಪರ್ಕಿಸಿ", "coverage": "ತಮಿಳುನಾಡಿನಾದ್ಯಂತ ಸೇವೆ", "testimonialsTitle": "ನಮ್ಮ ಅನುಭವಗಳು:"
+    "title": "ವಿಶೇಷ ಕೊಡುಗೆ",
+    "serviceFee": "ಸೇವಾ ಶುಲ್ಕ",
+    "discount": "67% ರಿಯಾಯಿತಿ",
+    "savings": "ನೀವು ₹2,000 ಉಳಿಸುತ್ತೀರಿ!",
+    "featureDigitize": "ಹಳೆಯ ಮೊಯ್ ಪುಸ್ತಕಗಳನ್ನು ಡಿಜಿಟಲ್ ರೂಪಕ್ಕೆ ಪರಿವರ್ತಿಸಿ",
+    "featureOrganize": "ಊರಿನ ಪ್ರಕಾರ ವರ್ಣಮಾಲೆಯಲ್ಲಿ ವ್ಯವಸ್ಥೆ ಮಾಡಿ",
+    "featureSecure": "ಸುರಕ್ಷಿತ ಡಿಜಿಟಲ್ ಸಂಗ್ರಹಣೆ",
+    "featureAccess": "ಯಾವಾಗ ಬೇಕಾದರೂ ಪ್ರವೇಶಿಸಿ",
+    "featuresTitle": "ನಿಮಗೆ ಸಿಗುವುದು:",
+    "contactNow": "ಈಗ ಸಂಪರ್ಕಿಸಿ",
+    "coverage": "ತಮಿಳುನಾಡಿನಾದ್ಯಂತ ಸೇವೆ",
+    "testimonialsTitle": "ನಮ್ಮ ಅನುಭವಗಳು:"
   },
   "transactionList": {
-    "title": "ವಹಿವಾಟುಗಳು", "exportPdf": "PDF ಆಗಿ ರಫ್ತು ಮಾಡಿ", "search": "ಜನರು, ದಿನಾಂಕಗಳು ಅಥವಾ ಮೊತ್ತಗಳನ್ನು ಹುಡುಕಿ", "empty": "ಯಾವುದೇ ವಹಿವಾಟುಗಳು ಕಂಡುಬಂದಿಲ್ಲ", "emptyHint": "ನಿಮ್ಮ ಹುಡುಕಾಟವನ್ನು ಬದಲಿಸಿ ಪ್ರಯತ್ನಿಸಿ", "received": "ಸ್ವೀಕರಿಸಲಾಗಿದೆ", "given": "ನೀಡಲಾಗಿದೆ", "balance": "ಬಾಕಿ", "unknown": "ಅಜ್ಞಾತ", "userDetailsNotFound": "ಬಳಕೆದಾರರ ವಿವರಗಳು ಕಂಡುಬಂದಿಲ್ಲ", "exportedSuccessfully": "ಯಶಸ್ವಿಯಾಗಿ ರಫ್ತು ಮಾಡಲಾಗಿದೆ", "exportError": "ಡೇಟಾ ರಫ್ತು ಮಾಡುವಲ್ಲಿ ದೋಷ"
-  }
-  ,
-  "auth": {
-    "forgotTitle": "Forgot Password", "forgotSubtitle": "Enter your email to receive a verification code", "sendCode": "Send Code", "backToLogin": "Back to Login", "verifyEmailOtpTitle": "Verify Email OTP", "otpSentTo": "We sent a verification code to this email", "otp": "Verification Code", "otpRequired": "Verification code is required", "verify": "Verify", "resendIn": "Resend code in ", "didNotReceiveOtp": "Didn't receive the OTP? ", "resendCode": "Resend code", "resetTitle": "Reset Password", "resetSubtitle": "Your new password must be different from previously used passwords.", "newPassword": "New Password", "newPasswordRequired": "New password is required", "passwordRequired": "Password is required", "passwordMinLength": "Password must be at least 8 characters", "confirmPassword": "Confirm Password", "confirmPasswordRequired": "Please confirm your password", "passwordsDoNotMatch": "Passwords do not match", "changePassword": "Change Password", "password": "Password", "oldPassword": "Old Password", "oldPasswordRequired": "Old password is required", "passwordChanged": "Password changed successfully", "passwordChangeFailed": "Unable to change password", "createAccountTitle": "Create a New Account", "fullName": "Full Name", "fullNameRequired": "Full name is required", "nameMinLength": "Name must be at least 3 characters", "cityRequired": "City is required", "restoreTitle": "Restore Account", "otpSent": "An OTP has been sent to your email", "deletedAccountInfo": "Your account was deleted. Enter the OTP below to restore it.", "resendOtp": "Resend OTP", "otpSentSuccess": "OTP sent successfully", "otpSendFailed": "Failed to send OTP", "verifyOtpTitle": "Verify OTP", "otpSentToLabel": "OTP sent to", "restoreInfo": "Your account will be restored after OTP verification.", "otpSixDigits": "Enter the 6-digit OTP", "verifyAndRestore": "Verify and Restore", "accountRestored": "Account restored successfully", "restoreFailed": "Failed to restore account", "invalidOtp": "Invalid OTP. Please try again.", "otpResent": "OTP resent successfully"
+    "title": "ವಹಿವಾಟುಗಳು",
+    "exportPdf": "PDF ಆಗಿ ರಫ್ತು ಮಾಡಿ",
+    "search": "ಜನರು, ದಿನಾಂಕಗಳು ಅಥವಾ ಮೊತ್ತಗಳನ್ನು ಹುಡುಕಿ",
+    "empty": "ಯಾವುದೇ ವಹಿವಾಟುಗಳು ಕಂಡುಬಂದಿಲ್ಲ",
+    "emptyHint": "ನಿಮ್ಮ ಹುಡುಕಾಟವನ್ನು ಬದಲಿಸಿ ಪ್ರಯತ್ನಿಸಿ",
+    "received": "ಸ್ವೀಕರಿಸಲಾಗಿದೆ",
+    "given": "ನೀಡಲಾಗಿದೆ",
+    "balance": "ಬಾಕಿ",
+    "unknown": "ಅಜ್ಞಾತ",
+    "userDetailsNotFound": "ಬಳಕೆದಾರರ ವಿವರಗಳು ಕಂಡುಬಂದಿಲ್ಲ",
+    "exportedSuccessfully": "ಯಶಸ್ವಿಯಾಗಿ ರಫ್ತು ಮಾಡಲಾಗಿದೆ",
+    "exportError": "ಡೇಟಾ ರಫ್ತು ಮಾಡುವಲ್ಲಿ ದೋಷ"
   },
-  "permissions": { "title": "Permissions Required", "subtitle": "Allow the permissions below for the best experience", "allow": "Allow Access", "skip": "Skip" }
+  "auth": {
+    "forgotTitle": "Forgot Password",
+    "forgotSubtitle": "Enter your email to receive a verification code",
+    "sendCode": "Send Code",
+    "backToLogin": "Back to Login",
+    "verifyEmailOtpTitle": "Verify Email OTP",
+    "otpSentTo": "We sent a verification code to this email",
+    "otp": "Verification Code",
+    "otpRequired": "Verification code is required",
+    "verify": "Verify",
+    "resendIn": "Resend code in ",
+    "didNotReceiveOtp": "Didn't receive the OTP? ",
+    "resendCode": "Resend code",
+    "resetTitle": "Reset Password",
+    "resetSubtitle": "Your new password must be different from previously used passwords.",
+    "newPassword": "New Password",
+    "newPasswordRequired": "New password is required",
+    "passwordRequired": "Password is required",
+    "passwordMinLength": "Password must be at least 8 characters",
+    "confirmPassword": "Confirm Password",
+    "confirmPasswordRequired": "Please confirm your password",
+    "passwordsDoNotMatch": "Passwords do not match",
+    "changePassword": "Change Password",
+    "password": "Password",
+    "oldPassword": "Old Password",
+    "oldPasswordRequired": "Old password is required",
+    "passwordChanged": "Password changed successfully",
+    "passwordChangeFailed": "Unable to change password",
+    "createAccountTitle": "Create a New Account",
+    "fullName": "Full Name",
+    "fullNameRequired": "Full name is required",
+    "nameMinLength": "Name must be at least 3 characters",
+    "cityRequired": "City is required",
+    "restoreTitle": "Restore Account",
+    "otpSent": "An OTP has been sent to your email",
+    "deletedAccountInfo": "Your account was deleted. Enter the OTP below to restore it.",
+    "resendOtp": "Resend OTP",
+    "otpSentSuccess": "OTP sent successfully",
+    "otpSendFailed": "Failed to send OTP",
+    "verifyOtpTitle": "Verify OTP",
+    "otpSentToLabel": "OTP sent to",
+    "restoreInfo": "Your account will be restored after OTP verification.",
+    "otpSixDigits": "Enter the 6-digit OTP",
+    "verifyAndRestore": "Verify and Restore",
+    "accountRestored": "Account restored successfully",
+    "restoreFailed": "Failed to restore account",
+    "invalidOtp": "Invalid OTP. Please try again.",
+    "otpResent": "OTP resent successfully"
+  },
+  "permissions": {
+    "title": "Permissions Required",
+    "subtitle": "Allow the permissions below for the best experience",
+    "allow": "Allow Access",
+    "skip": "Skip"
+  }
 }
