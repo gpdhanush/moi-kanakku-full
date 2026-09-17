@@ -417,9 +417,9 @@ class _TransactionDashboardState extends State<TransactionDashboard> {
           final displayName =
               '${firstName.toTitleCase()} ${secondName.toTitleCase()}'.trim();
           final subtitle = [
-            if (city.isNotEmpty) city.toTitleCase(),
+            if (city.isNotEmpty) city.toUpperCase(),
             if (mobile.isNotEmpty) mobile,
-            if (business.isNotEmpty) business.toTitleCase(),
+            if (business.isNotEmpty) business.toUpperCase(),
           ].join(' · ');
 
           Future<void> openDetails() async {

@@ -98,7 +98,6 @@ class _TransactionDetailViewPageState extends State<TransactionDetailViewPage> {
       backgroundColor: AppColors.background,
       appBar: _DetailsAppHeader(
         title: headerTitle,
-        subtitle: '',
         onBack: () => Navigator.pop(context),
       ),
       body: Column(
@@ -343,12 +342,10 @@ class _TransactionDetailViewPageState extends State<TransactionDetailViewPage> {
 
 class _DetailsAppHeader extends StatelessWidget implements PreferredSizeWidget {
   final String title;
-  final String subtitle;
   final VoidCallback onBack;
 
   const _DetailsAppHeader({
     required this.title,
-    required this.subtitle,
     required this.onBack,
   });
 
@@ -399,6 +396,34 @@ class _DetailsAppHeader extends StatelessWidget implements PreferredSizeWidget {
             ),
           ],
         ),
+        child: Stack(
+          children: [
+            Positioned(
+              top: -28,
+              right: -18,
+              child: Container(
+                width: 100,
+                height: 100,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withValues(alpha: 0.08),
+                ),
+              ),
+            ),
+            Positioned(
+              bottom: -36,
+              left: 48,
+              child: Container(
+                width: 90,
+                height: 90,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withValues(alpha: 0.06),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.only(
@@ -433,38 +458,18 @@ class _DetailsAppHeader extends StatelessWidget implements PreferredSizeWidget {
           ),
         ),
       ),
-      title: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            title,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            textAlign: TextAlign.center,
-            style: AppTypography.sectionTitle.copyWith(
-              color: Colors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              letterSpacing: -0.2,
-              height: 1.15,
-            ),
-          ),
-          if (subtitle.isNotEmpty) ...[
-            const SizedBox(height: 2),
-            Text(
-              subtitle,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
-              style: AppTypography.body.copyWith(
-                color: Colors.white.withValues(alpha: 0.82),
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                height: 1.1,
-              ),
-            ),
-          ],
-        ],
+      title: Text(
+        title,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        textAlign: TextAlign.center,
+        style: AppTypography.sectionTitle.copyWith(
+          color: Colors.white,
+          fontSize: 16,
+          fontWeight: FontWeight.w700,
+          letterSpacing: -0.2,
+          height: 1.15,
+        ),
       ),
       actions: const [SizedBox(width: 54)],
     );

@@ -692,7 +692,6 @@ class _TransactionCard extends StatelessWidget {
                   amountText!,
                   style: AppTypography.amountMedium.copyWith(
                     color: accent,
-                    fontFamily: AppTypography.fontFamily,
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
                   ),

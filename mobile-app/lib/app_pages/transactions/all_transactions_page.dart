@@ -6,6 +6,7 @@ import 'package:moi/app_configs/index.dart';
 import 'package:moi/app_services/index.dart';
 import 'package:moi/app_services/export_service.dart';
 import 'package:moi/app_storages/secure_storages.dart';
+import 'package:moi/app_themes/index.dart';
 import 'package:moi/app_utils/app_widgets/moi_list_item.dart';
 import 'package:moi/app_utils/index.dart';
 import 'package:moi/app_utils/app_providers/language_provider.dart';
@@ -272,11 +273,10 @@ class _AllTransactionsPageState extends State<AllTransactionsPage> {
                               },
                               trailing: Text(
                                 '₹ ${_formatAmount(amount)}',
-                                style: TextStyle(
+                                style: AppTypography.amountMedium.copyWith(
                                   color: accent,
-                                  fontFamily: 'Inter',
-                                  fontWeight: FontWeight.w800,
                                   fontSize: 15,
+                                  fontWeight: FontWeight.w700,
                                 ),
                               ),
                             );
@@ -336,8 +336,8 @@ class _AllTransactionsPageState extends State<AllTransactionsPage> {
                 const SizedBox(height: 3),
                 Text(
                   '₹ ${_formatAmount(total)}',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontFamily: 'Inter',
+                  style: AppTypography.amountMedium.copyWith(
+                    fontSize: 22,
                     fontWeight: FontWeight.w700,
                     color: colorScheme.primary,
                   ),
