@@ -34,6 +34,17 @@ Thumbs.db
 **/google-services.json
 **/GoogleService-Info.plist
 
+# Production data dumps, user uploads, and signing artifacts
+backend/uploads/
+backend/database/*.sql
+!backend/database/optimizations_indexes.sql
+mobile-app/play_store_files.zip
+mobile-app/play_store_files/*.zip
+mobile-app/play_store_files/*password*
+mobile-app/play_store_files/*.json
+mobile-app/play_store_files/keystore
+mobile-app/play_store_files/KeyStore.png
+
 # Node / Package Manager Dependencies & Logs
 node_modules/
 jspm_packages/

@@ -13,6 +13,11 @@ package-lock.json
 .env.production
 .env.*.local
 
+# User uploads and production database dumps
+uploads/
+database/*.sql
+!database/optimizations_indexes.sql
+
 # IDE and Editor files
 .idea/
 .vscode/
