@@ -518,9 +518,10 @@
     "exportError": "Error exporting data"
   },
   "auth": {
-    "forgotTitle": "Forgot Password",
+    "forgotTitle": "Forgot Password?",
     "forgotSubtitle": "Enter your email to receive a verification code",
     "sendCode": "Send Code",
+    "rememberPassword": "Remember your password?",
     "backToLogin": "Back to Login",
     "verifyEmailOtpTitle": "Verify Email OTP",
     "otpSentTo": "We sent a verification code to this email",
