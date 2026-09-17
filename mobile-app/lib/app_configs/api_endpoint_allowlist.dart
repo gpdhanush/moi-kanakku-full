@@ -41,3 +41,28 @@ bool isAllowedApiEndpoint(String url) {
 
   return true;
 }
+
+/// Returns true when [url] is HTTPS (used for CDN / image base URLs from Remote Config).
+bool isAllowedHttpsImageUrl(String url) {
+  final trimmed = url.trim();
+  if (trimmed.isEmpty) {
+    return false;
+  }
+
+  final Uri uri;
+  try {
+    uri = Uri.parse(trimmed);
+  } catch (_) {
+    return false;
+  }
+
+  if (uri.scheme != 'https') {
+    return false;
+  }
+
+  if (uri.userInfo.isNotEmpty) {
+    return false;
+  }
+
+  return uri.host.isNotEmpty;
+}

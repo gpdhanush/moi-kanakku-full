@@ -6,20 +6,16 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 String appBaseUri = "";
 String appImageUrl = "";
 
-// API Secret Key for rate limiting and authentication
-// This is now loaded from Firebase Remote Config, with a fallback value
-// The actual key should be set in Firebase Remote Config for security
-String _cachedApiSecretKey = "MY_SON_NAME_IS_RENZO_ROWAN"; // Fallback value
+// API Secret Key for rate limiting — loaded only from Firebase Remote Config.
+// Never hardcode a production secret in source; empty until Remote Config supplies it.
+String _cachedApiSecretKey = '';
 
-// Getter function to retrieve API secret key
-// This allows the key to be updated from Firebase Remote Config
-String get apiSecretKey {
-  return _cachedApiSecretKey;
-}
+/// Current API secret key (empty until Remote Config updates it).
+String get apiSecretKey => _cachedApiSecretKey;
 
-// Function to update API secret key (called from firebase_remote.dart)
+/// Updates API secret key from Firebase Remote Config.
 void updateApiSecretKey(String newKey) {
-  _cachedApiSecretKey = newKey;
+  _cachedApiSecretKey = newKey.trim();
 }
 
 const String appName = "Moi Kanakku";

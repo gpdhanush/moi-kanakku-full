@@ -768,9 +768,11 @@ class _Leading extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       child: imageUrl.isEmpty
           ? _placeholder()
-          : Image.network(
-              imageUrl,
+          : MoiNetworkImage(
+              url: imageUrl,
               fit: BoxFit.cover,
+              width: 48,
+              height: 48,
               errorBuilder: (context, error, stackTrace) => _placeholder(),
             ),
     );

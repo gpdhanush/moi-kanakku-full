@@ -3,9 +3,40 @@ import 'package:moi/app_models/index.dart';
 import 'package:moi/app_pages/upcoming_functions/models/upcoming_function_model.dart';
 import 'package:moi/app_pages/index.dart';
 import 'package:moi/app_utils/app_providers/connectivity_provider.dart';
+import 'package:moi/app_utils/app_widgets/auth_guard.dart';
 import 'package:provider/provider.dart';
 
 class AppRoute {
+  static const Set<String> _protectedRoutes = {
+    'home',
+    'profile',
+    'change-password',
+    'contact_us',
+    'feedbacks',
+    'settings',
+    'functions-list',
+    'view-functions-list',
+    'function-transaction-list',
+    'add-edit-functions',
+    'transaction-dashboard',
+    'all-transactions',
+    'add-edit-transaction',
+    'add-transaction',
+    'transaction-person-details',
+    'transaction-detail-view',
+    'notifications',
+    'upcoming-function-list',
+    'upcoming-function-details',
+    'add-edit-upcoming-function',
+  };
+
+  static Widget _maybeGuard(String? name, Widget page) {
+    if (name != null && _protectedRoutes.contains(name)) {
+      return AuthGuard(child: page);
+    }
+    return page;
+  }
+
   static Route<dynamic> allRoutes(RouteSettings settings) {
     return MaterialPageRoute(
       builder: (context) {
@@ -23,78 +54,70 @@ class AppRoute {
         if (!isOnline) {
           return const NoInternetPage();
         }
+
+        late final Widget page;
         switch (settings.name) {
           case "splash":
-            return const SplashScreen();
+            page = const SplashScreen();
           case "onboarding":
-            return const OnboardingPage();
+            page = const OnboardingPage();
           case "permissions":
-            return const PermissionPage();
+            page = const PermissionPage();
           case "home":
-            return const MainShellPage();
+            page = const MainShellPage();
           case "login":
-            return const LoginPage();
+            page = const LoginPage();
           case "signup":
-            return const Signup();
+            page = const Signup();
           case "forgot_password":
-            return const ForgotPassword();
+            page = const ForgotPassword();
           case "verify_forgot_otp":
-            String args = settings.arguments as String;
-            return VerifyForgotOtp(email: args);
+            page = VerifyForgotOtp(email: settings.arguments as String);
           case "reset_password":
-            String args = settings.arguments as String;
-            return ResetPassword(email: args);
+            final args = settings.arguments;
+            if (args is Map) {
+              page = ResetPassword(
+                email: args['email']?.toString() ?? '',
+                otp: args['otp']?.toString() ?? '',
+              );
+            } else {
+              page = ResetPassword(email: args?.toString() ?? '', otp: '');
+            }
           case "restore_account_send_otp":
-            String args = settings.arguments as String;
-            return RestoreAccountSendOtp(email: args);
+            page = RestoreAccountSendOtp(email: settings.arguments as String);
           case "restore_account_verify_otp":
-            String args = settings.arguments as String;
-            return RestoreAccountVerifyOtp(email: args);
+            page = RestoreAccountVerifyOtp(email: settings.arguments as String);
           case "profile":
-            return const ProfilePage();
+            page = const ProfilePage();
           case "change-password":
-            return const ChangePassword();
+            page = const ChangePassword();
           case "contact_us":
-            return const ContactUs();
-          // case "contact-us":
-          //   return const ContactUsPage();
+            page = const ContactUs();
           case "feedbacks":
-            return const Feedbacks();
+            page = const Feedbacks();
           case "promotion":
-            return const PromotionPage();
-          // case "booking-success":
-          //   final args = settings.arguments as Map<String, dynamic>?;
-          //   return BookingSuccessScreen(
-          //     bookingId: args?['bookingId']?.toString(),
-          //     paymentId: args?['paymentId']?.toString(),
-          //   );
+            page = const PromotionPage();
           case "settings":
-            return const Settings();
-          // FUNCTIONS
+            page = const Settings();
           case "functions-list":
-            return const FunctionsList();
+            page = const FunctionsList();
           case "view-functions-list":
-            List args = settings.arguments as List;
-            return ViewFunctionDetails(data: args);
+            page = ViewFunctionDetails(data: settings.arguments as List);
           case "function-transaction-list":
-            dynamic args = settings.arguments;
-            return FunctionTransactionList(functionData: args);
+            page = FunctionTransactionList(functionData: settings.arguments);
           case "add-edit-functions":
-            List args = settings.arguments as List;
-            return AddEditFunctions(data: args);
+            page = AddEditFunctions(data: settings.arguments as List);
           case "transaction-dashboard":
-            return const TransactionDashboard();
+            page = const TransactionDashboard();
           case "all-transactions":
             final args = settings.arguments as Map<String, dynamic>?;
-            String type = args?['type']?.toString().toUpperCase() ?? '';
-            return AllTransactionsPage(type: type);
+            page = AllTransactionsPage(
+              type: args?['type']?.toString().toUpperCase() ?? '',
+            );
           case "add-edit-transaction":
-            dynamic args = settings.arguments;
-            //  String type = "RETURN";
-            //  dynamic personData;
-            return AddEditPage(data: args);
+            page = AddEditPage(data: settings.arguments);
           case "add-transaction":
-            dynamic args = settings.arguments;
+            final args = settings.arguments;
             String type = "RETURN";
             dynamic person;
             Map<String, dynamic>? transaction;
@@ -107,89 +130,34 @@ class AppRoute {
               }
               isEdit = args['isEdit'] == true;
             }
-            return AddTransactionPage(
+            page = AddTransactionPage(
               type: type,
               person: person,
               transaction: transaction,
               isEdit: isEdit,
             );
           case "transaction-person-details":
-            PersonResponseModel data =
-                settings.arguments as PersonResponseModel;
-            return TransactionPersonDetails(person: data);
+            page = TransactionPersonDetails(
+              person: settings.arguments as PersonResponseModel,
+            );
           case "transaction-detail-view":
-            Map<String, dynamic> args =
-                settings.arguments as Map<String, dynamic>;
-            return TransactionDetailViewPage(transaction: args);
-          // dynamic args = settings.arguments;
-          //             String type = "RETURN";
-          //             dynamic personData;
-
-          //             if (args is Map<String, dynamic>) {
-          //               type = args['type'] ?? "RETURN";
-          //               personData = args['personData'];
-          //             }
-
-          //             return AddMoiReturnInvest(type: type, personData: personData);
-          // MOI
-          // case "moi":
-          //   return const MoiList();
-          // case "add-moi":
-          //   List args = settings.arguments as List;
-          //   return AddUpdateMoi(data: args);
-          // case "moi-details":
-          //   List args = settings.arguments as List;
-          //   return MoiDetailsView(data: args);
-          // // MOI OUT DETAILD
-          // case "moi-out":
-          //   return const MoiOutList();
-          // case "add-moi-out":
-          //   List args = settings.arguments as List;
-          //   return AddUpdateMoiOut(data: args);
-          // case "moi_out_details":
-          //   List args = settings.arguments as List;
-          //   return MoiOutDetailView(data: args);
-          // NOTIFICATIONS
+            page = TransactionDetailViewPage(
+              transaction: settings.arguments as Map<String, dynamic>,
+            );
           case "notifications":
-            return const NotificationListPage();
-          // UPCOMING FUNCTIONS
+            page = const NotificationListPage();
           case "upcoming-function-list":
-            return const UpcomingFunctionList();
+            page = const UpcomingFunctionList();
           case "upcoming-function-details":
-            final args = settings.arguments as UpcomingFunction;
-            return UpcomingFunctionDetailsPage(function: args);
+            page = UpcomingFunctionDetailsPage(
+              function: settings.arguments as UpcomingFunction,
+            );
           case "add-edit-upcoming-function":
-            dynamic args = settings.arguments;
-            return AddEditUpcomingFunction(data: args);
-          // MOI CREDIT DEBIT
-          // case "moi-credit-debit-dashboard":
-          //   return const MoiCreditDebitDashboard();
-          // case "moi-credit-debit-person-details":
-          //   List args = settings.arguments as List;
-          //   return MoiCreditDebitPersonDetails(personData: args[0]);
-          // case "add-edit-moi-person":
-          //   List args = settings.arguments as List;
-          //   return AddEditMoiPerson(data: args);
-          // case "add-moi-return-invest":
-          //   dynamic args = settings.arguments;
-          //   String type = "RETURN";
-          //   dynamic personData;
-
-          //   if (args is Map<String, dynamic>) {
-          //     type = args['type'] ?? "RETURN";
-          //     personData = args['personData'];
-          //   }
-
-          //   return AddMoiReturnInvest(type: type, personData: personData);
-          // case "moi-transaction-details":
-          //   Map<String, dynamic> args =
-          //       settings.arguments as Map<String, dynamic>;
-          //   return MoiTransactionDetails(
-          //     transaction: args['transaction'],
-          //     personDetails: args['personDetails'],
-          //   );
+            page = AddEditUpcomingFunction(data: settings.arguments);
+          default:
+            page = const SplashScreen();
         }
-        return const SplashScreen();
+        return _maybeGuard(settings.name, page);
       },
     );
   }

@@ -122,13 +122,19 @@ class ImagePickerBottomSheet extends StatelessWidget {
             Row(
               children: [
                 Container(
-                  width: 44,
-                  height: 44,
+                  width: 32,
+                  height: 32,
                   decoration: BoxDecoration(
                     color: colorScheme.primary,
                     borderRadius: BorderRadius.circular(5),
                   ),
-                  child: HugeIcon(icon: HugeIcons.strokeRoundedImageAdd01, size: 23, color: colorScheme.onPrimary, strokeWidth: 1.8),
+                  alignment: Alignment.center,
+                  child: HugeIcon(
+                    icon: HugeIcons.strokeRoundedImageAdd01,
+                    size: 20,
+                    color: colorScheme.onPrimary,
+                    strokeWidth: 1.8,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -181,12 +187,13 @@ class ImagePickerBottomSheet extends StatelessWidget {
             child: Row(
               children: [
                 Container(
-                  width: 38,
-                  height: 38,
+                  width: 32,
+                  height: 32,
                   decoration: BoxDecoration(
                     color: color,
                     borderRadius: BorderRadius.circular(5),
                   ),
+                  alignment: Alignment.center,
                   child: HugeIcon(
                     icon: icon,
                     color: Colors.white,

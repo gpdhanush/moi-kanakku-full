@@ -28,7 +28,6 @@ dependencies:
   crypto: ^3.0.6
   asn1lib: ^1.6.5
   flutter_easyloading: ^3.0.5
-  adaptive_action_sheet: ^2.0.4
   image_picker: ^1.1.2
   flutter_image_compress: ^2.5.1
   image_cropper: ^12.2.1
@@ -49,16 +48,15 @@ dependencies:
   screenshot: ^3.0.0
   # share_plus: ^12.0.1
   tamil_pdf_shaper: ^1.0.4
-  shared_preferences: ^2.5.5
   hugeicons: ^1.1.7
   google_fonts: ^8.2.1
   custom_refresh_indicator: ^4.0.2
-  flutter_launcher_icons: ^0.14.4
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.4
 
 flutter_launcher_icons:
   android: "ic_launcher"

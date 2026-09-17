@@ -6,6 +6,7 @@ import 'package:moi/app_configs/api_startup_config.dart';
 import 'package:moi/app_configs/app_variables.dart';
 import 'package:moi/app_firebase/firebase_remote.dart';
 import 'package:moi/app_pages/force_update/force_update_dialog.dart';
+import 'package:moi/app_services/connection.dart';
 import 'package:moi/app_storages/secure_storages.dart';
 import 'package:moi/app_utils/app_global/app_bio_metric.dart';
 import 'package:moi/app_utils/app_global/app_version_utils.dart';
@@ -112,7 +113,7 @@ class SplashScreenController extends ChangeNotifier {
   Future<void> _handleBiometricFlow() async {
     final check = await AppBioMetric().checkBioMetric();
     if (!_isActive) return;
-    if (check.toString() == "true") {
+    if (check == true) {
       await navigation("home");
     } else {
       FlutterExitApp.exitApp();
@@ -125,7 +126,10 @@ class SplashScreenController extends ChangeNotifier {
     isLoggedIn = await secureStorage.get(AppVariables.isLogin) ?? false;
     if (!_isActive) return;
 
-    if (isLoggedIn) {
+    final token = await secureStorage.getToken();
+    final hasValidSession = isLoggedIn && token.isNotEmpty;
+
+    if (hasValidSession) {
       isBioLock = await secureStorage.get(AppVariables.appLock) ?? false;
       if (!_isActive) return;
       if (isBioLock) {
@@ -134,6 +138,12 @@ class SplashScreenController extends ChangeNotifier {
         await navigation("home");
       }
       return;
+    }
+
+    // Flag without token (or token without flag) → clear and force re-auth.
+    if (isLoggedIn || token.isNotEmpty) {
+      Connection.instance.clearCachedToken();
+      await secureStorage.clearSessionData();
     }
 
     final permissionsRequested =

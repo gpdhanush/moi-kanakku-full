@@ -20,17 +20,18 @@ class Connection {
   String? _cachedToken;
   late final Dio _dio;
 
-  String _tr(String key, String fallback) {
-    final context = navigatorKey.currentState?.overlay?.context;
-    return context?.read<LanguageProvider>().tr(key) ?? fallback;
-  }
+  /// Shared singleton used by all *Services to avoid multiple Dio clients.
+  static final Connection instance = Connection._internal();
 
-  Connection() {
+  factory Connection() => instance;
+
+  Connection._internal() {
     _dio = Dio(
       BaseOptions(
         baseUrl: appBaseUri,
-        connectTimeout: const Duration(seconds: 30),
+        connectTimeout: const Duration(seconds: 15),
         receiveTimeout: const Duration(seconds: 30),
+        sendTimeout: const Duration(seconds: 30),
         headers: _baseHeader,
         // Treat 404/400/403 as success so we can read API JSON (e.g. responseType "F", message, deleted account)
         validateStatus: (status) =>
@@ -41,7 +42,6 @@ class Connection {
 
     configureApiCertificatePinning(_dio);
 
-    // Add interceptors
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
@@ -55,12 +55,13 @@ class Connection {
               ),
             );
           }
-          // Ensure X-API-Key is always present
           if (options.headers['X-API-Key'] == null) {
             options.headers['X-API-Key'] = apiSecretKey;
           }
-          // Add token if needed
-          if (options.headers['Authorization'] == null) {
+          final useToken = options.extra['useToken'] as bool? ?? true;
+          if (!useToken) {
+            options.headers.remove('Authorization');
+          } else if (options.headers['Authorization'] == null) {
             final token = await _getCachedToken();
             if (token != null) {
               options.headers['Authorization'] = 'Bearer $token';
@@ -69,7 +70,6 @@ class Connection {
           return handler.next(options);
         },
         onResponse: (response, handler) {
-          // Log successful responses
           serviceLogs(
             response.requestOptions.path,
             method: response.requestOptions.method,
@@ -79,10 +79,8 @@ class Connection {
           return handler.next(response);
         },
         onError: (DioException e, handler) async {
-          // Handle token refresh if needed
           if (e.response?.statusCode == 401) {
-            // Clear token and redirect to login
-            _cachedToken = null;
+            clearCachedToken();
             await secureStorage.clearSessionData();
             gotoLogin();
             return handler.reject(e);
@@ -91,6 +89,37 @@ class Connection {
         },
       ),
     );
+
+    // Retry idempotent GETs once on transient network/timeout failures.
+    _dio.interceptors.add(
+      InterceptorsWrapper(
+        onError: (DioException e, handler) async {
+          final options = e.requestOptions;
+          final alreadyRetried = options.extra['retried'] == true;
+          final isGet = options.method.toUpperCase() == 'GET';
+          final transient = e.type == DioExceptionType.connectionTimeout ||
+              e.type == DioExceptionType.receiveTimeout ||
+              e.type == DioExceptionType.connectionError ||
+              _isNetworkError(e);
+
+          if (!alreadyRetried && isGet && transient) {
+            options.extra['retried'] = true;
+            try {
+              final response = await _dio.fetch(options);
+              return handler.resolve(response);
+            } catch (_) {
+              return handler.next(e);
+            }
+          }
+          return handler.next(e);
+        },
+      ),
+    );
+  }
+
+  String _tr(String key, String fallback) {
+    final context = navigatorKey.currentState?.overlay?.context;
+    return context?.read<LanguageProvider>().tr(key) ?? fallback;
   }
 
   Future<String?> _getCachedToken() async {
@@ -106,9 +135,17 @@ class Connection {
     return null;
   }
 
+  /// Clears the in-memory JWT cache (call on logout / session clear).
+  void clearCachedToken() {
+    _cachedToken = null;
+  }
+
+  Options _requestOptions(bool useToken) {
+    return Options(extra: {'useToken': useToken});
+  }
+
   Future<Map<String, String>> _getHeader(bool useToken) async {
     final headers = Map<String, String>.from(_baseHeader);
-    // Always include the current API key (may be updated from Remote Config)
     headers['X-API-Key'] = apiSecretKey;
     if (useToken) {
       final token = await _getCachedToken();
@@ -117,6 +154,14 @@ class Connection {
       }
     }
     return headers;
+  }
+
+  String _safeLogPayload(dynamic data) {
+    try {
+      return redactSensitive(data).toString();
+    } catch (_) {
+      return '[redacted]';
+    }
   }
 
   Future<dynamic> getData(
@@ -129,10 +174,12 @@ class Connection {
       if (showLoading) {
         unawaited(_alertServices.showLoading());
       }
-      final response = await _dio.get(endpoint);
+      final response = await _dio.get(
+        endpoint,
+        options: _requestOptions(useToken),
+      );
       if (showLoading) unawaited(_alertServices.hideLoading());
 
-      // Check if response.data is null
       if (response.data == null) {
         printContent(
           "===> URL: $endpoint \n===> STATUS: ${response.statusCode} \n===> ERROR: Server returned null response",
@@ -148,13 +195,12 @@ class Connection {
         return null;
       }
 
-      // Better error logging with response data
       final errorMsg = e.message ?? "Unknown error";
       final responseData = e.response?.data ?? "No response data";
       final statusCode = e.response?.statusCode ?? "No status code";
 
       printContent(
-        "===> URL: $endpoint \n===> STATUS: $statusCode \n===> RESPONSE: $responseData \n===> ERROR: $errorMsg \n===> STACK: ${e.stackTrace}",
+        "===> URL: $endpoint \n===> STATUS: $statusCode \n===> RESPONSE: ${_safeLogPayload(responseData)} \n===> ERROR: $errorMsg",
       );
       logApiErrorToCrashlytics(
         e,
@@ -179,13 +225,16 @@ class Connection {
       if (showLoading) {
         unawaited(_alertServices.showLoading());
       }
-      final response = await _dio.post(endpoint, data: data);
+      final response = await _dio.post(
+        endpoint,
+        data: data,
+        options: _requestOptions(useToken),
+      );
       if (showLoading) unawaited(_alertServices.hideLoading());
 
-      // Check if response.data is null
       if (response.data == null) {
         printContent(
-          "===> URL: $endpoint \n===> REQUEST: $data \n===> STATUS: ${response.statusCode} \n===> ERROR: Server returned null response",
+          "===> URL: $endpoint \n===> REQUEST: ${_safeLogPayload(data)} \n===> STATUS: ${response.statusCode} \n===> ERROR: Server returned null response",
         );
         return null;
       }
@@ -198,13 +247,12 @@ class Connection {
         return null;
       }
 
-      // Better error logging with response data
       final errorMsg = e.message ?? "Unknown error";
       final responseData = e.response?.data ?? "No response data";
       final statusCode = e.response?.statusCode ?? "No status code";
 
       printContent(
-        "===> URL: $endpoint \n===> REQUEST: $data \n===> STATUS: $statusCode \n===> RESPONSE: $responseData \n===> ERROR: $errorMsg \n===> STACK: ${e.stackTrace}",
+        "===> URL: $endpoint \n===> REQUEST: ${_safeLogPayload(data)} \n===> STATUS: $statusCode \n===> RESPONSE: ${_safeLogPayload(responseData)} \n===> ERROR: $errorMsg",
       );
       logApiErrorToCrashlytics(
         e,
@@ -230,13 +278,16 @@ class Connection {
       if (showLoading) {
         unawaited(_alertServices.showLoading());
       }
-      final response = await _dio.put(endpoint, data: data);
+      final response = await _dio.put(
+        endpoint,
+        data: data,
+        options: _requestOptions(useToken),
+      );
       if (showLoading) unawaited(_alertServices.hideLoading());
 
-      // Check if response.data is null
       if (response.data == null) {
         printContent(
-          "===> URL: $endpoint \n===> REQUEST: $data \n===> STATUS: ${response.statusCode} \n===> ERROR: Server returned null response",
+          "===> URL: $endpoint \n===> REQUEST: ${_safeLogPayload(data)} \n===> STATUS: ${response.statusCode} \n===> ERROR: Server returned null response",
         );
         return null;
       }
@@ -249,13 +300,12 @@ class Connection {
         return null;
       }
 
-      // Better error logging with response data
       final errorMsg = e.message ?? "Unknown error";
       final responseData = e.response?.data ?? "No response data";
       final statusCode = e.response?.statusCode ?? "No status code";
 
       printContent(
-        "===> URL: $endpoint \n===> REQUEST: $data \n===> STATUS: $statusCode \n===> RESPONSE: $responseData \n===> ERROR: $errorMsg \n===> STACK: ${e.stackTrace}",
+        "===> URL: $endpoint \n===> REQUEST: ${_safeLogPayload(data)} \n===> STATUS: $statusCode \n===> RESPONSE: ${_safeLogPayload(responseData)} \n===> ERROR: $errorMsg",
       );
       logApiErrorToCrashlytics(
         e,
@@ -280,10 +330,12 @@ class Connection {
       if (showLoading) {
         unawaited(_alertServices.showLoading());
       }
-      final response = await _dio.delete(endpoint);
+      final response = await _dio.delete(
+        endpoint,
+        options: _requestOptions(useToken),
+      );
       if (showLoading) unawaited(_alertServices.hideLoading());
 
-      // Check if response.data is null
       if (response.data == null) {
         printContent(
           "===> URL: $endpoint \n===> STATUS: ${response.statusCode} \n===> ERROR: Server returned null response",
@@ -299,13 +351,12 @@ class Connection {
         return null;
       }
 
-      // Better error logging with response data
       final errorMsg = e.message ?? "Unknown error";
       final responseData = e.response?.data ?? "No response data";
       final statusCode = e.response?.statusCode ?? "No status code";
 
       printContent(
-        "===> URL: $endpoint \n===> STATUS: $statusCode \n===> RESPONSE: $responseData \n===> ERROR: $errorMsg \n===> STACK: ${e.stackTrace}",
+        "===> URL: $endpoint \n===> STATUS: $statusCode \n===> RESPONSE: ${_safeLogPayload(responseData)} \n===> ERROR: $errorMsg",
       );
       logApiErrorToCrashlytics(
         e,
@@ -328,12 +379,10 @@ class Connection {
   }) async {
     try {
       final headers = await _getHeader(useToken);
-      // Remove Content-Type for multipart uploads (Dio will set it automatically)
       headers.remove('Content-Type');
 
       await _alertServices.showLoading();
 
-      // Verify file exists before creating FormData
       final file = File(filePath);
       if (!await file.exists()) {
         throw Exception("File does not exist: $filePath");
@@ -344,26 +393,28 @@ class Connection {
         MapEntry(fileKey, await MultipartFile.fromFile(filePath)),
       );
 
-      // Check if endpoint is a full URL or relative path
       final isFullUrl =
           endpoint.startsWith('http://') || endpoint.startsWith('https://');
       final fullUrl = isFullUrl ? endpoint : '$appBaseUri$endpoint';
 
       printContent(
-        "===> Uploading file: $filePath (size: ${await file.length()} bytes)",
+        "===> Uploading file size: ${await file.length()} bytes",
       );
       printContent("===> Full URL: $fullUrl");
       printContent(
         "===> Form data keys: ${formData.fields.map((e) => e.key).toList()}",
       );
       printContent("===> File key: $fileKey");
-      printContent("===> Headers: $headers");
+      printContent("===> Headers: ${redactHeaders(headers)}");
 
-      // Dio automatically handles full URLs - if endpoint starts with http/https, it ignores baseUrl
       final response = await _dio.post(
         endpoint,
         data: formData,
-        options: Options(headers: headers),
+        options: Options(
+          headers: headers,
+          extra: {'useToken': useToken},
+          sendTimeout: const Duration(seconds: 60),
+        ),
       );
 
       await _alertServices.hideLoading();
@@ -400,7 +451,7 @@ class Connection {
         printContent("Error parsing error response: $parseError");
       }
       printContent(
-        "===> URL: $endpoint \n===> REQUEST: $data \n===> ERROR: $errorMessage \n===> STATUS CODE: ${e.response?.statusCode} \n===> RESPONSE: ${e.response?.data}",
+        "===> URL: $endpoint \n===> REQUEST: ${_safeLogPayload(data)} \n===> ERROR: $errorMessage \n===> STATUS CODE: ${e.response?.statusCode}",
       );
       logApiErrorToCrashlytics(
         e,
@@ -413,7 +464,7 @@ class Connection {
     } catch (e) {
       unawaited(_alertServices.hideLoading());
       printContent(
-        "===> URL: $endpoint \n===> REQUEST: $data \n===> UNEXPECTED ERROR: ${e.toString()}",
+        "===> URL: $endpoint \n===> REQUEST: ${_safeLogPayload(data)} \n===> UNEXPECTED ERROR: ${e.toString()}",
       );
       logErrorToCrashlytics(
         e,
@@ -426,17 +477,16 @@ class Connection {
 
   /// Check if error is a network/internet connectivity issue
   bool _isNetworkError(DioException e) {
-    // Check error type
     if (e.type == DioExceptionType.connectionTimeout ||
+        e.type == DioExceptionType.connectionError ||
         e.type == DioExceptionType.unknown) {
       return true;
     }
 
-    // Check error message for network-related keywords
     final errorMessage = (e.message ?? '').toLowerCase();
     final errorString = (e.error?.toString() ?? '').toLowerCase();
 
-    final networkErrorKeywords = [
+    const networkErrorKeywords = [
       'network is unreachable',
       'network unreachable',
       'failed host lookup',
@@ -460,7 +510,6 @@ class Connection {
       }
     }
 
-    // Check if error is a SocketException
     if (e.error is SocketException) {
       return true;
     }
@@ -468,20 +517,17 @@ class Connection {
     return false;
   }
 
-  /// Returns true when the request was blocked because startup config is invalid.
   bool _isStartupConfigBlocked(DioException e) {
     return e.type == DioExceptionType.cancel &&
         e.message == ApiStartupConfig.blockedRequestMessage;
   }
 
-  /// HANDLE ERROR
   void _handleError(DioException e) {
     if (_isStartupConfigBlocked(e)) {
       printContent('API request blocked: startup configuration invalid');
       return;
     }
 
-    // Check for network/internet connectivity issues first
     if (_isNetworkError(e)) {
       _alertServices.errorToast(
         _tr('network.noInternet', 'No Internet Connection'),
@@ -549,7 +595,13 @@ class Connection {
   }
 
   Future<void> gotoLogin() async {
-    BuildContext ctx = navigatorKey.currentState!.overlay!.context;
+    clearCachedToken();
+    final overlay = navigatorKey.currentState?.overlay;
+    if (overlay == null) {
+      await secureStorage.clearSessionData();
+      return;
+    }
+    final ctx = overlay.context;
     await secureStorage.clearSessionData();
     if (ctx.mounted) {
       Navigator.pushNamedAndRemoveUntil(ctx, "login", (r) => false);

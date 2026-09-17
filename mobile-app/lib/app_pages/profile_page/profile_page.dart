@@ -43,6 +43,7 @@ class _ProfilePageState extends State<ProfilePage> {
   final TextEditingController _stateCtrl = TextEditingController();
   final TextEditingController _countryCtrl = TextEditingController();
   final TextEditingController _postalCodeCtrl = TextEditingController();
+  final TextEditingController _dobCtrl = TextEditingController();
 
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final ImagePicker _imagePicker = ImagePicker();
@@ -94,6 +95,10 @@ class _ProfilePageState extends State<ProfilePage> {
             final dobString = _user?["date_of_birth"].toString();
             if (dobString != null) {
               _selectedDateOfBirth = AppDatePicker.parseDisplay(dobString);
+              if (_selectedDateOfBirth != null) {
+                _dobCtrl.text =
+                    AppDatePicker.formatForDisplay(_selectedDateOfBirth!);
+              }
             }
           } catch (e) {
             printContent("Error parsing date of birth: $e");
@@ -162,6 +167,10 @@ class _ProfilePageState extends State<ProfilePage> {
                 try {
                   final dobString = profileData["date_of_birth"].toString();
                   _selectedDateOfBirth = AppDatePicker.parseDisplay(dobString);
+                  if (_selectedDateOfBirth != null) {
+                    _dobCtrl.text =
+                        AppDatePicker.formatForDisplay(_selectedDateOfBirth!);
+                  }
                 } catch (e) {
                   printContent("Error parsing date of birth: $e");
                 }
@@ -245,6 +254,7 @@ class _ProfilePageState extends State<ProfilePage> {
     _stateCtrl.dispose();
     _countryCtrl.dispose();
     _postalCodeCtrl.dispose();
+    _dobCtrl.dispose();
     super.dispose();
   }
 
@@ -572,11 +582,7 @@ class _ProfilePageState extends State<ProfilePage> {
       onTap: () => _selectDate(context),
       child: TextFormWidget(
         title: languageProvider.tr('profile.dateOfBirth'),
-        controller: TextEditingController(
-          text: _selectedDateOfBirth != null
-              ? AppDatePicker.formatForDisplay(_selectedDateOfBirth!)
-              : '',
-        ),
+        controller: _dobCtrl,
         readOnly: true,
         enabled: false,
         required: false,
@@ -596,6 +602,7 @@ class _ProfilePageState extends State<ProfilePage> {
     if (picked != null) {
       setState(() {
         _selectedDateOfBirth = picked;
+        _dobCtrl.text = AppDatePicker.formatForDisplay(picked);
       });
     }
   }

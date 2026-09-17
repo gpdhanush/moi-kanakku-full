@@ -9,7 +9,8 @@ import 'package:hugeicons/hugeicons.dart';
 
 class ResetPassword extends StatefulWidget {
   final String email;
-  const ResetPassword({super.key, required this.email});
+  final String otp;
+  const ResetPassword({super.key, required this.email, this.otp = ''});
 
   @override
   State<ResetPassword> createState() => _ResetPasswordState();
@@ -74,15 +75,12 @@ class _ResetPasswordState extends State<ResetPassword> {
                           required: true,
                           validator: (value) {
                             confirmPass = value.toString();
-                            if (value.toString().isEmpty) {
-                              return languageProvider.tr(
-                                'auth.newPasswordRequired',
-                              );
-                            }
-                            if (value.toString().length < 8) {
-                              return languageProvider.tr(
-                                'auth.passwordMinLength',
-                              );
+                            final key = PasswordValidator.validateSecure(
+                              value,
+                              requiredKey: 'auth.newPasswordRequired',
+                            );
+                            if (key != null) {
+                              return languageProvider.tr(key);
                             }
                             return null;
                           },
@@ -312,10 +310,18 @@ class _ResetPasswordState extends State<ResetPassword> {
 
   Future<void> changePassword() async {
     FocusScope.of(context).unfocus();
+    if (widget.otp.trim().length != 6) {
+      alertServices.errorToast(
+        context.read<LanguageProvider>().tr('auth.otpSixDigits'),
+      );
+      return;
+    }
     alertServices.showLoading();
     final params = {
       'email': widget.email.toString().toLowerCase(),
       'password': confirmPass.toString(),
+      'otp': widget.otp.trim(),
+      'type': 'forgot',
     };
     userServices
         .resetUserPasswords(params)

@@ -4,11 +4,13 @@ import 'package:in_app_review/in_app_review.dart';
 import 'package:moi/app_configs/index.dart';
 import 'package:moi/app_pages/home_page/widgets/drawer_widget.dart';
 import 'package:moi/app_services/user_services.dart';
+import 'package:moi/app_services/connection.dart';
 import 'package:moi/app_storages/secure_storages.dart';
 import 'package:moi/app_themes/index.dart';
 import 'package:moi/app_utils/app_providers/user_provider.dart';
 import 'package:moi/app_utils/app_providers/language_provider.dart';
 import 'package:moi/app_utils/app_widgets/custom_action_sheet.dart';
+import 'package:moi/app_utils/app_widgets/moi_network_image.dart';
 import 'package:provider/provider.dart';
 
 class BuildSideDrawer extends StatelessWidget {
@@ -246,6 +248,7 @@ class BuildSideDrawer extends StatelessWidget {
 
     if (!context.mounted) return;
 
+    Connection.instance.clearCachedToken();
     await secureStorage.clearSessionData();
 
     if (context.mounted) {
@@ -386,9 +389,11 @@ class _DrawerHeader extends StatelessWidget {
                                 ),
                               ),
                             )
-                          : Image.network(
-                              imageUrl,
+                          : MoiNetworkImage(
+                              url: imageUrl,
                               fit: BoxFit.cover,
+                              width: 56,
+                              height: 56,
                               errorBuilder: (context, error, stackTrace) {
                                 return Container(
                                   color: Colors.white.withValues(alpha: 0.2),

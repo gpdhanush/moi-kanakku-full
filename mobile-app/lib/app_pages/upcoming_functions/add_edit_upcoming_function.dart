@@ -316,8 +316,8 @@ class _AddEditUpcomingFunctionState extends State<AddEditUpcomingFunction> {
                                 )
                               : (_existingImageUrl != null &&
                                     _existingImageUrl!.isNotEmpty)
-                              ? Image.network(
-                                  _existingImageUrl!,
+                              ? MoiNetworkImage(
+                      url: _existingImageUrl!,
                                   fit: BoxFit.cover,
                                   width: double.infinity,
                                   height: double.infinity,

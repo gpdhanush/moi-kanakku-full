@@ -301,7 +301,8 @@ class _AddEditFunctionsState extends State<AddEditFunctions> {
       "functionDate": _convertDate(_dateController.text.toString()),
       "location": _placeController.text.toString().trim().toCapitalized(),
       "notes": _notesController.text.toString().trim().toCapitalized(),
-      if (imagePathToSend.isNotEmpty) "imageUrl": imagePathToSend,
+      // Always send imageUrl when editing so a deleted image is cleared on the server.
+      if (isEditing || imagePathToSend.isNotEmpty) "imageUrl": imagePathToSend,
     };
 
     try {
@@ -382,8 +383,8 @@ class _AddEditFunctionsState extends State<AddEditFunctions> {
                                 )
                               : (_existingImageUrl != null &&
                                     _existingImageUrl!.isNotEmpty)
-                              ? Image.network(
-                                  _existingImageUrl!,
+                              ? MoiNetworkImage(
+                      url: _existingImageUrl!,
                                   fit: BoxFit.cover,
                                   width: double.infinity,
                                   height: double.infinity,
@@ -478,6 +479,7 @@ class _AddEditFunctionsState extends State<AddEditFunctions> {
         _functionImage = null;
         _uploadedImageUrl = null;
         _existingImageUrl = null;
+        _initialImagePath = null;
       });
     } else if (action == ImagePickerAction.gallery) {
       await _pickImage(ImageSource.gallery);

@@ -30,12 +30,15 @@ class MoiBottomNavBar extends StatelessWidget {
 
   /// Space pages / FABs should leave clear above the bottom bar.
   static double clearanceOf(BuildContext context) {
-    return barHeight + MediaQuery.paddingOf(context).bottom;
+    return barHeight + MediaQuery.viewPaddingOf(context).bottom;
   }
 
   @override
   Widget build(BuildContext context) {
     final primary = Theme.of(context).colorScheme.primary;
+    // Scaffold consumes MediaQuery.padding for bottomNavigationBar, so use
+    // viewPadding to keep clear of the system gesture / home indicator.
+    final bottomInset = MediaQuery.viewPaddingOf(context).bottom;
 
     return Material(
       color: AppColors.white,
@@ -57,8 +60,8 @@ class MoiBottomNavBar extends StatelessWidget {
             ),
           ],
         ),
-        child: SafeArea(
-          top: false,
+        child: Padding(
+          padding: EdgeInsets.only(bottom: bottomInset),
           child: SizedBox(
             height: barHeight,
             width: double.infinity,

@@ -29,7 +29,7 @@ Podfile.lock
 .pub-cache/
 .pub/
 /build/
-pubspec.lock
+# Keep pubspec.lock committed for reproducible app builds
 
 # Android related
 **/android/**/gradle-wrapper.jar
@@ -54,6 +54,12 @@ android/.bundle/
 play_store_files/keystore
 play_store_files/*.keystore
 play_store_files/keystore password.txt
+play_store_files/*.zip
+play_store_files/*.json
+play_store_files.zip
+# Never commit signing material — even inside archives
+**/keystore-files.zip
+**/keystore*.zip
 
 # iOS/XCode related
 **/ios/**/*.mode1v3

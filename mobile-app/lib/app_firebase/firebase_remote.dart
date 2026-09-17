@@ -34,7 +34,10 @@ Future<AppRemoteConfig?> getFirebaseRemoteConfig({
     }
 
     final configString = remoteConfig.getString('moiAppVersionConfig');
-    printDirect('Remote Config raw: $configString');
+    // Do not log raw Remote Config — it may contain apiSecretKey.
+    printDirect(
+      'Remote Config loaded: length=${configString.length}, empty=${configString.isEmpty}',
+    );
 
     if (configString.isEmpty) return AppRemoteConfig.current;
 
@@ -72,7 +75,13 @@ Future<AppRemoteConfig?> getFirebaseRemoteConfig({
       );
     }
 
-    appImageUrl = config.imageUrl;
+    if (isAllowedHttpsImageUrl(config.imageUrl)) {
+      appImageUrl = config.imageUrl;
+    } else if (config.imageUrl.trim().isNotEmpty) {
+      printDirect(
+        'Remote Config imageUrl rejected: must be HTTPS',
+      );
+    }
     if (config.apiSecretKey.isNotEmpty) {
       updateApiSecretKey(config.apiSecretKey);
     }

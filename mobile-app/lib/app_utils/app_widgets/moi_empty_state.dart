@@ -35,9 +35,10 @@ class _MoiEmptyStateState extends State<MoiEmptyState>
       duration: const Duration(milliseconds: 500),
     );
     _fade = CurvedAnimation(parent: _controller, curve: Curves.easeOut);
-    _scale = Tween<double>(begin: 0.9, end: 1).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOutBack),
-    );
+    _scale = Tween<double>(
+      begin: 0.9,
+      end: 1,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutBack));
     _controller.forward();
   }
 
@@ -49,8 +50,7 @@ class _MoiEmptyStateState extends State<MoiEmptyState>
 
   @override
   Widget build(BuildContext context) {
-    final primary =
-        widget.accentColor ?? Theme.of(context).colorScheme.primary;
+    final primary = widget.accentColor ?? Theme.of(context).colorScheme.primary;
     final reduceMotion = MediaQuery.disableAnimationsOf(context);
 
     Widget buildContent() {
@@ -61,28 +61,11 @@ class _MoiEmptyStateState extends State<MoiEmptyState>
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Container(
-                width: 88,
-                height: 88,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(color: const Color(0xffE4E4E7)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: primary.withValues(alpha: 0.1),
-                      blurRadius: 16,
-                      offset: const Offset(0, 6),
-                    ),
-                  ],
-                ),
-                alignment: Alignment.center,
-                child: HugeIcon(
-                  icon: widget.icon,
-                  color: primary.withValues(alpha: 0.85),
-                  size: 30,
-                  strokeWidth: 1.8,
-                ),
+              HugeIcon(
+                icon: widget.icon,
+                color: primary.withValues(alpha: 0.85),
+                size: 30,
+                strokeWidth: 1.8,
               ),
               const SizedBox(height: 18),
               Text(

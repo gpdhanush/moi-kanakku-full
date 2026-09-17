@@ -90,8 +90,11 @@ class _VerifyForgotOtpState extends State<VerifyForgotOtp> {
                             FilteringTextInputFormatter.allow(RegExp(r'\d')),
                           ],
                           validator: (value) {
-                            if (value!.isEmpty) {
+                            if (value == null || value.isEmpty) {
                               return languageProvider.tr('auth.otpRequired');
+                            }
+                            if (value.length != 6) {
+                              return languageProvider.tr('auth.otpSixDigits');
                             }
                             return null;
                           },
@@ -404,7 +407,10 @@ class _VerifyForgotOtpState extends State<VerifyForgotOtp> {
         Navigator.pushNamedAndRemoveUntil(
           context,
           'reset_password',
-          arguments: widget.email.toLowerCase(),
+          arguments: {
+            'email': widget.email.toLowerCase(),
+            'otp': otpCtrl.text.trim(),
+          },
           (r) => false,
         );
       }

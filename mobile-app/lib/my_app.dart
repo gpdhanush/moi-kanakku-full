@@ -31,7 +31,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
-    GoogleFonts.config.allowRuntimeFetching = true;
+    GoogleFonts.config.allowRuntimeFetching = false;
     WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
@@ -42,6 +42,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
   @override
   void dispose() {
+    PushNotificationService.instance.dispose();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }

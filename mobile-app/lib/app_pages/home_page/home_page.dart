@@ -416,48 +416,57 @@ class _HomePageState extends State<HomePage> {
 
     setState(() => _isLoadingFunctionSummaries = true);
     try {
-      final response = await _transactionServices.listTransactionFunctions({
-        'userId': userId,
-      }, showLoading: false);
-      final rawFunctions = response is Map && response['responseType'] == 'S'
-          ? response['responseValue']
+      // Two calls total (functions + all transactions) instead of N+1 per function.
+      final results = await Future.wait([
+        _transactionServices.listTransactionFunctions({
+          'userId': userId,
+        }, showLoading: false),
+        _transactionServices.listTransactions({
+          'userId': userId,
+        }, showLoading: false),
+      ]);
+
+      final functionsResponse = results[0];
+      final transactionsResponse = results[1];
+
+      final rawFunctions =
+          functionsResponse is Map && functionsResponse['responseType'] == 'S'
+          ? functionsResponse['responseValue']
           : null;
       if (rawFunctions is! List) return;
 
-      final summaries = await Future.wait(
-        rawFunctions.whereType<Map>().map((function) async {
-          double invest = 0;
-          final functionId = function['id']?.toString();
-          if (functionId != null && functionId.isNotEmpty) {
-            final transactionResponse = await _transactionServices
-                .listTransactions({
-                  'userId': userId,
-                  'transactionFunctionId': functionId,
-                }, showLoading: false);
-            final transactions =
-                transactionResponse is Map &&
-                    transactionResponse['responseType'] == 'S'
-                ? transactionResponse['responseValue']
-                : null;
-            if (transactions is List) {
-              for (final transaction in transactions.whereType<Map>()) {
-                final amount =
-                    double.tryParse(transaction['amount']?.toString() ?? '0') ??
-                    0;
-                if (transaction['type']?.toString().toUpperCase() == 'INVEST') {
-                  invest += amount;
-                }
-              }
-            }
+      final investByFunctionId = <String, double>{};
+      final rawTransactions =
+          transactionsResponse is Map &&
+              transactionsResponse['responseType'] == 'S'
+          ? transactionsResponse['responseValue']
+          : null;
+      if (rawTransactions is List) {
+        for (final transaction in rawTransactions.whereType<Map>()) {
+          if (transaction['type']?.toString().toUpperCase() != 'INVEST') {
+            continue;
           }
-          return {
-            'function': Map<String, dynamic>.from(function),
-            'name': function['functionName']?.toString() ?? '-',
-            'date': formatFunctionDate(function['functionDate']?.toString()),
-            'invest': invest,
-          };
-        }),
-      );
+          final functionId =
+              transaction['transactionFunctionId']?.toString() ??
+              transaction['transaction_function_id']?.toString() ??
+              '';
+          if (functionId.isEmpty) continue;
+          final amount =
+              double.tryParse(transaction['amount']?.toString() ?? '0') ?? 0;
+          investByFunctionId[functionId] =
+              (investByFunctionId[functionId] ?? 0) + amount;
+        }
+      }
+
+      final summaries = rawFunctions.whereType<Map>().map((function) {
+        final functionId = function['id']?.toString() ?? '';
+        return {
+          'function': Map<String, dynamic>.from(function),
+          'name': function['functionName']?.toString() ?? '-',
+          'date': formatFunctionDate(function['functionDate']?.toString()),
+          'invest': investByFunctionId[functionId] ?? 0,
+        };
+      }).toList();
 
       if (mounted) {
         setState(() => _functionSummaries = summaries);

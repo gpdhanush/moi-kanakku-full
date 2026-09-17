@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:moi/app_configs/app_variables.dart';
 import 'package:moi/app_services/user_services.dart';
+import 'package:moi/app_services/connection.dart';
 import 'package:moi/app_storages/secure_storages.dart';
 import 'package:moi/app_themes/index.dart';
 import 'package:moi/app_utils/index.dart';
@@ -341,6 +342,7 @@ class _ChangePasswordState extends State<ChangePassword> {
         }
 
         await secureStorageService.clearSessionData();
+        Connection.instance.clearCachedToken();
 
         if (!mounted) return;
         Navigator.pushNamedAndRemoveUntil(context, 'login', (route) => false);

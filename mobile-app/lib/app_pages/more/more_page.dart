@@ -4,6 +4,7 @@ import 'package:in_app_review/in_app_review.dart';
 import 'package:intl/intl.dart';
 import 'package:moi/app_configs/index.dart';
 import 'package:moi/app_pages/settings_page/settings_menus_panel.dart';
+import 'package:moi/app_services/connection.dart';
 import 'package:moi/app_services/export_service.dart';
 import 'package:moi/app_services/index.dart';
 import 'package:moi/app_storages/secure_storages.dart';
@@ -246,6 +247,7 @@ class MorePage extends StatelessWidget {
     } catch (_) {}
 
     if (!context.mounted) return;
+    Connection.instance.clearCachedToken();
     await secureStorage.clearSessionData();
 
     if (context.mounted) {

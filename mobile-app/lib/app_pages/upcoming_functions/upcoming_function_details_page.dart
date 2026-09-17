@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:moi/app_utils/app_widgets/moi_network_image.dart';
 import 'package:flutter/services.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:moi/app_configs/index.dart';
@@ -129,8 +130,8 @@ class UpcomingFunctionDetailsPage extends StatelessWidget {
                   minScale: 0.8,
                   maxScale: 4,
                   child: imageUrl.isNotEmpty
-                      ? Image.network(
-                          imageUrl,
+                      ? MoiNetworkImage(
+                      url: imageUrl,
                           fit: BoxFit.contain,
                           errorBuilder: (context, error, stackTrace) =>
                               Image.asset(AppImages.defaultImage),
@@ -355,8 +356,8 @@ class _HeroImage extends StatelessWidget {
             fit: StackFit.expand,
             children: [
               imageUrl.isNotEmpty
-                  ? Image.network(
-                      imageUrl,
+                  ? MoiNetworkImage(
+                      url: imageUrl,
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) =>
                           Image.asset(AppImages.defaultImage, fit: BoxFit.cover),

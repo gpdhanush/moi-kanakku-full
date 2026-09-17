@@ -287,8 +287,8 @@ class _ViewFunctionDetailsState extends State<ViewFunctionDetails> {
                   minScale: 0.8,
                   maxScale: 4,
                   child: imageUrl != null && imageUrl.isNotEmpty
-                      ? Image.network(
-                          imageUrl,
+                      ? MoiNetworkImage(
+                      url: imageUrl,
                           fit: BoxFit.contain,
                           errorBuilder: (context, error, stackTrace) =>
                               Image.asset(AppImages.defaultImage),
@@ -477,8 +477,8 @@ class _HeroImage extends StatelessWidget {
             fit: StackFit.expand,
             children: [
               imageUrl != null && imageUrl!.isNotEmpty
-                  ? Image.network(
-                      imageUrl!,
+                  ? MoiNetworkImage(
+                      url: imageUrl!,
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) =>
                           Image.asset(AppImages.defaultImage, fit: BoxFit.cover),

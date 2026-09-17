@@ -8,25 +8,12 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <!-- Audio -->
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
-    <!-- Location (Required for BLE scanning) -->
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-    <!-- Bluetooth Permissions -->
-    <!-- Legacy Bluetooth (required for permission_handler compatibility) -->
+    <!-- Bluetooth (headset support for speech) -->
     <uses-permission android:name="android.permission.BLUETOOTH"/>
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30"/>
-    <!-- Android 12+ (API 31+) Bluetooth permissions -->
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT"/>
-    <uses-permission android:name="android.permission.BLUETOOTH_SCAN"/>
-    <uses-permission android:name="android.permission.BLUETOOTH_ADVERTISE"/>
-    <!-- Nearby Devices (Android 13+) -->
-    <uses-permission
-        android:name="android.permission.NEARBY_WIFI_DEVICES"
-        android:usesPermissionFlags="neverForLocation"
-        tools:targetApi="tiramisu" />
     <!-- Bluetooth hardware optional -->
     <uses-feature android:name="android.hardware.bluetooth" android:required="false"/>
-    <!-- Advertising ID (Declare in Play Console Data Safety) -->
-    <uses-permission android:name="com.google.android.gms.permission.AD_ID"/>
     <!-- Biometrics -->
     <uses-permission android:name="android.permission.USE_BIOMETRIC" tools:ignore="SystemPermissionTypo"/>
     <!-- Camera & Media -->
@@ -44,6 +31,9 @@
         android:label="Moi Kanakku"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
+        android:allowBackup="false"
+        android:fullBackupContent="false"
+        android:dataExtractionRules="@xml/data_extraction_rules"
         android:usesCleartextTraffic="false">
 
         <activity
@@ -68,6 +58,7 @@
         </activity>
         <activity
             android:name="com.yalantis.ucrop.UCropActivity"
+            android:exported="false"
             android:screenOrientation="portrait"
             android:theme="@style/UCropTheme"
             android:windowSoftInputMode="adjustResize"

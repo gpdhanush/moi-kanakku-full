@@ -10,11 +10,9 @@ Moi Kanakku is a comprehensive expense tracking application built with Flutter, 
 
 ### Android
 - **applicationId**: `com.renzo.moi`
-- **minSdk**: 24
-- **targetSdk**: 36
-- **AGP**: 8.8.2
-- **Gradle**: 8.10.2
-- **Kotlin**: 2.1.0
+- **minSdk**: 28
+- **targetSdk / compileSdk**: 37
+- **Release**: R8 minify + shrink; use Dart `--obfuscate` (see App Security)
 
 ## Getting Started
 
@@ -29,8 +27,30 @@ Moi Kanakku is a comprehensive expense tracking application built with Flutter, 
 The app implements several security features:
 - Biometric authentication for app access
 - Secure storage for sensitive information
+- HTTPS API allowlist + certificate pinning
 - Firebase Crashlytics for monitoring app stability
 - Firebase Performance for monitoring app performance
+
+### Signing & secrets (ops)
+
+**Never commit** keystores, `key.properties`, Play service-account JSON, or zip archives that contain them (`play_store_files.zip`, `keystore-files.zip`).
+
+If signing material was ever committed:
+
+1. **Rotate** the Play upload keystore (Play Console → App signing) and create a new Google Play service-account key; revoke the old one.
+2. **Rotate** the API `X-API-Key` / Remote Config `apiSecretKey` on the server (client no longer ships a hardcoded fallback).
+3. Remove sensitive files from git history (`git filter-repo` / BFG) and force-push only after coordinating with the team.
+4. Keep secrets in GitLab CI variables / local `key.properties` only.
+
+### Release builds (obfuscation)
+
+```bash
+flutter build appbundle --release \
+  --obfuscate \
+  --split-debug-info=build/symbols
+```
+
+Archive `build/symbols` securely for Crashlytics deobfuscation. Do not commit symbol files.
 
 ---
 

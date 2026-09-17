@@ -3,6 +3,7 @@ import 'package:moi/app_configs/index.dart';
 import 'package:moi/app_themes/index.dart';
 import 'package:moi/app_utils/app_providers/language_provider.dart';
 import 'package:moi/app_utils/app_providers/user_provider.dart';
+import 'package:moi/app_utils/app_widgets/moi_network_image.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:provider/provider.dart';
 
@@ -178,9 +179,11 @@ class _Avatar extends StatelessWidget {
       child: ClipOval(
         child: imageUrl.isEmpty
             ? _placeholder()
-            : Image.network(
-                imageUrl,
+            : MoiNetworkImage(
+                url: imageUrl,
                 fit: BoxFit.cover,
+                width: 48,
+                height: 48,
                 errorBuilder: (context, error, stackTrace) => _placeholder(),
               ),
       ),

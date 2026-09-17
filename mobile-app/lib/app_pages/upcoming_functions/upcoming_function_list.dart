@@ -949,9 +949,10 @@ class _UpcomingFunctionCard extends StatelessWidget {
       return Image.asset(AppImages.defaultImage, fit: BoxFit.cover);
     }
 
-    return Image.network(
-      imageUrl,
+    return MoiNetworkImage(
+      url: imageUrl,
       fit: BoxFit.cover,
+      memCacheWidth: 400,
       errorBuilder: (_, _, _) =>
           Image.asset(AppImages.defaultImage, fit: BoxFit.cover),
     );

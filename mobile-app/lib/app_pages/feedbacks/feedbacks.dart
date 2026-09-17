@@ -60,10 +60,9 @@ class _FeedbacksState extends State<Feedbacks> {
       }
 
       final userId = userData['id'].toString();
-      final response = await _feedbackServices.getFeedbacksList(
-        {'userId': userId},
-        showLoading: false,
-      );
+      final response = await _feedbackServices.getFeedbacksList({
+        'userId': userId,
+      }, showLoading: false);
 
       if (response != null) {
         List<dynamic> feedbacksList = [];
@@ -223,9 +222,7 @@ class _FeedbacksState extends State<Feedbacks> {
     if (_isLoading) {
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 48),
-        child: Center(
-          child: CircularProgressIndicator(color: primary),
-        ),
+        child: Center(child: CircularProgressIndicator(color: primary)),
       );
     }
 
@@ -650,7 +647,9 @@ class _FeedbackCard extends StatelessWidget {
                         width: 34,
                         height: 34,
                         decoration: BoxDecoration(
-                          color: const Color(0xFF2E7D32).withValues(alpha: 0.12),
+                          color: const Color(
+                            0xFF2E7D32,
+                          ).withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         alignment: Alignment.center,
@@ -678,9 +677,7 @@ class _FeedbackCard extends StatelessWidget {
                             Text(
                               repliedAt.isNotEmpty
                                   ? repliedAt
-                                  : languageProvider.tr(
-                                      'feedback.unknownDate',
-                                    ),
+                                  : languageProvider.tr('feedback.unknownDate'),
                               style: AppTypography.body.copyWith(
                                 color: AppColors.textSecondary,
                                 fontSize: 11,
@@ -695,7 +692,9 @@ class _FeedbackCard extends StatelessWidget {
                           vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF2E7D32).withValues(alpha: 0.12),
+                          color: const Color(
+                            0xFF2E7D32,
+                          ).withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(

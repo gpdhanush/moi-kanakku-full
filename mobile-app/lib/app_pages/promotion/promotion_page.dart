@@ -51,7 +51,10 @@ class _PromotionPageState extends State<PromotionPage> {
   @override
   void initState() {
     super.initState();
-    _pageController = PageController(initialPage: 0);
+    _pageController = PageController(
+      initialPage: testimonials.length * 50,
+      viewportFraction: 0.9,
+    );
     _startAutoScroll();
   }
 
@@ -430,10 +433,7 @@ class _PromotionPageState extends State<PromotionPage> {
         SizedBox(
           height: 220,
           child: PageView.builder(
-            controller: PageController(
-              initialPage: testimonials.length * 50,
-              viewportFraction: 0.9,
-            ),
+            controller: _pageController,
             onPageChanged: (index) {
               setState(() {
                 _currentPage = index % testimonials.length;

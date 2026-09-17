@@ -4,6 +4,7 @@ import 'package:moi/app_configs/index.dart';
 import 'package:moi/app_pages/upcoming_functions/models/upcoming_function_model.dart';
 import 'package:moi/app_themes/index.dart';
 import 'package:moi/app_utils/app_providers/language_provider.dart';
+import 'package:moi/app_utils/app_widgets/moi_network_image.dart';
 import 'package:provider/provider.dart';
 
 class HomeUpcomingSection extends StatelessWidget {
@@ -209,9 +210,10 @@ class _UpcomingCard extends StatelessWidget {
                 if (hasImage)
                   Opacity(
                     opacity: 0.2,
-                    child: Image.network(
-                      imageUrl,
+                    child: MoiNetworkImage(
+                      url: imageUrl,
                       fit: BoxFit.cover,
+                      memCacheWidth: 400,
                       errorBuilder: (context, error, stackTrace) {
                         return const SizedBox.shrink();
                       },

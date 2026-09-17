@@ -40,6 +40,10 @@ void main() {
         FlutterError.presentError(details);
         FirebaseCrashlytics.instance.recordFlutterFatalError(details);
       };
+      PlatformDispatcher.instance.onError = (error, stack) {
+        FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+        return true;
+      };
       FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(
         kReleaseMode,
       );
