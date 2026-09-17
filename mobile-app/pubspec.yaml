@@ -33,7 +33,6 @@ dependencies:
   image_cropper: ^12.2.1
   flutter_file_downloader: ^2.1.1
   # razorpay_flutter: ^1.3.7
-  webview_flutter: ^4.10.0
   # FIREBASE PLUGINS
   firebase_core: ^4.15.0
   firebase_crashlytics: ^5.4.0
@@ -69,10 +68,10 @@ flutter_launcher_icons:
 flutter:
   uses-material-design: true
   assets:
-    - assets/img/
     - assets/images/
     - assets/logo/
     - assets/translations/
+    # Needed for PDF rootBundle.load (also registered as NotoSansTamil below).
     - assets/fonts/NotoSansTamil-Regular.ttf
 
   fonts:
@@ -102,71 +101,3 @@ flutter:
     - family: NotoSansTamil
       fonts:
         - asset: assets/fonts/NotoSansTamil-Regular.ttf
-
-    - family: AzeretMono
-      fonts:
-        - asset: assets/fonts/AzeretMono/AzeretMono-Variable.ttf
-
-    # Compatibility aliases used by existing widgets.
-    - family: appFontFamily
-      fonts:
-        - asset: assets/fonts/Arimo/Arimo-Regular.ttf
-          weight: 400
-        - asset: assets/fonts/Arimo/Arimo-Medium.ttf
-          weight: 500
-        - asset: assets/fonts/Arimo/Arimo-SemiBold.ttf
-          weight: 600
-        - asset: assets/fonts/Arimo/Arimo-Bold.ttf
-          weight: 700
-
-    - family: RobotoBold
-      fonts:
-        - asset: assets/fonts/Arimo/Arimo-Bold.ttf
-          weight: 700
-
-    - family: ProximaNova
-      fonts:
-        - asset: assets/fonts/Arimo/Arimo-Regular.ttf
-
-    - family: Roboto
-      fonts:
-        - asset: assets/fonts/Arimo/Arimo-Regular.ttf
-
-    - family: Poppins
-      fonts:
-        - asset: assets/fonts/Arimo/Arimo-Regular.ttf
-          weight: 400
-        - asset: assets/fonts/Arimo/Arimo-Medium.ttf
-          weight: 500
-        - asset: assets/fonts/Arimo/Arimo-SemiBold.ttf
-          weight: 600
-        - asset: assets/fonts/Arimo/Arimo-Bold.ttf
-          weight: 700
-
-    - family: tamilFont
-      fonts:
-        - asset: assets/fonts/Arimo/Arimo-Regular.ttf
-          weight: 400
-        - asset: assets/fonts/Arimo/Arimo-Medium.ttf
-          weight: 500
-        - asset: assets/fonts/Arimo/Arimo-SemiBold.ttf
-          weight: 600
-        - asset: assets/fonts/Arimo/Arimo-Bold.ttf
-          weight: 700
-    
-    - family: englishFont
-      fonts:
-        - asset: assets/fonts/Arimo/Arimo-Regular.ttf
-          weight: 400
-        - asset: assets/fonts/Arimo/Arimo-Medium.ttf
-          weight: 500
-        - asset: assets/fonts/Arimo/Arimo-SemiBold.ttf
-          weight: 600
-        - asset: assets/fonts/Arimo/Arimo-Bold.ttf
-          weight: 700
-
-    - family: amountFont
-      fonts:
-        - asset: assets/fonts/AzeretMono/AzeretMono-Variable.ttf
-
-

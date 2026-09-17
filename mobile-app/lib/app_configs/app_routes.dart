@@ -95,8 +95,6 @@ class AppRoute {
             page = const ContactUs();
           case "feedbacks":
             page = const Feedbacks();
-          case "promotion":
-            page = const PromotionPage();
           case "settings":
             page = const Settings();
           case "functions-list":

@@ -54,4 +54,3 @@ export './transactions/transaction_person_details.dart';
 export './transactions/add_transaction.dart';
 export './transactions/transaction_detail_view_page.dart';
 export './transactions/all_transactions_page.dart';
-export './promotion/promotion_page.dart';
