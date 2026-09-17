@@ -14,6 +14,41 @@ class AppTypography {
     height: 1.2,
   );
 
+  /// Login / signup page title — matches auth hero copy style.
+  static TextStyle authTitle = GoogleFonts.poppins(
+    fontSize: 22,
+    fontWeight: FontWeight.w700,
+    color: AppColors.authTitle,
+    height: 1.2,
+    letterSpacing: -0.2,
+  );
+
+  /// Login / signup page subtitle under [authTitle].
+  static TextStyle authSubtitle = GoogleFonts.poppins(
+    fontSize: 13,
+    fontWeight: FontWeight.w400,
+    color: AppColors.authSubtitle,
+    height: 1.4,
+  );
+
+  /// Hero image overlay headline (e.g. Every Function Matters).
+  static TextStyle heroHeadline = GoogleFonts.outfit(
+    fontSize: 22,
+    fontWeight: FontWeight.w700,
+    color: Colors.white,
+    height: 1.2,
+    letterSpacing: -0.3,
+  );
+
+  /// Hero image overlay support line under [heroHeadline].
+  static TextStyle heroSupport = GoogleFonts.outfit(
+    fontSize: 13,
+    fontWeight: FontWeight.w400,
+    color: Colors.white,
+    height: 1.35,
+    letterSpacing: 0.1,
+  );
+
   static TextStyle sectionTitle = GoogleFonts.inter(
     fontSize: 17,
     fontWeight: FontWeight.w700,

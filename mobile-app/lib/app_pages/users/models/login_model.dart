@@ -4,6 +4,7 @@ class SignUpRequestModel {
   String? mobile;
   String? city;
   String? password;
+  String? confirmPassword;
   String? fcm_token;
 
   String? device_id;
@@ -20,8 +21,8 @@ class SignUpRequestModel {
     this.mobile,
     this.city,
     this.password,
+    this.confirmPassword,
     this.fcm_token,
-
     this.device_id,
     this.device_name,
     this.brand,
@@ -37,6 +38,8 @@ class SignUpRequestModel {
     mobile = json['mobile'];
     city = json['city'];
     password = json['password'];
+    confirmPassword =
+        json['confirmPassword'] ?? json['confirm_password'] ?? json['password'];
     fcm_token = json['fcm_token'];
 
     device_id = json['device_id'];
@@ -55,6 +58,7 @@ class SignUpRequestModel {
     data['mobile'] = mobile;
     data['city'] = city;
     data['password'] = password;
+    data['confirmPassword'] = confirmPassword ?? password;
     data['fcm_token'] = fcm_token;
 
     data['device_id'] = device_id;

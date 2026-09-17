@@ -65,6 +65,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/img/
+    - assets/images/
     - assets/translations/
     - assets/fonts/NotoSansTamil-Regular.ttf
 

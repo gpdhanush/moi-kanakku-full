@@ -76,16 +76,22 @@ class LoginController {
     }
   }
 
-  String? validateEmail(String? value) {
-    return EmailValidator.validateEmail(value);
+  String? validateEmail(
+    String? value,
+    LanguageProvider languageProvider, {
+    bool forceValidate = true,
+  }) {
+    return EmailValidator.validateEmailOnInteraction(
+      value,
+      languageProvider: languageProvider,
+      forceValidate: forceValidate,
+    );
   }
 
+  /// Login only requires a non-empty password; length rules belong on signup/reset.
   String? validatePassword(String? value, LanguageProvider languageProvider) {
-    if (value == null || value.isEmpty) {
+    if (value == null || value.trim().isEmpty) {
       return languageProvider.tr('auth.passwordRequired');
-    }
-    if (value.length < 8) {
-      return languageProvider.tr('auth.passwordMinLength');
     }
     return null;
   }

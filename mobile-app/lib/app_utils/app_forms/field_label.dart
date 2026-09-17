@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:moi/app_themes/app_colors.dart';
+import 'package:moi/app_themes/app_typography.dart';
 
-/// A small widget that renders the title of a form field along with an
-/// optional asterisk when the field is required.  Both text inputs and
-/// dropdowns use the same styling so we keep it in one place.
+/// Shared field label with optional red required asterisk.
 class FieldLabel extends StatelessWidget {
   final String text;
   final bool required;
@@ -11,23 +11,26 @@ class FieldLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return RichText(
       text: TextSpan(
         text: text,
-        style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w500),
+        style: AppTypography.label.copyWith(
+          color: AppColors.textPrimary,
+          fontSize: 13,
+          fontWeight: FontWeight.w600,
+        ),
         children: required
             ? [
                 TextSpan(
                   text: ' *',
-                  style: theme.textTheme.bodySmall?.copyWith(
+                  style: AppTypography.label.copyWith(
                     fontSize: 14,
-                    fontWeight: FontWeight.w900,
+                    fontWeight: FontWeight.w800,
                     color: Colors.redAccent,
                   ),
                 ),
               ]
-            : [],
+            : const [],
       ),
     );
   }

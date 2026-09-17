@@ -33,6 +33,9 @@ class AppColors {
   static const Color borderSubtle = Color(0xffD6E4F7);
   static const Color textPrimary = Color(0xff0F172A);
   static const Color textSecondary = Color(0xff64748B);
+  /// Auth page heading colors (Welcome Back / Create account)
+  static const Color authTitle = Color(0xff000B3E);
+  static const Color authSubtitle = Color(0xff758095);
 
   static const Color white = Color(0xffffffff);
   static const Color white50 = Color(0x88ffffff);

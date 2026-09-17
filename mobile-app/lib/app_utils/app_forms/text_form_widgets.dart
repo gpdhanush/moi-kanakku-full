@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:moi/app_themes/app_colors.dart';
 import 'package:moi/app_themes/app_custom_themes.dart';
+import 'package:moi/app_themes/app_typography.dart';
 
 import 'mic_icon_widget.dart';
 import 'field_label.dart';
 
-/// A custom text form field widget with optional microphone input
+/// Shared text form field used across the app.
 class TextFormWidget extends StatelessWidget {
+  static const Color _fillColor = Color(0xffF7FAFF);
+  static const double _radius = 12;
+
   final String title;
   final String? hintText;
   final TextInputType? keyboardType;
@@ -44,6 +49,7 @@ class TextFormWidget extends StatelessWidget {
   final int? maxLines;
   final int? minLines;
   final InputDecoration? decoration;
+  final AutovalidateMode? autovalidateMode;
 
   const TextFormWidget({
     super.key,
@@ -84,126 +90,132 @@ class TextFormWidget extends StatelessWidget {
     this.maxLines,
     this.decoration,
     this.enableMic = false,
+    this.autovalidateMode,
   });
 
   @override
   Widget build(BuildContext context) {
-    ThemeData theme = Theme.of(context);
+    final primary = Theme.of(context).colorScheme.primary;
 
     return Column(
       mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // label for the field (shared with dropdown)
         FieldLabel(text: title, required: required),
-        const SizedBox(height: 4),
-        TextFormField(
-          maxLines: maxLines ?? 1,
-          minLines: minLines ?? 1,
-          initialValue: initialValue,
-          controller: controller,
-          keyboardType: keyboardType ?? TextInputType.text,
-          textInputAction: textInputAction ?? TextInputAction.next,
-          maxLength: maxLength,
-          obscureText: obscureText ?? false,
-          scrollPadding: EdgeInsets.zero,
-          obscuringCharacter: obscuringCharacter ?? '*',
-          autofocus: autofocus ?? false,
-          autovalidateMode: AutovalidateMode.onUserInteraction,
-          validator: validator,
-          textCapitalization: textCapitalization ?? TextCapitalization.none,
-          readOnly: readOnly ?? false,
-          enabled: enabled,
-          onSaved: onSaved,
-          onTap: onTap,
-          onChanged: onChanged,
-          inputFormatters: inputFormatters,
-          onFieldSubmitted: onFieldSubmitted,
-          focusNode: focusNode,
-          style: theme.textTheme.bodySmall?.copyWith(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            overflow: TextOverflow.clip,
-            fontFamily: 'Inter',
-            // fontFamily: theme.textTheme.bodySmall?.fontFamily,
+        const SizedBox(height: 8),
+        DecoratedBox(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(_radius),
+            boxShadow: [
+              BoxShadow(
+                color: primary.withValues(alpha: 0.06),
+                blurRadius: 10,
+                offset: const Offset(0, 3),
+              ),
+            ],
           ),
-          decoration: decoration ?? customDecoration(context),
+          child: TextFormField(
+            maxLines: maxLines ?? 1,
+            minLines: minLines ?? 1,
+            initialValue: initialValue,
+            controller: controller,
+            keyboardType: keyboardType ?? TextInputType.text,
+            textInputAction: textInputAction ?? TextInputAction.next,
+            maxLength: maxLength,
+            obscureText: obscureText ?? false,
+            scrollPadding: EdgeInsets.zero,
+            obscuringCharacter: obscuringCharacter ?? '●',
+            autofocus: autofocus ?? false,
+            autovalidateMode:
+                autovalidateMode ?? AutovalidateMode.onUserInteraction,
+            validator: validator,
+            textCapitalization: textCapitalization ?? TextCapitalization.none,
+            readOnly: readOnly ?? false,
+            enabled: enabled,
+            onSaved: onSaved,
+            onTap: onTap,
+            onChanged: onChanged,
+            inputFormatters: inputFormatters,
+            onFieldSubmitted: onFieldSubmitted,
+            focusNode: focusNode,
+            style: AppTypography.body.copyWith(
+              color: AppColors.textPrimary,
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              overflow: TextOverflow.clip,
+            ),
+            decoration: decoration ?? customDecoration(context),
+          ),
         ),
       ],
     );
   }
 
-  /// Returns a custom decoration for the text form field
-  /// Shared theme used by text fields and dropdown menus so they look consistent.
-  ///
-  /// This method centralizes the `InputDecorationTheme` properties that both
-  /// widgets rely on.  When the design needs tweaking, update this helper and
-  /// both widgets will follow.
+  /// Shared theme used by text fields and dropdown menus.
   static InputDecorationTheme commonInputDecorationTheme(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final primary = Theme.of(context).colorScheme.primary;
+    final borderRadius = BorderRadius.circular(_radius);
+    final borderSide = const BorderSide(color: AppColors.borderSubtle);
 
     return InputDecorationTheme(
       filled: true,
-      fillColor: Colors.white,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 7, vertical: 14),
+      fillColor: _fillColor,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       isDense: true,
-      constraints: const BoxConstraints(minHeight: 48),
-      hintStyle: AppTextStyles.customHintStyle,
+      constraints: const BoxConstraints(minHeight: 52),
+      hintStyle: AppTextStyles.customHintStyle.copyWith(
+        color: AppColors.textSecondary.withValues(alpha: 0.9),
+        fontWeight: FontWeight.w500,
+      ),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(5),
-        borderSide: BorderSide(
-          color: colorScheme.primary.withValues(alpha: 0.2),
-          width: 1.5,
-        ),
+        borderRadius: borderRadius,
+        borderSide: borderSide,
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(5),
-        borderSide: BorderSide(
-          color: colorScheme.primary.withValues(alpha: 0.2),
-          width: 1.5,
-        ),
+        borderRadius: borderRadius,
+        borderSide: borderSide,
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(5),
-        borderSide: BorderSide(color: colorScheme.primary, width: 2),
+        borderRadius: borderRadius,
+        borderSide: BorderSide(color: primary, width: 1.5),
       ),
       focusedErrorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(5),
-        borderSide: const BorderSide(color: Colors.redAccent, width: 2),
+        borderRadius: borderRadius,
+        borderSide: const BorderSide(color: Colors.redAccent, width: 1.5),
       ),
       disabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(5),
-        borderSide: BorderSide(color: Colors.grey.shade300, width: 1.5),
+        borderRadius: borderRadius,
+        borderSide: BorderSide(color: Colors.grey.shade300),
       ),
       errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(5),
-        borderSide: const BorderSide(color: Colors.redAccent, width: 1.5),
+        borderRadius: borderRadius,
+        borderSide: const BorderSide(color: Colors.redAccent),
       ),
     );
   }
 
   InputDecoration customDecoration(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
     final base = TextFormWidget.commonInputDecorationTheme(context);
+    final iconTint =
+        iconColor ?? AppColors.textPrimary.withValues(alpha: 0.8);
 
     return InputDecoration(
       prefixText: prefixText,
       hintText: hintText ?? title,
       counterText: counterText ?? '',
-      errorMaxLines: errorMaxLines ?? 1,
+      errorMaxLines: errorMaxLines ?? 2,
       helperText: helperText,
+      errorText: errorText,
       alignLabelWithHint: true,
       filled: base.filled,
       fillColor: base.fillColor,
       contentPadding: base.contentPadding,
       isDense: base.isDense,
-      suffixIconConstraints: const BoxConstraints(minWidth: 5, minHeight: 2),
+      suffixIconConstraints: const BoxConstraints(minWidth: 40, minHeight: 40),
       prefixIcon: prefixIcon != null
-          ? Icon(prefixIcon, size: 20, color: colorScheme.primary)
+          ? Icon(prefixIcon, size: 22, color: iconTint)
           : null,
-      prefixIconConstraints: const BoxConstraints(minHeight: 10, minWidth: 40),
+      prefixIconConstraints: const BoxConstraints(minHeight: 40, minWidth: 44),
       suffixIcon: getSuffix(controller, context),
       errorStyle: const TextStyle(
         color: Colors.red,
@@ -220,20 +232,20 @@ class TextFormWidget extends StatelessWidget {
     );
   }
 
-  /// Returns the appropriate suffix widget for the text form field
   Widget? getSuffix(TextEditingController? ctrl, BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final iconTint =
+        iconColor ?? AppColors.textPrimary.withValues(alpha: 0.75);
 
     if (suffixIconTrue == true) {
       return Padding(
-        padding: const EdgeInsets.only(right: 8),
+        padding: const EdgeInsets.only(right: 4),
         child: SizedBox(
-          height: 25,
+          height: 40,
           width: 40,
           child: IconButton(
             padding: EdgeInsets.zero,
-            visualDensity: VisualDensity.adaptivePlatformDensity,
-            icon: Icon(suffixIcon, size: 22, color: colorScheme.primary),
+            visualDensity: VisualDensity.compact,
+            icon: Icon(suffixIcon, size: 22, color: iconTint),
             onPressed: suffixIconOnPressed,
           ),
         ),

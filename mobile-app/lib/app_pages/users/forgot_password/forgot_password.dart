@@ -71,7 +71,10 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                             FilteringTextInputFormatter.deny(RegExp(r'\s')),
                           ],
                           validator: (value) {
-                            return EmailValidator.validateEmail(value);
+                            return EmailValidator.validateEmail(
+                              value,
+                              languageProvider: languageProvider,
+                            );
                           },
                         ),
                       ),

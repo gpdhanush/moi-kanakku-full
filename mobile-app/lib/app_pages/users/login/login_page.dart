@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:moi/app_configs/index.dart';
+import 'package:moi/app_themes/index.dart';
 import 'package:moi/app_utils/app_providers/language_provider.dart';
 import 'package:moi/app_utils/index.dart';
 import 'package:provider/provider.dart';
+
 import 'login_controller.dart';
 
 class LoginPage extends StatefulWidget {
@@ -13,292 +15,438 @@ class LoginPage extends StatefulWidget {
   State<LoginPage> createState() => _LoginPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _LoginPageState extends State<LoginPage>
+    with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final LoginController _controller = LoginController();
+  final FocusNode _emailFocus = FocusNode();
+  final FocusNode _passwordFocus = FocusNode();
+
+  bool _isLoading = false;
+  bool _submitted = false;
+  late final AnimationController _entrance;
+  late final Animation<double> _fadeIn;
+  late final Animation<Offset> _slideUp;
 
   @override
   void initState() {
     super.initState();
     pageTitleLogs('LOGIN PAGE');
+    _entrance = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 520),
+    );
+    _fadeIn = CurvedAnimation(parent: _entrance, curve: Curves.easeOutCubic);
+    _slideUp = Tween<Offset>(
+      begin: const Offset(0, 0.04),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _entrance, curve: Curves.easeOutCubic));
+    _entrance.forward();
   }
 
   @override
   void dispose() {
+    _entrance.dispose();
+    _emailFocus.dispose();
+    _passwordFocus.dispose();
     _controller.dispose();
     super.dispose();
+  }
+
+  Future<void> _onLogin() async {
+    FocusScope.of(context).unfocus();
+    setState(() => _submitted = true);
+    if (!_formKey.currentState!.validate()) return;
+    _formKey.currentState!.save();
+    if (_isLoading) return;
+
+    setState(() => _isLoading = true);
+    try {
+      await _controller.submitLogin(context);
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final languageProvider = context.watch<LanguageProvider>();
-    final theme = Theme.of(context);
-    final primary = theme.colorScheme.primary;
-    final isKeyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
+    final media = MediaQuery.of(context);
+    final screenHeight = media.size.height;
+    final keyboardOpen = media.viewInsets.bottom > 0;
+    final heroHeight = (screenHeight * (keyboardOpen ? 0.18 : 0.32)).clamp(
+      keyboardOpen ? 120.0 : 200.0,
+      keyboardOpen ? 160.0 : 300.0,
+    );
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: const SystemUiOverlayStyle(
-        statusBarIconBrightness: Brightness.dark,
+      value: SystemUiOverlayStyle.light.copyWith(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+        statusBarBrightness: Brightness.dark,
       ),
       child: PopScope(
         canPop: false,
-        child: SafeArea(
-          child: Scaffold(
-            resizeToAvoidBottomInset: true,
-            body: Column(
-              children: [
-                Expanded(
-                  child: SingleChildScrollView(
-                    child: Form(
-                      key: _formKey,
-                      child: Column(
-                        children: [
-                          _buildHeaderImage(),
-                          const SizedBox(height: 25),
-                          _buildTitleText(theme, languageProvider),
-                          const SizedBox(height: 25),
-                          _buildEmailField(theme, languageProvider),
-                          const SizedBox(height: 16),
-                          _buildPasswordField(theme, languageProvider),
-                          Align(
-                            alignment: Alignment.centerRight,
-                            child: Padding(
-                              padding: const EdgeInsets.only(right: 15, top: 4),
-                              child: _buildForgotPasswordButton(
-                                context,
-                                theme,
-                                languageProvider,
+        child: Scaffold(
+          resizeToAvoidBottomInset: true,
+          backgroundColor: AppColors.white,
+          body: Column(
+            children: [
+              LoginHeroHeader(
+                height: heroHeight,
+                headline: keyboardOpen
+                    ? null
+                    : languageProvider.tr('login.heroHeadline'),
+                support: keyboardOpen
+                    ? null
+                    : languageProvider.tr('login.heroSupport'),
+              ),
+              Expanded(
+                child: FadeTransition(
+                  opacity: _fadeIn,
+                  child: SlideTransition(
+                    position: _slideUp,
+                    child: Column(
+                      children: [
+                        Expanded(
+                          child: SingleChildScrollView(
+                            physics: const BouncingScrollPhysics(),
+                            padding: EdgeInsets.fromLTRB(
+                              AppSpacing.page,
+                              AppSpacing.md,
+                              AppSpacing.page,
+                              AppSpacing.md,
+                            ),
+                            child: Form(
+                              key: _formKey,
+                              autovalidateMode: _submitted
+                                  ? AutovalidateMode.onUserInteraction
+                                  : AutovalidateMode.disabled,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  Text(
+                                    languageProvider.tr('login.title'),
+                                    textAlign: TextAlign.center,
+                                    style: AppTypography.authTitle,
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    languageProvider.tr('login.subtitle'),
+                                    textAlign: TextAlign.center,
+                                    style: AppTypography.authSubtitle,
+                                  ),
+                                  const SizedBox(height: AppSpacing.lg),
+                                  TextFormWidget(
+                                    title: languageProvider.tr('login.email'),
+                                    hintText: languageProvider.tr(
+                                      'login.emailHint',
+                                    ),
+                                    required: true,
+                                    controller: _controller.emailCtrl,
+                                    focusNode: _emailFocus,
+                                    prefixIcon: Icons.email_outlined,
+                                    keyboardType: TextInputType.emailAddress,
+                                    textInputAction: TextInputAction.next,
+                                    inputFormatters: [
+                                      FilteringTextInputFormatter.deny(
+                                        RegExp(r'\s'),
+                                      ),
+                                    ],
+                                    autovalidateMode: _submitted
+                                        ? AutovalidateMode.onUserInteraction
+                                        : AutovalidateMode.disabled,
+                                    validator: (value) =>
+                                        _controller.validateEmail(
+                                      value,
+                                      languageProvider,
+                                      forceValidate: _submitted,
+                                    ),
+                                    onFieldSubmitted: (_) {
+                                      _passwordFocus.requestFocus();
+                                    },
+                                  ),
+                                  const SizedBox(height: AppSpacing.md),
+                                  TextFormWidget(
+                                    title: languageProvider.tr(
+                                      'login.password',
+                                    ),
+                                    hintText: languageProvider.tr(
+                                      'login.passwordHint',
+                                    ),
+                                    required: true,
+                                    controller: _controller.passCtrl,
+                                    focusNode: _passwordFocus,
+                                    prefixIcon: Icons.lock_outline,
+                                    obscureText: _controller.showPass,
+                                    obscuringCharacter: '●',
+                                    textInputAction: TextInputAction.done,
+                                    maxLength: 64,
+                                    suffixIconTrue: true,
+                                    suffixIcon: _controller.showPass
+                                        ? Icons.visibility_outlined
+                                        : Icons.visibility_off_outlined,
+                                    suffixIconOnPressed: () {
+                                      setState(() {
+                                        _controller.togglePasswordVisibility();
+                                      });
+                                    },
+                                    autovalidateMode: _submitted
+                                        ? AutovalidateMode.onUserInteraction
+                                        : AutovalidateMode.disabled,
+                                    validator: (value) =>
+                                        _controller.validatePassword(
+                                      value,
+                                      languageProvider,
+                                    ),
+                                    onFieldSubmitted: (_) => _onLogin(),
+                                  ),
+                                  Align(
+                                    alignment: Alignment.centerRight,
+                                    child: TextButton(
+                                      onPressed: _isLoading
+                                          ? null
+                                          : () => Navigator.pushNamed(
+                                                context,
+                                                'forgot_password',
+                                              ),
+                                      style: TextButton.styleFrom(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 4,
+                                          vertical: 10,
+                                        ),
+                                        minimumSize: const Size(48, 48),
+                                        tapTargetSize:
+                                            MaterialTapTargetSize.shrinkWrap,
+                                      ),
+                                      child: Text(
+                                        languageProvider.tr(
+                                          'login.forgotPassword',
+                                        ),
+                                        style: AppTypography.label.copyWith(
+                                          color: AppColors.primary,
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: AppSpacing.sm),
+                                  _LoginPrimaryButton(
+                                    title: languageProvider.tr(
+                                      'login.loginNow',
+                                    ),
+                                    isLoading: _isLoading,
+                                    onPressed: _onLogin,
+                                  ),
+                                  const SizedBox(height: AppSpacing.xl),
+                                  _CreateAccountRow(
+                                    prefix: languageProvider.tr(
+                                      'login.noAccount',
+                                    ),
+                                    action: languageProvider.tr(
+                                      'login.createAccount',
+                                    ),
+                                    enabled: !_isLoading,
+                                    onTap: () => Navigator.pushNamed(
+                                      context,
+                                      'signup',
+                                    ),
+                                  ),
+                                  SizedBox(height: media.padding.bottom + 8),
+                                ],
                               ),
                             ),
                           ),
-                          const SizedBox(height: 12),
-                          _buildLoginButton(theme, languageProvider),
-                          const SizedBox(height: 50),
-                          _buildSignupSection(context, theme, languageProvider),
-                          const SizedBox(height: 12),
-                        ],
-                      ),
+                        ),
+                        if (!keyboardOpen)
+                          _LoginWavesPattern(
+                            primary: Theme.of(context).colorScheme.primary,
+                          ),
+                      ],
                     ),
                   ),
                 ),
-                if (!isKeyboardOpen) _BottomPattern(color: primary),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _LoginPrimaryButton extends StatelessWidget {
+  final String title;
+  final bool isLoading;
+  final VoidCallback onPressed;
+
+  const _LoginPrimaryButton({
+    required this.title,
+    required this.isLoading,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
+
+    return Semantics(
+      button: true,
+      label: title,
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        child: InkWell(
+          onTap: isLoading ? null : onPressed,
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          child: Ink(
+            height: 56,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(AppRadius.md),
+              color: isLoading ? primary.withValues(alpha: 0.72) : primary,
+              boxShadow: [
+                BoxShadow(
+                  color: primary.withValues(alpha: 0.28),
+                  blurRadius: 14,
+                  offset: const Offset(0, 6),
+                ),
               ],
+            ),
+            child: Center(
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 180),
+                child: isLoading
+                    ? const SizedBox(
+                        key: ValueKey('loading'),
+                        width: 22,
+                        height: 22,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2.4,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.white,
+                          ),
+                        ),
+                      )
+                    : Text(
+                        key: const ValueKey('label'),
+                        title,
+                        style: AppTypography.label.copyWith(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+              ),
             ),
           ),
         ),
       ),
     );
   }
+}
 
-  Widget _buildHeaderImage() {
-    return Image.asset(
-      AppImages.loginBackgroundImage,
-      fit: BoxFit.cover,
-      height: 250,
-      width: double.infinity,
-    );
-  }
+class _CreateAccountRow extends StatelessWidget {
+  final String prefix;
+  final String action;
+  final bool enabled;
+  final VoidCallback onTap;
 
-  Widget _buildTitleText(ThemeData theme, LanguageProvider languageProvider) {
-    return Column(
+  const _CreateAccountRow({
+    required this.prefix,
+    required this.action,
+    required this.enabled,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
+
+    return Wrap(
+      alignment: WrapAlignment.center,
+      crossAxisAlignment: WrapCrossAlignment.center,
       children: [
         Text(
-          languageProvider.tr('login.title'),
-          style: theme.textTheme.bodyLarge?.copyWith(
-            fontWeight: FontWeight.bold,
-            fontSize: 24.0,
-            fontFamily: 'Inter',
+          '$prefix ',
+          style: AppTypography.body.copyWith(
+            color: AppColors.textSecondary,
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
           ),
         ),
-        const SizedBox(height: 8),
-        Text(
-          languageProvider.tr('login.subtitle'),
-          textAlign: TextAlign.center,
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: Colors.black87,
-            fontWeight: FontWeight.normal,
+        Semantics(
+          button: true,
+          label: action,
+          child: InkWell(
+            onTap: enabled ? onTap : null,
+            borderRadius: BorderRadius.circular(8),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+              child: Text(
+                action,
+                style: AppTypography.label.copyWith(
+                  color: primary,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  decoration: TextDecoration.underline,
+                  decorationColor: primary,
+                  decorationThickness: 1.4,
+                ),
+              ),
+            ),
           ),
         ),
       ],
     );
   }
-
-  Widget _buildEmailField(ThemeData theme, LanguageProvider languageProvider) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 15),
-      child: TextFormWidget(
-        title: languageProvider.tr('login.email'),
-        prefixIcon: Icons.email_outlined,
-        required: true,
-        controller: _controller.emailCtrl,
-        keyboardType: TextInputType.emailAddress,
-        textCapitalization: TextCapitalization.none,
-        validator: _controller.validateEmail,
-      ),
-    );
-  }
-
-  Widget _buildPasswordField(
-    ThemeData theme,
-    LanguageProvider languageProvider,
-  ) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 15),
-      child: TextFormWidget(
-        title: languageProvider.tr('login.password'),
-        prefixIcon: Icons.lock_outline,
-        maxLines: 1,
-        controller: _controller.passCtrl,
-        maxLength: 64,
-        obscureText: _controller.showPass,
-        required: true,
-        obscuringCharacter: '●',
-        textInputAction: TextInputAction.done,
-        suffixIconTrue: true,
-        suffixIcon: _controller.showPass
-            ? Icons.visibility_outlined
-            : Icons.visibility_off_outlined,
-        suffixIconOnPressed: () {
-          setState(() {
-            _controller.togglePasswordVisibility();
-          });
-        },
-        validator: (value) =>
-            _controller.validatePassword(value, languageProvider),
-      ),
-    );
-  }
-
-  Widget _buildLoginButton(ThemeData theme, LanguageProvider languageProvider) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 15),
-      child: AppButton(
-        title: languageProvider.tr('login.loginNow'),
-        onPressed: () {
-          FocusScope.of(context).unfocus();
-          if (_formKey.currentState!.validate()) {
-            _formKey.currentState!.save();
-            _controller.submitLogin(context);
-          }
-        },
-      ),
-    );
-  }
-
-  Widget _buildSignupSection(
-    BuildContext context,
-    ThemeData theme,
-    LanguageProvider languageProvider,
-  ) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 15),
-      child: Wrap(
-        alignment: WrapAlignment.center,
-        crossAxisAlignment: WrapCrossAlignment.center,
-        children: [
-          Text(
-            '${languageProvider.tr('login.noAccount')} ',
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: Colors.black54,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          GestureDetector(
-            onTap: () => Navigator.pushNamed(context, 'signup'),
-            child: Text(
-              languageProvider.tr('login.createAccount'),
-              style: theme.textTheme.bodyMedium?.copyWith(
-                decoration: TextDecoration.underline,
-                decorationThickness: 1.5,
-                decorationColor: theme.colorScheme.primary,
-                fontWeight: FontWeight.w600,
-                color: theme.colorScheme.primary,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildForgotPasswordButton(
-    BuildContext context,
-    ThemeData theme,
-    LanguageProvider languageProvider,
-  ) {
-    return TextButton(
-      onPressed: () {
-        Navigator.pushNamed(context, 'forgot_password');
-      },
-      style: TextButton.styleFrom(
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-        minimumSize: Size.zero,
-        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-      ),
-      child: Text(
-        languageProvider.tr('login.forgotPassword'),
-        overflow: TextOverflow.ellipsis,
-        style: theme.textTheme.bodyMedium?.copyWith(
-          decoration: TextDecoration.underline,
-          decorationThickness: 1.5,
-          decorationColor: theme.colorScheme.primary,
-          fontWeight: FontWeight.w600,
-          color: theme.colorScheme.primary,
-        ),
-      ),
-    );
-  }
 }
 
-class _BottomPattern extends StatelessWidget {
-  final Color color;
+class _LoginWavesPattern extends StatelessWidget {
+  final Color primary;
 
-  const _BottomPattern({required this.color});
+  const _LoginWavesPattern({required this.primary});
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 72,
-      width: double.infinity,
-      child: CustomPaint(painter: _LoginBottomPatternPainter(color: color)),
+    final backWave = Color.lerp(primary, const Color(0xffA8C8F0), 0.55)!;
+    final frontWave = primary;
+
+    return SafeArea(
+      top: false,
+      child: SizedBox(
+        height: 78,
+        width: double.infinity,
+        child: Stack(
+          alignment: Alignment.bottomCenter,
+          children: [
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: WaveBottom(
+                color: backWave,
+                height: 64,
+                opacity: 0.55,
+                style: WaveCurveStyle.gentle,
+                phase: 0.12,
+              ),
+            ),
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: WaveBottom(
+                color: frontWave,
+                height: 46,
+                opacity: 0.38,
+                style: WaveCurveStyle.soft,
+                phase: 0.58,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
-  }
-}
-
-class _LoginBottomPatternPainter extends CustomPainter {
-  final Color color;
-
-  _LoginBottomPatternPainter({required this.color});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final soft = Paint()
-      ..color = color.withValues(alpha: 0.08)
-      ..style = PaintingStyle.fill;
-    final mid = Paint()
-      ..color = color.withValues(alpha: 0.12)
-      ..style = PaintingStyle.fill;
-    final dot = Paint()
-      ..color = color.withValues(alpha: 0.18)
-      ..style = PaintingStyle.fill;
-
-    canvas.drawCircle(Offset(size.width * 0.12, size.height * 1.15), 48, soft);
-    canvas.drawCircle(Offset(size.width * 0.88, size.height * 1.05), 56, soft);
-    canvas.drawCircle(Offset(size.width * 0.50, size.height * 1.35), 70, mid);
-
-    const spacing = 18.0;
-    for (double x = 10; x < size.width; x += spacing) {
-      for (double y = 18; y < size.height - 8; y += spacing) {
-        final offset = ((x / spacing).round() + (y / spacing).round()).isEven
-            ? 0.0
-            : 4.0;
-        canvas.drawCircle(Offset(x + offset, y), 1.6, dot);
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _LoginBottomPatternPainter oldDelegate) {
-    return oldDelegate.color != color;
   }
 }
