@@ -1,15 +1,15 @@
-import 'dart:ui' show ImageFilter;
+import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:moi/app_configs/index.dart';
 import 'package:moi/app_models/index.dart';
 import 'package:moi/app_pages/transactions/edit_person_page.dart';
 import 'package:moi/app_services/index.dart';
 import 'package:moi/app_storages/secure_storages.dart';
+import 'package:moi/app_themes/index.dart';
 import 'package:moi/app_utils/app_providers/language_provider.dart';
-import 'package:moi/app_utils/app_widgets/app_no_data_found.dart';
-import 'package:moi/app_utils/app_widgets/moi_list_item.dart';
 import 'package:moi/app_utils/index.dart';
 import 'package:provider/provider.dart';
 
@@ -21,124 +21,188 @@ class TransactionDashboard extends StatefulWidget {
 }
 
 class _TransactionDashboardState extends State<TransactionDashboard> {
-  SecureStorageService storage = SecureStorageService();
-  AlertServices alertServices = AlertServices();
-  MoiServices moiServices = MoiServices();
+  static const int _pageSize = 40;
 
+  final SecureStorageService storage = SecureStorageService();
+  final AlertServices alertServices = AlertServices();
+  final TransactionServices txServices = TransactionServices();
   final TextEditingController searchController = TextEditingController();
-  List<Map<String, dynamic>> persons = [];
-  List<Map<String, dynamic>> filteredPersons = [];
-  final txServices = TransactionServices();
   final ScrollController _scrollController = ScrollController();
+
+  List<Map<String, dynamic>> persons = [];
+  String? _userId;
+  Timer? _searchDebounce;
+
+  int _page = 1;
+  int _totalCount = 0;
+  bool _hasMore = true;
+  bool _isLoading = true;
+  bool _isLoadingMore = false;
 
   @override
   void initState() {
     super.initState();
-    fetchPersonLists();
+    _scrollController.addListener(_onScroll);
     searchController.addListener(_onSearchChanged);
+    fetchPersonLists(reset: true);
   }
 
   @override
   void dispose() {
+    _searchDebounce?.cancel();
     searchController.removeListener(_onSearchChanged);
     searchController.dispose();
+    _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     super.dispose();
   }
 
   void _onSearchChanged() {
-    _filterPersons();
+    _searchDebounce?.cancel();
+    _searchDebounce = Timer(const Duration(milliseconds: 450), () {
+      fetchPersonLists(reset: true);
+    });
   }
 
-  void _filterPersons() {
-    final query = searchController.text.toLowerCase();
-    if (query.isEmpty) {
-      if (mounted) {
-        final newList = List<Map<String, dynamic>>.from(persons);
-        if (!listEquals(filteredPersons, newList)) {
-          setState(() {
-            filteredPersons = newList;
-          });
-        }
-      }
-    } else {
-      if (mounted) {
-        setState(() {
-          filteredPersons = persons.where((person) {
-            final firstName =
-                (person['firstName']?.toString().toLowerCase()) ?? '';
-            final secondName =
-                (person['secondName']?.toString().toLowerCase()) ?? '';
-            final business =
-                (person['business']?.toString().toLowerCase()) ?? '';
-            final city = (person['city']?.toString().toLowerCase()) ?? '';
-            final mobile = (person['mobile']?.toString().toLowerCase()) ?? '';
-            final searchText = '$firstName $secondName $business $city $mobile';
-            return searchText.contains(query);
-          }).toList();
-        });
-      }
+  void _onScroll() {
+    if (!_scrollController.hasClients ||
+        !_hasMore ||
+        _isLoadingMore ||
+        _isLoading) {
+      return;
+    }
+    final position = _scrollController.position;
+    if (position.pixels >= position.maxScrollExtent - 240) {
+      fetchPersonLists(reset: false);
     }
   }
 
-  Future<void> fetchPersonLists() async {
+  Future<void> fetchPersonLists({required bool reset}) async {
+    if (reset) {
+      if (mounted) {
+        setState(() {
+          _isLoading = true;
+          _page = 1;
+          _hasMore = true;
+        });
+      }
+    } else {
+      if (!_hasMore || _isLoadingMore || _isLoading) return;
+      if (mounted) setState(() => _isLoadingMore = true);
+    }
+
     try {
-      final userData = await storage.get(AppVariables.userInformation);
-      if (userData == null || userData is! Map) {
+      _userId ??= await _resolveUserId();
+      if (_userId == null || _userId!.isEmpty) {
         if (mounted) _clearDashboardState();
         return;
       }
 
-      final userId = userData['id']?.toString();
-      if (userId == null || userId.isEmpty) {
-        if (mounted) _clearDashboardState();
-        return;
-      }
+      final pageToLoad = reset ? 1 : _page + 1;
+      final searchQuery = searchController.text.trim();
 
-      final request = {"userId": userId};
-      // Connection shows a single loader — avoid stacking EasyLoading here
-      final response = await txServices.getPersons(request);
-      printDirect("Dashboard Response: $response");
+      final response = await txServices.getPersons(
+        {
+          'userId': _userId,
+          'page': pageToLoad,
+          'limit': _pageSize,
+          if (searchQuery.isNotEmpty) 'search': searchQuery,
+        },
+        showLoading: false,
+      );
+      printDirect('Dashboard Response page=$pageToLoad: $response');
+
       if (response == null || response is! Map) {
-        if (mounted) _clearDashboardState();
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+            _isLoadingMore = false;
+            if (reset) {
+              persons = [];
+              _totalCount = 0;
+              _hasMore = false;
+            }
+          });
+        }
         return;
       }
 
-      if (response['responseType'] == "S") {
+      if (response['responseType'] == 'S') {
         final responseValue = response['responseValue'];
-        // new API returns a list of person objects directly
-        if (responseValue == null || responseValue is! List) {
-          if (mounted) _clearDashboardState();
-          return;
-        }
+        final chunk = responseValue is List
+            ? List<Map<String, dynamic>>.from(
+                responseValue.map(
+                  (e) => e is Map
+                      ? Map<String, dynamic>.from(e)
+                      : <String, dynamic>{},
+                ),
+              )
+            : <Map<String, dynamic>>[];
 
-        final newPersons = List<Map<String, dynamic>>.from(
-          (responseValue).map(
-            (e) =>
-                e is Map ? Map<String, dynamic>.from(e) : <String, dynamic>{},
-          ),
-        );
+        final total = response['count'] is int
+            ? response['count'] as int
+            : int.tryParse(response['count']?.toString() ?? '') ??
+                (reset ? chunk.length : _totalCount);
+        final hasMore = response['hasMore'] == true ||
+            (response['hasMore'] == null && chunk.length >= _pageSize);
 
         if (mounted) {
           setState(() {
-            persons = newPersons;
-            filteredPersons = List<Map<String, dynamic>>.from(newPersons);
+            if (reset) {
+              persons = chunk;
+            } else {
+              persons = [...persons, ...chunk];
+            }
+            _page = pageToLoad;
+            _totalCount = total;
+            _hasMore = hasMore && chunk.isNotEmpty;
+            _isLoading = false;
+            _isLoadingMore = false;
           });
         }
-      } else {
-        if (mounted) _clearDashboardState();
+      } else if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _isLoadingMore = false;
+          if (reset) {
+            persons = [];
+            _totalCount = 0;
+            _hasMore = false;
+          }
+        });
       }
     } catch (e) {
-      if (mounted) _clearDashboardState();
-      final languageProvider = context.read<LanguageProvider>();
-      alertServices.errorToast(languageProvider.tr('transactions.loadError'));
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _isLoadingMore = false;
+          if (reset) {
+            persons = [];
+            _totalCount = 0;
+            _hasMore = false;
+          }
+        });
+        alertServices.errorToast(
+          context.read<LanguageProvider>().tr('transactions.loadError'),
+        );
+      }
     }
+  }
+
+  Future<String?> _resolveUserId() async {
+    final userData = await storage.get(AppVariables.userInformation);
+    if (userData == null || userData is! Map) return null;
+    return userData['id']?.toString();
   }
 
   void _clearDashboardState() {
     setState(() {
       persons = [];
-      filteredPersons = [];
+      _totalCount = 0;
+      _page = 1;
+      _hasMore = false;
+      _isLoading = false;
+      _isLoadingMore = false;
     });
   }
 
@@ -160,7 +224,7 @@ class _TransactionDashboardState extends State<TransactionDashboard> {
         showLoading: false,
       );
       alertServices.hideLoading();
-      // Handle different response types
+
       if (response == null) {
         alertServices.errorToast(
           languageProvider.tr('transactions.noServerResponse'),
@@ -168,7 +232,6 @@ class _TransactionDashboardState extends State<TransactionDashboard> {
         return;
       }
 
-      // Ensure response is a Map
       if (response is! Map) {
         alertServices.errorToast(
           languageProvider.tr('transactions.invalidResponse'),
@@ -178,14 +241,12 @@ class _TransactionDashboardState extends State<TransactionDashboard> {
 
       final responseMap = response as Map<String, dynamic>;
 
-      if (responseMap['responseType'] == "S") {
+      if (responseMap['responseType'] == 'S') {
         final message =
             responseMap['responseValue']?['message']?.toString() ??
             languageProvider.tr('transactions.personDeleted');
         alertServices.successToast(message);
-        if (mounted) {
-          fetchPersonLists();
-        }
+        if (mounted) fetchPersonLists(reset: true);
       } else {
         final errorMsg =
             responseMap['responseValue']?['message']?.toString() ??
@@ -200,6 +261,10 @@ class _TransactionDashboardState extends State<TransactionDashboard> {
     }
   }
 
+  void _goHome() {
+    Navigator.pushNamedAndRemoveUntil(context, 'home', (r) => false);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer<LanguageProvider>(
@@ -208,15 +273,20 @@ class _TransactionDashboardState extends State<TransactionDashboard> {
           canPop: false,
           onPopInvokedWithResult: (didPop, result) {
             if (didPop) return;
-            Navigator.pushNamedAndRemoveUntil(context, "home", (r) => false);
+            _goHome();
           },
           child: Scaffold(
-            appBar: AppBarWidget(
+            backgroundColor: AppColors.background,
+            appBar: _MoiOverviewHeader(
               title:
-                  '${languageProvider.tr('transactions.title')} (${persons.length})',
-              action: [],
+                  '${languageProvider.tr('menu.moiDashboard').toUpperCase()} ($_totalCount)',
+              onBack: _goHome,
             ),
-            body: _buildBody(languageProvider),
+            body: _isLoading && persons.isEmpty
+                ? const Center(
+                    child: CircularProgressIndicator(strokeWidth: 2.5),
+                  )
+                : _buildBody(languageProvider),
           ),
         );
       },
@@ -224,49 +294,49 @@ class _TransactionDashboardState extends State<TransactionDashboard> {
   }
 
   Widget _buildBody(LanguageProvider languageProvider) {
+    final primary = Theme.of(context).colorScheme.primary;
+
     return CustomScrollView(
       controller: _scrollController,
       physics: const BouncingScrollPhysics(),
       slivers: [
         SliverToBoxAdapter(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.page,
+              AppSpacing.sm,
+              AppSpacing.page,
+              0,
+            ),
             child: Column(
               children: [
-                const SizedBox(height: 12),
-                _buildSearchAndFilter(languageProvider),
-                const SizedBox(height: 12),
+                SearchWidget(
+                  controller: searchController,
+                  hintText: languageProvider.tr('transactions.search'),
+                ),
+                const SizedBox(height: AppSpacing.sm),
                 _buildActionButtons(languageProvider),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppSpacing.sm),
               ],
             ),
           ),
         ),
-        _buildPersonsSliverList(languageProvider),
-        const SliverToBoxAdapter(child: SizedBox(height: 20)),
+        _buildPersonsSliverList(languageProvider, primary),
+        if (_isLoadingMore)
+          const SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.symmetric(vertical: 16),
+              child: Center(
+                child: SizedBox(
+                  width: 22,
+                  height: 22,
+                  child: CircularProgressIndicator(strokeWidth: 2.4),
+                ),
+              ),
+            ),
+          ),
+        const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.xxl)),
       ],
-    );
-  }
-
-  Widget _buildSearchAndFilter(LanguageProvider languageProvider) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(15),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: Container(
-          height: 50,
-          padding: const EdgeInsets.symmetric(horizontal: 4),
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.7),
-            borderRadius: BorderRadius.circular(15),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.85)),
-          ),
-          child: SearchWidget(
-            controller: searchController,
-            hintText: languageProvider.tr('transactions.search'),
-          ),
-        ),
-      ),
     );
   }
 
@@ -274,175 +344,71 @@ class _TransactionDashboardState extends State<TransactionDashboard> {
     return Row(
       children: [
         Expanded(
-          child: ElevatedButton(
-            onPressed: () async {
+          child: _QuickActionButton(
+            label: languageProvider.tr('transactions.newInvest'),
+            color: AppColors.moiReceived,
+            icon: HugeIcons.strokeRoundedArrowDownLeft01,
+            onTap: () async {
               final result = await Navigator.pushNamed(
                 context,
-                "add-edit-transaction",
-                arguments: {"type": "INVEST"},
+                'add-edit-transaction',
+                arguments: {'type': 'INVEST'},
               );
-              if (result == true) {
-                fetchPersonLists();
-              }
+              if (result == true && mounted) fetchPersonLists(reset: true);
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color.fromARGB(255, 3, 153, 8),
-              padding: const EdgeInsets.symmetric(vertical: 10),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(5),
-              ),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(
-                  Icons.south_west_rounded,
-                  color: Colors.white,
-                  size: 17,
-                ),
-                const SizedBox(width: 6),
-                Flexible(
-                  child: Text(
-                    languageProvider.tr('transactions.newInvest'),
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ],
-            ),
           ),
         ),
         const SizedBox(width: 12),
         Expanded(
-          child: ElevatedButton(
-            onPressed: () async {
+          child: _QuickActionButton(
+            label: languageProvider.tr('transactions.newReturn'),
+            color: AppColors.moiGiven,
+            icon: HugeIcons.strokeRoundedArrowUpRight01,
+            onTap: () async {
               final result = await Navigator.pushNamed(
                 context,
-                "add-edit-transaction",
+                'add-edit-transaction',
                 arguments: [
-                  {"type": "RETURN"},
+                  {'type': 'RETURN'},
                 ],
               );
-              if (result == true) {
-                fetchPersonLists();
-              }
+              if (result == true && mounted) fetchPersonLists(reset: true);
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              padding: const EdgeInsets.symmetric(vertical: 10),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(5),
-              ),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(
-                  Icons.north_east_rounded,
-                  color: Colors.white,
-                  size: 17,
-                ),
-                const SizedBox(width: 6),
-                Flexible(
-                  child: Text(
-                    languageProvider.tr('transactions.newReturn'),
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ],
-            ),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildPersonsSliverList(LanguageProvider languageProvider) {
-    final colorScheme = Theme.of(context).colorScheme;
+  Widget _buildPersonsSliverList(
+    LanguageProvider languageProvider,
+    Color primary,
+  ) {
+    final isSearching = searchController.text.trim().isNotEmpty;
 
-    if (filteredPersons.isEmpty && persons.isEmpty) {
-      return SliverFillRemaining(
-        hasScrollBody: false,
-        child: Center(
-          // child: Padding(
-          //   padding: const EdgeInsets.symmetric(horizontal: 32),
-          //   child: Column(
-          //     mainAxisAlignment: MainAxisAlignment.center,
-          //     crossAxisAlignment: CrossAxisAlignment.center,
-          //     children: [
-          //       Container(
-          //         width: 75,
-          //         height: 75,
-          //         decoration: BoxDecoration(
-          //           gradient: LinearGradient(
-          //             colors: [
-          //               colorScheme.primary.withAlpha((0.15 * 255).toInt()),
-          //               colorScheme.primary.withAlpha((0.05 * 255).toInt()),
-          //             ],
-          //             begin: Alignment.topLeft,
-          //             end: Alignment.bottomRight,
-          //           ),
-          //           shape: BoxShape.circle,
-          //         ),
-          //         child: Icon(
-          //           Icons.people_outline,
-          //           size: 50,
-          //           color: colorScheme.primary.withAlpha((0.7 * 255).toInt()),
-          //         ),
-          //       ),
-          //       const SizedBox(height: 28),
-          //       Text(
-          //         'பதிவுகள் இல்லை',
-          //         textAlign: TextAlign.center,
-          //         style: Theme.of(context).textTheme.titleMedium?.copyWith(
-          //           color: colorScheme.primary,
-          //           fontWeight: FontWeight.w500,
-          //         ),
-          //         // style: TextStyle(
-          //         //   fontSize: 20,
-          //         //   fontWeight: FontWeight.w700,
-          //         //   color: colorScheme.primary,
-          //         // ),
-          //       ),
-          //       const SizedBox(height: 10),
-          //       Text(
-          //         'புதிய நபர்களை சேர்த்தால் இங்கே காண்பிக்கப்படும்.',
-          //         textAlign: TextAlign.center,
-          //         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-          //           color: Colors.grey.shade600,
-          //           fontWeight: FontWeight.normal,
-          //         ),
-          //       ),
-          //     ],
-          //   ),
-          // ),
-          child: AppNoDataFound(showSecond: false),
-        ),
-      );
-    }
-
-    if (filteredPersons.isEmpty && persons.isNotEmpty) {
+    if (persons.isEmpty) {
       return SliverFillRemaining(
         hasScrollBody: false,
         child: MoiEmptyState(
           title: languageProvider.tr('transactions.noPersonsFound'),
-          subtitle: languageProvider.tr('functions.tryAdjustSearch'),
+          subtitle: isSearching
+              ? languageProvider.tr('functions.tryAdjustSearch')
+              : languageProvider.tr('transactions.emptyHint'),
+          icon: isSearching
+              ? HugeIcons.strokeRoundedSearchRemove
+              : HugeIcons.strokeRoundedUser,
+          accentColor: primary,
         ),
       );
     }
 
     return SliverPadding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      sliver: SliverList(
-        delegate: SliverChildBuilderDelegate((context, index) {
-          final person = filteredPersons[index];
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.page),
+      sliver: SliverList.separated(
+        itemCount: persons.length,
+        separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm),
+        itemBuilder: (context, index) {
+          final person = persons[index];
           final firstName = person['firstName']?.toString() ?? '';
           final secondName = person['secondName']?.toString() ?? '';
           final business = person['business']?.toString() ?? '';
@@ -454,15 +420,15 @@ class _TransactionDashboardState extends State<TransactionDashboard> {
             if (city.isNotEmpty) city.toTitleCase(),
             if (mobile.isNotEmpty) mobile,
             if (business.isNotEmpty) business.toTitleCase(),
-          ].join(' | ');
+          ].join(' · ');
 
           Future<void> openDetails() async {
             final result = await Navigator.pushNamed(
               context,
-              "transaction-person-details",
+              'transaction-person-details',
               arguments: PersonResponseModel.fromJson(person),
             );
-            if (result == true && mounted) fetchPersonLists();
+            if (result == true && mounted) fetchPersonLists(reset: true);
           }
 
           Future<void> editPerson() async {
@@ -474,64 +440,383 @@ class _TransactionDashboardState extends State<TransactionDashboard> {
                 ),
               ),
             );
-            if (result == true && mounted) fetchPersonLists();
+            if (result == true && mounted) fetchPersonLists(reset: true);
           }
 
           Future<void> deletePerson() async {
             final personModel = PersonResponseModel.fromJson(person);
-            final confirm = await alertServices.confirmAlert(
-              context,
-              languageProvider.tr('transactions.deleteConfirmation'),
+            final confirm = await showMoiConfirmSheet(
+              context: context,
+              title: languageProvider.tr('transactions.deleteTitle'),
+              message: languageProvider.tr('transactions.deleteConfirmation'),
+              confirmLabel: languageProvider.tr('common.delete'),
+              cancelLabel: languageProvider.tr('common.cancel'),
+              icon: HugeIcons.strokeRoundedDelete02,
+              isDestructive: true,
             );
             if (confirm == true && mounted) {
               await _deletePerson(personModel.id.toString(), languageProvider);
             }
           }
 
-          return RepaintBoundary(
-            child: MoiListItem(
-              leadingIcon: Icons.person_outline,
-              accentColor: colorScheme.primary,
-              title: displayName.isEmpty ? '-' : displayName,
-              subtitle: subtitle,
-              onTap: openDetails,
-              actions: [
-                _buildPersonAction(
-                  icon: Icons.edit_outlined,
-                  color: colorScheme.primary,
-                  tooltip: languageProvider.tr('transactions.edit'),
-                  onPressed: editPerson,
-                ),
-                _buildPersonAction(
-                  icon: Icons.delete_outline,
-                  color: Colors.redAccent,
-                  tooltip: languageProvider.tr('transactions.delete'),
-                  onPressed: deletePerson,
-                ),
-              ],
-            ),
+          return _PersonCard(
+            primary: primary,
+            title: displayName.isEmpty ? '—' : displayName,
+            subtitle: subtitle,
+            onTap: openDetails,
+            onEdit: editPerson,
+            onDelete: deletePerson,
+            editTooltip: languageProvider.tr('transactions.edit'),
+            deleteTooltip: languageProvider.tr('transactions.delete'),
           );
-        }, childCount: filteredPersons.length),
+        },
       ),
     );
   }
+}
 
-  Widget _buildPersonAction({
-    required IconData icon,
-    required Color color,
-    required String tooltip,
-    required VoidCallback onPressed,
-  }) {
-    return IconButton(
-      onPressed: onPressed,
-      tooltip: tooltip,
-      icon: Icon(icon, size: 19),
-      color: color,
-      style: IconButton.styleFrom(
-        backgroundColor: color.withValues(alpha: 0.09),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(9)),
-        padding: const EdgeInsets.all(8),
-        minimumSize: const Size(36, 36),
+class _MoiOverviewHeader extends StatelessWidget implements PreferredSizeWidget {
+  final String title;
+  final VoidCallback onBack;
+
+  const _MoiOverviewHeader({required this.title, required this.onBack});
+
+  @override
+  Size get preferredSize => const Size.fromHeight(72);
+
+  @override
+  Widget build(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return AppBar(
+      toolbarHeight: preferredSize.height,
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      surfaceTintColor: Colors.transparent,
+      backgroundColor: Colors.transparent,
+      centerTitle: true,
+      automaticallyImplyLeading: false,
+      titleSpacing: 0,
+      systemOverlayStyle: SystemUiOverlayStyle.light.copyWith(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+        statusBarBrightness: Brightness.dark,
+        systemNavigationBarColor: isDark ? Colors.black : Colors.white,
+        systemNavigationBarIconBrightness:
+            isDark ? Brightness.light : Brightness.dark,
+      ),
+      flexibleSpace: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              primary,
+              Color.lerp(primary, const Color(0xff0A3D8F), 0.35)!,
+            ],
+          ),
+          borderRadius: const BorderRadius.only(
+            bottomLeft: Radius.circular(22),
+            bottomRight: Radius.circular(22),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: primary.withValues(alpha: 0.28),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: Stack(
+          children: [
+            Positioned(
+              top: -28,
+              right: -18,
+              child: Container(
+                width: 100,
+                height: 100,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withValues(alpha: 0.08),
+                ),
+              ),
+            ),
+            Positioned(
+              bottom: -36,
+              left: 48,
+              child: Container(
+                width: 90,
+                height: 90,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withValues(alpha: 0.06),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.only(
+          bottomLeft: Radius.circular(22),
+          bottomRight: Radius.circular(22),
+        ),
+      ),
+      leadingWidth: 54,
+      leading: Padding(
+        padding: const EdgeInsets.only(left: 10),
+        child: Center(
+          child: Material(
+            color: Colors.white.withValues(alpha: 0.14),
+            shape: const CircleBorder(),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: onBack,
+              customBorder: const CircleBorder(),
+              child: const SizedBox(
+                width: 42,
+                height: 42,
+                child: Center(
+                  child: HugeIcon(
+                    icon: HugeIcons.strokeRoundedArrowLeft01,
+                    color: Colors.white,
+                    size: 22,
+                    strokeWidth: 1.9,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+      title: Text(
+        title,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        textAlign: TextAlign.center,
+        style: AppTypography.sectionTitle.copyWith(
+          color: Colors.white,
+          fontSize: 16,
+          fontWeight: FontWeight.w700,
+          letterSpacing: -0.2,
+        ),
+      ),
+      actions: const [SizedBox(width: 54)],
+    );
+  }
+}
+
+class _QuickActionButton extends StatelessWidget {
+  final String label;
+  final Color color;
+  final List<List<dynamic>> icon;
+  final VoidCallback onTap;
+
+  const _QuickActionButton({
+    required this.label,
+    required this.color,
+    required this.icon,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: Ink(
+          height: 48,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            color: color,
+            boxShadow: [
+              BoxShadow(
+                color: color.withValues(alpha: 0.28),
+                blurRadius: 12,
+                offset: const Offset(0, 5),
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              HugeIcon(
+                icon: icon,
+                color: Colors.white,
+                size: 16,
+                strokeWidth: 1.9,
+              ),
+              const SizedBox(width: 8),
+              Flexible(
+                child: Text(
+                  label,
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTypography.label.copyWith(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _PersonCard extends StatelessWidget {
+  final Color primary;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
+  final String editTooltip;
+  final String deleteTooltip;
+
+  const _PersonCard({
+    required this.primary,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+    required this.onEdit,
+    required this.onDelete,
+    required this.editTooltip,
+    required this.deleteTooltip,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        splashColor: primary.withValues(alpha: 0.06),
+        highlightColor: primary.withValues(alpha: 0.03),
+        child: Ink(
+          padding: const EdgeInsets.fromLTRB(14, 12, 10, 12),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: const Color(0xffE4E4E7)),
+            boxShadow: AppShadows.soft,
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                alignment: Alignment.center,
+                child: HugeIcon(
+                  icon: HugeIcons.strokeRoundedUser,
+                  color: primary,
+                  size: 20,
+                  strokeWidth: 1.8,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTypography.label.copyWith(
+                        color: AppColors.textPrimary,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    if (subtitle.isNotEmpty) ...[
+                      const SizedBox(height: 3),
+                      Text(
+                        subtitle,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTypography.body.copyWith(
+                          color: AppColors.textSecondary,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              const SizedBox(width: 4),
+              _IconAction(
+                icon: HugeIcons.strokeRoundedPencilEdit02,
+                color: primary,
+                tooltip: editTooltip,
+                onTap: onEdit,
+              ),
+              const SizedBox(width: 4),
+              _IconAction(
+                icon: HugeIcons.strokeRoundedDelete02,
+                color: AppColors.moiGiven,
+                tooltip: deleteTooltip,
+                onTap: onDelete,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _IconAction extends StatelessWidget {
+  final List<List<dynamic>> icon;
+  final Color color;
+  final String tooltip;
+  final VoidCallback onTap;
+
+  const _IconAction({
+    required this.icon,
+    required this.color,
+    required this.tooltip,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: tooltip,
+      child: Material(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(10),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(10),
+          child: SizedBox(
+            width: 36,
+            height: 36,
+            child: Center(
+              child: HugeIcon(
+                icon: icon,
+                color: color,
+                size: 16,
+                strokeWidth: 1.8,
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }

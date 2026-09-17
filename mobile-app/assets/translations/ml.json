@@ -135,7 +135,16 @@
     "location": "സ്ഥലം",
     "description": "വിവരണം",
     "invitation": "ക്ഷണക്കത്ത്",
-    "cropImage": "ചിത്രം മുറിക്കുക"
+    "cropImage": "ചിത്രം മുറിക്കുക",
+    "emptyHint": "വ്യക്തികളെ ഇവിടെ കാണാൻ ലഭിച്ച/നൽകിയ മോയ് ചേർക്കുക.",
+    "deleteTitle": "ഈ വ്യക്തിയെ ഇല്ലാതാക്കണോ?",
+    "deleteTransactionTitle": "ഈ ഇടപാട് ഇല്ലാതാക്കണോ?",
+    "transactionDeleted": "ഇടപാട് വിജയകരമായി ഇല്ലാതാക്കി",
+    "transactionDeleteFailed": "ഇടപാട് ഇല്ലാതാക്കാനായില്ല",
+    "transactionIdMissing": "ഇടപാട് ID ലഭ്യമല്ല",
+    "noTransactions": "ഇടപാടുകളില്ല",
+    "noTransactionsHint": "ഈ വ്യക്തിക്ക് ലഭിച്ച/നൽകിയ മോയ് ചേർക്കുക.",
+    "transactionsSection": "ഇടപാടുകൾ"
   },
   "home": {
     "title": "ഹോം",

@@ -139,7 +139,16 @@
     "receivedTitle": "வந்த மொய்",
     "givenTitle": "செய்த மொய்",
     "editPerson": "நபரைப் புதுப்பிக்கவும்",
-    "personUpdated": "நபர் வெற்றிகரமாக புதுப்பிக்கப்பட்டார்"
+    "personUpdated": "நபர் வெற்றிகரமாக புதுப்பிக்கப்பட்டார்",
+    "emptyHint": "நபர்களை இங்கே காண மொய் பெற்றது அல்லது கொடுத்தது சேர்க்கவும்.",
+    "deleteTitle": "இந்த நபரை நீக்கவா?",
+    "deleteTransactionTitle": "இந்த பரிவர்த்தனையை நீக்கவா?",
+    "transactionDeleted": "பரிவர்த்தனை வெற்றிகரமாக நீக்கப்பட்டது",
+    "transactionDeleteFailed": "பரிவர்த்தனையை நீக்க முடியவில்லை",
+    "transactionIdMissing": "பரிவர்த்தனை ID கிடைக்கவில்லை",
+    "noTransactions": "பரிவர்த்தனைகள் இல்லை",
+    "noTransactionsHint": "இந்த நபருக்கான மொய் பெற்றது அல்லது கொடுத்ததைச் சேர்க்கவும்.",
+    "transactionsSection": "பரிவர்த்தனைகள்"
   },
   "login": {
     "title": "உள்நுழைய",

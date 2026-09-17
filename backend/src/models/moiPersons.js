@@ -33,20 +33,37 @@ const Model = {
     return { insertId: String(result.insertId), affectedRows: result.affectedRows };
   },
 
-  async readAll(userId, search = null) {
-    let query = `SELECT id, user_id, first_name, last_name, mobile, city, occupation, created_at, updated_at FROM ${table} 
-            WHERE user_id = ?`;
+  async readAll(userId, search = null, { limit = null, offset = 0 } = {}) {
+    let where = `WHERE user_id = ?`;
     const params = [toBinaryUUID(userId)];
     if (search) {
-      query += ` AND (first_name LIKE ? OR last_name LIKE ? OR city LIKE ? OR mobile LIKE ?)`;
+      where += ` AND (first_name LIKE ? OR last_name LIKE ? OR city LIKE ? OR mobile LIKE ? OR occupation LIKE ?)`;
       const searchTerm = `%${search}%`;
-      params.push(searchTerm, searchTerm, searchTerm, searchTerm);
+      params.push(searchTerm, searchTerm, searchTerm, searchTerm, searchTerm);
     }
 
-    query += ` ORDER BY first_name ASC, last_name ASC`;
+    const [countRows] = await db.query(
+      `SELECT COUNT(*) AS total FROM ${table} ${where}`,
+      params,
+    );
+    const total = Number(countRows[0]?.total || 0);
 
-    const [result] = await db.query(query, params);
-    return result.map((r) => mapPersonRow(r));
+    let query = `SELECT id, user_id, first_name, last_name, mobile, city, occupation, created_at, updated_at
+                 FROM ${table}
+                 ${where}
+                 ORDER BY first_name ASC, last_name ASC`;
+    const dataParams = [...params];
+
+    if (limit != null) {
+      query += ` LIMIT ? OFFSET ?`;
+      dataParams.push(Number(limit), Number(offset));
+    }
+
+    const [result] = await db.query(query, dataParams);
+    return {
+      rows: result.map((r) => mapPersonRow(r)),
+      total,
+    };
   },
 
   async readAllForAdmin(filters = {}) {

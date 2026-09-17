@@ -116,7 +116,16 @@
     "receivedTitle": "ಸ್ವೀಕರಿಸಿದ ಮೊಯ್",
     "givenTitle": "ನೀಡಿದ ಮೊಯ್",
     "editPerson": "ವ್ಯಕ್ತಿಯನ್ನು ಸಂಪಾದಿಸಿ",
-    "personUpdated": "ವ್ಯಕ್ತಿಯನ್ನು ಯಶಸ್ವಿಯಾಗಿ ನವೀಕರಿಸಲಾಗಿದೆ"
+    "personUpdated": "ವ್ಯಕ್ತಿಯನ್ನು ಯಶಸ್ವಿಯಾಗಿ ನವೀಕರಿಸಲಾಗಿದೆ",
+    "emptyHint": "ವ್ಯಕ್ತಿಗಳನ್ನು ಇಲ್ಲಿ ನೋಡಲು ಮೊಯ್ ಪಡೆದ/ನೀಡಿದವುಗಳನ್ನು ಸೇರಿಸಿ.",
+    "deleteTitle": "ಈ ವ್ಯಕ್ತಿಯನ್ನು ಅಳಿಸುವುದೇ?",
+    "deleteTransactionTitle": "ಈ ವಹಿವಾಟನ್ನು ಅಳಿಸುವುದೇ?",
+    "transactionDeleted": "ವಹಿವಾಟು ಯಶಸ್ವಿಯಾಗಿ ಅಳಿಸಲಾಗಿದೆ",
+    "transactionDeleteFailed": "ವಹಿವಾಟು ಅಳಿಸಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ",
+    "transactionIdMissing": "ವಹಿವಾಟು ID ಲಭ್ಯವಿಲ್ಲ",
+    "noTransactions": "ಯಾವುದೇ ವಹಿವಾಟುಗಳಿಲ್ಲ",
+    "noTransactionsHint": "ಈ ವ್ಯಕ್ತಿಗೆ ಮೊಯ್ ಪಡೆದ/ನೀಡಿದವುಗಳನ್ನು ಸೇರಿಸಿ.",
+    "transactionsSection": "ವಹಿವಾಟುಗಳು"
   },
   "home": {
     "title": "ಮುಖಪುಟ",

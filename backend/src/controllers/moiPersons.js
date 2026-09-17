@@ -27,7 +27,7 @@ const formatAdminPerson = (person) => ({
 
 exports.controller = {
   list: async (req, res) => {
-    const { userId, search } = req.body;
+    const { userId, search, page, limit } = req.body;
     try {
       const idCheck = validateUuid(userId, "userId");
       if (!idCheck.ok) return sendUuidError(res, idCheck.message);
@@ -40,20 +40,26 @@ exports.controller = {
         });
       }
 
-      const persons = await Model.readAll(userId, search);
+      const pageNum = Math.max(1, parseInt(page, 10) || 1);
+      const pageSize = Math.min(100, Math.max(1, parseInt(limit, 10) || 50));
+      const offset = (pageNum - 1) * pageSize;
+      const searchTerm =
+        typeof search === "string" && search.trim() ? search.trim() : null;
 
-      if (persons.length === 0) {
-        return res.status(404).json({
-          responseType: "F",
-          responseValue: { message: "No details found." },
-        });
-      }
+      const { rows, total } = await Model.readAll(userId, searchTerm, {
+        limit: pageSize,
+        offset,
+      });
 
-      const transformed = persons.map(formatPersonSummary);
+      const transformed = rows.map(formatPersonSummary);
+      const hasMore = offset + transformed.length < total;
 
       return res.status(200).json({
         responseType: "S",
-        count: transformed.length,
+        count: total,
+        page: pageNum,
+        limit: pageSize,
+        hasMore,
         responseValue: transformed,
       });
     } catch (error) {

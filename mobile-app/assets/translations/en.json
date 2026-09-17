@@ -139,7 +139,16 @@
     "receivedTitle": "Received moi",
     "givenTitle": "Given moi",
     "editPerson": "Edit person",
-    "personUpdated": "Person updated successfully"
+    "personUpdated": "Person updated successfully",
+    "emptyHint": "Add moi received or given to see persons here.",
+    "deleteTitle": "Delete this person?",
+    "deleteTransactionTitle": "Delete this transaction?",
+    "transactionDeleted": "Transaction deleted successfully",
+    "transactionDeleteFailed": "Unable to delete transaction",
+    "transactionIdMissing": "Transaction ID is missing",
+    "noTransactions": "No transactions yet",
+    "noTransactionsHint": "Add moi received or given for this person.",
+    "transactionsSection": "Transactions"
   },
   "login": {
     "title": "Login",
