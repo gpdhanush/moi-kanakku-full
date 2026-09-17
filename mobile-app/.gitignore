@@ -54,6 +54,11 @@ android/.bundle/
 play_store_files/keystore
 play_store_files/*.keystore
 play_store_files/keystore password.txt
+play_store_files.zip
+play_store_files/*.zip
+play_store_files/*.json
+play_store_files/*password*
+play_store_files/KeyStore.png
 
 # iOS/XCode related
 **/ios/**/*.mode1v3
@@ -101,6 +106,5 @@ coverage/
 !**/ios/**/default.pbxuser
 !**/ios/**/default.perspectivev3
 !/packages/flutter_tools/test/data/dart_dependencies_test/**/.packages
-play_store_files/moi-master-f2f9415b77b0.json
 # Widget Preview related
 .widget_preview/
