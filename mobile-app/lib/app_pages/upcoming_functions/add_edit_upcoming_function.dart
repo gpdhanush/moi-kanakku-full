@@ -1,22 +1,27 @@
 import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'package:hugeicons/hugeicons.dart';
+import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
-import 'package:moi/app_utils/app_providers/language_provider.dart';
-import 'package:image_cropper/image_cropper.dart';
-import 'package:flutter_image_compress/flutter_image_compress.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:path/path.dart' as path;
 import 'package:moi/app_configs/index.dart';
+import 'package:moi/app_pages/upcoming_functions/models/upcoming_function_model.dart';
 import 'package:moi/app_services/upcoming_function_services.dart';
 import 'package:moi/app_storages/secure_storages.dart';
-import 'package:moi/app_utils/index.dart';
+import 'package:moi/app_themes/index.dart';
+import 'package:moi/app_utils/app_providers/language_provider.dart';
 import 'package:moi/app_utils/app_widgets/image_picker_bottom_sheet.dart';
+import 'package:moi/app_utils/index.dart';
+import 'package:path/path.dart' as path;
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
-import 'models/upcoming_function_model.dart';
 
 class AddEditUpcomingFunction extends StatefulWidget {
   final dynamic data;
+
   const AddEditUpcomingFunction({super.key, required this.data});
 
   @override
@@ -39,7 +44,6 @@ class _AddEditUpcomingFunctionState extends State<AddEditUpcomingFunction> {
   final ImagePicker _imagePicker = ImagePicker();
 
   DateTime _selectedDate = DateTime.now();
-  String buttonName = '';
   bool isEditing = false;
   File? _invitationImage;
   String? _existingImageUrl;
@@ -55,19 +59,22 @@ class _AddEditUpcomingFunctionState extends State<AddEditUpcomingFunction> {
 
   void setFieldValue(UpcomingFunction function) {
     isEditing = true;
-    buttonName = 'update';
     _titleController.text = function.title;
     _locationController.text = function.location;
     _descriptionController.text = function.description ?? '';
     _dateController.text = function.functionDate;
-
     _requestModel.id = function.id;
 
     if (function.functionDate.isNotEmpty) {
       try {
-        _selectedDate = DateFormat("dd-MMM-yyyy").parse(function.functionDate);
-      } catch (e) {
-        _selectedDate = DateTime.now();
+        _selectedDate = AppDatePicker.parseDisplay(function.functionDate);
+      } catch (_) {
+        try {
+          _selectedDate =
+              DateFormat('dd-MMM-yyyy').parse(function.functionDate);
+        } catch (_) {
+          _selectedDate = DateTime.now();
+        }
       }
     }
 
@@ -75,7 +82,7 @@ class _AddEditUpcomingFunctionState extends State<AddEditUpcomingFunction> {
       _uploadedImageUrl = function.invitationUrl;
       _existingImageUrl = function.invitationUrl!.startsWith('http')
           ? function.invitationUrl
-          : "$appImageUrl/${function.invitationUrl}";
+          : '$appImageUrl/${function.invitationUrl}';
     }
     setState(() {});
   }
@@ -91,81 +98,132 @@ class _AddEditUpcomingFunctionState extends State<AddEditUpcomingFunction> {
 
   @override
   Widget build(BuildContext context) {
-    final languageProvider = context.watch<LanguageProvider>();
-    return Scaffold(
-      backgroundColor: Colors.grey.shade50,
-      appBar: AppBarWidget(
-        title: languageProvider.tr('upcomingFunctions.title'),
-        action: [],
-      ),
-      body: SingleChildScrollView(
-        physics: const BouncingScrollPhysics(),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              children: [
-                const SizedBox(height: 20),
-                _buildTextFormWidget(
-                  title: languageProvider.tr('upcomingFunctions.functionName'),
-                  controller: _titleController,
-                  required: true,
-                  enableMic: true,
-                  maxLength: 120,
-                  validator: _mandatoryValidator(
-                    languageProvider.tr('upcomingFunctions.functionName'),
-                  ),
-                  onSaved: (value) => _requestModel.title = value,
-                ),
-                const SizedBox(height: 16),
-                _buildTextFormWidget(
-                  title: languageProvider.tr('upcomingFunctions.functionDate'),
-                  controller: _dateController,
-                  required: true,
-                  focusNode: AlwaysDisabledFocusNode(),
-                  onTap: () => _selectDate(context),
-                  validator: _mandatoryValidator(
-                    languageProvider.tr('upcomingFunctions.functionDate'),
-                  ),
-                  onSaved: (value) => _requestModel.functionDate = value,
-                ),
-                const SizedBox(height: 16),
-                _buildTextFormWidget(
-                  title: languageProvider.tr('upcomingFunctions.location'),
-                  controller: _locationController,
-                  required: true,
-                  enableMic: true,
-                  maxLength: 150,
-                  validator: _mandatoryValidator(
-                    languageProvider.tr('upcomingFunctions.location'),
-                  ),
-                  onSaved: (value) => _requestModel.location = value,
-                ),
-                const SizedBox(height: 16),
-                _buildTextFormWidget(
-                  title: languageProvider.tr('upcomingFunctions.description'),
-                  controller: _descriptionController,
-                  required: false,
-                  enableMic: true,
-                  maxLines: 4,
-                  onSaved: (value) => _requestModel.description = value,
-                ),
-                const SizedBox(height: 16),
-                _buildImageUploadWidget(),
-                const SizedBox(height: 32),
-                AppButton(
-                  title: isEditing
-                      ? languageProvider.tr('common.update')
-                      : languageProvider.tr('common.save'),
-                  onPressed: _onSubmit,
-                ),
-                const SizedBox(height: 32),
-              ],
-            ),
+    return Consumer<LanguageProvider>(
+      builder: (context, languageProvider, _) {
+        final primary = Theme.of(context).colorScheme.primary;
+        final headerTitle = languageProvider.tr(
+          isEditing
+              ? 'upcomingFunctions.editFunction'
+              : 'upcomingFunctions.addFunction',
+        );
+
+        return Scaffold(
+          backgroundColor: AppColors.background,
+          appBar: _FormAppHeader(
+            title: headerTitle.toUpperCase(),
+            onBack: () => Navigator.pop(context),
           ),
-        ),
-      ),
+          body: Column(
+            children: [
+              Expanded(
+                child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.page,
+                    AppSpacing.md,
+                    AppSpacing.page,
+                    AppSpacing.lg,
+                  ),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _FormSectionCard(
+                          children: [
+                            _buildTextFormWidget(
+                              title: languageProvider.tr(
+                                'upcomingFunctions.functionName',
+                              ),
+                              controller: _titleController,
+                              required: true,
+                              enableMic: true,
+                              maxLength: 120,
+                              validator: _mandatoryValidator(
+                                languageProvider.tr(
+                                  'upcomingFunctions.functionName',
+                                ),
+                                languageProvider,
+                              ),
+                              onSaved: (value) => _requestModel.title = value,
+                            ),
+                            const SizedBox(height: AppSpacing.md),
+                            _buildTextFormWidget(
+                              title: languageProvider.tr(
+                                'upcomingFunctions.functionDate',
+                              ),
+                              controller: _dateController,
+                              required: true,
+                              focusNode: AlwaysDisabledFocusNode(),
+                              onTap: () => _selectDate(context),
+                              validator: _mandatoryValidator(
+                                languageProvider.tr(
+                                  'upcomingFunctions.functionDate',
+                                ),
+                                languageProvider,
+                              ),
+                              onSaved: (value) =>
+                                  _requestModel.functionDate = value,
+                            ),
+                            const SizedBox(height: AppSpacing.md),
+                            _buildTextFormWidget(
+                              title: languageProvider.tr(
+                                'upcomingFunctions.location',
+                              ),
+                              controller: _locationController,
+                              required: true,
+                              enableMic: true,
+                              maxLength: 150,
+                              validator: _mandatoryValidator(
+                                languageProvider.tr(
+                                  'upcomingFunctions.location',
+                                ),
+                                languageProvider,
+                              ),
+                              onSaved: (value) =>
+                                  _requestModel.location = value,
+                            ),
+                            const SizedBox(height: AppSpacing.md),
+                            _buildTextFormWidget(
+                              title: languageProvider.tr(
+                                'upcomingFunctions.description',
+                              ),
+                              controller: _descriptionController,
+                              enableMic: true,
+                              maxLines: 4,
+                              onSaved: (value) =>
+                                  _requestModel.description = value,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                        _buildImageUploadWidget(primary, languageProvider),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              SafeArea(
+                top: false,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.page,
+                    0,
+                    AppSpacing.page,
+                    AppSpacing.md,
+                  ),
+                  child: _PrimaryActionButton(
+                    title: isEditing
+                        ? languageProvider.tr('common.update')
+                        : languageProvider.tr('common.save'),
+                    onPressed: _onSubmit,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -196,14 +254,22 @@ class _AddEditUpcomingFunctionState extends State<AddEditUpcomingFunction> {
     );
   }
 
-  String? Function(dynamic) _mandatoryValidator(String fieldName) {
-    return (value) => value?.toString().trim().isEmpty == true
-        ? "$fieldName ${context.read<LanguageProvider>().tr('common.required')}"
-        : null;
+  String? Function(dynamic) _mandatoryValidator(
+    String fieldName,
+    LanguageProvider languageProvider,
+  ) {
+    return (value) {
+      if (value?.toString().trim().isEmpty == true) {
+        return '$fieldName ${languageProvider.tr('common.required')}';
+      }
+      return null;
+    };
   }
 
-  Widget _buildImageUploadWidget() {
-    final colorScheme = Theme.of(context).colorScheme;
+  Widget _buildImageUploadWidget(
+    Color primary,
+    LanguageProvider languageProvider,
+  ) {
     final bool hasImage =
         _invitationImage != null ||
         _existingImageUrl != null ||
@@ -213,94 +279,111 @@ class _AddEditUpcomingFunctionState extends State<AddEditUpcomingFunction> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          context.read<LanguageProvider>().tr('upcomingFunctions.invitation'),
-          style: TextStyle(
+          languageProvider.tr('upcomingFunctions.invitation'),
+          style: AppTypography.label.copyWith(
+            color: AppColors.textPrimary,
             fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: Colors.black87,
+            fontWeight: FontWeight.w700,
           ),
         ),
-        const SizedBox(height: 8),
-        GestureDetector(
-          onTap: hasImage ? _showImageOptions : _showImagePickerOptions,
-          child: Container(
-            height: 200,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: colorScheme.primary.withValues(alpha: 0.3),
-                width: 1.5,
+        const SizedBox(height: AppSpacing.sm),
+        Material(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          child: InkWell(
+            onTap: hasImage ? _showImageOptions : _showImagePickerOptions,
+            borderRadius: BorderRadius.circular(16),
+            child: Ink(
+              height: 200,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: AppShadows.soft,
               ),
-            ),
-            child: hasImage
-                ? Stack(
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: _invitationImage != null
-                            ? Image.file(
-                                _invitationImage!,
-                                fit: BoxFit.cover,
-                                width: double.infinity,
-                                height: double.infinity,
-                              )
-                            : (_existingImageUrl != null &&
-                                  _existingImageUrl!.isNotEmpty)
-                            ? Image.network(
-                                _existingImageUrl!,
-                                fit: BoxFit.cover,
-                                width: double.infinity,
-                                height: double.infinity,
-                                errorBuilder: (context, error, stackTrace) =>
-                                    _buildPlaceholder(colorScheme),
-                              )
-                            : _buildPlaceholder(colorScheme),
-                      ),
-                      Positioned(
-                        top: 8,
-                        right: 8,
-                        child: Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            color: Colors.black.withValues(alpha: 0.6),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.edit_outlined,
-                            color: Colors.white,
-                            size: 18,
+              child: hasImage
+                  ? Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(16),
+                          child: _invitationImage != null
+                              ? Image.file(
+                                  _invitationImage!,
+                                  fit: BoxFit.cover,
+                                  width: double.infinity,
+                                  height: double.infinity,
+                                )
+                              : (_existingImageUrl != null &&
+                                    _existingImageUrl!.isNotEmpty)
+                              ? Image.network(
+                                  _existingImageUrl!,
+                                  fit: BoxFit.cover,
+                                  width: double.infinity,
+                                  height: double.infinity,
+                                  errorBuilder: (context, error, stackTrace) =>
+                                      _buildPlaceholder(primary),
+                                )
+                              : _buildPlaceholder(primary),
+                        ),
+                        Positioned(
+                          top: 10,
+                          right: 10,
+                          child: Container(
+                            width: 34,
+                            height: 34,
+                            decoration: BoxDecoration(
+                              color: Colors.black.withValues(alpha: 0.45),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            alignment: Alignment.center,
+                            child: const HugeIcon(
+                              icon: HugeIcons.strokeRoundedPencilEdit02,
+                              color: Colors.white,
+                              size: 16,
+                              strokeWidth: 1.8,
+                            ),
                           ),
                         ),
-                      ),
-                    ],
-                  )
-                : _buildPlaceholder(colorScheme),
+                      ],
+                    )
+                  : _buildPlaceholder(primary),
+            ),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildPlaceholder(ColorScheme colorScheme) {
+  Widget _buildPlaceholder(Color primary) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.image_outlined,
-            size: 48,
-            color: colorScheme.primary.withValues(alpha: 0.5),
+          Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              color: primary.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            alignment: Alignment.center,
+            child: HugeIcon(
+              icon: HugeIcons.strokeRoundedCamera01,
+              color: primary.withValues(alpha: 0.85),
+              size: 24,
+              strokeWidth: 1.8,
+            ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
           Text(
             context.read<LanguageProvider>().tr(
               'upcomingFunctions.selectImage',
             ),
-            style: TextStyle(
-              fontSize: 14,
-              color: colorScheme.primary.withValues(alpha: 0.7),
+            style: AppTypography.body.copyWith(
+              color: AppColors.textSecondary,
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
             ),
           ),
         ],
@@ -314,203 +397,34 @@ class _AddEditUpcomingFunctionState extends State<AddEditUpcomingFunction> {
       listen: false,
     );
     if (!mounted) return;
-    showModalBottomSheet(
+
+    final action = await ImagePickerBottomSheet.show(
       context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      title: languageProvider.tr('upcomingFunctions.selectImage'),
+      galleryLabel: languageProvider.tr('upcomingFunctions.chooseFromGallery'),
+      cameraLabel: languageProvider.tr('upcomingFunctions.takePhoto'),
+      deleteLabel: languageProvider.tr('common.delete'),
+      permissionsMessage: languageProvider.tr(
+        'upcomingFunctions.permissionsNeeded',
       ),
-      builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.delete_outline),
-              title: Text(languageProvider.tr('common.delete') ?? 'Delete'),
-              onTap: () {
-                Navigator.pop(context);
-                setState(() {
-                  _invitationImage = null;
-                  _uploadedImageUrl = null;
-                  _existingImageUrl = null;
-                });
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.photo_library_outlined),
-              title: Text(
-                languageProvider.tr('upcomingFunctions.chooseFromGallery') ??
-                    'Choose from gallery',
-              ),
-              onTap: () {
-                Navigator.pop(context);
-                _pickImage(ImageSource.gallery);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.camera_alt_outlined),
-              title: Text(
-                languageProvider.tr('upcomingFunctions.takePhoto') ??
-                    'Take photo',
-              ),
-              onTap: () {
-                Navigator.pop(context);
-                _pickImage(ImageSource.camera);
-              },
-            ),
-          ],
-        ),
-      ),
+      canUseGallery: true,
+      canUseCamera: true,
+      showDelete: true,
     );
+
+    if (!mounted || action == null) return;
+    if (action == ImagePickerAction.delete) {
+      setState(() {
+        _invitationImage = null;
+        _uploadedImageUrl = null;
+        _existingImageUrl = null;
+      });
+    } else if (action == ImagePickerAction.gallery) {
+      await _pickImage(ImageSource.gallery);
+    } else if (action == ImagePickerAction.camera) {
+      await _pickImage(ImageSource.camera);
+    }
   }
-
-  // void _viewFullSizeImage() {
-  //   final imageUrl = _invitationImage != null
-  //       ? _invitationImage!.path
-  //       : (_existingImageUrl != null && _existingImageUrl!.isNotEmpty)
-  //       ? _existingImageUrl!
-  //       : null;
-  //   if (imageUrl == null) return;
-
-  //   showDialog(
-  //     context: context,
-  //     barrierColor: Colors.black87,
-  //     builder: (context) => Dialog(
-  //       backgroundColor: Colors.transparent,
-  //       insetPadding: EdgeInsets.zero,
-  //       child: Stack(
-  //         children: [
-  //           Center(
-  //             child: InteractiveViewer(
-  //               minScale: 0.5,
-  //               maxScale: 4.0,
-  //               child: _invitationImage != null
-  //                   ? Image.file(_invitationImage!, fit: BoxFit.contain)
-  //                   : Image.network(
-  //                       _existingImageUrl!,
-  //                       fit: BoxFit.contain,
-  //                       errorBuilder: (context, error, stackTrace) {
-  //                         return const Center(
-  //                           child: Icon(
-  //                             Icons.error,
-  //                             color: Colors.white,
-  //                             size: 48,
-  //                           ),
-  //                         );
-  //                       },
-  //                     ),
-  //             ),
-  //           ),
-  //           Positioned(
-  //             top: 40,
-  //             right: 20,
-  //             child: IconButton(
-  //               icon: const Icon(Icons.close, color: Colors.white, size: 30),
-  //               onPressed: () => Navigator.pop(context),
-  //             ),
-  //           ),
-  //         ],
-  //       ),
-  //     ),
-  //   );
-  // }
-
-  // Future<void> _downloadAndSaveImage() async {
-  //   try {
-  //     String? imageUrl = _existingImageUrl;
-  //     if (imageUrl == null || imageUrl.isEmpty) {
-  //       _alertServices.errorToast("படம் கிடைக்கவில்லை");
-  //       return;
-  //     }
-
-  //     _alertServices.showLoading();
-
-  //     if (_invitationImage != null) {
-  //       await _saveLocalImage(_invitationImage!);
-  //     } else {
-  //       final response = await http.get(Uri.parse(imageUrl));
-  //       if (response.statusCode == 200) {
-  //         final tempDir = await getTemporaryDirectory();
-  //         final file = File(
-  //           path.join(
-  //             tempDir.path,
-  //             '${DateTime.now().millisecondsSinceEpoch}.jpg',
-  //           ),
-  //         );
-  //         await file.writeAsBytes(response.bodyBytes);
-  //         await _saveLocalImage(file);
-  //       } else {
-  //         _alertServices.hideLoading();
-  //         _alertServices.errorToast("படத்தைப் பதிவிறக்க முடியவில்லை");
-  //       }
-  //     }
-  //   } catch (e) {
-  //     _alertServices.hideLoading();
-  //     _alertServices.errorToast("படத்தைச் சேமிக்க முடியவில்லை");
-  //     printContent("Error saving image: $e");
-  //   }
-  // }
-
-  // Future<void> _saveLocalImage(File imageFile) async {
-  //   try {
-  //     if (Platform.isAndroid) {
-  //       // Read the image file as bytes
-  //       final Uint8List imageBytes = await imageFile.readAsBytes();
-  //       // Convert to base64
-  //       final String base64Image = base64Encode(imageBytes);
-
-  //       // Generate unique filename with timestamp
-  //       final timestamp = DateTime.now().millisecondsSinceEpoch;
-  //       final fileExtension = path
-  //           .extension(imageFile.path)
-  //           .replaceFirst('.', ''); // Remove the dot
-  //       final fileName = 'Moi_Kanakku_$timestamp';
-
-  //       // Use flutter_file_downloader's writeFile method to save to public Downloads folder
-  //       // This package handles Android 10+ scoped storage properly without MANAGE_EXTERNAL_STORAGE
-  //       FileDownloader.writeFile(
-  //         content: base64Image,
-  //         fileName: fileName,
-  //         extension: fileExtension,
-  //         subPath:
-  //             'Moi Kanakku', // Creates "Moi Kanakku" subfolder in Downloads
-  //         downloadDestination: DownloadDestinations.publicDownloads,
-  //         onCompleted: (String savedPath) {
-  //           _alertServices.hideLoading();
-  //           _alertServices.successToast("படம் வெற்றிகரமாக சேமிக்கப்பட்டது");
-  //           printContent("Image saved to: $savedPath");
-  //         },
-  //         onError: (String error) {
-  //           _alertServices.hideLoading();
-  //           _alertServices.errorToast("படத்தைச் சேமிக்க முடியவில்லை");
-  //           printContent("Error saving image: $error");
-  //         },
-  //       );
-  //     } else if (Platform.isIOS) {
-  //       // For iOS, use the app's Documents directory
-  //       final documentsDir = await getApplicationDocumentsDirectory();
-  //       final downloadsDir = Directory(
-  //         path.join(documentsDir.path, 'Downloads', 'Moi Kanakku'),
-  //       );
-  //       if (!await downloadsDir.exists()) {
-  //         await downloadsDir.create(recursive: true);
-  //       }
-
-  //       final timestamp = DateTime.now().millisecondsSinceEpoch;
-  //       final extension = path.extension(imageFile.path);
-  //       final fileName = 'Moi_Kanakku_$timestamp$extension';
-  //       final destinationPath = path.join(downloadsDir.path, fileName);
-
-  //       final savedFile = await imageFile.copy(destinationPath);
-  //       _alertServices.hideLoading();
-  //       _alertServices.successToast("படம் வெற்றிகரமாக சேமிக்கப்பட்டது");
-  //       printContent("Image saved to: ${savedFile.path}");
-  //     }
-  //   } catch (e) {
-  //     _alertServices.hideLoading();
-  //     _alertServices.errorToast("படத்தைச் சேமிக்க முடியவில்லை");
-  //     printContent("Error saving image: $e");
-  //   }
-  // }
 
   Future<void> _showImagePickerOptions() async {
     final permissions = await _checkPermissions();
@@ -592,7 +506,7 @@ class _AddEditUpcomingFunctionState extends State<AddEditUpcomingFunction> {
           'upcomingFunctions.imagePickFailed',
         ),
       );
-      printContent("Error picking image: $e");
+      printContent('Error picking image: $e');
     }
   }
 
@@ -609,7 +523,6 @@ class _AddEditUpcomingFunctionState extends State<AddEditUpcomingFunction> {
               'upcomingFunctions.cropImage',
             ),
             statusBarLight: true,
-            // statusBarColor: Theme.of(context).colorScheme.primary,
             activeControlsWidgetColor: Theme.of(context).colorScheme.primary,
             toolbarColor: Theme.of(context).colorScheme.primary,
             navBarLight: false,
@@ -621,7 +534,7 @@ class _AddEditUpcomingFunctionState extends State<AddEditUpcomingFunction> {
       );
       return croppedFile != null ? File(croppedFile.path) : null;
     } catch (e) {
-      printContent("Error cropping image: $e");
+      printContent('Error cropping image: $e');
       return File(imagePath);
     }
   }
@@ -643,39 +556,27 @@ class _AddEditUpcomingFunctionState extends State<AddEditUpcomingFunction> {
       );
       return compressedFile != null ? File(compressedFile.path) : null;
     } catch (e) {
-      printContent("Error compressing image: $e");
+      printContent('Error compressing image: $e');
       return File(imagePath);
     }
   }
 
   Future<void> _selectDate(BuildContext context) async {
-    final colorScheme = Theme.of(context).colorScheme;
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      barrierColor: Colors.black54,
-      locale: const Locale("en", "US"),
-      initialDate: _selectedDate,
+    final DateTime? picked = await AppDatePicker.pick(
+      context,
+      initialDate: _selectedDate.isBefore(DateTime.now())
+          ? DateTime.now()
+          : _selectedDate,
+      allowFutureDates: true,
       firstDate: DateTime.now(),
       lastDate: DateTime(DateTime.now().year + 50),
-      builder: (context, child) => Theme(
-        data: Theme.of(context).copyWith(
-          colorScheme: colorScheme,
-          datePickerTheme: DatePickerThemeData(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-            ),
-            headerBackgroundColor: colorScheme.primary,
-            headerForegroundColor: Colors.white,
-          ),
-        ),
-        child: child!,
-      ),
+      barrierColor: Colors.black54,
     );
 
     if (picked != null && picked != _selectedDate) {
       setState(() {
         _selectedDate = picked;
-        _dateController.text = DateFormat('dd-MMM-yyyy').format(picked);
+        _dateController.text = AppDatePicker.formatForDisplay(picked);
       });
     }
   }
@@ -691,8 +592,7 @@ class _AddEditUpcomingFunctionState extends State<AddEditUpcomingFunction> {
   Future<void> _saveUpdateUpcomingFunction() async {
     _alertServices.showLoading();
 
-    // Step 1: Upload image if a new one is selected
-    String imageUrl = _uploadedImageUrl ?? _existingImageUrl ?? "";
+    String imageUrl = _uploadedImageUrl ?? _existingImageUrl ?? '';
     if (_invitationImage != null) {
       final uploadedUrl = await _uploadInvitationImage(_invitationImage!);
       if (uploadedUrl != null && uploadedUrl.isNotEmpty) {
@@ -707,14 +607,14 @@ class _AddEditUpcomingFunctionState extends State<AddEditUpcomingFunction> {
       }
     }
 
-    var params = {
-      if (isEditing) "id": _requestModel.id,
-      "title": _titleController.text.trim(),
-      "functionDate": _convertDate(_dateController.text),
-      "location": _locationController.text.trim(),
-      "description": _descriptionController.text.trim(),
-      "invitationUrl": imageUrl,
-      if (!isEditing) "status": "ACTIVE",
+    final params = {
+      if (isEditing) 'id': _requestModel.id,
+      'title': _titleController.text.trim(),
+      'functionDate': _convertDate(_dateController.text),
+      'location': _locationController.text.trim(),
+      'description': _descriptionController.text.trim(),
+      'invitationUrl': imageUrl,
+      if (!isEditing) 'status': 'ACTIVE',
     };
 
     try {
@@ -726,9 +626,9 @@ class _AddEditUpcomingFunctionState extends State<AddEditUpcomingFunction> {
 
       if (response != null &&
           response is Map &&
-          response['responseType'] == "S") {
+          response['responseType'] == 'S') {
         final message =
-            response['responseValue']?["message"]?.toString() ??
+            response['responseValue']?['message']?.toString() ??
             (isEditing
                 ? context.read<LanguageProvider>().tr(
                     'upcomingFunctions.updated',
@@ -760,30 +660,27 @@ class _AddEditUpcomingFunctionState extends State<AddEditUpcomingFunction> {
       _alertServices.errorToast(
         context.read<LanguageProvider>().tr('upcomingFunctions.saveFailed'),
       );
-      printContent("Error saving upcoming function: $error");
+      printContent('Error saving upcoming function: $error');
     }
   }
 
   Future<String?> _uploadInvitationImage(File imageFile) async {
     try {
-      // Get userId from secure storage
       final userData = await _secureStorage.get(AppVariables.userInformation);
-      final userId = userData?['id'] ?? "";
+      final userId = userData?['id'] ?? '';
 
       if (userId.isEmpty) {
-        printContent("Error: User ID not found");
+        printContent('Error: User ID not found');
         return null;
       }
 
-      final params = {"userId": userId, "path": "upcoming-function"};
-
+      final params = {'userId': userId, 'path': 'upcoming-function'};
       final response = await _upcomingFunctionServices
           .uploadUpcomingFunctionImage(params, imageFile.path);
 
-      if (response != null && response['responseType'] == "S") {
-        String uploadedUrl = "";
+      if (response != null && response['responseType'] == 'S') {
+        String uploadedUrl = '';
 
-        // responseValue can be either a String (direct URL) or an object with imageUrl/url
         if (response['responseValue'] is String) {
           uploadedUrl = response['responseValue'].toString();
         } else if (response['responseValue'] is Map) {
@@ -791,33 +688,243 @@ class _AddEditUpcomingFunctionState extends State<AddEditUpcomingFunction> {
               response['responseValue']?['imageUrl']?.toString() ??
               response['responseValue']?['url']?.toString() ??
               response['responseValue']?.toString() ??
-              "";
+              '';
         }
 
         if (uploadedUrl.isNotEmpty) {
-          printContent("Image uploaded successfully: $uploadedUrl");
+          printContent('Image uploaded successfully: $uploadedUrl');
           return uploadedUrl;
-        } else {
-          printContent("Image upload failed: Invalid response format");
-          return null;
         }
-      } else {
-        printContent("Image upload failed: $response");
+        printContent('Image upload failed: Invalid response format');
         return null;
       }
+
+      printContent('Image upload failed: $response');
+      return null;
     } catch (e) {
-      printContent("Error uploading image: $e");
+      printContent('Error uploading image: $e');
       return null;
     }
   }
 
   String _convertDate(String inputDate) {
     try {
-      // If input is already in dd-MMM-yyyy format, convert to dd-MMM-yyyy
-      final parsed = DateFormat("dd-MMM-yyyy").parse(inputDate);
-      return DateFormat("dd-MMM-yyyy").format(parsed);
-    } catch (e) {
-      return inputDate;
+      final parsed = AppDatePicker.parseDisplay(inputDate);
+      return AppDatePicker.formatForDisplay(parsed);
+    } catch (_) {
+      try {
+        final parsed = DateFormat('dd-MMM-yyyy').parse(inputDate);
+        return DateFormat('dd-MMM-yyyy').format(parsed);
+      } catch (_) {
+        return inputDate;
+      }
     }
+  }
+}
+
+class _FormAppHeader extends StatelessWidget implements PreferredSizeWidget {
+  final String title;
+  final VoidCallback onBack;
+
+  const _FormAppHeader({required this.title, required this.onBack});
+
+  @override
+  Size get preferredSize => const Size.fromHeight(72);
+
+  @override
+  Widget build(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return AppBar(
+      toolbarHeight: preferredSize.height,
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      surfaceTintColor: Colors.transparent,
+      backgroundColor: Colors.transparent,
+      centerTitle: true,
+      automaticallyImplyLeading: false,
+      titleSpacing: 0,
+      systemOverlayStyle: SystemUiOverlayStyle.light.copyWith(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+        statusBarBrightness: Brightness.dark,
+        systemNavigationBarColor: isDark ? Colors.black : Colors.white,
+        systemNavigationBarIconBrightness:
+            isDark ? Brightness.light : Brightness.dark,
+      ),
+      flexibleSpace: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              primary,
+              Color.lerp(primary, const Color(0xff0A3D8F), 0.35)!,
+            ],
+          ),
+          borderRadius: const BorderRadius.only(
+            bottomLeft: Radius.circular(22),
+            bottomRight: Radius.circular(22),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: primary.withValues(alpha: 0.28),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: Stack(
+          children: [
+            Positioned(
+              top: -28,
+              right: -18,
+              child: Container(
+                width: 100,
+                height: 100,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withValues(alpha: 0.08),
+                ),
+              ),
+            ),
+            Positioned(
+              bottom: -36,
+              left: 48,
+              child: Container(
+                width: 90,
+                height: 90,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withValues(alpha: 0.06),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.only(
+          bottomLeft: Radius.circular(22),
+          bottomRight: Radius.circular(22),
+        ),
+      ),
+      leadingWidth: 54,
+      leading: Padding(
+        padding: const EdgeInsets.only(left: 10),
+        child: Center(
+          child: Material(
+            color: Colors.white.withValues(alpha: 0.14),
+            shape: const CircleBorder(),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: onBack,
+              customBorder: const CircleBorder(),
+              child: const SizedBox(
+                width: 42,
+                height: 42,
+                child: Center(
+                  child: HugeIcon(
+                    icon: HugeIcons.strokeRoundedArrowLeft01,
+                    color: Colors.white,
+                    size: 22,
+                    strokeWidth: 1.9,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+      title: Text(
+        title,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        textAlign: TextAlign.center,
+        style: AppTypography.sectionTitle.copyWith(
+          color: Colors.white,
+          fontSize: 16,
+          fontWeight: FontWeight.w700,
+          letterSpacing: -0.2,
+        ),
+      ),
+      actions: const [SizedBox(width: 54)],
+    );
+  }
+}
+
+class _FormSectionCard extends StatelessWidget {
+  final List<Widget> children;
+
+  const _FormSectionCard({required this.children});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(14, 16, 14, 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: AppShadows.soft,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: children,
+      ),
+    );
+  }
+}
+
+class _PrimaryActionButton extends StatelessWidget {
+  final String title;
+  final VoidCallback onPressed;
+
+  const _PrimaryActionButton({required this.title, required this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
+
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(14),
+        child: Ink(
+          height: 52,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                primary,
+                Color.lerp(primary, const Color(0xff0A3D8F), 0.28)!,
+              ],
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: primary.withValues(alpha: 0.28),
+                blurRadius: 14,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          child: Center(
+            child: Text(
+              title,
+              style: AppTypography.label.copyWith(
+                color: Colors.white,
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
