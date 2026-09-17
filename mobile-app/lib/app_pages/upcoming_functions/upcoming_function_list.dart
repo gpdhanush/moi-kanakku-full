@@ -167,12 +167,8 @@ class _UpcomingFunctionListState extends State<UpcomingFunctionList> {
               ),
               backgroundColor: primary,
               tooltip: languageProvider.tr('upcomingFunctions.addFunction'),
-              child: const HugeIcon(
-                icon: HugeIcons.strokeRoundedAdd01,
-                color: Colors.white,
-                size: 24,
-                strokeWidth: 2,
-              ),
+              child: const HugeIcon(icon: HugeIcons.strokeRoundedAdd01,
+                strokeWidth: 2, size: 24, color: Colors.white),
             ),
           ),
         );
@@ -419,12 +415,8 @@ class _UpcomingFunctionListState extends State<UpcomingFunctionList> {
                         borderRadius: BorderRadius.circular(18),
                       ),
                       alignment: Alignment.center,
-                      child: HugeIcon(
-                        icon: HugeIcons.strokeRoundedRefresh,
-                        color: AppColors.accentAmber,
-                        size: 28,
-                        strokeWidth: 1.8,
-                      ),
+                      child: HugeIcon(icon: HugeIcons.strokeRoundedRefresh,
+                        strokeWidth: 1.8, size: 28, color: AppColors.accentAmber),
                     ),
                     const SizedBox(height: 16),
                     Text(
@@ -664,13 +656,9 @@ class _StatusOptionTile extends StatelessWidget {
                   ),
                 ),
               ),
-              Icon(
-                selected
-                    ? Icons.check_circle_rounded
-                    : Icons.radio_button_unchecked_rounded,
-                size: 20,
-                color: selected ? color : const Color(0xffA1A1AA),
-              ),
+              HugeIcon(icon: selected
+                    ? HugeIcons.strokeRoundedCheckmarkCircle02
+                    : HugeIcons.strokeRoundedCircle, size: 20, color: selected ? color : const Color(0xffA1A1AA), strokeWidth: 1.8),
             ],
           ),
         ),
@@ -782,12 +770,8 @@ class _UpcomingAppHeader extends StatelessWidget implements PreferredSizeWidget 
                 width: 42,
                 height: 42,
                 child: Center(
-                  child: HugeIcon(
-                    icon: HugeIcons.strokeRoundedArrowLeft01,
-                    color: Colors.white,
-                    size: 22,
-                    strokeWidth: 1.9,
-                  ),
+                  child: HugeIcon(icon: HugeIcons.strokeRoundedArrowLeft01,
+                    strokeWidth: 1.9, size: 22, color: Colors.white),
                 ),
               ),
             ),
@@ -910,12 +894,8 @@ class _UpcomingFunctionCard extends StatelessWidget {
                       const SizedBox(height: 8),
                       Row(
                         children: [
-                          HugeIcon(
-                            icon: HugeIcons.strokeRoundedCalendar03,
-                            color: Colors.white.withValues(alpha: 0.95),
-                            size: 14,
-                            strokeWidth: 1.8,
-                          ),
+                          HugeIcon(icon: HugeIcons.strokeRoundedCalendar03,
+                            strokeWidth: 1.8, size: 14, color: Colors.white.withValues(alpha: 0.95)),
                           const SizedBox(width: 6),
                           Expanded(
                             child: Text(
@@ -935,12 +915,8 @@ class _UpcomingFunctionCard extends StatelessWidget {
                         const SizedBox(height: 5),
                         Row(
                           children: [
-                            HugeIcon(
-                              icon: HugeIcons.strokeRoundedLocation01,
-                              color: Colors.white.withValues(alpha: 0.95),
-                              size: 14,
-                              strokeWidth: 1.8,
-                            ),
+                            HugeIcon(icon: HugeIcons.strokeRoundedLocation01,
+                              strokeWidth: 1.8, size: 14, color: Colors.white.withValues(alpha: 0.95)),
                             const SizedBox(width: 6),
                             Expanded(
                               child: Text(

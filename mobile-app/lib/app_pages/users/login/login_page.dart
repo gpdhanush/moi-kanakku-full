@@ -7,6 +7,7 @@ import 'package:moi/app_utils/index.dart';
 import 'package:provider/provider.dart';
 
 import 'login_controller.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -145,7 +146,7 @@ class _LoginPageState extends State<LoginPage>
                                     required: true,
                                     controller: _controller.emailCtrl,
                                     focusNode: _emailFocus,
-                                    prefixIcon: Icons.email_outlined,
+                                    prefixIcon: HugeIcons.strokeRoundedMail01,
                                     keyboardType: TextInputType.emailAddress,
                                     textInputAction: TextInputAction.next,
                                     inputFormatters: [
@@ -177,15 +178,15 @@ class _LoginPageState extends State<LoginPage>
                                     required: true,
                                     controller: _controller.passCtrl,
                                     focusNode: _passwordFocus,
-                                    prefixIcon: Icons.lock_outline,
+                                    prefixIcon: HugeIcons.strokeRoundedLockPassword,
                                     obscureText: _controller.showPass,
                                     obscuringCharacter: '●',
                                     textInputAction: TextInputAction.done,
                                     maxLength: 64,
                                     suffixIconTrue: true,
                                     suffixIcon: _controller.showPass
-                                        ? Icons.visibility_outlined
-                                        : Icons.visibility_off_outlined,
+                                        ? HugeIcons.strokeRoundedView
+                                        : HugeIcons.strokeRoundedViewOffSlash,
                                     suffixIconOnPressed: () {
                                       setState(() {
                                         _controller.togglePasswordVisibility();

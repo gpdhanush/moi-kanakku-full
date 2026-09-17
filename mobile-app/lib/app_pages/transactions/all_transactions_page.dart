@@ -1,15 +1,14 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:intl/intl.dart';
 import 'package:moi/app_configs/index.dart';
-import 'package:moi/app_services/index.dart';
 import 'package:moi/app_services/export_service.dart';
+import 'package:moi/app_services/index.dart';
 import 'package:moi/app_storages/secure_storages.dart';
 import 'package:moi/app_themes/index.dart';
-import 'package:moi/app_utils/app_widgets/moi_list_item.dart';
-import 'package:moi/app_utils/index.dart';
 import 'package:moi/app_utils/app_providers/language_provider.dart';
+import 'package:moi/app_utils/index.dart';
 import 'package:provider/provider.dart';
 
 class AllTransactionsPage extends StatefulWidget {
@@ -27,56 +26,18 @@ class _AllTransactionsPageState extends State<AllTransactionsPage> {
   final AlertServices _alertServices = AlertServices();
 
   List<dynamic> _transactions = [];
-  List<dynamic> _searchHistory = [];
   bool _isLoading = true;
 
-  final TextEditingController _searchController = TextEditingController();
-  Timer? _debounce;
+  bool get _isReceived => widget.type == 'INVEST';
+  bool get _isGiven => widget.type == 'RETURN';
+
+  Color get _accent =>
+      _isReceived ? AppColors.moiReceived : AppColors.moiGiven;
 
   @override
   void initState() {
     super.initState();
     _loadTransactions();
-    _searchController.addListener(_onSearchChanged);
-  }
-
-  @override
-  void dispose() {
-    _searchController.removeListener(_onSearchChanged);
-    _searchController.dispose();
-    _debounce?.cancel();
-    super.dispose();
-  }
-
-  void _onSearchChanged() {
-    if (_debounce?.isActive ?? false) _debounce!.cancel();
-    _debounce = Timer(const Duration(milliseconds: 500), () {
-      _performSearch(_searchController.text);
-    });
-  }
-
-  void _performSearch(String value) {
-    if (!mounted) return;
-    final filtered = value.isEmpty
-        ? _transactions
-        : _transactions.where((element) {
-            final personName =
-                "${element['person']?['firstName']?.toString() ?? ''} ${element['person']?['lastName']?.toString() ?? ''}"
-                    .toLowerCase();
-            final date =
-                element['transactionDate']?.toString().toLowerCase() ?? '';
-            final notes = element['notes']?.toString().toLowerCase() ?? '';
-            final amount = element['amount']?.toString().toLowerCase() ?? '';
-            final input = value.toLowerCase();
-
-            return personName.contains(input) ||
-                date.contains(input) ||
-                notes.contains(input) ||
-                amount.contains(input);
-          }).toList();
-    setState(() {
-      _searchHistory = filtered;
-    });
   }
 
   Future<void> _loadTransactions() async {
@@ -102,13 +63,11 @@ class _AllTransactionsPageState extends State<AllTransactionsPage> {
           }
           setState(() {
             _transactions = list;
-            _searchHistory = list;
             _isLoading = false;
           });
         } else {
           setState(() {
             _transactions = [];
-            _searchHistory = [];
             _isLoading = false;
           });
         }
@@ -118,7 +77,6 @@ class _AllTransactionsPageState extends State<AllTransactionsPage> {
       if (mounted) {
         setState(() {
           _transactions = [];
-          _searchHistory = [];
           _isLoading = false;
         });
       }
@@ -126,26 +84,22 @@ class _AllTransactionsPageState extends State<AllTransactionsPage> {
   }
 
   String _formatAmount(double amt) {
-    if (amt == 0) return '0.00';
-    final formatter = NumberFormat('#,##,##0.00');
+    if (amt == 0) return '0';
+    final formatter = NumberFormat('#,##,##0');
     return formatter.format(amt);
   }
 
-  String _formatDate(String? dateStr) {
-    if (dateStr == null || dateStr.isEmpty) return '-';
-    try {
-      final date = DateTime.parse(dateStr);
-      return DateFormat('dd-MMM-yyyy').format(date);
-    } catch (e) {
-      return dateStr;
-    }
-  }
-
-  double _totalAmount() {
-    return _transactions.fold(0.0, (total, transaction) {
-      return total +
-          (double.tryParse(transaction['amount']?.toString() ?? '0') ?? 0);
-    });
+  String _functionName(dynamic t) {
+    final isCustom =
+        t['isCustom'] == true ||
+        t['isCustom']?.toString().toLowerCase() == 'true' ||
+        t['isCustom']?.toString() == '1';
+    final custom = t['customFunction']?.toString().trim() ?? '';
+    final name = t['transactionFunctionName']?.toString().trim() ?? '';
+    if (isCustom && custom.isNotEmpty) return custom;
+    if (name.isNotEmpty) return name;
+    if (custom.isNotEmpty) return custom;
+    return '-';
   }
 
   Future<void> _exportPdf() async {
@@ -187,174 +141,234 @@ class _AllTransactionsPageState extends State<AllTransactionsPage> {
   @override
   Widget build(BuildContext context) {
     final languageProvider = context.watch<LanguageProvider>();
-    final colorScheme = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final title = widget.type == 'INVEST'
-        ? languageProvider.tr('transactions.newInvest')
-        : widget.type == 'RETURN'
-        ? languageProvider.tr('transactions.newReturn')
+    final title = _isReceived
+        ? languageProvider.tr('moi.moiIn')
+        : _isGiven
+        ? languageProvider.tr('moi.moiOut')
         : languageProvider.tr('moi.title');
 
     return Scaffold(
-      appBar: AppBarWidget(
-        title: title,
-        action: [
-          IconButton(
-            icon: const Icon(
-              Icons.picture_as_pdf_outlined,
-              color: Colors.white,
-            ),
-            onPressed: _exportPdf,
-            tooltip: languageProvider.tr('home.exportData'),
-          ),
-        ],
+      backgroundColor: AppColors.background,
+      appBar: _MoiFlowHeader(
+        title: title.toUpperCase(),
+        onBack: () => Navigator.pop(context),
+        onExport: _exportPdf,
+        exportTooltip: languageProvider.tr('home.exportData'),
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : Column(
-              children: [
-                _buildSummary(colorScheme, isDark),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
-                  child: SizedBox(
-                    height: 52,
-                    child: SearchWidget(
-                      controller: _searchController,
-                      hintText: languageProvider.tr('transactions.search'),
-                    ),
-                  ),
+          ? const Center(child: CircularProgressIndicator(strokeWidth: 2.5))
+          : _transactions.isEmpty
+          ? MoiEmptyState(
+              title: languageProvider.tr('transactionList.empty'),
+              subtitle: languageProvider.tr('transactionList.emptyHint'),
+              icon: HugeIcons.strokeRoundedInvoice01,
+              accentColor: _accent,
+            )
+          : RefreshIndicator(
+              color: _accent,
+              onRefresh: _loadTransactions,
+              child: ListView.separated(
+                physics: const AlwaysScrollableScrollPhysics(
+                  parent: BouncingScrollPhysics(),
                 ),
-                Expanded(
-                  child: _searchHistory.isEmpty
-                      ? MoiEmptyState(
-                          title: languageProvider.tr('transactionList.empty'),
-                          subtitle: languageProvider.tr(
-                            'transactionList.emptyHint',
-                          ),
-                          icon: HugeIcons.strokeRoundedInvoice01,
-                        )
-                      : ListView.builder(
-                          physics: const BouncingScrollPhysics(),
-                          padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-                          itemCount: _searchHistory.length,
-                          itemBuilder: (context, index) {
-                            final t = _searchHistory[index];
-                            final type =
-                                t['type']?.toString().toUpperCase() ?? '';
-                            final isInvest = type == 'INVEST';
-                            final amount =
-                                double.tryParse(
-                                  t['amount']?.toString() ?? '0',
-                                ) ??
-                                0;
-                            final personName =
-                                "${t['person']?['firstName'] ?? ''} ${t['person']?['lastName'] ?? ''}"
-                                    .trim();
-                            final date = _formatDate(
-                              t['transactionDate']?.toString(),
-                            );
-
-                            final accent = isInvest
-                                ? Colors.green
-                                : Colors.redAccent;
-
-                            return MoiListItem(
-                              accentColor: accent,
-                              title: personName.isEmpty
-                                  ? languageProvider.tr('common.noData')
-                                  : personName,
-                              subtitle: date,
-                              onTap: () {
-                                Navigator.pushNamed(
-                                  context,
-                                  'transaction-detail-view',
-                                  arguments: t,
-                                );
-                              },
-                              trailing: Text(
-                                '₹ ${_formatAmount(amount)}',
-                                style: AppTypography.amountMedium.copyWith(
-                                  color: accent,
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                            );
-                          },
-                        ),
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.page,
+                  AppSpacing.md,
+                  AppSpacing.page,
+                  AppSpacing.xxl,
                 ),
-              ],
+                itemCount: _transactions.length,
+                separatorBuilder: (_, _) => const SizedBox(height: 12),
+                itemBuilder: (context, index) {
+                  final t = _transactions[index];
+                  final type = t['type']?.toString().toUpperCase() ?? '';
+                  final isInvest = type == 'INVEST';
+                  final amount =
+                      double.tryParse(t['amount']?.toString() ?? '0') ?? 0;
+                  final first =
+                      t['person']?['firstName']?.toString().trim() ?? '';
+                  final last =
+                      t['person']?['lastName']?.toString().trim() ??
+                      t['person']?['secondName']?.toString().trim() ??
+                      '';
+                  final personName = '$first $last'.trim();
+                  final functionName = _functionName(t);
+
+                  return MoiInvoiceListTile.moiFlow(
+                    isReceived: isInvest,
+                    title: personName.isEmpty
+                        ? languageProvider.tr('common.noData')
+                        : personName,
+                    subtitle: functionName.toUpperCase(),
+                    amount: '₹${_formatAmount(amount)}',
+                    onTap: () {
+                      Navigator.pushNamed(
+                        context,
+                        'transaction-detail-view',
+                        arguments: t,
+                      );
+                    },
+                  );
+                },
+              ),
             ),
     );
   }
+}
 
-  Widget _buildSummary(ColorScheme colorScheme, bool isDark) {
-    final languageProvider = context.read<LanguageProvider>();
-    final total = _totalAmount();
-    final label = widget.type == 'INVEST'
-        ? languageProvider.tr('home.totalBalance')
-        : widget.type == 'RETURN'
-        ? languageProvider.tr('home.totalBalance')
-        : languageProvider.tr('transactions.title');
+class _MoiFlowHeader extends StatelessWidget implements PreferredSizeWidget {
+  final String title;
+  final VoidCallback onBack;
+  final VoidCallback onExport;
+  final String exportTooltip;
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
-      decoration: BoxDecoration(
-        color: isDark ? colorScheme.surfaceContainerHighest : Colors.white,
-        border: Border(
-          bottom: BorderSide(
-            color: colorScheme.outline.withValues(alpha: 0.12),
+  const _MoiFlowHeader({
+    required this.title,
+    required this.onBack,
+    required this.onExport,
+    required this.exportTooltip,
+  });
+
+  @override
+  Size get preferredSize => const Size.fromHeight(72);
+
+  @override
+  Widget build(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return AppBar(
+      toolbarHeight: preferredSize.height,
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      surfaceTintColor: Colors.transparent,
+      backgroundColor: Colors.transparent,
+      centerTitle: true,
+      automaticallyImplyLeading: false,
+      titleSpacing: 0,
+      systemOverlayStyle: SystemUiOverlayStyle.light.copyWith(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+        statusBarBrightness: Brightness.dark,
+        systemNavigationBarColor: isDark ? Colors.black : Colors.white,
+        systemNavigationBarIconBrightness:
+            isDark ? Brightness.light : Brightness.dark,
+      ),
+      flexibleSpace: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              primary,
+              Color.lerp(primary, const Color(0xff0A3D8F), 0.35)!,
+            ],
+          ),
+          borderRadius: const BorderRadius.only(
+            bottomLeft: Radius.circular(22),
+            bottomRight: Radius.circular(22),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: primary.withValues(alpha: 0.28),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: Stack(
+          children: [
+            Positioned(
+              top: -28,
+              right: -18,
+              child: Container(
+                width: 100,
+                height: 100,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withValues(alpha: 0.08),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.only(
+          bottomLeft: Radius.circular(22),
+          bottomRight: Radius.circular(22),
+        ),
+      ),
+      leadingWidth: 54,
+      leading: Padding(
+        padding: const EdgeInsets.only(left: 10),
+        child: Center(
+          child: Material(
+            color: Colors.white.withValues(alpha: 0.14),
+            shape: const CircleBorder(),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: onBack,
+              customBorder: const CircleBorder(),
+              child: const SizedBox(
+                width: 42,
+                height: 42,
+                child: Center(
+                  child: HugeIcon(
+                    icon: HugeIcons.strokeRoundedArrowLeft01,
+                    color: Colors.white,
+                    size: 22,
+                    strokeWidth: 1.9,
+                  ),
+                ),
+              ),
+            ),
           ),
         ),
       ),
-      child: Row(
-        children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: colorScheme.primary.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(
-              Icons.receipt_long_outlined,
-              color: colorScheme.primary,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: isDark ? Colors.white70 : Colors.black54,
-                  ),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  '₹ ${_formatAmount(total)}',
-                  style: AppTypography.amountMedium.copyWith(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w700,
-                    color: colorScheme.primary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Text(
-            '${_transactions.length} records',
-            style: TextStyle(
-              color: isDark ? Colors.white60 : Colors.black45,
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
+      title: Text(
+        title,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        textAlign: TextAlign.center,
+        style: AppTypography.sectionTitle.copyWith(
+          color: Colors.white,
+          fontSize: 16,
+          fontWeight: FontWeight.w700,
+          letterSpacing: -0.2,
+        ),
       ),
+      actions: [
+        Padding(
+          padding: const EdgeInsets.only(right: 10),
+          child: Center(
+            child: Tooltip(
+              message: exportTooltip,
+              child: Material(
+                color: Colors.white.withValues(alpha: 0.14),
+                shape: const CircleBorder(),
+                clipBehavior: Clip.antiAlias,
+                child: InkWell(
+                  onTap: onExport,
+                  customBorder: const CircleBorder(),
+                  child: const SizedBox(
+                    width: 42,
+                    height: 42,
+                    child: Center(
+                      child: HugeIcon(
+                        icon: HugeIcons.strokeRoundedPdf02,
+                        color: Colors.white,
+                        size: 20,
+                        strokeWidth: 1.9,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

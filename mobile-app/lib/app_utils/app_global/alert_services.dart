@@ -7,6 +7,7 @@ import 'package:moi/app_configs/app_variables.dart';
 import 'package:moi/app_utils/app_global/app_button_widget.dart';
 import 'package:moi/app_utils/app_providers/language_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 class AlertServices {
   BuildContext? get _ctx => navigatorKey.currentState?.overlay?.context;
@@ -230,11 +231,7 @@ class AlertServices {
                     color: colorScheme.primary.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(
-                    Icons.exit_to_app_rounded,
-                    color: colorScheme.primary,
-                    size: 29,
-                  ),
+                  child: HugeIcon(icon: HugeIcons.strokeRoundedLogout01, size: 29, color: colorScheme.primary, strokeWidth: 1.8),
                 ),
                 const SizedBox(height: 18),
                 Text(

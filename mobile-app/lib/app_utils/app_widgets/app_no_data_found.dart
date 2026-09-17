@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:moi/app_utils/app_providers/language_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 class AppNoDataFound extends StatelessWidget {
   final bool showSecond;
@@ -39,11 +40,7 @@ class AppNoDataFound extends StatelessWidget {
                       shape: BoxShape.circle,
                       color: colorScheme.primary.withValues(alpha: 0.10),
                     ),
-                    child: Icon(
-                      Icons.hourglass_empty_outlined,
-                      size: 50,
-                      color: colorScheme.primary,
-                    ),
+                    child: HugeIcon(icon: HugeIcons.strokeRoundedHourglass, size: 50, color: colorScheme.primary, strokeWidth: 1.8),
                   ),
                   const SizedBox(height: 18),
                   Text(

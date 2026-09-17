@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:moi/app_utils/app_global/app_bar_widget.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 class WebViewPage extends StatefulWidget {
   final String url;
@@ -45,7 +46,7 @@ class _WebViewPageState extends State<WebViewPage> {
         title: widget.title,
         action: [
           IconButton(
-            icon: const Icon(Icons.refresh),
+            icon: HugeIcon(icon: HugeIcons.strokeRoundedRefresh, size: 22, strokeWidth: 1.8),
             onPressed: () {
               _controller.reload();
             },

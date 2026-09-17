@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 class MoiListItem extends StatelessWidget {
-  final IconData? leadingIcon;
+  final List<List<dynamic>>? leadingIcon;
   final Color accentColor;
   final String title;
   final String subtitle;
@@ -47,7 +48,13 @@ class MoiListItem extends StatelessWidget {
                     color: accentColor.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(leadingIcon, color: accentColor, size: 21),
+                  alignment: Alignment.center,
+                  child: HugeIcon(
+                    icon: leadingIcon!,
+                    color: accentColor,
+                    size: 21,
+                    strokeWidth: 1.8,
+                  ),
                 ),
                 const SizedBox(width: 11),
               ],

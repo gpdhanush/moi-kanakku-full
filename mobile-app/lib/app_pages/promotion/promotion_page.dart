@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:moi/app_utils/index.dart';
 import 'package:moi/app_utils/app_providers/language_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 class PromotionPage extends StatefulWidget {
   const PromotionPage({super.key});
@@ -198,11 +199,7 @@ class _PromotionPageState extends State<PromotionPage> {
               ),
               const SizedBox(width: 20),
               // Arrow
-              Icon(
-                Icons.arrow_forward_outlined,
-                color: colorScheme.primary,
-                size: 28,
-              ),
+              HugeIcon(icon: HugeIcons.strokeRoundedArrowRight01, size: 28, color: colorScheme.primary, strokeWidth: 1.8),
               const SizedBox(width: 20),
               // Offer Price
               Container(
@@ -271,23 +268,23 @@ class _PromotionPageState extends State<PromotionPage> {
   Widget _buildFeaturesList(ColorScheme colorScheme) {
     final features = [
       {
-        'icon': Icons.document_scanner,
+        'icon': HugeIcons.strokeRoundedDocumentValidation,
         'text': context.read<LanguageProvider>().tr(
           'promotion.featureDigitize',
         ),
       },
       {
-        'icon': Icons.sort_by_alpha,
+        'icon': HugeIcons.strokeRoundedSortingAZ01,
         'text': context.read<LanguageProvider>().tr(
           'promotion.featureOrganize',
         ),
       },
       {
-        'icon': Icons.security,
+        'icon': HugeIcons.strokeRoundedSecurity,
         'text': context.read<LanguageProvider>().tr('promotion.featureSecure'),
       },
       {
-        'icon': Icons.visibility,
+        'icon': HugeIcons.strokeRoundedView,
         'text': context.read<LanguageProvider>().tr('promotion.featureAccess'),
       },
     ];
@@ -321,10 +318,11 @@ class _PromotionPageState extends State<PromotionPage> {
                     ),
                     borderRadius: BorderRadius.circular(5),
                   ),
-                  child: Icon(
-                    feature['icon'] as IconData,
+                  child: HugeIcon(
+                    icon: feature['icon'] as List<List<dynamic>>,
                     color: Colors.white,
                     size: 18,
+                    strokeWidth: 1.8,
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -379,7 +377,7 @@ class _PromotionPageState extends State<PromotionPage> {
       //     child: Row(
       //       mainAxisAlignment: MainAxisAlignment.center,
       //       children: [
-      //         Icon(Icons.contact_phone, color: Colors.white, size: 20),
+      //         HugeIcon(icon: HugeIcons.strokeRoundedCall, size: 20, color: Colors.white, strokeWidth: 1.8),
       //         const SizedBox(width: 10),
       //         Text(
       //           'இப்போது தொடர்பு கொள்ளுங்கள்',
@@ -402,7 +400,7 @@ class _PromotionPageState extends State<PromotionPage> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Icon(Icons.location_on, color: colorScheme.primary, size: 14),
+        HugeIcon(icon: HugeIcons.strokeRoundedLocation01, size: 14, color: colorScheme.primary, strokeWidth: 1.8),
         const SizedBox(width: 4),
         Text(
           context.read<LanguageProvider>().tr('promotion.coverage'),
@@ -468,11 +466,7 @@ class _PromotionPageState extends State<PromotionPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(
-                      Icons.format_quote_outlined,
-                      color: colorScheme.primary.withAlpha(153),
-                      size: 22,
-                    ),
+                    HugeIcon(icon: HugeIcons.strokeRoundedQuoteUp, size: 22, color: colorScheme.primary.withAlpha(153), strokeWidth: 1.8),
                     const SizedBox(height: 8),
                     Expanded(
                       child: Text(
@@ -489,11 +483,10 @@ class _PromotionPageState extends State<PromotionPage> {
                     // Row(
                     //   children: List.generate(
                     //     5,
-                    //     (i) => Icon(
-                    //       Icons.star_outlined,
-                    //       color: Colors.amber[700],
-                    //       size: 16,
-                    //     ),
+                    //     (i) => HugeIcon(icon: //       HugeIcons.strokeRoundedStar,
+                    //,
+                    //,
+                    //, size: 16, color: Colors.amber[700], strokeWidth: 1.8),
                     //   ),
                     // ),
                     // const SizedBox(height: 10),

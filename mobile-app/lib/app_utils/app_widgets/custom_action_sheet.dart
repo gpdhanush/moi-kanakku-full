@@ -4,7 +4,6 @@ import 'package:moi/app_themes/index.dart';
 
 /// Menu row for [showMoiActionSheet] / [showCustomActionSheet].
 class ActionSheetItem {
-  final IconData? icon;
   final List<List<dynamic>>? hugeIcon;
   final String title;
   final Color? color;
@@ -13,7 +12,6 @@ class ActionSheetItem {
   final Future<void> Function(BuildContext) onPressed;
 
   ActionSheetItem({
-    this.icon,
     this.hugeIcon,
     required this.title,
     this.color,
@@ -21,8 +19,8 @@ class ActionSheetItem {
     this.isCancel = false,
     required this.onPressed,
   }) : assert(
-         isCancel || icon != null || hugeIcon != null,
-         'Provide either icon or hugeIcon for non-cancel actions',
+         isCancel || hugeIcon != null,
+         'Provide hugeIcon for non-cancel actions',
        );
 }
 
@@ -259,7 +257,12 @@ class _MoiActionSheetTile extends StatelessWidget {
                         size: 20,
                         strokeWidth: 1.8,
                       )
-                    : Icon(item.icon, color: accent, size: 20),
+                    : HugeIcon(
+                        icon: HugeIcons.strokeRoundedArrowRight01,
+                        color: accent,
+                        size: 20,
+                        strokeWidth: 1.8,
+                      ),
               ),
               const SizedBox(width: 12),
               Expanded(

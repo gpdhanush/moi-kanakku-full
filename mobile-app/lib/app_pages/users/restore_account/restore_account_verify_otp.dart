@@ -8,6 +8,7 @@ import 'package:moi/app_services/user_services.dart';
 import 'package:moi/app_utils/index.dart';
 import 'package:moi/app_utils/app_providers/language_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 class RestoreAccountVerifyOtp extends StatefulWidget {
   final String email;
@@ -202,11 +203,7 @@ class _RestoreAccountVerifyOtpState extends State<RestoreAccountVerifyOtp> {
                   ),
                   child: Row(
                     children: [
-                      Icon(
-                        Icons.restore_outlined,
-                        color: Colors.blue.shade700,
-                        size: 24,
-                      ),
+                      HugeIcon(icon: HugeIcons.strokeRoundedRestoreBin, size: 24, color: Colors.blue.shade700, strokeWidth: 1.8),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
@@ -226,7 +223,7 @@ class _RestoreAccountVerifyOtpState extends State<RestoreAccountVerifyOtp> {
                 // OTP Input Field
                 TextFormWidget(
                   title: languageProvider.tr('auth.otp'),
-                  prefixIcon: Icons.lock_outlined,
+                  prefixIcon: HugeIcons.strokeRoundedLockPassword,
                   required: true,
                   controller: otpCtrl,
                   maxLength: 6,
@@ -344,11 +341,7 @@ class _RestoreAccountVerifyOtpState extends State<RestoreAccountVerifyOtp> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(
-                        Icons.arrow_back_outlined,
-                        size: 18,
-                        color: colorScheme.primary,
-                      ),
+                      HugeIcon(icon: HugeIcons.strokeRoundedArrowLeft01, size: 18, color: colorScheme.primary, strokeWidth: 1.8),
                       const SizedBox(width: 8),
                       Text(
                         languageProvider.tr('auth.backToLogin'),

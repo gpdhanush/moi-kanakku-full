@@ -12,6 +12,7 @@ import 'package:moi/app_utils/app_providers/language_provider.dart';
 import 'package:moi/app_utils/device_info_service.dart';
 import 'package:moi/app_utils/index.dart';
 import 'package:provider/provider.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 class Signup extends StatefulWidget {
   const Signup({super.key});
@@ -127,7 +128,7 @@ class _SignupState extends State<Signup> with SingleTickerProviderStateMixin {
                           ),
                           const SizedBox(height: AppSpacing.lg),
                           TextFormWidget(
-                            prefixIcon: Icons.account_circle_outlined,
+                            prefixIcon: HugeIcons.strokeRoundedUser,
                             title: languageProvider.tr('auth.fullName'),
                             required: true,
                             textCapitalization: TextCapitalization.characters,
@@ -155,7 +156,7 @@ class _SignupState extends State<Signup> with SingleTickerProviderStateMixin {
                           const SizedBox(height: AppSpacing.sm),
                           TextFormWidget(
                             title: languageProvider.tr('login.email'),
-                            prefixIcon: Icons.email_outlined,
+                            prefixIcon: HugeIcons.strokeRoundedMail01,
                             required: true,
                             keyboardType: TextInputType.emailAddress,
                             inputFormatters: [
@@ -178,7 +179,7 @@ class _SignupState extends State<Signup> with SingleTickerProviderStateMixin {
                               Expanded(
                                 child: TextFormWidget(
                                   title: languageProvider.tr('profile.mobile'),
-                                  prefixIcon: Icons.phone_outlined,
+                                  prefixIcon: HugeIcons.strokeRoundedCall,
                                   required: true,
                                   maxLength: 10,
                                   keyboardType: TextInputType.number,
@@ -201,7 +202,7 @@ class _SignupState extends State<Signup> with SingleTickerProviderStateMixin {
                               Expanded(
                                 child: TextFormWidget(
                                   title: languageProvider.tr('profile.city'),
-                                  prefixIcon: Icons.location_city_outlined,
+                                  prefixIcon: HugeIcons.strokeRoundedCity01,
                                   required: true,
                                   textCapitalization:
                                       TextCapitalization.characters,
@@ -224,7 +225,7 @@ class _SignupState extends State<Signup> with SingleTickerProviderStateMixin {
                           const SizedBox(height: AppSpacing.sm),
                           TextFormWidget(
                             title: languageProvider.tr('login.password'),
-                            prefixIcon: Icons.lock_outlined,
+                            prefixIcon: HugeIcons.strokeRoundedLockPassword,
                             required: true,
                             maxLines: 1,
                             maxLength: 16,
@@ -233,8 +234,8 @@ class _SignupState extends State<Signup> with SingleTickerProviderStateMixin {
                             obscureText: showPass,
                             suffixIconTrue: true,
                             suffixIcon: showPass
-                                ? Icons.visibility_outlined
-                                : Icons.visibility_off_outlined,
+                                ? HugeIcons.strokeRoundedView
+                                : HugeIcons.strokeRoundedViewOffSlash,
                             suffixIconOnPressed: () {
                               setState(() {
                                 showPass = !showPass;

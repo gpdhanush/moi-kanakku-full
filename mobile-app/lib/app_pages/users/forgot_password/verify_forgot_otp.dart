@@ -8,6 +8,7 @@ import 'package:moi/app_services/user_services.dart';
 import 'package:moi/app_utils/index.dart';
 import 'package:moi/app_utils/app_providers/language_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 class VerifyForgotOtp extends StatefulWidget {
   final String email;
@@ -74,7 +75,7 @@ class _VerifyForgotOtpState extends State<VerifyForgotOtp> {
                         padding: const EdgeInsets.symmetric(horizontal: 15),
                         child: TextFormWidget(
                           title: languageProvider.tr('auth.otp'),
-                          prefixIcon: Icons.lock_outlined,
+                          prefixIcon: HugeIcons.strokeRoundedLockPassword,
                           required: true,
                           controller: otpCtrl,
                           maxLength: 6,
@@ -194,11 +195,7 @@ class _VerifyForgotOtpState extends State<VerifyForgotOtp> {
                 child: const SizedBox(
                   width: 42,
                   height: 42,
-                  child: Icon(
-                    Icons.arrow_back_ios_new_rounded,
-                    color: Colors.white,
-                    size: 18,
-                  ),
+                  child: HugeIcon(icon: HugeIcons.strokeRoundedArrowLeft01, size: 18, color: Colors.white, strokeWidth: 1.8),
                 ),
               ),
             ),

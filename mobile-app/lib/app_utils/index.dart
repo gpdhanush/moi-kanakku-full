@@ -16,5 +16,7 @@ export './app_widgets/app_date_picker.dart';
 export './app_widgets/moi_refresh_indicator.dart';
 export './app_widgets/custom_action_sheet.dart';
 export './app_widgets/moi_empty_state.dart';
+export './app_widgets/moi_flow_app_header.dart';
+export './app_widgets/moi_invoice_list_tile.dart';
 export './app_widgets/wave_bottom.dart';
 export './app_widgets/login_hero_header.dart';

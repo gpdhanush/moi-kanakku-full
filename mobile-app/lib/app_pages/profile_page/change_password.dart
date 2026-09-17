@@ -109,12 +109,8 @@ class _ChangePasswordState extends State<ChangePassword> {
                               borderRadius: BorderRadius.circular(12),
                             ),
                             alignment: Alignment.center,
-                            child: HugeIcon(
-                              icon: HugeIcons.strokeRoundedLockPassword,
-                              color: primary,
-                              size: 20,
-                              strokeWidth: 1.8,
-                            ),
+                            child: HugeIcon(icon: HugeIcons.strokeRoundedLockPassword,
+                              strokeWidth: 1.8, size: 20, color: primary),
                           ),
                           const SizedBox(width: 12),
                           Expanded(
@@ -299,8 +295,8 @@ class _ChangePasswordState extends State<ChangePassword> {
       obscuringCharacter: "●",
       suffixIconTrue: true,
       suffixIcon: obscureText
-          ? Icons.visibility_outlined
-          : Icons.visibility_off_outlined,
+          ? HugeIcons.strokeRoundedView
+          : HugeIcons.strokeRoundedViewOffSlash,
       suffixIconOnPressed: toggleVisibility,
       inputFormatters: [_passwordAllowed],
       maxLength: 32,
@@ -419,15 +415,11 @@ class _PasswordRulesChecklist extends StatelessWidget {
               padding: const EdgeInsets.only(bottom: 6),
               child: Row(
                 children: [
-                  Icon(
-                    rule.met
-                        ? Icons.check_circle_rounded
-                        : Icons.radio_button_unchecked_rounded,
-                    size: 16,
-                    color: rule.met
+                  HugeIcon(icon: rule.met
+                        ? HugeIcons.strokeRoundedCheckmarkCircle02
+                        : HugeIcons.strokeRoundedCircle, size: 16, color: rule.met
                         ? const Color(0xFF2E7D32)
-                        : AppColors.textSecondary.withValues(alpha: 0.55),
-                  ),
+                        : AppColors.textSecondary.withValues(alpha: 0.55), strokeWidth: 1.8),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
@@ -556,12 +548,8 @@ class _ChangePasswordHeader extends StatelessWidget
                 width: 42,
                 height: 42,
                 child: Center(
-                  child: HugeIcon(
-                    icon: HugeIcons.strokeRoundedArrowLeft01,
-                    color: Colors.white,
-                    size: 22,
-                    strokeWidth: 1.9,
-                  ),
+                  child: HugeIcon(icon: HugeIcons.strokeRoundedArrowLeft01,
+                    strokeWidth: 1.9, size: 22, color: Colors.white),
                 ),
               ),
             ),

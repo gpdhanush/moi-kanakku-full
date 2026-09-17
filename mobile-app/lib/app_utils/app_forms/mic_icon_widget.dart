@@ -5,6 +5,7 @@ import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 import 'package:moi/app_utils/app_providers/language_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 /// A widget that provides a microphone icon for speech-to-text functionality
 class MicIconWidget extends StatefulWidget {
@@ -53,12 +54,7 @@ class _MicIconWidgetState extends State<MicIconWidget> {
         visualDensity: VisualDensity.adaptivePlatformDensity,
         icon: AnimatedSwitcher(
           duration: const Duration(milliseconds: 200),
-          child: Icon(
-            isListening ? Icons.mic_outlined : Icons.mic_none_outlined,
-            key: ValueKey(isListening),
-            size: 22,
-            color: isListening ? Colors.redAccent : colorScheme.primary,
-          ),
+          child: HugeIcon(key: ValueKey(isListening), icon: isListening ? HugeIcons.strokeRoundedMic01 : HugeIcons.strokeRoundedMic02, size: 22, color: isListening ? Colors.redAccent : colorScheme.primary, strokeWidth: 1.8),
         ),
         onPressed: () {
           FocusScope.of(context).unfocus();

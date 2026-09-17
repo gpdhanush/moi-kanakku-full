@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:moi/app_configs/index.dart';
 import 'package:moi/app_themes/index.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 /// Full-bleed auth hero image (~30% height). Optional soft snowfall for login.
 class AuthImageHero extends StatefulWidget {
@@ -204,11 +205,7 @@ class _AuthImageHeroState extends State<AuthImageHero>
                   child: const SizedBox(
                     width: 42,
                     height: 42,
-                    child: Icon(
-                      Icons.arrow_back_ios_new_rounded,
-                      color: Colors.white,
-                      size: 18,
-                    ),
+                    child: HugeIcon(icon: HugeIcons.strokeRoundedArrowLeft01, size: 18, color: Colors.white, strokeWidth: 1.8),
                   ),
                 ),
               ),

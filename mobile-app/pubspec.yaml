@@ -52,7 +52,6 @@ dependencies:
   tamil_pdf_shaper: ^1.0.4
   shared_preferences: ^2.5.5
   hugeicons: ^1.1.7
-  soft_ui_kit: ^1.0.0
   google_fonts: ^8.2.1
   custom_refresh_indicator: ^4.0.2
 

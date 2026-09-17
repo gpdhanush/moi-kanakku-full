@@ -235,7 +235,7 @@ class _TransactionPersonDetailsState extends State<TransactionPersonDetails> {
         AppSpacing.xxl,
       ),
       itemCount: transactions.length,
-      separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm),
+      separatorBuilder: (_, _) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
         final tx = transactions[index];
         final type = tx['type']?.toString() ?? '';
@@ -247,16 +247,17 @@ class _TransactionPersonDetailsState extends State<TransactionPersonDetails> {
             : tx['transactionFunctionName']?.toString() ?? '—';
         final date = _formatDate(tx['transactionDate']?.toString());
         final amount = tx['amount'];
-        final accent = isInvest ? AppColors.moiReceived : AppColors.moiGiven;
+        final subtitleParts = <String>[
+          if (date.isNotEmpty && date != '-') date,
+        ];
 
-        return _TransactionCard(
+        return MoiInvoiceListTile.moiFlow(
+          isReceived: isInvest,
           title: functionName.toString().toUpperCase(),
-          subtitle: date,
-          amountText: amount != null && amount.toString().isNotEmpty
-              ? '₹ ${_formatNumber(amount)}'
-              : null,
-          accent: accent,
-          isInvest: isInvest,
+          subtitle: subtitleParts.join(' • '),
+          amount: amount != null && amount.toString().isNotEmpty
+              ? '₹${_formatNumber(amount)}'
+              : '₹0',
           onTap: () => _showTransactionSheet(tx),
         );
       },
@@ -603,104 +604,3 @@ class _QuickActionButton extends StatelessWidget {
   }
 }
 
-class _TransactionCard extends StatelessWidget {
-  final String title;
-  final String subtitle;
-  final String? amountText;
-  final Color accent;
-  final bool isInvest;
-  final VoidCallback onTap;
-
-  const _TransactionCard({
-    required this.title,
-    required this.subtitle,
-    required this.amountText,
-    required this.accent,
-    required this.isInvest,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(16),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        splashColor: accent.withValues(alpha: 0.06),
-        highlightColor: accent.withValues(alpha: 0.03),
-        child: Ink(
-          padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xffE4E4E7)),
-            boxShadow: AppShadows.soft,
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  color: accent.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                alignment: Alignment.center,
-                child: HugeIcon(
-                  icon: isInvest
-                      ? HugeIcons.strokeRoundedArrowDownLeft01
-                      : HugeIcons.strokeRoundedArrowUpRight01,
-                  color: accent,
-                  size: 18,
-                  strokeWidth: 1.8,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTypography.label.copyWith(
-                        color: AppColors.textPrimary,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    if (subtitle.isNotEmpty) ...[
-                      const SizedBox(height: 3),
-                      Text(
-                        subtitle,
-                        style: AppTypography.body.copyWith(
-                          color: AppColors.textSecondary,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-              if (amountText != null) ...[
-                const SizedBox(width: 8),
-                Text(
-                  amountText!,
-                  style: AppTypography.amountMedium.copyWith(
-                    color: accent,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}

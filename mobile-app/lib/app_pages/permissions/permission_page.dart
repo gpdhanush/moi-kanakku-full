@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:moi/app_configs/index.dart';
 import 'package:moi/app_storages/secure_storages.dart';
 import 'permission_controller.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 class PermissionPage extends StatefulWidget {
   const PermissionPage({super.key});
@@ -275,11 +276,7 @@ class _PermissionPageState extends State<PermissionPage> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(
-                        allGranted ? Icons.check_circle : Icons.shield_outlined,
-                        color: Colors.white,
-                        size: 16.0,
-                      ),
+                      HugeIcon(icon: allGranted ? HugeIcons.strokeRoundedCheckmarkCircle02 : HugeIcons.strokeRoundedShield01, size: 16.0, color: Colors.white, strokeWidth: 1.8),
                       const SizedBox(width: 6.0),
                       Text(
                         allGranted
@@ -392,11 +389,7 @@ class _PermissionPageState extends State<PermissionPage> {
                     : accentColor.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(12.0),
               ),
-              child: Icon(
-                isGranted ? Icons.check_circle_rounded : permission.icon,
-                color: isGranted ? const Color(0xFF10B981) : accentColor,
-                size: 22.0,
-              ),
+              child: HugeIcon(icon: isGranted ? HugeIcons.strokeRoundedCheckmarkCircle02 : permission.icon, size: 22.0, color: isGranted ? const Color(0xFF10B981) : accentColor, strokeWidth: 1.8),
             ),
             const SizedBox(width: 14.0),
 
@@ -467,11 +460,7 @@ class _PermissionPageState extends State<PermissionPage> {
         child: const Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.check_circle,
-              color: Color(0xFF10B981),
-              size: 14.0,
-            ),
+            HugeIcon(icon: HugeIcons.strokeRoundedCheckmarkCircle02, size: 14.0, color: Color(0xFF10B981), strokeWidth: 1.8),
             SizedBox(width: 4.0),
             Text(
               "Allowed",
@@ -500,11 +489,7 @@ class _PermissionPageState extends State<PermissionPage> {
           child: const Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                Icons.settings_outlined,
-                color: Color(0xFFD97706),
-                size: 14.0,
-              ),
+              HugeIcon(icon: HugeIcons.strokeRoundedSettings01, size: 14.0, color: Color(0xFFD97706), strokeWidth: 1.8),
               SizedBox(width: 4.0),
               Text(
                 "Settings",
@@ -609,12 +594,9 @@ class _PermissionPageState extends State<PermissionPage> {
                           ),
                         ),
                         const SizedBox(width: 8.0),
-                        Icon(
-                          allGranted
-                              ? Icons.arrow_forward_rounded
-                              : Icons.check_circle_outline_rounded,
-                          size: 20.0,
-                        ),
+                        HugeIcon(icon: allGranted
+                              ? HugeIcons.strokeRoundedArrowRight01
+                              : HugeIcons.strokeRoundedCheckmarkCircle02, size: 20.0, strokeWidth: 1.8),
                       ],
                     ),
                   ),

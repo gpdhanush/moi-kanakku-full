@@ -4,6 +4,7 @@ import 'package:moi/app_services/user_services.dart';
 import 'package:moi/app_utils/index.dart';
 import 'package:moi/app_utils/app_providers/language_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 class RestoreAccountSendOtp extends StatefulWidget {
   final String email;
@@ -186,11 +187,7 @@ class _RestoreAccountSendOtpState extends State<RestoreAccountSendOtp> {
                 ),
                 child: Row(
                   children: [
-                    Icon(
-                      Icons.info_outline,
-                      color: Colors.orange.shade700,
-                      size: 24,
-                    ),
+                    HugeIcon(icon: HugeIcons.strokeRoundedInformationCircle, size: 24, color: Colors.orange.shade700, strokeWidth: 1.8),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
@@ -226,11 +223,7 @@ class _RestoreAccountSendOtpState extends State<RestoreAccountSendOtp> {
                         color: colorScheme.primary.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: Icon(
-                        Icons.email_outlined,
-                        color: colorScheme.primary,
-                        size: 24,
-                      ),
+                      child: HugeIcon(icon: HugeIcons.strokeRoundedMail01, size: 24, color: colorScheme.primary, strokeWidth: 1.8),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -301,11 +294,7 @@ class _RestoreAccountSendOtpState extends State<RestoreAccountSendOtp> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(
-                      Icons.arrow_back_outlined,
-                      size: 18,
-                      color: colorScheme.primary,
-                    ),
+                    HugeIcon(icon: HugeIcons.strokeRoundedArrowLeft01, size: 18, color: colorScheme.primary, strokeWidth: 1.8),
                     const SizedBox(width: 8),
                     Text(
                       languageProvider.tr('auth.backToLogin'),

@@ -3,6 +3,7 @@ import 'package:flutter_exit_app/flutter_exit_app.dart';
 import 'package:moi/app_utils/app_global/play_store_launcher.dart';
 import 'package:moi/app_utils/app_providers/language_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 class ForceUpdateDialog {
   static Future<void> show(
@@ -41,11 +42,7 @@ class ForceUpdateDialog {
                       shape: BoxShape.circle,
                       color: colorScheme.primary.withValues(alpha: 0.12),
                     ),
-                    child: Icon(
-                      Icons.system_update_alt_rounded,
-                      size: 36,
-                      color: colorScheme.primary,
-                    ),
+                    child: HugeIcon(icon: HugeIcons.strokeRoundedSystemUpdate01, size: 36, color: colorScheme.primary, strokeWidth: 1.8),
                   ),
                   const SizedBox(height: 20),
                   Text(
@@ -106,7 +103,7 @@ class ForceUpdateDialog {
                     width: double.infinity,
                     child: FilledButton.icon(
                       onPressed: openAppPlayStoreListing,
-                      icon: const Icon(Icons.download_rounded),
+                      icon: HugeIcon(icon: HugeIcons.strokeRoundedDownload01, size: 22, strokeWidth: 1.8),
                       label: Text(languageProvider.tr('forceUpdate.updateApp')),
                       style: FilledButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 14),
@@ -121,7 +118,7 @@ class ForceUpdateDialog {
                     width: double.infinity,
                     child: OutlinedButton.icon(
                       onPressed: FlutterExitApp.exitApp,
-                      icon: const Icon(Icons.logout_rounded),
+                      icon: HugeIcon(icon: HugeIcons.strokeRoundedLogout01, size: 22, strokeWidth: 1.8),
                       label: Text(languageProvider.tr('forceUpdate.exitApp')),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 14),

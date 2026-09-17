@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:moi/app_configs/index.dart';
 import 'package:moi/app_firebase/firebase_remote.dart';
+import 'package:moi/app_themes/index.dart';
 import 'package:moi/app_utils/app_providers/language_provider.dart';
 import 'package:provider/provider.dart';
 
@@ -24,7 +27,7 @@ class _MaintenanceModePageState extends State<MaintenanceModePage>
       vsync: this,
       duration: const Duration(milliseconds: 1800),
     )..repeat(reverse: true);
-    _pulseAnimation = Tween<double>(begin: 0.92, end: 1.08).animate(
+    _pulseAnimation = Tween<double>(begin: 0.96, end: 1.04).animate(
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
   }
@@ -75,182 +78,268 @@ class _MaintenanceModePageState extends State<MaintenanceModePage>
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final primary = Theme.of(context).colorScheme.primary;
     final languageProvider = context.watch<LanguageProvider>();
 
-    return Scaffold(
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              colorScheme.primary.withValues(alpha: 0.08),
-              colorScheme.surface,
-              colorScheme.secondaryContainer.withValues(alpha: 0.12),
-            ],
-          ),
-        ),
-        child: SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  ScaleTransition(
-                    scale: _pulseAnimation,
-                    child: Container(
-                      height: 120,
-                      width: 120,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            colorScheme.primary.withValues(alpha: 0.18),
-                            colorScheme.primary.withValues(alpha: 0.06),
-                          ],
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: colorScheme.primary.withValues(alpha: 0.18),
-                            blurRadius: 28,
-                            offset: const Offset(0, 12),
-                          ),
-                        ],
-                      ),
-                      child: Icon(
-                        Icons.construction_rounded,
-                        size: 54,
-                        color: colorScheme.primary,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 32),
-                  Text(
-                    languageProvider.tr('maintenance.title'),
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 26,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -0.5,
-                      color: colorScheme.primary,
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-                  Text(
-                    languageProvider.tr('maintenance.subtitle'),
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: colorScheme.onSurface.withValues(alpha: 0.85),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    languageProvider.tr('maintenance.description'),
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 14,
-                      height: 1.6,
-                      color: colorScheme.onSurface.withValues(alpha: 0.65),
-                    ),
-                  ),
-                  const SizedBox(height: 28),
-                  _buildInfoCard(
-                    icon: Icons.schedule_rounded,
-                    text: languageProvider.tr('maintenance.availableSoon'),
-                    colorScheme: colorScheme,
-                  ),
-                  const SizedBox(height: 12),
-                  _buildInfoCard(
-                    icon: Icons.cloud_sync_rounded,
-                    text: languageProvider.tr('maintenance.checkStatus'),
-                    colorScheme: colorScheme,
-                  ),
-                  const SizedBox(height: 32),
-                  SizedBox(
-                    width: double.infinity,
-                    child: FilledButton.icon(
-                      onPressed: _isChecking ? null : _tryAgain,
-                      icon: _isChecking
-                          ? SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: colorScheme.onPrimary,
-                              ),
-                            )
-                          : const Icon(Icons.refresh_rounded),
-                      label: Text(
-                        _isChecking
-                            ? languageProvider.tr('common.checking')
-                            : languageProvider.tr('common.tryAgain'),
-                      ),
-                      style: FilledButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        elevation: 2,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    '${languageProvider.tr('common.appVersion')}: $appVersion',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: colorScheme.onSurface.withValues(alpha: 0.45),
-                    ),
-                  ),
-                ],
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.dark.copyWith(
+        statusBarColor: Colors.transparent,
+        systemNavigationBarColor: AppColors.background,
+      ),
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        body: Stack(
+          children: [
+            Positioned(
+              top: -60,
+              right: -40,
+              child: Container(
+                width: 180,
+                height: 180,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: primary.withValues(alpha: 0.08),
+                ),
               ),
             ),
-          ),
+            Positioned(
+              bottom: -50,
+              left: -30,
+              child: Container(
+                width: 150,
+                height: 150,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppColors.accentAmber.withValues(alpha: 0.08),
+                ),
+              ),
+            ),
+            SafeArea(
+              child: Center(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.page,
+                    AppSpacing.lg,
+                    AppSpacing.page,
+                    AppSpacing.xl,
+                  ),
+                  child: Column(
+                    children: [
+                      ScaleTransition(
+                        scale: _pulseAnimation,
+                        child: Container(
+                          width: 96,
+                          height: 96,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(28),
+                            border: Border.all(color: const Color(0xffE4E4E7)),
+                            boxShadow: [
+                              BoxShadow(
+                                color: primary.withValues(alpha: 0.12),
+                                blurRadius: 24,
+                                offset: const Offset(0, 10),
+                              ),
+                            ],
+                          ),
+                          alignment: Alignment.center,
+                          child: Container(
+                            width: 56,
+                            height: 56,
+                            decoration: BoxDecoration(
+                              color: AppColors.accentAmberSoft,
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            alignment: Alignment.center,
+                            child: HugeIcon(
+                              icon: HugeIcons.strokeRoundedConstruction,
+                              size: 22,
+                              color: AppColors.accentAmber,
+                              strokeWidth: 1.8,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 28),
+                      Text(
+                        languageProvider.tr('maintenance.title'),
+                        textAlign: TextAlign.center,
+                        style: AppTypography.sectionTitle.copyWith(
+                          color: AppColors.textPrimary,
+                          fontSize: 24,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.5,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        languageProvider.tr('maintenance.subtitle'),
+                        textAlign: TextAlign.center,
+                        style: AppTypography.label.copyWith(
+                          color: AppColors.textPrimary,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        languageProvider.tr('maintenance.description'),
+                        textAlign: TextAlign.center,
+                        style: AppTypography.body.copyWith(
+                          color: AppColors.textSecondary,
+                          fontSize: 14,
+                          height: 1.55,
+                        ),
+                      ),
+                      const SizedBox(height: 28),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(18),
+                          border: Border.all(color: const Color(0xffE4E4E7)),
+                          boxShadow: AppShadows.soft,
+                        ),
+                        child: Column(
+                          children: [
+                            _InfoRow(
+                              icon: HugeIcons.strokeRoundedClock01,
+                              text: languageProvider.tr(
+                                'maintenance.availableSoon',
+                              ),
+                              accent: AppColors.accentAmber,
+                              soft: AppColors.accentAmberSoft,
+                            ),
+                            const SizedBox(height: 10),
+                            _InfoRow(
+                              icon: HugeIcons.strokeRoundedCloud,
+                              text: languageProvider.tr(
+                                'maintenance.checkStatus',
+                              ),
+                              accent: primary,
+                              soft: AppColors.primarySoft,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 28),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 50,
+                        child: FilledButton.icon(
+                          onPressed: _isChecking ? null : _tryAgain,
+                          icon: _isChecking
+                              ? const SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2.2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : const HugeIcon(
+                                  icon: HugeIcons.strokeRoundedRefresh,
+                                  color: Colors.white,
+                                  size: 18,
+                                  strokeWidth: 1.9,
+                                ),
+                          label: Text(
+                            _isChecking
+                                ? languageProvider.tr('common.checking')
+                                : languageProvider.tr('common.tryAgain'),
+                            style: AppTypography.label.copyWith(
+                              color: Colors.white,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          style: FilledButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            disabledBackgroundColor: AppColors.primary
+                                .withValues(alpha: 0.7),
+                            foregroundColor: Colors.white,
+                            disabledForegroundColor: Colors.white,
+                            elevation: 0,
+                            shadowColor: AppColors.primary.withValues(
+                              alpha: 0.26,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 18),
+                      Text(
+                        '${languageProvider.tr('common.appVersion')}: $appVersion',
+                        style: AppTypography.body.copyWith(
+                          color: AppColors.textSecondary.withValues(alpha: 0.7),
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
+}
 
-  Widget _buildInfoCard({
-    required IconData icon,
-    required String text,
-    required ColorScheme colorScheme,
-  }) {
+class _InfoRow extends StatelessWidget {
+  final List<List<dynamic>> icon;
+  final String text;
+  final Color accent;
+  final Color soft;
+
+  const _InfoRow({
+    required this.icon,
+    required this.text,
+    required this.accent,
+    required this.soft,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       decoration: BoxDecoration(
-        color: colorScheme.surface.withValues(alpha: 0.85),
+        color: soft,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: colorScheme.outline.withValues(alpha: 0.15)),
+        border: Border.all(color: accent.withValues(alpha: 0.12)),
       ),
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(8),
+            width: 36,
+            height: 36,
             decoration: BoxDecoration(
-              color: colorScheme.primary.withValues(alpha: 0.1),
+              color: Colors.white,
               borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: accent.withValues(alpha: 0.14)),
             ),
-            child: Icon(icon, size: 18, color: colorScheme.primary),
+            alignment: Alignment.center,
+            child: HugeIcon(
+              icon: icon,
+              size: 18,
+              color: accent,
+              strokeWidth: 1.8,
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
               text,
-              style: TextStyle(
+              style: AppTypography.body.copyWith(
+                color: AppColors.textPrimary,
                 fontSize: 13,
                 height: 1.4,
-                color: colorScheme.onSurface.withValues(alpha: 0.75),
+                fontWeight: FontWeight.w500,
               ),
             ),
           ),

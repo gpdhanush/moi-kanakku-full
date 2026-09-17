@@ -163,12 +163,8 @@ class _SettingsState extends State<Settings> {
                             ),
                           ),
                           const SizedBox(width: 6),
-                          const HugeIcon(
-                            icon: HugeIcons.strokeRoundedArrowRight01,
-                            color: Color(0xffA1A1AA),
-                            size: 16,
-                            strokeWidth: 1.9,
-                          ),
+                          const HugeIcon(icon: HugeIcons.strokeRoundedArrowRight01,
+                            strokeWidth: 1.9, size: 16, color: Color(0xffA1A1AA)),
                         ],
                       ),
                       onTap: () => _showAccentColorSheet(themeProvider),
@@ -388,11 +384,7 @@ class _SettingsState extends State<Settings> {
                         ),
                         child: selected
                             ? const Center(
-                                child: Icon(
-                                  Icons.check_rounded,
-                                  color: Colors.white,
-                                  size: 18,
-                                ),
+                                child: HugeIcon(icon: HugeIcons.strokeRoundedTick02, size: 18, color: Colors.white, strokeWidth: 1.8),
                               )
                             : null,
                       ),
@@ -511,12 +503,8 @@ class _SettingsAppHeader extends StatelessWidget implements PreferredSizeWidget 
                 width: 42,
                 height: 42,
                 child: Center(
-                  child: HugeIcon(
-                    icon: HugeIcons.strokeRoundedArrowLeft01,
-                    color: Colors.white,
-                    size: 22,
-                    strokeWidth: 1.9,
-                  ),
+                  child: HugeIcon(icon: HugeIcons.strokeRoundedArrowLeft01,
+                    strokeWidth: 1.9, size: 22, color: Colors.white),
                 ),
               ),
             ),
@@ -703,12 +691,8 @@ class _SettingsRow extends StatelessWidget {
                       ),
                     if (showChevron) ...[
                       const SizedBox(width: 4),
-                      const HugeIcon(
-                        icon: HugeIcons.strokeRoundedArrowRight01,
-                        color: Color(0xffA1A1AA),
-                        size: 16,
-                        strokeWidth: 1.9,
-                      ),
+                      const HugeIcon(icon: HugeIcons.strokeRoundedArrowRight01,
+                        strokeWidth: 1.9, size: 16, color: Color(0xffA1A1AA)),
                     ],
                   ],
                 ],
@@ -809,12 +793,8 @@ class _PickerSheet extends StatelessWidget {
                             ),
                           ),
                           if (selected)
-                            HugeIcon(
-                              icon: HugeIcons.strokeRoundedTick02,
-                              color: primary,
-                              size: 18,
-                              strokeWidth: 1.9,
-                            ),
+                            HugeIcon(icon: HugeIcons.strokeRoundedTick02,
+                              strokeWidth: 1.9, size: 18, color: primary),
                         ],
                       ),
                     ),

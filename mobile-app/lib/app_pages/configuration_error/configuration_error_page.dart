@@ -4,6 +4,7 @@ import 'package:moi/app_configs/index.dart';
 import 'package:moi/app_firebase/firebase_remote.dart';
 import 'package:moi/app_utils/app_providers/language_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 class ConfigurationErrorPage extends StatefulWidget {
   const ConfigurationErrorPage({super.key});
@@ -132,11 +133,7 @@ class _ConfigurationErrorPageState extends State<ConfigurationErrorPage>
                           ),
                         ],
                       ),
-                      child: Icon(
-                        Icons.settings_suggest_rounded,
-                        size: 54,
-                        color: colorScheme.error,
-                      ),
+                      child: HugeIcon(icon: HugeIcons.strokeRoundedSettings02, size: 54, color: colorScheme.error, strokeWidth: 1.8),
                     ),
                   ),
                   const SizedBox(height: 32),
@@ -184,7 +181,7 @@ class _ConfigurationErrorPageState extends State<ConfigurationErrorPage>
                                 color: colorScheme.onPrimary,
                               ),
                             )
-                          : const Icon(Icons.refresh_rounded),
+                          : HugeIcon(icon: HugeIcons.strokeRoundedRefresh, size: 22, strokeWidth: 1.8),
                       label: Text(
                         _isChecking
                             ? languageProvider.tr('common.checking')

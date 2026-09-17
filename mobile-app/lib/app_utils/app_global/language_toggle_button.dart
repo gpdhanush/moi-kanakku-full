@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:moi/app_utils/app_providers/language_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 class LanguageToggleButton extends StatelessWidget {
   final Color? iconColor;
@@ -100,10 +101,10 @@ class LanguageSelectorButton extends StatelessWidget {
     String label,
   ) {
     return ListTile(
-      leading: const Icon(Icons.language),
+      leading: HugeIcon(icon: HugeIcons.strokeRoundedLanguageCircle, size: 22, strokeWidth: 1.8),
       title: Text(label),
       trailing: languageProvider.currentLanguage == code
-          ? const Icon(Icons.check, color: Colors.green)
+          ? HugeIcon(icon: HugeIcons.strokeRoundedTick02, size: 22, color: Colors.green, strokeWidth: 1.8)
           : null,
       onTap: () {
         languageProvider.setLanguage(code);
@@ -115,7 +116,7 @@ class LanguageSelectorButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return IconButton(
-      icon: Icon(Icons.language, color: iconColor ?? Colors.white),
+      icon: HugeIcon(icon: HugeIcons.strokeRoundedLanguageCircle, size: 22, color: iconColor ?? Colors.white, strokeWidth: 1.8),
       onPressed: () => _showLanguageDialog(context),
       tooltip: context.read<LanguageProvider>().tr('common.changeLanguage'),
     );

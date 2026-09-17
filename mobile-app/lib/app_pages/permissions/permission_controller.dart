@@ -4,12 +4,13 @@ import 'package:moi/app_configs/index.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'dart:io';
 import 'package:moi/app_storages/secure_storages.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 class PermissionInfo {
   final String id;
   final String name;
   final String description;
-  final IconData icon;
+  final List<List<dynamic>> icon;
   final Permission permission;
 
   PermissionInfo({
@@ -39,21 +40,21 @@ class PermissionController extends ChangeNotifier {
         id: 'notifications',
         name: 'அறிவிப்புகள்',
         description: 'முக்கியமான அறிவிப்புகள் மற்றும் புதுப்பித்தல்களைப் பெற',
-        icon: Icons.notifications_outlined,
+        icon: HugeIcons.strokeRoundedNotification01,
         permission: Permission.notification,
       ),
       PermissionInfo(
         id: 'camera',
         name: 'கேமரா',
         description: 'புகைப்படங்கள் எடுக்கவும் பயன்பாட்டில் பயன்படுத்தவும்',
-        icon: Icons.camera_alt_outlined,
+        icon: HugeIcons.strokeRoundedCamera01,
         permission: Permission.camera,
       ),
       PermissionInfo(
         id: 'microphone',
         name: 'மைக்ரோஃபோன்',
         description: 'ஒலி பதிவு மற்றும் பேச்சு-உரை மாற்றத்திற்கு',
-        icon: Icons.mic_outlined,
+        icon: HugeIcons.strokeRoundedMic01,
         permission: Permission.microphone,
       ),
     ];
@@ -67,7 +68,7 @@ class PermissionController extends ChangeNotifier {
             id: 'photos',
             name: 'புகைப்படங்கள்',
             description: 'புகைப்படங்களை அணுகவும் பகிரவும்',
-            icon: Icons.photo_library_outlined,
+            icon: HugeIcons.strokeRoundedAlbum01,
             permission: Permission.storage,
           ),
         );
@@ -78,7 +79,7 @@ class PermissionController extends ChangeNotifier {
           id: 'photos',
           name: 'புகைப்படங்கள்',
           description: 'புகைப்படங்களை அணுகவும் பகிரவும்',
-          icon: Icons.photo_library_outlined,
+          icon: HugeIcons.strokeRoundedAlbum01,
           permission: Permission.photos,
         ),
       );

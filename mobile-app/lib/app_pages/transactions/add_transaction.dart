@@ -312,16 +312,28 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
   Widget build(BuildContext context) {
     return Consumer<LanguageProvider>(
       builder: (context, languageProvider, _) {
+        final accent = _isReceived ? AppColors.moiReceived : AppColors.moiGiven;
+        final softTop = _isReceived
+            ? AppColors.moiReceivedSoft
+            : AppColors.moiGivenSoft;
+        final softBottom = _isReceived
+            ? const Color(0xffD1FAE5)
+            : const Color(0xffFFE4E6);
+        final flowLabel = _isReceived
+            ? languageProvider.tr('moi.moiIn')
+            : languageProvider.tr('moi.moiOut');
         final title = widget.isEdit
             ? languageProvider.tr('transactions.updateTitle')
             : _isReceived
-            ? languageProvider.tr('transactions.receivedTitle')
-            : languageProvider.tr('transactions.givenTitle');
+            ? languageProvider.tr('transactions.newInvest')
+            : languageProvider.tr('transactions.newReturn');
 
         return Scaffold(
           backgroundColor: AppColors.background,
-          appBar: _FormAppHeader(
+          appBar: MoiFlowAppHeader(
             title: title.toUpperCase(),
+            subtitle: widget.isEdit ? null : flowLabel,
+            accent: accent,
             onBack: () => Navigator.pop(context),
           ),
           body: Column(
@@ -337,65 +349,93 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
                   ),
                   child: Form(
                     key: _formKey,
-                    child: _FormSectionCard(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        _buildFunctionDropdown(languageProvider),
-                        if (isCustomFunction) ...[
+                        if (!widget.isEdit) ...[
+                          _FlowIntroCard(
+                            title: flowLabel,
+                            subtitle: _isReceived
+                                ? languageProvider.tr(
+                                    'transactions.addReceived',
+                                  )
+                                : languageProvider.tr(
+                                    'transactions.addGiven',
+                                  ),
+                            accent: accent,
+                            softTop: softTop,
+                            softBottom: softBottom,
+                            icon: _isReceived
+                                ? HugeIcons.strokeRoundedArrowDownLeft01
+                                : HugeIcons.strokeRoundedArrowUpRight01,
+                          ),
                           const SizedBox(height: AppSpacing.md),
-                          _buildCustomFunctionField(languageProvider),
                         ],
-                        const SizedBox(height: AppSpacing.md),
-                        _buildDateField(languageProvider),
-                        const SizedBox(height: AppSpacing.md),
-                        TextFormWidget(
-                          title: languageProvider.tr('transactions.amount'),
-                          controller: amountCtrl,
-                          maxLength: 7,
-                          required: false,
-                          keyboardType: TextInputType.number,
-                          inputFormatters: [
-                            FilteringTextInputFormatter.digitsOnly,
+                        _SectionCard(
+                          accent: accent,
+                          title: languageProvider
+                              .tr('transactions.transactionsSection')
+                              .toUpperCase(),
+                          children: [
+                            _buildFunctionDropdown(languageProvider),
+                            if (isCustomFunction) ...[
+                              const SizedBox(height: AppSpacing.md),
+                              _buildCustomFunctionField(languageProvider),
+                            ],
+                            const SizedBox(height: AppSpacing.md),
+                            _buildDateField(languageProvider),
+                            const SizedBox(height: AppSpacing.md),
+                            TextFormWidget(
+                              title: languageProvider.tr(
+                                'transactions.amount',
+                              ),
+                              controller: amountCtrl,
+                              prefixIcon: HugeIcons.strokeRoundedMoney01,
+                              prefixText: '₹ ',
+                              maxLength: 7,
+                              required: false,
+                              keyboardType: TextInputType.number,
+                              inputFormatters: [
+                                FilteringTextInputFormatter.digitsOnly,
+                              ],
+                            ),
+                            const SizedBox(height: AppSpacing.md),
+                            TextFormWidget(
+                              title: languageProvider.tr(
+                                'transactions.thing',
+                              ),
+                              controller: thingsCtrl,
+                              prefixIcon: HugeIcons.strokeRoundedGift,
+                              required: false,
+                              maxLines: 3,
+                              enableMic: true,
+                              textInputAction: TextInputAction.done,
+                            ),
+                            const SizedBox(height: AppSpacing.md),
+                            TextFormWidget(
+                              title: languageProvider.tr(
+                                'transactions.notes',
+                              ),
+                              controller: notesCtrl,
+                              prefixIcon: HugeIcons.strokeRoundedNote,
+                              required: false,
+                              maxLines: 3,
+                              enableMic: true,
+                              textInputAction: TextInputAction.done,
+                            ),
                           ],
-                        ),
-                        const SizedBox(height: AppSpacing.md),
-                        TextFormWidget(
-                          title: languageProvider.tr('transactions.thing'),
-                          controller: thingsCtrl,
-                          required: false,
-                          maxLines: 3,
-                          enableMic: true,
-                          textInputAction: TextInputAction.done,
-                        ),
-                        const SizedBox(height: AppSpacing.md),
-                        TextFormWidget(
-                          title: languageProvider.tr('transactions.notes'),
-                          controller: notesCtrl,
-                          required: false,
-                          maxLines: 3,
-                          enableMic: true,
-                          textInputAction: TextInputAction.done,
                         ),
                       ],
                     ),
                   ),
                 ),
               ),
-              SafeArea(
-                top: false,
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    AppSpacing.page,
-                    0,
-                    AppSpacing.page,
-                    AppSpacing.md,
-                  ),
-                  child: _PrimaryActionButton(
-                    title: languageProvider.tr(
-                      widget.isEdit ? 'common.update' : 'common.save',
-                    ),
-                    onPressed: _submit,
-                  ),
+              _BottomSaveBar(
+                title: languageProvider.tr(
+                  widget.isEdit ? 'common.update' : 'common.save',
                 ),
+                accent: accent,
+                onPressed: _submit,
               ),
             ],
           ),
@@ -414,13 +454,18 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
       required: true,
       search: false,
       enableMic: false,
+      showArrow: true,
+      prefixIcon: HugeIcons.strokeRoundedWedding,
       notFoundText: languageProvider.tr('transactions.functionNotFound'),
       dropdownMenuEntries: functionsMaster
           .map((e) => e is Map ? e['name']?.toString() ?? '' : '')
           .where((name) => name.isNotEmpty)
           .toList()
           .map<DropdownMenuEntry<String>>((value) {
-            return DropdownMenuEntry<String>(value: value, label: value);
+            return DropdownMenuEntry<String>(
+              value: value,
+              label: value.toUpperCase(),
+            );
           })
           .toList(),
       onSelected: (value) {
@@ -454,6 +499,7 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
     return TextFormWidget(
       title: languageProvider.tr('transactions.customFunction'),
       controller: customFunctionCtrl,
+      prefixIcon: HugeIcons.strokeRoundedPencilEdit02,
       required: true,
       enableMic: true,
       validator: (value) => value.toString().trim().isEmpty
@@ -466,6 +512,7 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
     return TextFormWidget(
       title: languageProvider.tr('transactions.date'),
       controller: dateCtrl,
+      prefixIcon: HugeIcons.strokeRoundedCalendar01,
       required: true,
       readOnly: true,
       onTap: _selectDate,
@@ -476,204 +523,223 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
   }
 }
 
-class _FormAppHeader extends StatelessWidget implements PreferredSizeWidget {
+class _FlowIntroCard extends StatelessWidget {
   final String title;
-  final VoidCallback onBack;
+  final String subtitle;
+  final Color accent;
+  final Color softTop;
+  final Color softBottom;
+  final List<List<dynamic>> icon;
 
-  const _FormAppHeader({required this.title, required this.onBack});
-
-  @override
-  Size get preferredSize => const Size.fromHeight(72);
-
-  @override
-  Widget build(BuildContext context) {
-    final primary = Theme.of(context).colorScheme.primary;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return AppBar(
-      toolbarHeight: preferredSize.height,
-      elevation: 0,
-      scrolledUnderElevation: 0,
-      surfaceTintColor: Colors.transparent,
-      backgroundColor: Colors.transparent,
-      centerTitle: true,
-      automaticallyImplyLeading: false,
-      titleSpacing: 0,
-      systemOverlayStyle: SystemUiOverlayStyle.light.copyWith(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
-        statusBarBrightness: Brightness.dark,
-        systemNavigationBarColor: isDark ? Colors.black : Colors.white,
-        systemNavigationBarIconBrightness:
-            isDark ? Brightness.light : Brightness.dark,
-      ),
-      flexibleSpace: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              primary,
-              Color.lerp(primary, const Color(0xff0A3D8F), 0.35)!,
-            ],
-          ),
-          borderRadius: const BorderRadius.only(
-            bottomLeft: Radius.circular(22),
-            bottomRight: Radius.circular(22),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: primary.withValues(alpha: 0.28),
-              blurRadius: 16,
-              offset: const Offset(0, 6),
-            ),
-          ],
-        ),
-        child: Stack(
-          children: [
-            Positioned(
-              top: -28,
-              right: -18,
-              child: Container(
-                width: 100,
-                height: 100,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withValues(alpha: 0.08),
-                ),
-              ),
-            ),
-            Positioned(
-              bottom: -36,
-              left: 48,
-              child: Container(
-                width: 90,
-                height: 90,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withValues(alpha: 0.06),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(22),
-          bottomRight: Radius.circular(22),
-        ),
-      ),
-      leadingWidth: 54,
-      leading: Padding(
-        padding: const EdgeInsets.only(left: 10),
-        child: Center(
-          child: Material(
-            color: Colors.white.withValues(alpha: 0.14),
-            shape: const CircleBorder(),
-            clipBehavior: Clip.antiAlias,
-            child: InkWell(
-              onTap: onBack,
-              customBorder: const CircleBorder(),
-              child: const SizedBox(
-                width: 42,
-                height: 42,
-                child: Center(
-                  child: HugeIcon(
-                    icon: HugeIcons.strokeRoundedArrowLeft01,
-                    color: Colors.white,
-                    size: 22,
-                    strokeWidth: 1.9,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-      title: Text(
-        title,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        textAlign: TextAlign.center,
-        style: AppTypography.sectionTitle.copyWith(
-          color: Colors.white,
-          fontSize: 16,
-          fontWeight: FontWeight.w700,
-          letterSpacing: -0.2,
-        ),
-      ),
-      actions: const [SizedBox(width: 54)],
-    );
-  }
-}
-
-class _FormSectionCard extends StatelessWidget {
-  final List<Widget> children;
-
-  const _FormSectionCard({required this.children});
+  const _FlowIntroCard({
+    required this.title,
+    required this.subtitle,
+    required this.accent,
+    required this.softTop,
+    required this.softBottom,
+    required this.icon,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(14, 16, 14, 16),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: AppShadows.soft,
+        borderRadius: AppRadius.lgAll,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [softTop, softBottom],
+        ),
+        border: Border.all(color: accent.withValues(alpha: 0.2)),
+        boxShadow: [
+          BoxShadow(
+            color: accent.withValues(alpha: 0.12),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: children,
+      child: Row(
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.85),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: accent.withValues(alpha: 0.18)),
+            ),
+            alignment: Alignment.center,
+            child: HugeIcon(
+              icon: icon,
+              color: accent,
+              size: 22,
+              strokeWidth: 1.9,
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: AppTypography.label.copyWith(
+                    color: accent,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  subtitle,
+                  style: AppTypography.body.copyWith(
+                    color: accent.withValues(alpha: 0.8),
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
 }
 
-class _PrimaryActionButton extends StatelessWidget {
+class _SectionCard extends StatelessWidget {
   final String title;
-  final VoidCallback onPressed;
+  final Color accent;
+  final List<Widget> children;
 
-  const _PrimaryActionButton({required this.title, required this.onPressed});
+  const _SectionCard({
+    required this.title,
+    required this.accent,
+    required this.children,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final primary = Theme.of(context).colorScheme.primary;
-
-    return Material(
-      color: Colors.transparent,
-      borderRadius: BorderRadius.circular(14),
-      child: InkWell(
-        onTap: onPressed,
-        borderRadius: BorderRadius.circular(14),
-        child: Ink(
-          height: 52,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(14),
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                primary,
-                Color.lerp(primary, const Color(0xff0A3D8F), 0.28)!,
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xffE4E4E7)),
+        boxShadow: AppShadows.soft,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
+            child: Row(
+              children: [
+                Container(
+                  width: 3,
+                  height: 14,
+                  decoration: BoxDecoration(
+                    color: accent,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: AppTypography.label.copyWith(
+                      color: AppColors.textPrimary,
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.35,
+                    ),
+                  ),
+                ),
               ],
             ),
-            boxShadow: [
-              BoxShadow(
-                color: primary.withValues(alpha: 0.28),
-                blurRadius: 14,
-                offset: const Offset(0, 6),
-              ),
-            ],
           ),
-          child: Center(
-            child: Text(
-              title,
-              style: AppTypography.label.copyWith(
-                color: Colors.white,
-                fontSize: 15,
-                fontWeight: FontWeight.w700,
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 18),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: children,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _BottomSaveBar extends StatelessWidget {
+  final String title;
+  final Color accent;
+  final VoidCallback onPressed;
+
+  const _BottomSaveBar({
+    required this.title,
+    required this.accent,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border(
+          top: BorderSide(color: AppColors.borderSubtle.withValues(alpha: 0.9)),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 12,
+            offset: const Offset(0, -4),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.page,
+            12,
+            AppSpacing.page,
+            12,
+          ),
+          child: Material(
+            color: Colors.transparent,
+            borderRadius: BorderRadius.circular(14),
+            child: InkWell(
+              onTap: onPressed,
+              borderRadius: BorderRadius.circular(14),
+              child: Ink(
+                height: 50,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(14),
+                  color: accent,
+                  boxShadow: [
+                    BoxShadow(
+                      color: accent.withValues(alpha: 0.26),
+                      blurRadius: 12,
+                      offset: const Offset(0, 5),
+                    ),
+                  ],
+                ),
+                child: Center(
+                  child: Text(
+                    title,
+                    style: AppTypography.label.copyWith(
+                      color: Colors.white,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
               ),
             ),
           ),

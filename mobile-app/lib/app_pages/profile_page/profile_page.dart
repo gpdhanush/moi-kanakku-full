@@ -398,12 +398,8 @@ class _ProfilePageState extends State<ProfilePage> {
                             borderRadius: BorderRadius.circular(8),
                           ),
                           alignment: Alignment.center,
-                          child: HugeIcon(
-                            icon: HugeIcons.strokeRoundedPencilEdit02,
-                            color: primary,
-                            size: 14,
-                            strokeWidth: 1.8,
-                          ),
+                          child: HugeIcon(icon: HugeIcons.strokeRoundedPencilEdit02,
+                            strokeWidth: 1.8, size: 14, color: primary),
                         ),
                       ),
                     ],
@@ -479,7 +475,7 @@ class _ProfilePageState extends State<ProfilePage> {
               title: languageProvider.tr('profile.name'),
               controller: _nameCtrl,
               required: true,
-              // prefixIcon: Icons.person_outline_outlined, // removed
+              // prefixIcon: HugeIcons.strokeRoundedUser, // removed
               validator: (value) => value?.isEmpty == true
                   ? languageProvider.tr('profile.enterValidName')
                   : null,
@@ -510,7 +506,7 @@ class _ProfilePageState extends State<ProfilePage> {
               title: languageProvider.tr('profile.mobile'),
               controller: _mobileCtrl,
               required: false,
-              // prefixIcon: Icons.phone_outlined, // removed
+              // prefixIcon: HugeIcons.strokeRoundedCall, // removed
               keyboardType: TextInputType.phone,
               validator: (value) {
                 return PhoneValidator.validatePhone(value, required: false);
@@ -769,14 +765,10 @@ class _ProfilePageState extends State<ProfilePage> {
                   ],
                 ),
               ),
-              HugeIcon(
-                icon: HugeIcons.strokeRoundedArrowRight01,
-                color: isDestructive
+              HugeIcon(icon: HugeIcons.strokeRoundedArrowRight01,
+                strokeWidth: 1.9, size: 16, color: isDestructive
                     ? AppColors.moiGiven.withValues(alpha: 0.55)
-                    : const Color(0xffA1A1AA),
-                size: 16,
-                strokeWidth: 1.9,
-              ),
+                    : const Color(0xffA1A1AA)),
             ],
           ),
         ),
@@ -1407,12 +1399,8 @@ class _ProfileAppHeader extends StatelessWidget implements PreferredSizeWidget {
                 width: 42,
                 height: 42,
                 child: Center(
-                  child: HugeIcon(
-                    icon: HugeIcons.strokeRoundedArrowLeft01,
-                    color: Colors.white,
-                    size: 22,
-                    strokeWidth: 1.9,
-                  ),
+                  child: HugeIcon(icon: HugeIcons.strokeRoundedArrowLeft01,
+                    strokeWidth: 1.9, size: 22, color: Colors.white),
                 ),
               ),
             ),

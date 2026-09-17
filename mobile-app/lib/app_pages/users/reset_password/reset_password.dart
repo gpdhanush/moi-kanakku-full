@@ -5,6 +5,7 @@ import 'package:moi/app_services/user_services.dart';
 import 'package:moi/app_utils/index.dart';
 import 'package:moi/app_utils/app_providers/language_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 class ResetPassword extends StatefulWidget {
   final String email;
@@ -57,14 +58,14 @@ class _ResetPasswordState extends State<ResetPassword> {
                         padding: const EdgeInsets.symmetric(horizontal: 15),
                         child: TextFormWidget(
                           title: languageProvider.tr('auth.newPassword'),
-                          prefixIcon: Icons.lock_outlined,
+                          prefixIcon: HugeIcons.strokeRoundedLockPassword,
                           obscureText: showPass,
                           obscuringCharacter: '●',
                           maxLength: 16,
                           suffixIconTrue: true,
                           suffixIcon: showPass
-                              ? Icons.visibility_outlined
-                              : Icons.visibility_off_outlined,
+                              ? HugeIcons.strokeRoundedView
+                              : HugeIcons.strokeRoundedViewOffSlash,
                           suffixIconOnPressed: () {
                             setState(() {
                               showPass = !showPass;
@@ -94,7 +95,7 @@ class _ResetPasswordState extends State<ResetPassword> {
                         child: TextFormWidget(
                           obscureText: showCPass,
                           title: languageProvider.tr('auth.confirmPassword'),
-                          prefixIcon: Icons.lock_outlined,
+                          prefixIcon: HugeIcons.strokeRoundedLockPassword,
                           obscuringCharacter: '●',
                           maxLength: 16,
                           textInputAction: TextInputAction.done,
@@ -118,8 +119,8 @@ class _ResetPasswordState extends State<ResetPassword> {
                           },
                           suffixIconTrue: true,
                           suffixIcon: showCPass
-                              ? Icons.visibility_outlined
-                              : Icons.visibility_off_outlined,
+                              ? HugeIcons.strokeRoundedView
+                              : HugeIcons.strokeRoundedViewOffSlash,
                           suffixIconOnPressed: () {
                             setState(() {
                               showCPass = !showCPass;
@@ -221,11 +222,7 @@ class _ResetPasswordState extends State<ResetPassword> {
                 child: const SizedBox(
                   width: 42,
                   height: 42,
-                  child: Icon(
-                    Icons.arrow_back_ios_new_rounded,
-                    color: Colors.white,
-                    size: 18,
-                  ),
+                  child: HugeIcon(icon: HugeIcons.strokeRoundedArrowLeft01, size: 18, color: Colors.white, strokeWidth: 1.8),
                 ),
               ),
             ),

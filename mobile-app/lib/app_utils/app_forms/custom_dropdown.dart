@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 import 'field_label.dart';
 import 'mic_icon_widget.dart';
@@ -17,7 +18,7 @@ class CustomDropdown extends StatefulWidget {
   final dynamic initialSelection;
 
   /// prefix icon to show inside the anchor, same as [TextFormWidget]
-  final IconData? prefixIcon;
+  final List<List<dynamic>>? prefixIcon;
   final Color? iconColor;
 
   /// whether the dropdown arrow (the toggle button) should be displayed.
@@ -29,7 +30,7 @@ class CustomDropdown extends StatefulWidget {
 
   /// show a generic suffix icon to the left of the dropdown arrow
   final bool? suffixIconTrue;
-  final IconData? suffixIcon;
+  final List<List<dynamic>>? suffixIcon;
   final VoidCallback? suffixIconOnPressed;
 
   /// if true a microphone icon is shown (and [onMicSubmit] is called with
@@ -181,9 +182,11 @@ class _CustomDropdownState extends State<CustomDropdown> {
               requestFocusOnTap: widget.search ?? false,
               controller: _ctrl,
               leadingIcon: widget.prefixIcon != null
-                  ? Icon(
-                      widget.prefixIcon,
+                  ? HugeIcon(
+                      icon: widget.prefixIcon!,
                       color: widget.iconColor ?? theme.colorScheme.primary,
+                      size: 22,
+                      strokeWidth: 1.8,
                     )
                   : null,
               textStyle: theme.textTheme.bodyMedium?.copyWith(
@@ -208,9 +211,11 @@ class _CustomDropdownState extends State<CustomDropdown> {
                   //   vertical: 1,
                   // ),
                   prefixIcon: widget.prefixIcon != null
-                      ? Icon(
-                          widget.prefixIcon,
+                      ? HugeIcon(
+                          icon: widget.prefixIcon!,
                           color: widget.iconColor ?? theme.colorScheme.primary,
+                          size: 22,
+                          strokeWidth: 1.8,
                         )
                       : null,
                 );
@@ -223,9 +228,11 @@ class _CustomDropdownState extends State<CustomDropdown> {
                     IconButton(
                       padding: EdgeInsets.zero,
                       visualDensity: VisualDensity.adaptivePlatformDensity,
-                      icon: Icon(
-                        widget.suffixIcon!,
+                      icon: HugeIcon(
+                        icon: widget.suffixIcon!,
                         color: theme.colorScheme.primary,
+                        size: 22,
+                        strokeWidth: 1.8,
                       ),
                       onPressed: widget.suffixIconOnPressed,
                     ),
@@ -255,10 +262,13 @@ class _CustomDropdownState extends State<CustomDropdown> {
                   Widget arrow = IconButton(
                     padding: EdgeInsets.zero,
                     visualDensity: VisualDensity.adaptivePlatformDensity,
-                    icon: Icon(
-                      controller.isOpen
-                          ? Icons.arrow_drop_up
-                          : Icons.arrow_drop_down,
+                    icon: HugeIcon(
+                      icon: controller.isOpen
+                          ? HugeIcons.strokeRoundedArrowUp01
+                          : HugeIcons.strokeRoundedArrowDown01,
+                      color: widget.iconColor ?? theme.colorScheme.primary,
+                      size: 22,
+                      strokeWidth: 1.8,
                     ),
                     onPressed: () {
                       // open/close regardless of enabled state; DropdownMenu

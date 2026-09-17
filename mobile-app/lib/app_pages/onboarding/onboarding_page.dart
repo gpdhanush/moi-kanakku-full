@@ -3,6 +3,7 @@ import 'package:moi/app_configs/app_variables.dart';
 import 'package:moi/app_storages/secure_storages.dart';
 import 'package:moi/app_utils/app_providers/language_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 class OnboardingPage extends StatefulWidget {
   const OnboardingPage({super.key});
@@ -15,19 +16,19 @@ class _OnboardingPageState extends State<OnboardingPage> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
 
-  final List<_OnboardingItem> _items = const [
+  final List<_OnboardingItem> _items = [
     _OnboardingItem(
-      icon: Icons.celebration_rounded,
+      icon: HugeIcons.strokeRoundedWedding,
       titleKey: 'onboarding.slide1Title',
       subtitleKey: 'onboarding.slide1Subtitle',
     ),
     _OnboardingItem(
-      icon: Icons.card_giftcard_rounded,
+      icon: HugeIcons.strokeRoundedGift,
       titleKey: 'onboarding.slide2Title',
       subtitleKey: 'onboarding.slide2Subtitle',
     ),
     _OnboardingItem(
-      icon: Icons.picture_as_pdf_rounded,
+      icon: HugeIcons.strokeRoundedPdf02,
       titleKey: 'onboarding.slide3Title',
       subtitleKey: 'onboarding.slide3Subtitle',
     ),
@@ -177,10 +178,11 @@ class _OnboardingPageState extends State<OnboardingPage> {
                                 ),
                               ],
                             ),
-                            child: Icon(
-                              item.icon,
+                            child: HugeIcon(
+                              icon: item.icon,
                               size: 64,
                               color: colorScheme.primary,
+                              strokeWidth: 1.8,
                             ),
                           ),
                           const SizedBox(height: 48),
@@ -279,11 +281,11 @@ class _OnboardingPageState extends State<OnboardingPage> {
 }
 
 class _OnboardingItem {
-  final IconData icon;
+  final List<List<dynamic>> icon;
   final String titleKey;
   final String subtitleKey;
 
-  const _OnboardingItem({
+  _OnboardingItem({
     required this.icon,
     required this.titleKey,
     required this.subtitleKey,

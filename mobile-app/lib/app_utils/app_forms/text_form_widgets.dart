@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:moi/app_themes/app_colors.dart';
 import 'package:moi/app_themes/app_custom_themes.dart';
 import 'package:moi/app_themes/app_typography.dart';
@@ -16,7 +17,7 @@ class TextFormWidget extends StatelessWidget {
   final String? hintText;
   final TextInputType? keyboardType;
   final TextInputAction? textInputAction;
-  final IconData? prefixIcon;
+  final List<List<dynamic>>? prefixIcon;
   final Color? iconColor;
   final TextEditingController? controller;
   final FormFieldValidator<String>? validator;
@@ -29,7 +30,7 @@ class TextFormWidget extends StatelessWidget {
   final GestureTapCallback? onTap;
   final List<TextInputFormatter>? inputFormatters;
   final bool? suffixIconTrue;
-  final IconData? suffixIcon;
+  final List<List<dynamic>>? suffixIcon;
   final String? suffixText;
   final String? prefixText;
   final VoidCallback? suffixIconOnPressed;
@@ -213,7 +214,12 @@ class TextFormWidget extends StatelessWidget {
       isDense: base.isDense,
       suffixIconConstraints: const BoxConstraints(minWidth: 40, minHeight: 40),
       prefixIcon: prefixIcon != null
-          ? Icon(prefixIcon, size: 22, color: iconTint)
+          ? HugeIcon(
+              icon: prefixIcon!,
+              size: 22,
+              color: iconTint,
+              strokeWidth: 1.8,
+            )
           : null,
       prefixIconConstraints: const BoxConstraints(minHeight: 40, minWidth: 44),
       suffixIcon: getSuffix(controller, context),
@@ -245,7 +251,12 @@ class TextFormWidget extends StatelessWidget {
           child: IconButton(
             padding: EdgeInsets.zero,
             visualDensity: VisualDensity.compact,
-            icon: Icon(suffixIcon, size: 22, color: iconTint),
+            icon: HugeIcon(
+              icon: suffixIcon!,
+              size: 22,
+              color: iconTint,
+              strokeWidth: 1.8,
+            ),
             onPressed: suffixIconOnPressed,
           ),
         ),

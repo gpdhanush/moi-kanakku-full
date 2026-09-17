@@ -289,19 +289,50 @@ class _FunctionTransactionListState extends State<FunctionTransactionList> {
                           ),
                           itemCount: searchHistory.length,
                           separatorBuilder: (_, _) =>
-                              const SizedBox(height: 8),
+                              const SizedBox(height: 12),
                           itemBuilder: (context, index) {
-                            return _TransactionCard(
-                              transaction: searchHistory[index],
-                              formatAmount: _formatAmount,
-                              unknownLabel: languageProvider.tr(
-                                'transactionList.unknown',
-                              ),
+                            final tx = searchHistory[index];
+                            final type =
+                                tx['type']?.toString().toUpperCase() ?? '';
+                            final isInvest = type == 'INVEST';
+                            final amount =
+                                double.tryParse(
+                                      tx['amount']?.toString() ?? '0',
+                                    ) ??
+                                    0.0;
+                            final first =
+                                tx['person']?['firstName']?.toString().trim() ??
+                                '';
+                            final last =
+                                tx['person']?['lastName']?.toString().trim() ??
+                                tx['person']?['secondName']
+                                    ?.toString()
+                                    .trim() ??
+                                '';
+                            final personName = '$first $last'.trim();
+                            final city =
+                                tx['person']?['city']?.toString().trim() ?? '';
+                            final location =
+                                tx['person']?['location']?.toString().trim() ??
+                                '';
+                            final place = city.isNotEmpty
+                                ? city
+                                : location;
+
+                            return MoiInvoiceListTile.moiFlow(
+                              isReceived: isInvest,
+                              title: personName.isEmpty
+                                  ? languageProvider.tr(
+                                      'transactionList.unknown',
+                                    )
+                                  : personName,
+                              subtitle: place.toUpperCase(),
+                              amount: '₹${_formatAmount(amount)}',
                               onTap: () {
                                 Navigator.pushNamed(
                                   context,
                                   'transaction-detail-view',
-                                  arguments: searchHistory[index],
+                                  arguments: tx,
                                 );
                               },
                             );
@@ -475,121 +506,6 @@ class _FunctionListHeader extends StatelessWidget
           ),
         ),
       ],
-    );
-  }
-}
-
-class _TransactionCard extends StatelessWidget {
-  final dynamic transaction;
-  final String Function(double) formatAmount;
-  final String unknownLabel;
-  final VoidCallback onTap;
-
-  const _TransactionCard({
-    required this.transaction,
-    required this.formatAmount,
-    required this.unknownLabel,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final type = transaction['type']?.toString().toUpperCase() ?? '';
-    final isInvest = type == 'INVEST';
-    final amount =
-        double.tryParse(transaction['amount']?.toString() ?? '0') ?? 0.0;
-    final personName =
-        "${transaction['person']?['firstName']?.toString() ?? ''} ${transaction['person']?['lastName']?.toString().toTitleCase() ?? ''}"
-            .trim();
-    final city = transaction['person']?['city']?.toString().trim() ?? '';
-    final accent = isInvest ? AppColors.moiReceived : AppColors.moiGiven;
-    final soft =
-        isInvest ? AppColors.moiReceivedSoft : AppColors.moiGivenSoft;
-
-    return Material(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(14),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
-        child: Ink(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(14),
-            boxShadow: AppShadows.soft,
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: soft,
-                  borderRadius: BorderRadius.circular(11),
-                ),
-                alignment: Alignment.center,
-                child: HugeIcon(
-                  icon: HugeIcons.strokeRoundedUser,
-                  color: accent,
-                  size: 18,
-                  strokeWidth: 1.9,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      personName.isEmpty
-                          ? unknownLabel
-                          : personName.toUpperCase(),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTypography.label.copyWith(
-                        color: AppColors.textPrimary,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: -0.1,
-                      ),
-                    ),
-                    if (city.isNotEmpty) ...[
-                      const SizedBox(height: 3),
-                      Text(
-                        city.toUpperCase(),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: AppTypography.body.copyWith(
-                          fontSize: 12,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                '₹ ${formatAmount(amount)}',
-                style: AppTypography.amountMedium.copyWith(
-                  color: accent,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: -0.2,
-                ),
-              ),
-              const SizedBox(width: 4),
-              HugeIcon(
-                icon: HugeIcons.strokeRoundedArrowRight01,
-                color: const Color(0xffA1A1AA),
-                size: 15,
-                strokeWidth: 1.9,
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }

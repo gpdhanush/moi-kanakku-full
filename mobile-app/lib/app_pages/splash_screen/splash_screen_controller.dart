@@ -19,17 +19,22 @@ class SplashScreenController extends ChangeNotifier {
   String _version = '';
   double _progress = 0;
   String _statusLabel = 'Starting…';
+  bool _isDisposed = false;
 
   String get version => _version;
   double get progress => _progress;
   int get progressPercent => (_progress * 100).clamp(0, 100).round();
   String get statusLabel => _statusLabel;
 
+  bool get _isActive => !_isDisposed;
+
   void setContext(BuildContext context) {
+    if (_isDisposed) return;
     _context = context;
   }
 
   Future<void> _setProgress(double value, String label) async {
+    if (!_isActive) return;
     _progress = value.clamp(0.0, 1.0);
     _statusLabel = label;
     notifyListeners();
@@ -38,28 +43,36 @@ class SplashScreenController extends ChangeNotifier {
   }
 
   Future<void> init() async {
+    if (!_isActive) return;
+
     await _setProgress(0.08, 'Preparing app…');
+    if (!_isActive) return;
+
     await _fetchAppVersion();
-    if (_context == null) return;
+    if (!_isActive || _context == null) return;
 
     await _setProgress(0.28, 'Checking configuration…');
+    if (!_isActive) return;
+
     final remoteConfig = await getFirebaseRemoteConfig(forceRefresh: true);
-    if (_context == null) return;
+    if (!_isActive || _context == null) return;
 
     await _setProgress(0.48, 'Validating services…');
+    if (!_isActive) return;
+
     final startupConfig = ApiStartupConfig.applyStartupValidation(
       baseUrl: appBaseUri,
       apiKey: apiSecretKey,
     );
     if (!startupConfig.isValid) {
-      await _setProgress(1.0, 'Ready');
       await navigation('configuration_error');
       return;
     }
 
     await _setProgress(0.62, 'Checking updates…');
+    if (!_isActive) return;
+
     if (remoteConfig?.maintenanceMode == true) {
-      await _setProgress(1.0, 'Ready');
       await navigation('maintenance');
       return;
     }
@@ -67,7 +80,7 @@ class SplashScreenController extends ChangeNotifier {
     final minAppVersion = remoteConfig?.minAppVersion ?? '';
     if (isVersionBelowMinimum(_version, minAppVersion)) {
       await _setProgress(1.0, 'Update required');
-      if (_context == null || !_context!.mounted) return;
+      if (!_isActive || _context == null || !_context!.mounted) return;
       await ForceUpdateDialog.show(
         _context!,
         currentVersion: _version,
@@ -77,11 +90,14 @@ class SplashScreenController extends ChangeNotifier {
     }
 
     await _setProgress(0.82, 'Finishing up…');
+    if (!_isActive) return;
+
     await getRoute();
   }
 
   Future<void> _fetchAppVersion() async {
-    PackageInfo packageInfo = await PackageInfo.fromPlatform();
+    final packageInfo = await PackageInfo.fromPlatform();
+    if (!_isActive) return;
     _version = "${packageInfo.version}.${packageInfo.buildNumber}";
     appVersion = _version;
     notifyListeners();
@@ -89,13 +105,13 @@ class SplashScreenController extends ChangeNotifier {
 
   Future<void> navigation(String route) async {
     await _setProgress(1.0, 'Ready');
-    if (_context == null) return;
-    if (!(_context!.mounted)) return;
+    if (!_isActive || _context == null || !_context!.mounted) return;
     await Navigator.pushNamedAndRemoveUntil(_context!, route, (route) => false);
   }
 
   Future<void> _handleBiometricFlow() async {
     final check = await AppBioMetric().checkBioMetric();
+    if (!_isActive) return;
     if (check.toString() == "true") {
       await navigation("home");
     } else {
@@ -104,12 +120,14 @@ class SplashScreenController extends ChangeNotifier {
   }
 
   Future<void> getRoute() async {
-    if (_context == null) return;
+    if (!_isActive || _context == null) return;
 
     isLoggedIn = await secureStorage.get(AppVariables.isLogin) ?? false;
+    if (!_isActive) return;
 
     if (isLoggedIn) {
       isBioLock = await secureStorage.get(AppVariables.appLock) ?? false;
+      if (!_isActive) return;
       if (isBioLock) {
         await _handleBiometricFlow();
       } else {
@@ -120,6 +138,7 @@ class SplashScreenController extends ChangeNotifier {
 
     final permissionsRequested =
         await secureStorage.hasPermissionsBeenRequested();
+    if (!_isActive) return;
 
     if (!permissionsRequested) {
       await navigation("permissions");
@@ -130,6 +149,7 @@ class SplashScreenController extends ChangeNotifier {
 
   @override
   void dispose() {
+    _isDisposed = true;
     _context = null;
     super.dispose();
   }

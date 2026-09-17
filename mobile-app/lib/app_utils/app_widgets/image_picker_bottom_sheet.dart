@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 enum ImagePickerAction { gallery, camera, delete }
 
@@ -61,7 +62,7 @@ class ImagePickerBottomSheet extends StatelessWidget {
       options.add(
         _buildOption(
           context,
-          icon: Icons.delete_outline_rounded,
+          icon: HugeIcons.strokeRoundedDelete02,
           label: deleteLabel,
           color: Colors.redAccent,
           onTap: () => Navigator.pop(context, ImagePickerAction.delete),
@@ -72,7 +73,7 @@ class ImagePickerBottomSheet extends StatelessWidget {
       options.add(
         _buildOption(
           context,
-          icon: Icons.photo_library_outlined,
+          icon: HugeIcons.strokeRoundedAlbum01,
           label: galleryLabel,
           color: colorScheme.primary,
           onTap: () => Navigator.pop(context, ImagePickerAction.gallery),
@@ -83,7 +84,7 @@ class ImagePickerBottomSheet extends StatelessWidget {
       options.add(
         _buildOption(
           context,
-          icon: Icons.camera_alt_outlined,
+          icon: HugeIcons.strokeRoundedCamera01,
           label: cameraLabel,
           color: colorScheme.primary,
           onTap: () => Navigator.pop(context, ImagePickerAction.camera),
@@ -127,11 +128,7 @@ class ImagePickerBottomSheet extends StatelessWidget {
                     color: colorScheme.primary,
                     borderRadius: BorderRadius.circular(5),
                   ),
-                  child: Icon(
-                    Icons.add_photo_alternate_outlined,
-                    color: colorScheme.onPrimary,
-                    size: 23,
-                  ),
+                  child: HugeIcon(icon: HugeIcons.strokeRoundedImageAdd01, size: 23, color: colorScheme.onPrimary, strokeWidth: 1.8),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -166,7 +163,7 @@ class ImagePickerBottomSheet extends StatelessWidget {
 
   Widget _buildOption(
     BuildContext context, {
-    required IconData icon,
+    required List<List<dynamic>> icon,
     required String label,
     required Color color,
     required VoidCallback onTap,
@@ -190,7 +187,12 @@ class ImagePickerBottomSheet extends StatelessWidget {
                     color: color,
                     borderRadius: BorderRadius.circular(5),
                   ),
-                  child: Icon(icon, color: Colors.white, size: 20),
+                  child: HugeIcon(
+                    icon: icon,
+                    color: Colors.white,
+                    size: 20,
+                    strokeWidth: 1.8,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
