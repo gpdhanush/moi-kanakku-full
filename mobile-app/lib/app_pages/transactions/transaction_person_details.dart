@@ -268,7 +268,6 @@ class _TransactionPersonDetailsState extends State<TransactionPersonDetails> {
               : null,
           accent: accent,
           isInvest: isInvest,
-          typeLabel: languageProvider.tr(isInvest ? 'moi.moiIn' : 'moi.moiOut'),
           onTap: () => _showTransactionSheet(tx),
         );
       },
@@ -572,82 +571,6 @@ class _PersonDetailsHeader extends StatelessWidget
   }
 }
 
-class _PersonSummaryCard extends StatelessWidget {
-  final Color primary;
-  final String name;
-  final String subtitle;
-
-  const _PersonSummaryCard({
-    required this.primary,
-    required this.name,
-    required this.subtitle,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: AppShadows.soft,
-        border: Border.all(color: const Color(0xffE4E4E7)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: primary.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            alignment: Alignment.center,
-            child: HugeIcon(
-              icon: HugeIcons.strokeRoundedUser,
-              color: primary,
-              size: 22,
-              strokeWidth: 1.8,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppTypography.label.copyWith(
-                    color: AppColors.textPrimary,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                if (subtitle.isNotEmpty) ...[
-                  const SizedBox(height: 3),
-                  Text(
-                    subtitle,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppTypography.body.copyWith(
-                      color: AppColors.textSecondary,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _QuickActionButton extends StatelessWidget {
   final String label;
   final Color color;
@@ -719,7 +642,6 @@ class _TransactionCard extends StatelessWidget {
   final String? amountText;
   final Color accent;
   final bool isInvest;
-  final String typeLabel;
   final VoidCallback onTap;
 
   const _TransactionCard({
@@ -728,7 +650,6 @@ class _TransactionCard extends StatelessWidget {
     required this.amountText,
     required this.accent,
     required this.isInvest,
-    required this.typeLabel,
     required this.onTap,
   });
 
@@ -784,40 +705,17 @@ class _TransactionCard extends StatelessWidget {
                         fontWeight: FontWeight.w700,
                       ),
                     ),
-                    const SizedBox(height: 3),
-                    Row(
-                      children: [
-                        if (subtitle.isNotEmpty) ...[
-                          Text(
-                            subtitle,
-                            style: AppTypography.body.copyWith(
-                              color: AppColors.textSecondary,
-                              fontSize: 11,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                        ],
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 3,
-                          ),
-                          decoration: BoxDecoration(
-                            color: accent.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Text(
-                            typeLabel,
-                            style: AppTypography.label.copyWith(
-                              color: accent,
-                              fontSize: 10,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
+                    if (subtitle.isNotEmpty) ...[
+                      const SizedBox(height: 3),
+                      Text(
+                        subtitle,
+                        style: AppTypography.body.copyWith(
+                          color: AppColors.textSecondary,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ],
                 ),
               ),
