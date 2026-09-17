@@ -17,36 +17,56 @@ class SplashScreenController extends ChangeNotifier {
   bool isBioLock = false;
   BuildContext? _context;
   String _version = '';
+  double _progress = 0;
+  String _statusLabel = 'Starting…';
 
   String get version => _version;
+  double get progress => _progress;
+  int get progressPercent => (_progress * 100).clamp(0, 100).round();
+  String get statusLabel => _statusLabel;
 
   void setContext(BuildContext context) {
     _context = context;
   }
 
+  Future<void> _setProgress(double value, String label) async {
+    _progress = value.clamp(0.0, 1.0);
+    _statusLabel = label;
+    notifyListeners();
+    // Allow the UI one frame to paint the update.
+    await Future<void>.delayed(const Duration(milliseconds: 40));
+  }
+
   Future<void> init() async {
+    await _setProgress(0.08, 'Preparing app…');
     await _fetchAppVersion();
     if (_context == null) return;
 
+    await _setProgress(0.28, 'Checking configuration…');
     final remoteConfig = await getFirebaseRemoteConfig(forceRefresh: true);
     if (_context == null) return;
 
+    await _setProgress(0.48, 'Validating services…');
     final startupConfig = ApiStartupConfig.applyStartupValidation(
       baseUrl: appBaseUri,
       apiKey: apiSecretKey,
     );
     if (!startupConfig.isValid) {
+      await _setProgress(1.0, 'Ready');
       await navigation('configuration_error');
       return;
     }
 
+    await _setProgress(0.62, 'Checking updates…');
     if (remoteConfig?.maintenanceMode == true) {
+      await _setProgress(1.0, 'Ready');
       await navigation('maintenance');
       return;
     }
 
     final minAppVersion = remoteConfig?.minAppVersion ?? '';
     if (isVersionBelowMinimum(_version, minAppVersion)) {
+      await _setProgress(1.0, 'Update required');
       if (_context == null || !_context!.mounted) return;
       await ForceUpdateDialog.show(
         _context!,
@@ -56,10 +76,10 @@ class SplashScreenController extends ChangeNotifier {
       return;
     }
 
+    await _setProgress(0.82, 'Finishing up…');
     await getRoute();
   }
 
-  // Fetches the app version from the platform
   Future<void> _fetchAppVersion() async {
     PackageInfo packageInfo = await PackageInfo.fromPlatform();
     _version = "${packageInfo.version}.${packageInfo.buildNumber}";
@@ -67,34 +87,28 @@ class SplashScreenController extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Navigates to the specified route
   Future<void> navigation(String route) async {
+    await _setProgress(1.0, 'Ready');
     if (_context == null) return;
     if (!(_context!.mounted)) return;
     await Navigator.pushNamedAndRemoveUntil(_context!, route, (route) => false);
   }
 
-  // Handles biometric verification
   Future<void> _handleBiometricFlow() async {
     final check = await AppBioMetric().checkBioMetric();
     if (check.toString() == "true") {
-      // Biometrics passed
       await navigation("home");
     } else {
-      // Biometrics failed, exit app
       FlutterExitApp.exitApp();
     }
   }
 
-  // Determines the route based on login and biometric status
   Future<void> getRoute() async {
     if (_context == null) return;
 
-    // First check if user is already logged in
     isLoggedIn = await secureStorage.get(AppVariables.isLogin) ?? false;
 
     if (isLoggedIn) {
-      // If logged in, skip permissions check and go directly to home
       isBioLock = await secureStorage.get(AppVariables.appLock) ?? false;
       if (isBioLock) {
         await _handleBiometricFlow();
@@ -104,24 +118,12 @@ class SplashScreenController extends ChangeNotifier {
       return;
     }
 
-    // Check if onboarding has been completed
-    final onboardingCompleted =
-        await secureStorage.get("onboardingCompleted") ?? false;
-
-    if (!onboardingCompleted) {
-      await navigation("onboarding");
-      return;
-    }
-
-    // User is not logged in, check permissions
-    final permissionsRequested = await secureStorage
-        .hasPermissionsBeenRequested();
+    final permissionsRequested =
+        await secureStorage.hasPermissionsBeenRequested();
 
     if (!permissionsRequested) {
-      // Navigate to permission page only if permissions haven't been requested yet
       await navigation("permissions");
     } else {
-      // Permissions already handled, go to login
       await navigation("login");
     }
   }
