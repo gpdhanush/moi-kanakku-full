@@ -20,21 +20,22 @@ class _LoginPageState extends State<LoginPage> {
   @override
   void initState() {
     super.initState();
-    pageTitleLogs("LOGIN PAGE");
-    // _controller.emailCtrl.text = "agprakash406@gmail.com";
-    // _controller.passCtrl.text = "Renzo@1995";
+    pageTitleLogs('LOGIN PAGE');
   }
 
   @override
   void dispose() {
-    super.dispose();
     _controller.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final languageProvider = context.watch<LanguageProvider>();
     final theme = Theme.of(context);
+    final primary = theme.colorScheme.primary;
+    final isKeyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
+
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: const SystemUiOverlayStyle(
         statusBarIconBrightness: Brightness.dark,
@@ -43,32 +44,45 @@ class _LoginPageState extends State<LoginPage> {
         canPop: false,
         child: SafeArea(
           child: Scaffold(
-            body: SingleChildScrollView(
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    _buildHeaderImage(),
-                    const SizedBox(height: 25),
-                    _buildTitleText(theme, languageProvider),
-                    const SizedBox(height: 25),
-                    _buildEmailField(theme, languageProvider),
-                    const SizedBox(height: 16),
-                    _buildPasswordField(theme, languageProvider),
-                    const SizedBox(height: 25),
-                    _buildLoginButton(theme, languageProvider),
-                    const SizedBox(height: 16),
-                    _buildSignupButton(context, theme, languageProvider),
-                    _buildForgotPasswordButton(
-                      context,
-                      theme,
-                      languageProvider,
+            resizeToAvoidBottomInset: true,
+            body: Column(
+              children: [
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        children: [
+                          _buildHeaderImage(),
+                          const SizedBox(height: 25),
+                          _buildTitleText(theme, languageProvider),
+                          const SizedBox(height: 25),
+                          _buildEmailField(theme, languageProvider),
+                          const SizedBox(height: 16),
+                          _buildPasswordField(theme, languageProvider),
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: Padding(
+                              padding: const EdgeInsets.only(right: 15, top: 4),
+                              child: _buildForgotPasswordButton(
+                                context,
+                                theme,
+                                languageProvider,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          _buildLoginButton(theme, languageProvider),
+                          const SizedBox(height: 50),
+                          _buildSignupSection(context, theme, languageProvider),
+                          const SizedBox(height: 12),
+                        ],
+                      ),
                     ),
-                    const SizedBox(height: 16),
-                  ],
+                  ),
                 ),
-              ),
+                if (!isKeyboardOpen) _BottomPattern(color: primary),
+              ],
             ),
           ),
         ),
@@ -96,9 +110,10 @@ class _LoginPageState extends State<LoginPage> {
             fontFamily: 'Inter',
           ),
         ),
-        SizedBox(height: 8),
+        const SizedBox(height: 8),
         Text(
           languageProvider.tr('login.subtitle'),
+          textAlign: TextAlign.center,
           style: theme.textTheme.bodyMedium?.copyWith(
             color: Colors.black87,
             fontWeight: FontWeight.normal,
@@ -137,7 +152,7 @@ class _LoginPageState extends State<LoginPage> {
         maxLength: 64,
         obscureText: _controller.showPass,
         required: true,
-        obscuringCharacter: "●",
+        obscuringCharacter: '●',
         textInputAction: TextInputAction.done,
         suffixIconTrue: true,
         suffixIcon: _controller.showPass
@@ -170,24 +185,28 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  Widget _buildSignupButton(
+  Widget _buildSignupSection(
     BuildContext context,
     ThemeData theme,
     LanguageProvider languageProvider,
   ) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 10),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        crossAxisAlignment: CrossAxisAlignment.center,
+      padding: const EdgeInsets.symmetric(horizontal: 15),
+      child: Wrap(
+        alignment: WrapAlignment.center,
+        crossAxisAlignment: WrapCrossAlignment.center,
         children: [
-          TextButton(
-            onPressed: () {
-              Navigator.pushNamed(context, "signup");
-            },
+          Text(
+            '${languageProvider.tr('login.noAccount')} ',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: Colors.black54,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          GestureDetector(
+            onTap: () => Navigator.pushNamed(context, 'signup'),
             child: Text(
               languageProvider.tr('login.createAccount'),
-              overflow: TextOverflow.ellipsis,
               style: theme.textTheme.bodyMedium?.copyWith(
                 decoration: TextDecoration.underline,
                 decorationThickness: 1.5,
@@ -209,8 +228,13 @@ class _LoginPageState extends State<LoginPage> {
   ) {
     return TextButton(
       onPressed: () {
-        Navigator.pushNamed(context, "forgot_password");
+        Navigator.pushNamed(context, 'forgot_password');
       },
+      style: TextButton.styleFrom(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+        minimumSize: Size.zero,
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      ),
       child: Text(
         languageProvider.tr('login.forgotPassword'),
         overflow: TextOverflow.ellipsis,
@@ -223,5 +247,58 @@ class _LoginPageState extends State<LoginPage> {
         ),
       ),
     );
+  }
+}
+
+class _BottomPattern extends StatelessWidget {
+  final Color color;
+
+  const _BottomPattern({required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 72,
+      width: double.infinity,
+      child: CustomPaint(painter: _LoginBottomPatternPainter(color: color)),
+    );
+  }
+}
+
+class _LoginBottomPatternPainter extends CustomPainter {
+  final Color color;
+
+  _LoginBottomPatternPainter({required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final soft = Paint()
+      ..color = color.withValues(alpha: 0.08)
+      ..style = PaintingStyle.fill;
+    final mid = Paint()
+      ..color = color.withValues(alpha: 0.12)
+      ..style = PaintingStyle.fill;
+    final dot = Paint()
+      ..color = color.withValues(alpha: 0.18)
+      ..style = PaintingStyle.fill;
+
+    canvas.drawCircle(Offset(size.width * 0.12, size.height * 1.15), 48, soft);
+    canvas.drawCircle(Offset(size.width * 0.88, size.height * 1.05), 56, soft);
+    canvas.drawCircle(Offset(size.width * 0.50, size.height * 1.35), 70, mid);
+
+    const spacing = 18.0;
+    for (double x = 10; x < size.width; x += spacing) {
+      for (double y = 18; y < size.height - 8; y += spacing) {
+        final offset = ((x / spacing).round() + (y / spacing).round()).isEven
+            ? 0.0
+            : 4.0;
+        canvas.drawCircle(Offset(x + offset, y), 1.6, dot);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _LoginBottomPatternPainter oldDelegate) {
+    return oldDelegate.color != color;
   }
 }

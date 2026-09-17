@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:intl/intl.dart';
 import 'package:moi/app_configs/index.dart';
 import 'package:moi/app_services/index.dart';
 import 'package:moi/app_storages/secure_storages.dart';
+import 'package:moi/app_themes/index.dart';
 import 'package:moi/app_utils/app_forms/custom_dropdown.dart';
 import 'package:moi/app_utils/index.dart';
 import 'package:moi/app_utils/app_providers/language_provider.dart';
@@ -45,6 +47,8 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
   String? selectedFunctionId;
   bool isCustomFunction = false;
   bool _isDisposed = false;
+
+  bool get _isReceived => widget.type == 'INVEST';
 
   @override
   void initState() {
@@ -306,92 +310,111 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
 
   @override
   Widget build(BuildContext context) {
-    final languageProvider = context.watch<LanguageProvider>();
-    final title = widget.isEdit
-        ? languageProvider.tr('transactions.updateTitle')
-        : widget.type == 'RETURN'
-        ? languageProvider.tr('transactions.receivedTitle')
-        : languageProvider.tr('transactions.givenTitle');
+    return Consumer<LanguageProvider>(
+      builder: (context, languageProvider, _) {
+        final title = widget.isEdit
+            ? languageProvider.tr('transactions.updateTitle')
+            : _isReceived
+            ? languageProvider.tr('transactions.receivedTitle')
+            : languageProvider.tr('transactions.givenTitle');
 
-    return Scaffold(
-      backgroundColor: Colors.grey.shade50,
-      appBar: AppBarWidget(title: title, action: []),
-      body: SingleChildScrollView(
-        physics: const BouncingScrollPhysics(),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildFunctionDropdown(),
-                if (isCustomFunction) ...[
-                  const SizedBox(height: 12),
-                  _buildCustomFunctionField(),
-                ],
-                const SizedBox(height: 12),
-                _buildDateField(),
-                const SizedBox(height: 12),
-                TextFormWidget(
-                  title: languageProvider.tr('transactions.amount'),
-                  prefixIcon: Icons.currency_rupee_outlined,
-                  controller: amountCtrl,
-                  maxLength: 7,
-                  required: false,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                ),
-                const SizedBox(height: 12),
-                TextFormWidget(
-                  title: languageProvider.tr('transactions.thing'),
-                  prefixIcon: Icons.category_outlined,
-                  controller: thingsCtrl,
-                  required: false,
-                  maxLines: 3,
-                  enableMic: true,
-                  textInputAction: TextInputAction.done,
-                ),
-                const SizedBox(height: 12),
-                TextFormWidget(
-                  title: languageProvider.tr('transactions.notes'),
-                  prefixIcon: Icons.note_add_outlined,
-                  controller: notesCtrl,
-                  required: false,
-                  maxLines: 3,
-                  enableMic: true,
-                  textInputAction: TextInputAction.done,
-                ),
-                const SizedBox(height: 20),
-                AppButton(
-                  title: context.read<LanguageProvider>().tr(
-                    widget.isEdit ? 'common.update' : 'common.save',
-                  ),
-                  onPressed: _submit,
-                ),
-                const SizedBox(height: 20),
-              ],
-            ),
+        return Scaffold(
+          backgroundColor: AppColors.background,
+          appBar: _FormAppHeader(
+            title: title.toUpperCase(),
+            onBack: () => Navigator.pop(context),
           ),
-        ),
-      ),
+          body: Column(
+            children: [
+              Expanded(
+                child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.page,
+                    AppSpacing.md,
+                    AppSpacing.page,
+                    AppSpacing.lg,
+                  ),
+                  child: Form(
+                    key: _formKey,
+                    child: _FormSectionCard(
+                      children: [
+                        _buildFunctionDropdown(languageProvider),
+                        if (isCustomFunction) ...[
+                          const SizedBox(height: AppSpacing.md),
+                          _buildCustomFunctionField(languageProvider),
+                        ],
+                        const SizedBox(height: AppSpacing.md),
+                        _buildDateField(languageProvider),
+                        const SizedBox(height: AppSpacing.md),
+                        TextFormWidget(
+                          title: languageProvider.tr('transactions.amount'),
+                          controller: amountCtrl,
+                          maxLength: 7,
+                          required: false,
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                          ],
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                        TextFormWidget(
+                          title: languageProvider.tr('transactions.thing'),
+                          controller: thingsCtrl,
+                          required: false,
+                          maxLines: 3,
+                          enableMic: true,
+                          textInputAction: TextInputAction.done,
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                        TextFormWidget(
+                          title: languageProvider.tr('transactions.notes'),
+                          controller: notesCtrl,
+                          required: false,
+                          maxLines: 3,
+                          enableMic: true,
+                          textInputAction: TextInputAction.done,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              SafeArea(
+                top: false,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.page,
+                    0,
+                    AppSpacing.page,
+                    AppSpacing.md,
+                  ),
+                  child: _PrimaryActionButton(
+                    title: languageProvider.tr(
+                      widget.isEdit ? 'common.update' : 'common.save',
+                    ),
+                    onPressed: _submit,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
-  Widget _buildFunctionDropdown() {
+  Widget _buildFunctionDropdown(LanguageProvider languageProvider) {
     return CustomDropdown(
       key: ValueKey(
         'function_dropdown_${selectedFunction}_${functionsMaster.length}',
       ),
       initialSelection: selectedFunction.isNotEmpty ? selectedFunction : null,
-      title: context.read<LanguageProvider>().tr('transactions.selectFunction'),
+      title: languageProvider.tr('transactions.selectFunction'),
       required: true,
       search: false,
       enableMic: false,
-      notFoundText: context.read<LanguageProvider>().tr(
-        'transactions.functionNotFound',
-      ),
-      prefixIcon: Icons.celebration_outlined,
+      notFoundText: languageProvider.tr('transactions.functionNotFound'),
       dropdownMenuEntries: functionsMaster
           .map((e) => e is Map ? e['name']?.toString() ?? '' : '')
           .where((name) => name.isNotEmpty)
@@ -427,28 +450,235 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
     );
   }
 
-  Widget _buildCustomFunctionField() {
+  Widget _buildCustomFunctionField(LanguageProvider languageProvider) {
     return TextFormWidget(
-      title: context.read<LanguageProvider>().tr('transactions.customFunction'),
-      prefixIcon: Icons.edit_note_outlined,
+      title: languageProvider.tr('transactions.customFunction'),
       controller: customFunctionCtrl,
       required: true,
-      validator: (value) =>
-          value.toString().trim().isEmpty ? 'தனிப்பட்ட விழா கட்டாயம்!' : null,
+      enableMic: true,
+      validator: (value) => value.toString().trim().isEmpty
+          ? languageProvider.tr('transactions.customFunctionRequired')
+          : null,
     );
   }
 
-  Widget _buildDateField() {
+  Widget _buildDateField(LanguageProvider languageProvider) {
     return TextFormWidget(
-      title: context.read<LanguageProvider>().tr('transactions.date'),
-      prefixIcon: Icons.calendar_month_outlined,
+      title: languageProvider.tr('transactions.date'),
       controller: dateCtrl,
       required: true,
       readOnly: true,
       onTap: _selectDate,
       validator: (value) => value.toString().isEmpty
-          ? context.read<LanguageProvider>().tr('transactions.dateRequired')
+          ? languageProvider.tr('transactions.dateRequired')
           : null,
+    );
+  }
+}
+
+class _FormAppHeader extends StatelessWidget implements PreferredSizeWidget {
+  final String title;
+  final VoidCallback onBack;
+
+  const _FormAppHeader({required this.title, required this.onBack});
+
+  @override
+  Size get preferredSize => const Size.fromHeight(72);
+
+  @override
+  Widget build(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return AppBar(
+      toolbarHeight: preferredSize.height,
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      surfaceTintColor: Colors.transparent,
+      backgroundColor: Colors.transparent,
+      centerTitle: true,
+      automaticallyImplyLeading: false,
+      titleSpacing: 0,
+      systemOverlayStyle: SystemUiOverlayStyle.light.copyWith(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+        statusBarBrightness: Brightness.dark,
+        systemNavigationBarColor: isDark ? Colors.black : Colors.white,
+        systemNavigationBarIconBrightness:
+            isDark ? Brightness.light : Brightness.dark,
+      ),
+      flexibleSpace: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              primary,
+              Color.lerp(primary, const Color(0xff0A3D8F), 0.35)!,
+            ],
+          ),
+          borderRadius: const BorderRadius.only(
+            bottomLeft: Radius.circular(22),
+            bottomRight: Radius.circular(22),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: primary.withValues(alpha: 0.28),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: Stack(
+          children: [
+            Positioned(
+              top: -28,
+              right: -18,
+              child: Container(
+                width: 100,
+                height: 100,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withValues(alpha: 0.08),
+                ),
+              ),
+            ),
+            Positioned(
+              bottom: -36,
+              left: 48,
+              child: Container(
+                width: 90,
+                height: 90,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withValues(alpha: 0.06),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.only(
+          bottomLeft: Radius.circular(22),
+          bottomRight: Radius.circular(22),
+        ),
+      ),
+      leadingWidth: 54,
+      leading: Padding(
+        padding: const EdgeInsets.only(left: 10),
+        child: Center(
+          child: Material(
+            color: Colors.white.withValues(alpha: 0.14),
+            shape: const CircleBorder(),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: onBack,
+              customBorder: const CircleBorder(),
+              child: const SizedBox(
+                width: 42,
+                height: 42,
+                child: Center(
+                  child: HugeIcon(
+                    icon: HugeIcons.strokeRoundedArrowLeft01,
+                    color: Colors.white,
+                    size: 22,
+                    strokeWidth: 1.9,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+      title: Text(
+        title,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        textAlign: TextAlign.center,
+        style: AppTypography.sectionTitle.copyWith(
+          color: Colors.white,
+          fontSize: 16,
+          fontWeight: FontWeight.w700,
+          letterSpacing: -0.2,
+        ),
+      ),
+      actions: const [SizedBox(width: 54)],
+    );
+  }
+}
+
+class _FormSectionCard extends StatelessWidget {
+  final List<Widget> children;
+
+  const _FormSectionCard({required this.children});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(14, 16, 14, 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: AppShadows.soft,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: children,
+      ),
+    );
+  }
+}
+
+class _PrimaryActionButton extends StatelessWidget {
+  final String title;
+  final VoidCallback onPressed;
+
+  const _PrimaryActionButton({required this.title, required this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
+
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(14),
+        child: Ink(
+          height: 52,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                primary,
+                Color.lerp(primary, const Color(0xff0A3D8F), 0.28)!,
+              ],
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: primary.withValues(alpha: 0.28),
+                blurRadius: 14,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          child: Center(
+            child: Text(
+              title,
+              style: AppTypography.label.copyWith(
+                color: Colors.white,
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

@@ -151,12 +151,14 @@
     "transactionsSection": "Transactions"
   },
   "login": {
-    "title": "Login",
-    "subtitle": "Enter your login details...",
+    "title": "Welcome Back!",
+    "subtitle": "Login to your Moi Kanakku account",
     "email": "Email",
     "password": "Password",
     "loginNow": "Login Now",
-    "createAccount": "Create New Account",
+    "noAccount": "Don't have an account?",
+    "createAccount": "Create a new account",
+    "tagline": "Simple Tracking • Happier Celebrations",
     "forgotPassword": "Forgot Password?"
   },
   "home": {
