@@ -1,13 +1,14 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:moi/app_configs/index.dart';
+import 'package:moi/app_pages/upcoming_functions/models/upcoming_function_model.dart';
 import 'package:moi/app_services/upcoming_function_services.dart';
 import 'package:moi/app_themes/index.dart';
-import 'package:moi/app_utils/app_widgets/app_no_data_found.dart';
-import 'package:moi/app_utils/index.dart';
 import 'package:moi/app_utils/app_providers/language_provider.dart';
-import 'package:moi/app_pages/upcoming_functions/models/upcoming_function_model.dart';
-import 'dart:async';
+import 'package:moi/app_utils/index.dart';
 import 'package:provider/provider.dart';
 
 class UpcomingFunctionList extends StatefulWidget {
@@ -35,28 +36,36 @@ class _UpcomingFunctionListState extends State<UpcomingFunctionList> {
     searchController.addListener(searchListener);
   }
 
-  Future<void> getUpcomingFunctions() async {
-    setState(() => isLoading = true);
+  Future<void> getUpcomingFunctions({bool showLoading = true}) async {
+    if (showLoading && mounted) {
+      setState(() => isLoading = true);
+    }
 
     try {
-      final response = await services.getUpcomingFunctions();
+      final response = await services.getUpcomingFunctions(
+        showLoading: showLoading,
+      );
 
-      if (mounted) {
-        setState(() {
-          if (response != null && response['responseType'] == "S") {
-            final list = response['responseValue'] ?? [];
-            upcomingFunctionList = List<UpcomingFunction>.from(
-              list.map((item) => UpcomingFunction.fromJson(item)),
-            );
-            searchHistory = upcomingFunctionList;
-          } else {
-            searchHistory = [];
-            upcomingFunctionList = [];
-          }
-          isLoading = false;
-        });
+      if (!mounted) return;
+
+      setState(() {
+        if (response != null && response['responseType'] == 'S') {
+          final list = response['responseValue'] ?? [];
+          upcomingFunctionList = List<UpcomingFunction>.from(
+            list.map((item) => UpcomingFunction.fromJson(item)),
+          );
+          searchHistory = upcomingFunctionList;
+        } else {
+          searchHistory = [];
+          upcomingFunctionList = [];
+        }
+        isLoading = false;
+      });
+
+      if (searchController.text.isNotEmpty) {
+        search(searchController.text);
       }
-    } catch (e) {
+    } catch (_) {
       if (mounted) {
         setState(() {
           isLoading = false;
@@ -100,288 +109,165 @@ class _UpcomingFunctionListState extends State<UpcomingFunctionList> {
     setState(() => searchHistory = filteredList);
   }
 
+  void _goHome() {
+    Navigator.pushNamedAndRemoveUntil(context, 'home', (r) => false);
+  }
+
+  String _resolveImageUrl(String? path) {
+    final value = path?.trim() ?? '';
+    if (value.isEmpty) return '';
+    if (value.startsWith('http://') || value.startsWith('https://')) {
+      return value;
+    }
+    return '$appImageUrl/${value.replaceFirst(RegExp(r'^/+'), '')}';
+  }
+
   @override
   Widget build(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
+
     return Consumer<LanguageProvider>(
-      builder: (context, languageProvider, _) => PopScope(
-        canPop: false,
-        onPopInvokedWithResult: (didPop, result) {
-          if (didPop) return;
-          Navigator.pushNamedAndRemoveUntil(context, "home", (r) => false);
-        },
-        child: Scaffold(
-          appBar: AppBarWidget(
-            title: languageProvider.tr('upcomingFunctions.title'),
-            action: [],
-          ),
-          body: isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : upcomingFunctionList.isEmpty
-              ? const AppNoDataFound(showSecond: true)
-              : _buildMainContent(),
-          floatingActionButton: FloatingActionButton(
-            onPressed: () {
-              Navigator.pushNamed(
-                context,
-                "add-edit-upcoming-function",
-                arguments: UpcomingFunction(
-                  id: '',
-                  userId: '',
-                  title: '',
-                  functionDate: '',
-                  location: '',
-                  status: 'ACTIVE',
-                ),
-              ).then((result) {
-                if (result == true) {
-                  getUpcomingFunctions();
-                }
-              });
-            },
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+      builder: (context, languageProvider, _) {
+        return PopScope(
+          canPop: false,
+          onPopInvokedWithResult: (didPop, result) {
+            if (didPop) return;
+            _goHome();
+          },
+          child: Scaffold(
+            backgroundColor: AppColors.background,
+            appBar: _UpcomingAppHeader(
+              title:
+                  '${languageProvider.tr('upcomingFunctions.title').toUpperCase()} (${upcomingFunctionList.length})',
+              onBack: _goHome,
             ),
-            backgroundColor: Theme.of(context).colorScheme.primary,
-            child: const Icon(Icons.add_outlined, color: Colors.white),
+            body: isLoading && upcomingFunctionList.isEmpty
+                ? const Center(
+                    child: CircularProgressIndicator(strokeWidth: 2.5),
+                  )
+                : upcomingFunctionList.isEmpty
+                ? _EmptyUpcomingState(
+                    primary: primary,
+                    title: languageProvider.tr('upcomingFunctions.noFunctions'),
+                    subtitle: languageProvider.tr(
+                      'upcomingFunctions.noFunctionsHint',
+                    ),
+                    actionLabel: languageProvider.tr(
+                      'upcomingFunctions.addFunction',
+                    ),
+                    onAdd: _openAdd,
+                  )
+                : _buildMainContent(languageProvider, primary),
+            floatingActionButton: FloatingActionButton(
+              onPressed: _openAdd,
+              elevation: 2,
+              highlightElevation: 3,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+              backgroundColor: primary,
+              tooltip: languageProvider.tr('upcomingFunctions.addFunction'),
+              child: const HugeIcon(
+                icon: HugeIcons.strokeRoundedAdd01,
+                color: Colors.white,
+                size: 24,
+                strokeWidth: 2,
+              ),
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
-  Widget _buildMainContent() {
-    final colorScheme = Theme.of(context).colorScheme;
+  Future<void> _openAdd() async {
+    final result = await Navigator.pushNamed(
+      context,
+      'add-edit-upcoming-function',
+      arguments: UpcomingFunction(
+        id: '',
+        userId: '',
+        title: '',
+        functionDate: '',
+        location: '',
+        status: 'ACTIVE',
+      ),
+    );
+    if (result == true && mounted) {
+      await getUpcomingFunctions(showLoading: false);
+    }
+  }
 
+  Widget _buildMainContent(LanguageProvider languageProvider, Color primary) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.page),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 20),
-          SizedBox(
-            height: 50,
-            child: SearchWidget(
-              controller: searchController,
-              hintText: context.read<LanguageProvider>().tr('functions.search'),
-            ),
+          const SizedBox(height: AppSpacing.sm),
+          SearchWidget(
+            controller: searchController,
+            hintText: languageProvider.tr('functions.search'),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: AppSpacing.sm),
           if (searchHistory.isEmpty)
             Expanded(
-              child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: colorScheme.primary.withValues(alpha: 0.1),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        Icons.search_off_outlined,
-                        size: 64,
-                        color: colorScheme.primary.withValues(alpha: 0.6),
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    Text(
-                      context.read<LanguageProvider>().tr(
+              child: CustomScrollView(
+                physics: const BouncingScrollPhysics(),
+                slivers: [
+                  SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: MoiEmptyState(
+                      title: languageProvider.tr(
                         'upcomingFunctions.noFunctions',
                       ),
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: colorScheme.primary,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      context.read<LanguageProvider>().tr(
+                      subtitle: languageProvider.tr(
                         'functions.tryAdjustSearch',
                       ),
-                      style: TextStyle(fontSize: 14, color: AppColors.fontGrey),
+                      icon: HugeIcons.strokeRoundedSearchRemove,
+                      accentColor: primary,
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             )
           else
             Expanded(
-              child: ListView.builder(
+              child: ListView.separated(
                 physics: const BouncingScrollPhysics(),
+                padding: const EdgeInsets.only(bottom: 88),
                 itemCount: searchHistory.length,
-                itemBuilder: (context, index) => _buildFunctionCard(
-                  searchHistory[index],
-                  colorScheme,
-                  index,
-                ),
+                separatorBuilder: (_, _) =>
+                    const SizedBox(height: AppSpacing.sm),
+                itemBuilder: (context, index) {
+                  final function = searchHistory[index];
+                  return _UpcomingFunctionCard(
+                    title: function.title.toUpperCase(),
+                    date: function.functionDate,
+                    location: function.location,
+                    statusLabel: _getStatusText(function.status),
+                    statusColor: _getStatusColor(function.status),
+                    imageUrl: _resolveImageUrl(function.invitationUrl),
+                    onTap: () => _showFunctionSheet(function),
+                  );
+                },
               ),
             ),
         ],
       ),
-    );
-  }
-
-  Widget _buildFunctionCard(
-    UpcomingFunction function,
-    ColorScheme colorScheme,
-    int index,
-  ) {
-    String imageUrl = function.invitationUrl ?? '';
-    String functionDate = function.functionDate;
-    String functionTitle = function.title;
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      height: 180,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: colorScheme.primary.withValues(alpha: 0.08),
-            blurRadius: 12,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            _buildFunctionBackgroundImage(imageUrl),
-            Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.black.withValues(alpha: 0.15),
-                    Colors.black.withValues(alpha: 0.75),
-                  ],
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 6),
-                  Text(
-                    functionTitle.toCapitalized(),
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                      letterSpacing: 0.3,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: colorScheme.primary.withValues(alpha: 0.8),
-                          borderRadius: BorderRadius.circular(5),
-                        ),
-                        child: Text(
-                          functionDate,
-                          style: const TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white,
-                            fontFamily: 'Inter',
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 7,
-                          vertical: 3,
-                        ),
-                        decoration: BoxDecoration(
-                          color: _getStatusColor(
-                            function.status,
-                          ).withValues(alpha: 0.9),
-                          borderRadius: BorderRadius.circular(5),
-                        ),
-                        child: Text(
-                          _getStatusText(function.status),
-                          style: const TextStyle(
-                            fontSize: 9,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            Positioned(
-              top: 8,
-              right: 8,
-              child: IconButton(
-                onPressed: () {
-                  _showFunctionSheet(function);
-                },
-                icon: const Icon(Icons.more_vert_outlined, color: Colors.white),
-              ),
-            ),
-            Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: () {
-                  _showFunctionSheet(function);
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFunctionBackgroundImage(String imageUrl) {
-    String url = imageUrl;
-
-    if (url.isNotEmpty && !url.startsWith('http')) {
-      url = '$appImageUrl/$url';
-    }
-
-    if (url.isEmpty) {
-      return Image.asset(AppImages.defaultImage, fit: BoxFit.cover);
-    }
-
-    return Image.network(
-      url,
-      fit: BoxFit.cover,
-      errorBuilder: (context, error, stackTrace) {
-        return Image.asset(AppImages.defaultImage, fit: BoxFit.cover);
-      },
     );
   }
 
   Color _getStatusColor(String status) {
     switch (status.toUpperCase()) {
       case 'ACTIVE':
-        return Colors.green;
+        return const Color(0xFF2E7D32);
       case 'CANCELLED':
-        return Colors.red;
+        return AppColors.moiGiven;
       case 'COMPLETED':
-        return Colors.orange;
+        return const Color(0xFFE65100);
       default:
-        return Colors.blue;
+        return Theme.of(context).colorScheme.primary;
     }
   }
 
@@ -402,6 +288,7 @@ class _UpcomingFunctionListState extends State<UpcomingFunctionList> {
   void _showFunctionSheet(UpcomingFunction function) {
     final colorScheme = Theme.of(context).colorScheme;
     final languageProvider = context.read<LanguageProvider>();
+
     showMoiActionSheet(
       context: context,
       title: languageProvider.tr('common.chooseAction'),
@@ -420,9 +307,11 @@ class _UpcomingFunctionListState extends State<UpcomingFunctionList> {
           hugeIcon: HugeIcons.strokeRoundedRefresh,
           title: languageProvider.tr('upcomingFunctions.changeStatus'),
           color: AppColors.accentAmber,
-          onPressed: (context) async {
-            Navigator.pop(context);
-            _showStatusChangeDialog(function);
+          onPressed: (sheetContext) async {
+            Navigator.pop(sheetContext);
+            await Future<void>.delayed(const Duration(milliseconds: 220));
+            if (!mounted) return;
+            await _showStatusChangeSheet(function);
           },
         ),
         ActionSheetItem(
@@ -438,9 +327,11 @@ class _UpcomingFunctionListState extends State<UpcomingFunctionList> {
           hugeIcon: HugeIcons.strokeRoundedDelete02,
           title: languageProvider.tr('common.delete'),
           isDestructive: true,
-          onPressed: (context) async {
-            Navigator.pop(context);
-            _confirmDelete(function, searchHistory.indexOf(function));
+          onPressed: (sheetContext) async {
+            Navigator.pop(sheetContext);
+            await Future<void>.delayed(const Duration(milliseconds: 220));
+            if (!mounted) return;
+            await _confirmDelete(function);
           },
         ),
         ActionSheetItem(
@@ -455,106 +346,157 @@ class _UpcomingFunctionListState extends State<UpcomingFunctionList> {
     );
   }
 
-  Future<void> _showStatusChangeDialog(UpcomingFunction function) async {
-    final colorScheme = Theme.of(context).colorScheme;
+  Future<void> _showStatusChangeSheet(UpcomingFunction function) async {
     final languageProvider = context.read<LanguageProvider>();
 
-    showDialog(
-      context: context,
-      builder: (BuildContext context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(
-          languageProvider.tr('upcomingFunctions.changeStatus'),
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: colorScheme.primary,
-          ),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _buildStatusOption(
-              'ACTIVE',
-              languageProvider.tr('upcomingFunctions.active'),
-              Colors.green,
-              function,
-            ),
-            const SizedBox(height: 12),
-            _buildStatusOption(
-              'CANCELLED',
-              languageProvider.tr('upcomingFunctions.cancelled'),
-              Colors.red,
-              function,
-            ),
-            const SizedBox(height: 12),
-            _buildStatusOption(
-              'COMPLETED',
-              languageProvider.tr('upcomingFunctions.completed'),
-              Colors.orange,
-              function,
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              languageProvider.tr('common.cancel'),
-              style: TextStyle(color: colorScheme.primary),
-            ),
-          ),
-        ],
+    final options = <({String code, String label, Color color, List<List<dynamic>> icon})>[
+      (
+        code: 'ACTIVE',
+        label: languageProvider.tr('upcomingFunctions.active'),
+        color: const Color(0xFF2E7D32),
+        icon: HugeIcons.strokeRoundedCheckmarkCircle02,
       ),
-    );
-  }
+      (
+        code: 'CANCELLED',
+        label: languageProvider.tr('upcomingFunctions.cancelled'),
+        color: AppColors.moiGiven,
+        icon: HugeIcons.strokeRoundedCancelCircle,
+      ),
+      (
+        code: 'COMPLETED',
+        label: languageProvider.tr('upcomingFunctions.completed'),
+        color: const Color(0xFFE65100),
+        icon: HugeIcons.strokeRoundedTick02,
+      ),
+    ];
 
-  Widget _buildStatusOption(
-    String statusCode,
-    String statusText,
-    Color color,
-    UpcomingFunction function,
-  ) {
-    final isSelected = function.status == statusCode;
+    final selected = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      barrierColor: Colors.black.withValues(alpha: 0.45),
+      builder: (sheetContext) {
+        final bottomInset = MediaQuery.paddingOf(sheetContext).bottom;
+        final current = function.status.toUpperCase();
 
-    return GestureDetector(
-      onTap: () {
-        Navigator.pop(context);
-        _updateFunctionStatus(function, statusCode);
-      },
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          border: Border.all(
-            color: isSelected ? color : Colors.grey.shade300,
-            width: isSelected ? 2 : 1,
-          ),
-          borderRadius: BorderRadius.circular(8),
-          color: isSelected ? color.withValues(alpha: 0.1) : Colors.transparent,
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 12,
-              height: 12,
-              decoration: BoxDecoration(shape: BoxShape.circle, color: color),
+        return Padding(
+          padding: EdgeInsets.only(bottom: bottomInset > 0 ? 0 : 8),
+          child: Container(
+            margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: const Color(0xffE4E4E7)),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xff09090B).withValues(alpha: 0.12),
+                  blurRadius: 28,
+                  offset: const Offset(0, 10),
+                ),
+              ],
             ),
-            const SizedBox(width: 12),
-            Text(
-              statusText,
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-                color: color,
-                fontSize: 14,
+            child: SafeArea(
+              top: false,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 10, 20, 18),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: const Color(0xffE4E4E7),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Container(
+                      width: 64,
+                      height: 64,
+                      decoration: BoxDecoration(
+                        color: AppColors.accentAmber.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                      alignment: Alignment.center,
+                      child: HugeIcon(
+                        icon: HugeIcons.strokeRoundedRefresh,
+                        color: AppColors.accentAmber,
+                        size: 28,
+                        strokeWidth: 1.8,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      languageProvider.tr('upcomingFunctions.changeStatus'),
+                      textAlign: TextAlign.center,
+                      style: AppTypography.sectionTitle.copyWith(
+                        color: AppColors.textPrimary,
+                        fontSize: 17,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -0.2,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      function.title.toUpperCase(),
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTypography.body.copyWith(
+                        color: const Color(0xff71717A),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+                    for (final option in options) ...[
+                      _StatusOptionTile(
+                        label: option.label,
+                        color: option.color,
+                        icon: option.icon,
+                        selected: current == option.code,
+                        onTap: () => Navigator.pop(sheetContext, option.code),
+                      ),
+                      if (option != options.last) const SizedBox(height: 10),
+                    ],
+                    const SizedBox(height: 14),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 48,
+                      child: Material(
+                        color: const Color(0xffF4F4F5),
+                        borderRadius: BorderRadius.circular(14),
+                        child: InkWell(
+                          onTap: () => Navigator.pop(sheetContext),
+                          borderRadius: BorderRadius.circular(14),
+                          child: Center(
+                            child: Text(
+                              languageProvider.tr('common.cancel'),
+                              style: AppTypography.label.copyWith(
+                                color: AppColors.textPrimary,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-            if (isSelected) ...[
-              const Spacer(),
-              Icon(Icons.check_outlined, color: color, size: 20),
-            ],
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
+
+    if (selected != null &&
+        selected.toUpperCase() != function.status.toUpperCase() &&
+        mounted) {
+      await _updateFunctionStatus(function, selected);
+    }
   }
 
   Future<void> _updateFunctionStatus(
@@ -562,12 +504,12 @@ class _UpcomingFunctionListState extends State<UpcomingFunctionList> {
     String newStatus,
   ) async {
     if (!mounted) return;
+    final languageProvider = context.read<LanguageProvider>();
 
     try {
       final response = await services.updateStatus(function.id, newStatus);
 
       if (response != null && response['responseType'] == 'S') {
-        // Update local list
         final index = upcomingFunctionList.indexWhere(
           (f) => f.id == function.id,
         );
@@ -579,12 +521,20 @@ class _UpcomingFunctionListState extends State<UpcomingFunctionList> {
         }
 
         if (mounted) {
-          alertServices.successToast('நிலை வெற்றிகரமாக மாற்றப்பட்டது');
+          alertServices.successToast(
+            languageProvider.tr('upcomingFunctions.statusUpdated'),
+          );
         }
+      } else if (mounted) {
+        alertServices.errorToast(
+          languageProvider.tr('upcomingFunctions.statusUpdateFailed'),
+        );
       }
-    } catch (e) {
+    } catch (_) {
       if (mounted) {
-        alertServices.errorToast('நிலை மாற்ற முடியவில்லை');
+        alertServices.errorToast(
+          languageProvider.tr('upcomingFunctions.statusUpdateFailed'),
+        );
       }
     }
   }
@@ -597,54 +547,514 @@ class _UpcomingFunctionListState extends State<UpcomingFunctionList> {
     );
   }
 
-  void _editFunction(UpcomingFunction function) {
-    Navigator.pushNamed(
+  Future<void> _editFunction(UpcomingFunction function) async {
+    final result = await Navigator.pushNamed(
       context,
-      "add-edit-upcoming-function",
+      'add-edit-upcoming-function',
       arguments: function,
-    ).then((result) {
-      if (result == true) {
-        getUpcomingFunctions();
-      }
-    });
+    );
+    if (result == true && mounted) {
+      await getUpcomingFunctions(showLoading: false);
+    }
   }
 
-  void _confirmDelete(UpcomingFunction function, int index) {
-    alertServices
-        .confirmAlert(
-          context,
-          context.read<LanguageProvider>().tr(
-            'upcomingFunctions.deleteConfirmation',
-          ),
-        )
-        .then((confirmDelete) {
-          if (confirmDelete == true) {
-            _deleteFunction(function, index);
-          }
-        });
+  Future<void> _confirmDelete(UpcomingFunction function) async {
+    final languageProvider = context.read<LanguageProvider>();
+    final confirmed = await showMoiConfirmSheet(
+      context: context,
+      title: languageProvider.tr('upcomingFunctions.deleteTitle'),
+      message: languageProvider.tr('upcomingFunctions.deleteConfirmation'),
+      confirmLabel: languageProvider.tr('common.delete'),
+      cancelLabel: languageProvider.tr('common.cancel'),
+      icon: HugeIcons.strokeRoundedDelete02,
+      isDestructive: true,
+    );
+
+    if (confirmed == true) {
+      await _deleteFunction(function);
+    }
   }
 
-  Future<void> _deleteFunction(UpcomingFunction function, int index) async {
+  Future<void> _deleteFunction(UpcomingFunction function) async {
+    final languageProvider = context.read<LanguageProvider>();
+
     try {
       final response = await services.deleteUpcomingFunction(function.id);
       if (response != null && response['responseType'] == 'S') {
         setState(() {
-          searchHistory.removeAt(index);
           upcomingFunctionList.removeWhere((item) => item.id == function.id);
+          searchHistory.removeWhere((item) => item.id == function.id);
         });
 
         final successMessage =
             response['responseValue']?['message']?.toString() ??
-            'விழா நீக்கப்பட்டது';
+            languageProvider.tr('upcomingFunctions.deleted');
         alertServices.successToast(successMessage);
       } else {
         final errorMessage =
             response?['responseValue']?['message']?.toString() ??
-            'விழாவை நீக்க முடியவில்லை';
+            languageProvider.tr('upcomingFunctions.deleteFailed');
         alertServices.errorToast(errorMessage);
       }
-    } catch (e) {
-      alertServices.errorToast('பிழை ஏற்பட்டது');
+    } catch (_) {
+      alertServices.errorToast(
+        languageProvider.tr('upcomingFunctions.deleteFailed'),
+      );
     }
+  }
+}
+
+class _StatusOptionTile extends StatelessWidget {
+  final String label;
+  final Color color;
+  final List<List<dynamic>> icon;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _StatusOptionTile({
+    required this.label,
+    required this.color,
+    required this.icon,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: selected ? color.withValues(alpha: 0.08) : const Color(0xffFAFAFA),
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: Ink(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: selected ? color.withValues(alpha: 0.45) : const Color(0xffE4E4E7),
+              width: selected ? 1.5 : 1,
+            ),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                alignment: Alignment.center,
+                child: HugeIcon(
+                  icon: icon,
+                  color: color,
+                  size: 18,
+                  strokeWidth: 1.8,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  label,
+                  style: AppTypography.label.copyWith(
+                    color: color,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              Icon(
+                selected
+                    ? Icons.check_circle_rounded
+                    : Icons.radio_button_unchecked_rounded,
+                size: 20,
+                color: selected ? color : const Color(0xffA1A1AA),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _UpcomingAppHeader extends StatelessWidget implements PreferredSizeWidget {
+  final String title;
+  final VoidCallback onBack;
+
+  const _UpcomingAppHeader({required this.title, required this.onBack});
+
+  @override
+  Size get preferredSize => const Size.fromHeight(72);
+
+  @override
+  Widget build(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return AppBar(
+      toolbarHeight: preferredSize.height,
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      surfaceTintColor: Colors.transparent,
+      backgroundColor: Colors.transparent,
+      centerTitle: true,
+      automaticallyImplyLeading: false,
+      titleSpacing: 0,
+      systemOverlayStyle: SystemUiOverlayStyle.light.copyWith(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+        statusBarBrightness: Brightness.dark,
+        systemNavigationBarColor: isDark ? Colors.black : Colors.white,
+        systemNavigationBarIconBrightness:
+            isDark ? Brightness.light : Brightness.dark,
+      ),
+      flexibleSpace: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              primary,
+              Color.lerp(primary, const Color(0xff0A3D8F), 0.35)!,
+            ],
+          ),
+          borderRadius: const BorderRadius.only(
+            bottomLeft: Radius.circular(22),
+            bottomRight: Radius.circular(22),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: primary.withValues(alpha: 0.28),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: Stack(
+          children: [
+            Positioned(
+              top: -28,
+              right: -18,
+              child: Container(
+                width: 100,
+                height: 100,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withValues(alpha: 0.08),
+                ),
+              ),
+            ),
+            Positioned(
+              bottom: -36,
+              left: 48,
+              child: Container(
+                width: 90,
+                height: 90,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withValues(alpha: 0.06),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.only(
+          bottomLeft: Radius.circular(22),
+          bottomRight: Radius.circular(22),
+        ),
+      ),
+      leadingWidth: 54,
+      leading: Padding(
+        padding: const EdgeInsets.only(left: 10),
+        child: Center(
+          child: Material(
+            color: Colors.white.withValues(alpha: 0.14),
+            shape: const CircleBorder(),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: onBack,
+              customBorder: const CircleBorder(),
+              child: const SizedBox(
+                width: 42,
+                height: 42,
+                child: Center(
+                  child: HugeIcon(
+                    icon: HugeIcons.strokeRoundedArrowLeft01,
+                    color: Colors.white,
+                    size: 22,
+                    strokeWidth: 1.9,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+      title: Text(
+        title,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        textAlign: TextAlign.center,
+        style: AppTypography.sectionTitle.copyWith(
+          color: Colors.white,
+          fontSize: 16,
+          fontWeight: FontWeight.w700,
+          letterSpacing: -0.2,
+        ),
+      ),
+      actions: const [SizedBox(width: 54)],
+    );
+  }
+}
+
+class _UpcomingFunctionCard extends StatelessWidget {
+  final String title;
+  final String date;
+  final String location;
+  final String statusLabel;
+  final Color statusColor;
+  final String imageUrl;
+  final VoidCallback onTap;
+
+  const _UpcomingFunctionCard({
+    required this.title,
+    required this.date,
+    required this.location,
+    required this.statusLabel,
+    required this.statusColor,
+    required this.imageUrl,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        splashColor: Colors.white.withValues(alpha: 0.08),
+        highlightColor: Colors.white.withValues(alpha: 0.04),
+        child: Ink(
+          height: 180,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: const Color(0xffE4E4E7)),
+            boxShadow: AppShadows.soft,
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(15),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                _buildImage(),
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.black.withValues(alpha: 0.12),
+                        Colors.black.withValues(alpha: 0.72),
+                      ],
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 12,
+                  right: 12,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 5,
+                    ),
+                    decoration: BoxDecoration(
+                      color: statusColor.withValues(alpha: 0.92),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      statusLabel,
+                      style: AppTypography.label.copyWith(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  left: 14,
+                  right: 14,
+                  bottom: 14,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        title,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTypography.label.copyWith(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: -0.1,
+                          height: 1.25,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          HugeIcon(
+                            icon: HugeIcons.strokeRoundedCalendar03,
+                            color: Colors.white.withValues(alpha: 0.95),
+                            size: 14,
+                            strokeWidth: 1.8,
+                          ),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              date.isNotEmpty ? date : '—',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: AppTypography.body.copyWith(
+                                color: Colors.white.withValues(alpha: 0.9),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (location.trim().isNotEmpty) ...[
+                        const SizedBox(height: 5),
+                        Row(
+                          children: [
+                            HugeIcon(
+                              icon: HugeIcons.strokeRoundedLocation01,
+                              color: Colors.white.withValues(alpha: 0.95),
+                              size: 14,
+                              strokeWidth: 1.8,
+                            ),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                location,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: AppTypography.body.copyWith(
+                                  color: Colors.white.withValues(alpha: 0.9),
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildImage() {
+    if (imageUrl.isEmpty) {
+      return Image.asset(AppImages.defaultImage, fit: BoxFit.cover);
+    }
+
+    return Image.network(
+      imageUrl,
+      fit: BoxFit.cover,
+      errorBuilder: (_, _, _) =>
+          Image.asset(AppImages.defaultImage, fit: BoxFit.cover),
+    );
+  }
+}
+
+class _EmptyUpcomingState extends StatelessWidget {
+  final Color primary;
+  final String title;
+  final String subtitle;
+  final String actionLabel;
+  final VoidCallback onAdd;
+
+  const _EmptyUpcomingState({
+    required this.primary,
+    required this.title,
+    required this.subtitle,
+    required this.actionLabel,
+    required this.onAdd,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.page),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            MoiEmptyState(
+              title: title,
+              subtitle: subtitle,
+              icon: HugeIcons.strokeRoundedCalendar03,
+              accentColor: primary,
+            ),
+            const SizedBox(height: AppSpacing.md),
+            Material(
+              color: Colors.transparent,
+              borderRadius: BorderRadius.circular(14),
+              child: InkWell(
+                onTap: onAdd,
+                borderRadius: BorderRadius.circular(14),
+                child: Ink(
+                  height: 48,
+                  width: 200,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(14),
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        primary,
+                        Color.lerp(primary, const Color(0xff0A3D8F), 0.28)!,
+                      ],
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: primary.withValues(alpha: 0.28),
+                        blurRadius: 14,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: Center(
+                    child: Text(
+                      actionLabel,
+                      style: AppTypography.label.copyWith(
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

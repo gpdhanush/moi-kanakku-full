@@ -391,7 +391,13 @@
     "cropImage": "Crop image",
     "updated": "Function updated successfully",
     "saved": "Function saved successfully",
-    "saveFailed": "Unable to save function"
+    "saveFailed": "Unable to save function",
+    "noFunctionsHint": "Add an upcoming function to get started.",
+    "statusUpdated": "Status updated successfully",
+    "statusUpdateFailed": "Unable to update status",
+    "deleted": "Function deleted successfully",
+    "deleteFailed": "Unable to delete function",
+    "deleteTitle": "Delete this function?"
   },
   "moi": {
     "title": "Moi",

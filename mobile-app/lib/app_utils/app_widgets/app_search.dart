@@ -196,6 +196,10 @@ class _SearchWidgetState extends State<SearchWidget> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: const Color(0xffE4E4E7),
+          width: 1,
+        ),
         boxShadow: AppShadows.soft,
       ),
       alignment: Alignment.center,
