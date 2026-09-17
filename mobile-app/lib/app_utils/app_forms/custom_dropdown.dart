@@ -182,11 +182,18 @@ class _CustomDropdownState extends State<CustomDropdown> {
               requestFocusOnTap: widget.search ?? false,
               controller: _ctrl,
               leadingIcon: widget.prefixIcon != null
-                  ? HugeIcon(
-                      icon: widget.prefixIcon!,
-                      color: widget.iconColor ?? theme.colorScheme.primary,
-                      size: 22,
-                      strokeWidth: 1.8,
+                  ? Padding(
+                      padding: const EdgeInsets.only(left: 14, right: 8),
+                      child: SizedBox(
+                        width: 14,
+                        height: 14,
+                        child: HugeIcon(
+                          icon: widget.prefixIcon!,
+                          color: widget.iconColor ?? theme.colorScheme.primary,
+                          size: 14,
+                          strokeWidth: 1.5,
+                        ),
+                      ),
                     )
                   : null,
               textStyle: theme.textTheme.bodyMedium?.copyWith(
@@ -211,11 +218,19 @@ class _CustomDropdownState extends State<CustomDropdown> {
                   //   vertical: 1,
                   // ),
                   prefixIcon: widget.prefixIcon != null
-                      ? HugeIcon(
-                          icon: widget.prefixIcon!,
-                          color: widget.iconColor ?? theme.colorScheme.primary,
-                          size: 22,
-                          strokeWidth: 1.8,
+                      ? Padding(
+                          padding: const EdgeInsets.only(left: 14, right: 8),
+                          child: SizedBox(
+                            width: 14,
+                            height: 14,
+                            child: HugeIcon(
+                              icon: widget.prefixIcon!,
+                              color: widget.iconColor ??
+                                  theme.colorScheme.primary,
+                              size: 14,
+                              strokeWidth: 1.5,
+                            ),
+                          ),
                         )
                       : null,
                 );
@@ -231,8 +246,8 @@ class _CustomDropdownState extends State<CustomDropdown> {
                       icon: HugeIcon(
                         icon: widget.suffixIcon!,
                         color: theme.colorScheme.primary,
-                        size: 22,
-                        strokeWidth: 1.8,
+                        size: 14,
+                        strokeWidth: 1.5,
                       ),
                       onPressed: widget.suffixIconOnPressed,
                     ),
@@ -267,8 +282,8 @@ class _CustomDropdownState extends State<CustomDropdown> {
                           ? HugeIcons.strokeRoundedArrowUp01
                           : HugeIcons.strokeRoundedArrowDown01,
                       color: widget.iconColor ?? theme.colorScheme.primary,
-                      size: 22,
-                      strokeWidth: 1.8,
+                      size: 14,
+                      strokeWidth: 1.5,
                     ),
                     onPressed: () {
                       // open/close regardless of enabled state; DropdownMenu

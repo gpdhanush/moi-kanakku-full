@@ -2,7 +2,6 @@ import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:moi/app_configs/app_variables.dart';
 import 'package:moi/app_utils/app_global/app_button_widget.dart';
 import 'package:moi/app_utils/app_providers/language_provider.dart';
@@ -10,7 +9,8 @@ import 'package:provider/provider.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 class AlertServices {
-  BuildContext? get _ctx => navigatorKey.currentState?.overlay?.context;
+  BuildContext? get _ctx =>
+      navigatorKey.currentContext ?? navigatorKey.currentState?.overlay?.context;
 
   String _tr(String key, String fallback) {
     final context = _ctx;
@@ -58,37 +58,18 @@ class AlertServices {
   }
 
   void errorToast(String message) {
-    _showToast(
-      message,
-      backgroundColor: Colors.redAccent,
-      textColor: Colors.white,
-    );
+    _showToast(message);
   }
 
   void successToast(String message) {
-    final context = _ctx;
-    _showToast(
-      message,
-      backgroundColor: context != null
-          ? Theme.of(context).colorScheme.primary
-          : Colors.blue,
-      textColor: Colors.white,
-    );
+    _showToast(message);
   }
 
   void toast(String message) {
-    _showToast(
-      message,
-      backgroundColor: Colors.black87,
-      textColor: Colors.white,
-    );
+    _showToast(message);
   }
 
-  void _showToast(
-    String message, {
-    required Color backgroundColor,
-    required Color textColor,
-  }) {
+  void _showToast(String message) {
     // Don't show toast if message is empty, null, or contains "no record"/"no data"
     final trimmedMessage = message.trim().toLowerCase();
     if (trimmedMessage.isEmpty ||
@@ -99,15 +80,36 @@ class AlertServices {
       return;
     }
 
-    Fluttertoast.showToast(
-      msg: message,
-      toastLength: Toast.LENGTH_LONG,
-      gravity: ToastGravity.BOTTOM,
-      backgroundColor: backgroundColor,
-      textColor: textColor,
-      fontSize: 12.0,
-      timeInSecForIosWeb: 4,
-    );
+    final context = _ctx;
+    if (context == null || !context.mounted) return;
+
+    final messenger = ScaffoldMessenger.maybeOf(context) ??
+        (navigatorKey.currentState != null
+            ? ScaffoldMessenger.maybeOf(navigatorKey.currentState!.context)
+            : null);
+    if (messenger == null) return;
+
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(
+            message,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          backgroundColor: Colors.black,
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+          duration: const Duration(seconds: 3),
+        ),
+      );
   }
 
   Future<bool?> confirmAlert(BuildContext context, String content) {

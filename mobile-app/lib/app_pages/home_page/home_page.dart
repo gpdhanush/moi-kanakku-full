@@ -337,7 +337,7 @@ class _HomePageState extends State<HomePage> {
                         horizontalPad,
                         AppSpacing.md,
                         horizontalPad,
-                        AppSpacing.xxl,
+                        MediaQuery.paddingOf(context).bottom + AppSpacing.md,
                       ),
                       children: [
                         HomeSectionReveal(
@@ -417,14 +417,6 @@ class _HomePageState extends State<HomePage> {
                                 arguments: [summary['function']],
                               );
                             },
-                          ),
-                        ),
-                        const SizedBox(height: AppSpacing.section),
-                        HomeSectionReveal(
-                          index: 4,
-                          child: HomeTipNote(
-                            message:
-                                languageProvider.tr('home.transactionNote'),
                           ),
                         ),
                       ],

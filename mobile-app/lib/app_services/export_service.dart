@@ -1,7 +1,14 @@
+import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_file_downloader/flutter_file_downloader.dart';
 import 'package:intl/intl.dart';
 import 'package:moi/app_configs/app_images.dart';
+import 'package:path/path.dart' as path;
+import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
@@ -10,11 +17,13 @@ import 'package:tamil_pdf_shaper/tamil_pdf_shaper.dart';
 class ExportService {
   static final NumberFormat _numberFormatter = NumberFormat('#,##,##,000.00');
 
-  /// Export transactions to PDF and share
+  /// Export transactions to PDF, save to Downloads, then open the share sheet.
   static Future<void> exportTransactionsToPdf({
     required List<dynamic> transactions,
     required Map<String, dynamic> userDetails,
     String? fileName,
+    bool saveToDownloads = true,
+    Future<void> Function()? onBeforeShare,
   }) async {
     try {
       if (transactions.isEmpty) {
@@ -41,14 +50,75 @@ class ExportService {
 
       // Generate filename with timestamp
       final timestamp = DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
-      final filename = fileName ?? "Moi_Kanakku_Export_$timestamp.pdf";
+      final filename = fileName ?? 'Moi_Kanakku_Export_$timestamp.pdf';
+      final bytes = await pdf.save();
 
-      // Share PDF
-      await Printing.sharePdf(bytes: await pdf.save(), filename: filename);
+      if (saveToDownloads) {
+        await _savePdfToDownloads(bytes, filename);
+      }
+
+      if (onBeforeShare != null) {
+        await onBeforeShare();
+      }
+
+      // Share PDF via system share sheet
+      await Printing.sharePdf(bytes: bytes, filename: filename);
     } catch (e) {
       debugPrint('Error exporting transactions: $e');
       rethrow;
     }
+  }
+
+  /// Saves PDF bytes under Downloads/Moi Kanakku (Android) or Documents/Downloads.
+  static Future<String?> _savePdfToDownloads(
+    Uint8List pdfBytes,
+    String fileName,
+  ) async {
+    final safeName = fileName.endsWith('.pdf')
+        ? fileName.substring(0, fileName.length - 4)
+        : fileName;
+
+    if (Platform.isAndroid) {
+      // Encode on the main isolate — Isolate.run cannot capture Completer
+      // from this scope (shared closure context is unsendable).
+      final base64Pdf = base64Encode(pdfBytes);
+      final completer = Completer<String?>();
+
+      FileDownloader.writeFile(
+        content: base64Pdf,
+        fileName: safeName,
+        extension: 'pdf',
+        subPath: 'Moi Kanakku',
+        downloadDestination: DownloadDestinations.publicDownloads,
+        onCompleted: (String savedPath) {
+          if (!completer.isCompleted) completer.complete(savedPath);
+        },
+        onError: (String error) {
+          debugPrint('Download save error: $error');
+          if (!completer.isCompleted) completer.complete(null);
+        },
+      );
+
+      return completer.future.timeout(
+        const Duration(seconds: 20),
+        onTimeout: () => null,
+      );
+    }
+
+    if (Platform.isIOS) {
+      final documentsDir = await getApplicationDocumentsDirectory();
+      final downloadsDir = Directory(
+        path.join(documentsDir.path, 'Downloads', 'Moi Kanakku'),
+      );
+      if (!await downloadsDir.exists()) {
+        await downloadsDir.create(recursive: true);
+      }
+      final filePath = path.join(downloadsDir.path, '$safeName.pdf');
+      await File(filePath).writeAsBytes(pdfBytes);
+      return filePath;
+    }
+
+    return null;
   }
 
   /// Generate PDF with transactions data

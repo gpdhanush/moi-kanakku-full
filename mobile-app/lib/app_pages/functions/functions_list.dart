@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:moi/app_configs/index.dart';
 import 'package:moi/app_services/index.dart';
@@ -117,11 +116,12 @@ class _FunctionsListState extends State<FunctionsList> {
       builder: (context, languageProvider, _) {
         final scaffold = Scaffold(
             backgroundColor: AppColors.background,
-            appBar: _FunctionsAppHeader(
-              title:
-                  '${languageProvider.tr('functions.title')} (${functionList.length})',
+            appBar: MoiAppHeader(
+              title: languageProvider.tr('functions.title'),
               showBack: !widget.embeddedInShell,
               onBack: _goHome,
+              height: 72,
+              titleFontSize: 18,
             ),
             body: _isLoading && functionList.isEmpty
                 ? const Center(
@@ -145,27 +145,36 @@ class _FunctionsListState extends State<FunctionsList> {
                     },
                   )
                 : mainContent(languageProvider, primary),
-            floatingActionButton: FloatingActionButton(
-              onPressed: () async {
-                await Navigator.pushNamed(
-                  context,
-                  "add-edit-functions",
-                  arguments: [],
-                );
-                if (mounted) await getUserFunctions(showLoading: false);
-              },
-              elevation: 2,
-              highlightElevation: 3,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
+            floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+            floatingActionButton: Padding(
+              // Keep Add FAB above the floating bottom nav pill.
+              padding: EdgeInsets.only(
+                bottom: widget.embeddedInShell
+                    ? MoiBottomNavBar.barHeight + MoiBottomNavBar.bottomGap
+                    : 0,
               ),
-              backgroundColor: primary,
-              tooltip: languageProvider.tr('functions.addFunction'),
-              child: const HugeIcon(
-                icon: HugeIcons.strokeRoundedAdd01,
-                color: Colors.white,
-                size: 24,
-                strokeWidth: 2,
+              child: FloatingActionButton(
+                onPressed: () async {
+                  await Navigator.pushNamed(
+                    context,
+                    "add-edit-functions",
+                    arguments: [],
+                  );
+                  if (mounted) await getUserFunctions(showLoading: false);
+                },
+                elevation: 2,
+                highlightElevation: 3,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                backgroundColor: primary,
+                tooltip: languageProvider.tr('functions.addFunction'),
+                child: const HugeIcon(
+                  icon: HugeIcons.strokeRoundedAdd01,
+                  color: Colors.white,
+                  size: 24,
+                  strokeWidth: 2,
+                ),
               ),
             ),
           );
@@ -316,145 +325,6 @@ class _FunctionsListState extends State<FunctionsList> {
           },
         ),
       ],
-    );
-  }
-}
-
-class _FunctionsAppHeader extends StatelessWidget
-    implements PreferredSizeWidget {
-  final String title;
-  final VoidCallback onBack;
-  final bool showBack;
-
-  const _FunctionsAppHeader({
-    required this.title,
-    required this.onBack,
-    this.showBack = true,
-  });
-
-  @override
-  Size get preferredSize => const Size.fromHeight(64);
-
-  @override
-  Widget build(BuildContext context) {
-    final primary = Theme.of(context).colorScheme.primary;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return AppBar(
-      toolbarHeight: preferredSize.height,
-      elevation: 0,
-      scrolledUnderElevation: 0,
-      surfaceTintColor: Colors.transparent,
-      backgroundColor: Colors.transparent,
-      centerTitle: true,
-      automaticallyImplyLeading: false,
-      titleSpacing: 0,
-      systemOverlayStyle: SystemUiOverlayStyle.light.copyWith(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
-        statusBarBrightness: Brightness.dark,
-        systemNavigationBarColor: isDark ? Colors.black : Colors.white,
-        systemNavigationBarIconBrightness: isDark
-            ? Brightness.light
-            : Brightness.dark,
-      ),
-      flexibleSpace: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              primary,
-              Color.lerp(primary, const Color(0xff0A3D8F), 0.35)!,
-            ],
-          ),
-          borderRadius: const BorderRadius.only(
-            bottomLeft: Radius.circular(22),
-            bottomRight: Radius.circular(22),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: primary.withValues(alpha: 0.28),
-              blurRadius: 16,
-              offset: const Offset(0, 6),
-            ),
-          ],
-        ),
-        child: Stack(
-          children: [
-            Positioned(
-              top: -28,
-              right: -18,
-              child: Container(
-                width: 100,
-                height: 100,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withValues(alpha: 0.08),
-                ),
-              ),
-            ),
-            Positioned(
-              bottom: -36,
-              left: 48,
-              child: Container(
-                width: 90,
-                height: 90,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withValues(alpha: 0.06),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(22),
-          bottomRight: Radius.circular(22),
-        ),
-      ),
-      leadingWidth: 54,
-      leading: showBack
-          ? Padding(
-              padding: const EdgeInsets.only(left: 10),
-              child: Center(
-                child: Material(
-                  color: Colors.white.withValues(alpha: 0.14),
-                  shape: const CircleBorder(),
-                  clipBehavior: Clip.antiAlias,
-                  child: InkWell(
-                    onTap: onBack,
-                    customBorder: const CircleBorder(),
-                    child: const SizedBox(
-                      width: 42,
-                      height: 42,
-                      child: Center(
-                        child: HugeIcon(
-                          icon: HugeIcons.strokeRoundedArrowLeft01,
-                          color: Colors.white,
-                          size: 22,
-                          strokeWidth: 1.9,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            )
-          : const SizedBox(width: 54),
-      title: Text(
-        title,
-        style: AppTypography.sectionTitle.copyWith(
-          color: Colors.white,
-          fontSize: 18,
-          fontWeight: FontWeight.w700,
-          letterSpacing: -0.3,
-          height: 1.1,
-        ),
-      ),
-      actions: const [SizedBox(width: 54)],
     );
   }
 }

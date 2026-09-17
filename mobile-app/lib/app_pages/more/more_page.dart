@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:in_app_review/in_app_review.dart';
+import 'package:intl/intl.dart';
 import 'package:moi/app_configs/index.dart';
-import 'package:moi/app_services/user_services.dart';
+import 'package:moi/app_pages/settings_page/settings_menus_panel.dart';
+import 'package:moi/app_services/export_service.dart';
+import 'package:moi/app_services/index.dart';
 import 'package:moi/app_storages/secure_storages.dart';
 import 'package:moi/app_themes/index.dart';
 import 'package:moi/app_utils/app_providers/language_provider.dart';
 import 'package:moi/app_utils/app_providers/user_provider.dart';
-import 'package:moi/app_utils/app_widgets/custom_action_sheet.dart';
 import 'package:moi/app_utils/index.dart';
 import 'package:provider/provider.dart';
 
@@ -19,31 +20,20 @@ class MorePage extends StatelessWidget {
   Widget build(BuildContext context) {
     final primary = Theme.of(context).colorScheme.primary;
 
-    return Consumer2<LanguageProvider, UserProvider>(
-      builder: (context, languageProvider, userProvider, _) {
-        final user = userProvider.userDetails.isNotEmpty
-            ? Map<String, dynamic>.from(userProvider.userDetails[0] as Map)
-            : null;
-        final name = user?['name']?.toString().trim().isNotEmpty == true
-            ? user!['name'].toString().trim()
-            : languageProvider.tr('menu.guestUser');
-
+    return Consumer<LanguageProvider>(
+      builder: (context, languageProvider, _) {
         return Scaffold(
           backgroundColor: AppColors.background,
-          appBar: _MoreAppHeader(
+          appBar: MoiAppHeader(
             title: languageProvider.tr('nav.more'),
-            subtitle: languageProvider.tr('more.subtitle'),
-            name: name,
-            user: user,
-            onProfileTap: () => Navigator.pushNamed(context, 'profile'),
           ),
           body: SingleChildScrollView(
             physics: const BouncingScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(
+            padding: EdgeInsets.fromLTRB(
               AppSpacing.page,
               AppSpacing.md,
               AppSpacing.page,
-              AppSpacing.xxl,
+              MediaQuery.paddingOf(context).bottom + AppSpacing.md,
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -68,18 +58,26 @@ class MorePage extends StatelessWidget {
                       title: languageProvider.tr('menu.profile'),
                       subtitle: languageProvider.tr('more.profileHint'),
                       onTap: () => Navigator.pushNamed(context, 'profile'),
-                    ),
-                    _MoreRow(
-                      icon: HugeIcons.strokeRoundedSettings01,
-                      iconBg: const Color(0xffEEF2FF),
-                      iconColor: const Color(0xff4F46E5),
-                      title: languageProvider.tr('menu.settings'),
-                      subtitle: languageProvider.tr('more.settingsHint'),
-                      onTap: () => Navigator.pushNamed(context, 'settings'),
                       showDivider: false,
                     ),
                   ],
                 ),
+                const SizedBox(height: AppSpacing.lg),
+                _MoreCard(
+                  children: [
+                    _MoreRow(
+                      icon: HugeIcons.strokeRoundedPdf02,
+                      iconBg: const Color(0xffEEF2FF),
+                      iconColor: const Color(0xff4F46E5),
+                      title: languageProvider.tr('more.export'),
+                      subtitle: languageProvider.tr('more.exportHint'),
+                      onTap: () => _onExportTap(context),
+                      showDivider: false,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                const SettingsMenusPanel(),
                 const SizedBox(height: AppSpacing.lg),
                 _MoreCard(
                   children: [
@@ -134,6 +132,83 @@ class MorePage extends StatelessWidget {
     await inAppReview.openStoreListing(appStoreId: 'com.renzo.moi');
   }
 
+  Future<void> _onExportTap(BuildContext context) async {
+    final languageProvider = Provider.of<LanguageProvider>(
+      context,
+      listen: false,
+    );
+
+    final confirm = await showMoiConfirmSheet(
+      context: context,
+      title: languageProvider.tr('more.export'),
+      message: languageProvider.tr('more.exportConfirmMessage'),
+      confirmLabel: languageProvider.tr('common.ok'),
+      cancelLabel: languageProvider.tr('common.cancel'),
+      icon: HugeIcons.strokeRoundedPdf02,
+    );
+
+    if (confirm == true && context.mounted) {
+      await _exportAllFunctionTransactions(context);
+    }
+  }
+
+  Future<void> _exportAllFunctionTransactions(BuildContext context) async {
+    final languageProvider = Provider.of<LanguageProvider>(
+      context,
+      listen: false,
+    );
+    final alertServices = AlertServices();
+    final storage = SecureStorageService();
+    final txServices = TransactionServices();
+
+    try {
+      alertServices.showLoading(languageProvider.tr('more.exporting'));
+
+      final user = await storage.get(AppVariables.userInformation);
+      if (user == null) {
+        await alertServices.hideLoading();
+        alertServices.errorToast(
+          languageProvider.tr('home.userDetailsNotFound'),
+        );
+        return;
+      }
+
+      final response = await txServices.listTransactions({
+        'userId': user['id'].toString(),
+      }, showLoading: false);
+
+      final List transactions = (response != null &&
+              response['responseType'] == 'S')
+          ? (response['responseValue'] as List? ?? [])
+          : [];
+
+      if (transactions.isEmpty) {
+        await alertServices.hideLoading();
+        alertServices.errorToast(
+          languageProvider.tr('home.noTransactionsToExport'),
+        );
+        return;
+      }
+
+      final timestamp = DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
+      await ExportService.exportTransactionsToPdf(
+        transactions: transactions,
+        userDetails: user,
+        fileName: 'Moi_Kanakku_All_Functions_$timestamp.pdf',
+        saveToDownloads: true,
+        onBeforeShare: () => alertServices.hideLoading(),
+      );
+
+      alertServices.successToast(
+        languageProvider.tr('home.exportedSuccessfully'),
+      );
+    } catch (e) {
+      debugPrint('More export error: $e');
+      await alertServices.hideLoading();
+      alertServices.errorToast(languageProvider.tr('home.exportError'));
+    }
+  }
+
   Future<void> _onLogoutTap(BuildContext context) async {
     final languageProvider = Provider.of<LanguageProvider>(
       context,
@@ -184,275 +259,6 @@ class MorePage extends StatelessWidget {
 
     if (!context.mounted) return;
     Navigator.pushNamedAndRemoveUntil(context, 'login', (route) => false);
-  }
-}
-
-class _MoreAppHeader extends StatelessWidget implements PreferredSizeWidget {
-  final String title;
-  final String subtitle;
-  final String name;
-  final Map<String, dynamic>? user;
-  final VoidCallback onProfileTap;
-
-  const _MoreAppHeader({
-    required this.title,
-    required this.subtitle,
-    required this.name,
-    required this.user,
-    required this.onProfileTap,
-  });
-
-  @override
-  Size get preferredSize => const Size.fromHeight(118);
-
-  String _resolveProfileImageUrl() {
-    if (user == null) return '';
-    final path = (user!['profile_image_url'] ?? user!['profile_image'])
-            ?.toString()
-            .trim() ??
-        '';
-    if (path.isEmpty) return '';
-    if (path.startsWith('http://') || path.startsWith('https://')) {
-      return path;
-    }
-    return '$appImageUrl/${path.replaceFirst(RegExp(r'^/+'), '')}';
-  }
-
-  String get _contactLine {
-    final email = user?['email']?.toString().trim() ?? '';
-    if (email.isNotEmpty) return email;
-    final phone = user?['phone']?.toString().trim() ??
-        user?['mobile']?.toString().trim() ??
-        '';
-    return phone;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final primary = Theme.of(context).colorScheme.primary;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final imageUrl = _resolveProfileImageUrl();
-    final contact = _contactLine;
-    final initial = name.isNotEmpty ? name[0].toUpperCase() : 'U';
-
-    return AppBar(
-      toolbarHeight: preferredSize.height,
-      elevation: 0,
-      scrolledUnderElevation: 0,
-      surfaceTintColor: Colors.transparent,
-      backgroundColor: Colors.transparent,
-      centerTitle: false,
-      automaticallyImplyLeading: false,
-      titleSpacing: 0,
-      systemOverlayStyle: SystemUiOverlayStyle.light.copyWith(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
-        statusBarBrightness: Brightness.dark,
-        systemNavigationBarColor: isDark ? Colors.black : Colors.white,
-        systemNavigationBarIconBrightness:
-            isDark ? Brightness.light : Brightness.dark,
-      ),
-      flexibleSpace: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              primary,
-              Color.lerp(primary, const Color(0xff0A3D8F), 0.35)!,
-            ],
-          ),
-          borderRadius: const BorderRadius.only(
-            bottomLeft: Radius.circular(22),
-            bottomRight: Radius.circular(22),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: primary.withValues(alpha: 0.28),
-              blurRadius: 16,
-              offset: const Offset(0, 6),
-            ),
-          ],
-        ),
-        child: Stack(
-          children: [
-            Positioned(
-              top: -28,
-              right: -18,
-              child: Container(
-                width: 110,
-                height: 110,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withValues(alpha: 0.08),
-                ),
-              ),
-            ),
-            Positioned(
-              bottom: -40,
-              left: -20,
-              child: Container(
-                width: 96,
-                height: 96,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withValues(alpha: 0.06),
-                ),
-              ),
-            ),
-            Positioned(
-              top: 18,
-              right: 56,
-              child: Container(
-                width: 46,
-                height: 46,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.12),
-                    width: 10,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(22),
-          bottomRight: Radius.circular(22),
-        ),
-      ),
-      title: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              title,
-              style: AppTypography.label.copyWith(
-                color: Colors.white.withValues(alpha: 0.78),
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                letterSpacing: 0.4,
-              ),
-            ),
-            const SizedBox(height: 10),
-            Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: onProfileTap,
-                borderRadius: BorderRadius.circular(16),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 52,
-                      height: 52,
-                      padding: const EdgeInsets.all(2.5),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.55),
-                          width: 1.5,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.14),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: ClipOval(
-                        child: imageUrl.isEmpty
-                            ? Container(
-                                color: Colors.white.withValues(alpha: 0.2),
-                                alignment: Alignment.center,
-                                child: Text(
-                                  initial,
-                                  style: AppTypography.sectionTitle.copyWith(
-                                    color: Colors.white,
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                              )
-                            : Image.network(
-                                imageUrl,
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) {
-                                  return Container(
-                                    color: Colors.white.withValues(alpha: 0.2),
-                                    alignment: Alignment.center,
-                                    child: Text(
-                                      initial,
-                                      style:
-                                          AppTypography.sectionTitle.copyWith(
-                                        color: Colors.white,
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.w700,
-                                      ),
-                                    ),
-                                  );
-                                },
-                              ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            name,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: AppTypography.sectionTitle.copyWith(
-                              color: Colors.white,
-                              fontSize: 17,
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: -0.3,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            contact.isNotEmpty ? contact : subtitle,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: AppTypography.body.copyWith(
-                              color: Colors.white.withValues(alpha: 0.78),
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      width: 34,
-                      height: 34,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.14),
-                        shape: BoxShape.circle,
-                      ),
-                      alignment: Alignment.center,
-                      child: const HugeIcon(
-                        icon: HugeIcons.strokeRoundedArrowRight01,
-                        color: Colors.white,
-                        size: 16,
-                        strokeWidth: 1.9,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 }
 

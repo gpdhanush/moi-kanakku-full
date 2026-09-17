@@ -6,6 +6,7 @@ import 'package:moi/app_pages/functions/functions_list.dart';
 import 'package:moi/app_pages/home_page/home_page.dart';
 import 'package:moi/app_pages/more/more_page.dart';
 import 'package:moi/app_pages/transactions/transaction_dashboard.dart';
+import 'package:moi/app_themes/index.dart';
 import 'package:moi/app_utils/app_global/alert_services.dart';
 import 'package:moi/app_utils/app_providers/language_provider.dart';
 import 'package:moi/app_utils/app_widgets/moi_bottom_nav_bar.dart';
@@ -86,11 +87,11 @@ class _MainShellPageState extends State<MainShellPage> {
           child: Builder(
             builder: (context) {
               final mq = MediaQuery.of(context);
-              // Pill height (~56) + float gap (14) + safe inset.
-              final navClearance = 70.0 + mq.padding.bottom + 14;
+              final navClearance = MoiBottomNavBar.clearanceOf(context);
 
               return Scaffold(
-                backgroundColor: Colors.transparent,
+                backgroundColor: AppColors.background,
+                // Float the pill over content like the reference image.
                 extendBody: true,
                 body: MediaQuery(
                   data: mq.copyWith(

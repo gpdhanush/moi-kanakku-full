@@ -54,7 +54,7 @@ class _MicIconWidgetState extends State<MicIconWidget> {
         visualDensity: VisualDensity.adaptivePlatformDensity,
         icon: AnimatedSwitcher(
           duration: const Duration(milliseconds: 200),
-          child: HugeIcon(key: ValueKey(isListening), icon: isListening ? HugeIcons.strokeRoundedMic01 : HugeIcons.strokeRoundedMic02, size: 22, color: isListening ? Colors.redAccent : colorScheme.primary, strokeWidth: 1.8),
+          child: HugeIcon(key: ValueKey(isListening), icon: isListening ? HugeIcons.strokeRoundedMic01 : HugeIcons.strokeRoundedMic02, size: 14, color: isListening ? Colors.redAccent : colorScheme.primary, strokeWidth: 1.5),
         ),
         onPressed: () {
           FocusScope.of(context).unfocus();

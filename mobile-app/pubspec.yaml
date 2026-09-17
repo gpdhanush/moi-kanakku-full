@@ -12,7 +12,6 @@ dependencies:
     sdk: flutter
   provider: ^6.1.5
   speech_to_text: ^7.4.0
-  fluttertoast: ^10.0.0
   upgrader: ^13.7.0
   intl: ^0.20.2
   local_auth: ^3.0.0

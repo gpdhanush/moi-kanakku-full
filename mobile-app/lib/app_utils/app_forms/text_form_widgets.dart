@@ -12,6 +12,7 @@ import 'field_label.dart';
 class TextFormWidget extends StatelessWidget {
   static const Color _fillColor = Color(0xffF7FAFF);
   static const double _radius = 12;
+  static const double _fieldIconSize = 20;
 
   final String title;
   final String? hintText;
@@ -195,10 +196,25 @@ class TextFormWidget extends StatelessWidget {
     );
   }
 
+  Widget _fieldIcon(List<List<dynamic>> icon, Color tint) {
+    return IconTheme(
+      data: IconThemeData(size: _fieldIconSize, color: tint),
+      child: SizedBox(
+        width: _fieldIconSize,
+        height: _fieldIconSize,
+        child: HugeIcon(
+          icon: icon,
+          size: _fieldIconSize,
+          color: tint,
+          strokeWidth: 1.5,
+        ),
+      ),
+    );
+  }
+
   InputDecoration customDecoration(BuildContext context) {
     final base = TextFormWidget.commonInputDecorationTheme(context);
-    final iconTint =
-        iconColor ?? AppColors.textPrimary.withValues(alpha: 0.8);
+    final iconTint = iconColor ?? AppColors.textPrimary.withValues(alpha: 0.8);
 
     return InputDecoration(
       prefixText: prefixText,
@@ -212,16 +228,14 @@ class TextFormWidget extends StatelessWidget {
       fillColor: base.fillColor,
       contentPadding: base.contentPadding,
       isDense: base.isDense,
-      suffixIconConstraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+      suffixIconConstraints: const BoxConstraints(minWidth: 28, minHeight: 28),
       prefixIcon: prefixIcon != null
-          ? HugeIcon(
-              icon: prefixIcon!,
-              size: 22,
-              color: iconTint,
-              strokeWidth: 1.8,
+          ? Padding(
+              padding: const EdgeInsets.only(left: 14, right: 8),
+              child: _fieldIcon(prefixIcon!, iconTint),
             )
           : null,
-      prefixIconConstraints: const BoxConstraints(minHeight: 40, minWidth: 44),
+      prefixIconConstraints: const BoxConstraints(minHeight: 30, minWidth: 36),
       suffixIcon: getSuffix(controller, context),
       errorStyle: const TextStyle(
         color: Colors.red,
@@ -239,24 +253,19 @@ class TextFormWidget extends StatelessWidget {
   }
 
   Widget? getSuffix(TextEditingController? ctrl, BuildContext context) {
-    final iconTint =
-        iconColor ?? AppColors.textPrimary.withValues(alpha: 0.75);
+    final iconTint = iconColor ?? AppColors.textPrimary.withValues(alpha: 0.75);
 
     if (suffixIconTrue == true) {
       return Padding(
-        padding: const EdgeInsets.only(right: 4),
+        padding: const EdgeInsets.only(right: 8),
         child: SizedBox(
-          height: 40,
-          width: 40,
+          height: 28,
+          width: 28,
           child: IconButton(
             padding: EdgeInsets.zero,
             visualDensity: VisualDensity.compact,
-            icon: HugeIcon(
-              icon: suffixIcon!,
-              size: 22,
-              color: iconTint,
-              strokeWidth: 1.8,
-            ),
+            constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+            icon: _fieldIcon(suffixIcon!, iconTint),
             onPressed: suffixIconOnPressed,
           ),
         ),

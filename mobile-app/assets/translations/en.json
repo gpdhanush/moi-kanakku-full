@@ -38,7 +38,8 @@
     "switchToEnglish": "Switch to English",
     "malayalam": "Malayalam",
     "kannada": "Kannada",
-    "exitConfirmation": "Do you want to exit the app?"
+    "exitConfirmation": "Do you want to exit the app?",
+    "ok": "OK"
   },
   "offline": {
     "enableWifi": "Turn on Wi-Fi or mobile data",
@@ -325,7 +326,11 @@
     "settingsHint": "App tools and preferences",
     "rateUsHint": "Share your experience",
     "contactHint": "Get help from our team",
-    "logoutHint": "Sign out of your account"
+    "logoutHint": "Sign out of your account",
+    "export": "Export",
+    "exportHint": "Download all function transactions as PDF",
+    "exportConfirmMessage": "You can export all function-based transactions in a single PDF. Tap OK to save it to Downloads and share.",
+    "exporting": "Preparing PDF..."
   },
   "functionDetails": {
     "title": "Function Details",
