@@ -210,64 +210,39 @@ class _AuthImageHeroState extends State<AuthImageHero>
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   if (_hasText(widget.headline))
-                    Text(
-                      widget.headline!,
-                      style: AppTypography.heroHeadline.copyWith(
-                        shadows: const [
-                          Shadow(
-                            color: Color(0x66000000),
-                            blurRadius: 8,
-                            offset: Offset(0, 1),
-                          ),
-                        ],
-                      ),
+                    _OutlinedHeroText(
+                      text: widget.headline!,
+                      outlineColor: primary,
+                      style: AppTypography.heroHeadline,
                     ),
                   if (_hasText(widget.support)) ...[
                     const SizedBox(height: 4),
-                    Text(
-                      widget.support!,
+                    _OutlinedHeroText(
+                      text: widget.support!,
+                      outlineColor: primary,
+                      strokeWidth: 1.6,
                       style: AppTypography.heroSupport.copyWith(
                         color: Colors.white.withValues(alpha: 0.90),
-                        shadows: const [
-                          Shadow(
-                            color: Color(0x66000000),
-                            blurRadius: 6,
-                            offset: Offset(0, 1),
-                          ),
-                        ],
                       ),
                     ),
                   ],
                   if (_hasText(widget.title)) ...[
                     if (_hasText(widget.headline) || _hasText(widget.support))
                       const SizedBox(height: 10),
-                    Text(
-                      widget.title!,
-                      style: AppTypography.heroHeadline.copyWith(
-                        fontSize: 20,
-                        shadows: const [
-                          Shadow(
-                            color: Color(0x66000000),
-                            blurRadius: 8,
-                            offset: Offset(0, 1),
-                          ),
-                        ],
-                      ),
+                    _OutlinedHeroText(
+                      text: widget.title!,
+                      outlineColor: primary,
+                      style: AppTypography.heroHeadline.copyWith(fontSize: 20),
                     ),
                   ],
                   if (_hasText(widget.subtitle)) ...[
                     const SizedBox(height: 4),
-                    Text(
-                      widget.subtitle!,
+                    _OutlinedHeroText(
+                      text: widget.subtitle!,
+                      outlineColor: primary,
+                      strokeWidth: 1.6,
                       style: AppTypography.heroSupport.copyWith(
                         color: Colors.white.withValues(alpha: 0.92),
-                        shadows: const [
-                          Shadow(
-                            color: Color(0x66000000),
-                            blurRadius: 6,
-                            offset: Offset(0, 1),
-                          ),
-                        ],
                       ),
                     ),
                   ],
@@ -299,6 +274,51 @@ class _AuthImageHeroState extends State<AuthImageHero>
   }
 }
 
+/// White fill + theme-colored stroke for readable hero overlay copy.
+class _OutlinedHeroText extends StatelessWidget {
+  final String text;
+  final TextStyle style;
+  final Color outlineColor;
+  final double strokeWidth;
+
+  const _OutlinedHeroText({
+    required this.text,
+    required this.style,
+    required this.outlineColor,
+    this.strokeWidth = 2.2,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        Text(
+          text,
+          style: style.copyWith(
+            foreground: Paint()
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = strokeWidth
+              ..strokeJoin = StrokeJoin.round
+              ..color = outlineColor,
+          ),
+        ),
+        Text(
+          text,
+          style: style.copyWith(
+            shadows: const [
+              Shadow(
+                color: Color(0x44000000),
+                blurRadius: 6,
+                offset: Offset(0, 1),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 /// Login hero with snowfall + overlay copy.
 class LoginHeroHeader extends StatelessWidget {
   final double height;
@@ -320,7 +340,7 @@ class LoginHeroHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return AuthImageHero(
       height: height,
-      imageAsset: AppImages.weddingHeroImage,
+      imageAsset: AppImages.loginHeroImage,
       enableSnow: true,
       imageAlignment: Alignment.center,
       headline: headline,

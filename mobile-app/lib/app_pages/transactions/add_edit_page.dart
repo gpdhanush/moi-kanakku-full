@@ -267,10 +267,6 @@ class _AddEditPageState extends State<AddEditPage> {
       builder: (context, languageProvider, _) {
         final isReceived = _getTransactionType() != 'RETURN';
         final accent = isReceived ? AppColors.moiReceived : AppColors.moiGiven;
-        final softTop =
-            isReceived ? AppColors.moiReceivedSoft : AppColors.moiGivenSoft;
-        final softBottom =
-            isReceived ? const Color(0xffD1FAE5) : const Color(0xffFFE4E6);
         final title = isReceived
             ? languageProvider.tr('transactions.newInvest')
             : languageProvider.tr('transactions.newReturn');
@@ -305,21 +301,6 @@ class _AddEditPageState extends State<AddEditPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _FlowIntroCard(
-                          title: flowLabel,
-                          subtitle: isReceived
-                              ? languageProvider.tr(
-                                  'transactions.addReceived',
-                                )
-                              : languageProvider.tr('transactions.addGiven'),
-                          accent: accent,
-                          softTop: softTop,
-                          softBottom: softBottom,
-                          icon: isReceived
-                              ? HugeIcons.strokeRoundedArrowDownLeft01
-                              : HugeIcons.strokeRoundedArrowUpRight01,
-                        ),
-                        const SizedBox(height: AppSpacing.md),
                         _SectionCard(
                           accent: accent,
                           title: languageProvider
@@ -563,93 +544,6 @@ class _AddEditPageState extends State<AddEditPage> {
     thingsCtrl.dispose();
     remarksCtrl.dispose();
     super.dispose();
-  }
-}
-
-class _FlowIntroCard extends StatelessWidget {
-  final String title;
-  final String subtitle;
-  final Color accent;
-  final Color softTop;
-  final Color softBottom;
-  final List<List<dynamic>> icon;
-
-  const _FlowIntroCard({
-    required this.title,
-    required this.subtitle,
-    required this.accent,
-    required this.softTop,
-    required this.softBottom,
-    required this.icon,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      decoration: BoxDecoration(
-        borderRadius: AppRadius.lgAll,
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [softTop, softBottom],
-        ),
-        border: Border.all(color: accent.withValues(alpha: 0.2)),
-        boxShadow: [
-          BoxShadow(
-            color: accent.withValues(alpha: 0.12),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.85),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: accent.withValues(alpha: 0.18)),
-            ),
-            alignment: Alignment.center,
-            child: HugeIcon(
-              icon: icon,
-              color: accent,
-              size: 22,
-              strokeWidth: 1.9,
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: AppTypography.label.copyWith(
-                    color: accent,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  subtitle,
-                  style: AppTypography.body.copyWith(
-                    color: accent.withValues(alpha: 0.8),
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
   }
 }
 

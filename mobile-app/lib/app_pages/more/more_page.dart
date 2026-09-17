@@ -32,13 +32,17 @@ class MorePage extends StatelessWidget {
             physics: const ClampingScrollPhysics(),
             padding: EdgeInsets.fromLTRB(
               AppSpacing.page,
-              AppSpacing.md,
+              AppSpacing.lg,
               AppSpacing.page,
               MediaQuery.paddingOf(context).bottom + AppSpacing.md,
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                _MoreSectionLabel(
+                  title: languageProvider.tr('more.sectionGeneral'),
+                ),
+                const SizedBox(height: AppSpacing.sm),
                 _MoreCard(
                   children: [
                     _MoreRow(
@@ -59,13 +63,7 @@ class MorePage extends StatelessWidget {
                       title: languageProvider.tr('menu.profile'),
                       subtitle: languageProvider.tr('more.profileHint'),
                       onTap: () => Navigator.pushNamed(context, 'profile'),
-                      showDivider: false,
                     ),
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.lg),
-                _MoreCard(
-                  children: [
                     _MoreRow(
                       icon: HugeIcons.strokeRoundedPdf02,
                       iconBg: const Color(0xffEEF2FF),
@@ -78,44 +76,14 @@ class MorePage extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: AppSpacing.lg),
-                const SettingsMenusPanel(),
-                const SizedBox(height: AppSpacing.lg),
-                _MoreCard(
-                  children: [
-                    _MoreRow(
-                      icon: HugeIcons.strokeRoundedStar,
-                      iconBg: const Color(0xffFFF7ED),
-                      iconColor: const Color(0xffEA580C),
-                      title: languageProvider.tr('menu.rateUs'),
-                      subtitle: languageProvider.tr('more.rateUsHint'),
-                      onTap: () => _rateApp(),
-                    ),
-                    _MoreRow(
-                      icon: HugeIcons.strokeRoundedContact,
-                      iconBg: const Color(0xffF0F9FF),
-                      iconColor: const Color(0xff0284C7),
-                      title: languageProvider.tr('menu.contactUs'),
-                      subtitle: languageProvider.tr('more.contactHint'),
-                      onTap: () => Navigator.pushNamed(context, 'contact_us'),
-                      showDivider: false,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.lg),
-                _MoreCard(
-                  children: [
-                    _MoreRow(
-                      icon: HugeIcons.strokeRoundedLogout01,
-                      iconBg: AppColors.moiGivenSoft,
-                      iconColor: AppColors.moiGiven,
-                      title: languageProvider.tr('menu.logout'),
-                      subtitle: languageProvider.tr('more.logoutHint'),
-                      showChevron: false,
-                      showDivider: false,
-                      titleColor: AppColors.moiGiven,
-                      onTap: () => _onLogoutTap(context),
-                    ),
-                  ],
+                SettingsMenusPanel(
+                  onContactUs: () =>
+                      Navigator.pushNamed(context, 'contact_us'),
+                  onRateUs: () => _rateApp(),
+                  onLogout: () => _onLogoutTap(context),
+                  contactSubtitle: languageProvider.tr('more.contactHint'),
+                  rateUsSubtitle: languageProvider.tr('more.rateUsHint'),
+                  logoutSubtitle: languageProvider.tr('more.logoutHint'),
                 ),
               ],
             ),
@@ -264,6 +232,28 @@ class MorePage extends StatelessWidget {
   }
 }
 
+class _MoreSectionLabel extends StatelessWidget {
+  final String title;
+
+  const _MoreSectionLabel({required this.title});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 4, bottom: 2),
+      child: Text(
+        title.toUpperCase(),
+        style: AppTypography.label.copyWith(
+          color: AppColors.textPrimary,
+          fontSize: 13,
+          fontWeight: FontWeight.w800,
+          letterSpacing: 0.5,
+        ),
+      ),
+    );
+  }
+}
+
 class _MoreCard extends StatelessWidget {
   final List<Widget> children;
 
@@ -290,9 +280,7 @@ class _MoreRow extends StatelessWidget {
   final String title;
   final String subtitle;
   final VoidCallback? onTap;
-  final bool showChevron;
   final bool showDivider;
-  final Color? titleColor;
 
   const _MoreRow({
     required this.icon,
@@ -301,9 +289,7 @@ class _MoreRow extends StatelessWidget {
     required this.title,
     required this.subtitle,
     this.onTap,
-    this.showChevron = true,
     this.showDivider = true,
-    this.titleColor,
   });
 
   @override
@@ -342,7 +328,7 @@ class _MoreRow extends StatelessWidget {
                         Text(
                           title,
                           style: AppTypography.label.copyWith(
-                            color: titleColor ?? AppColors.textPrimary,
+                            color: AppColors.textPrimary,
                             fontSize: 14,
                             fontWeight: FontWeight.w700,
                           ),
@@ -360,15 +346,13 @@ class _MoreRow extends StatelessWidget {
                       ],
                     ),
                   ),
-                  if (showChevron) ...[
-                    const SizedBox(width: 8),
-                    const HugeIcon(
-                      icon: HugeIcons.strokeRoundedArrowRight01,
-                      strokeWidth: 1.9,
-                      size: 16,
-                      color: Color(0xffA1A1AA),
-                    ),
-                  ],
+                  const SizedBox(width: 8),
+                  const HugeIcon(
+                    icon: HugeIcons.strokeRoundedArrowRight01,
+                    strokeWidth: 1.9,
+                    size: 16,
+                    color: Color(0xffA1A1AA),
+                  ),
                 ],
               ),
             ),

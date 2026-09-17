@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:moi/app_themes/index.dart';
+import 'package:moi/app_utils/app_global/speech_input_service.dart';
 import 'package:moi/app_utils/app_providers/language_provider.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
-import 'package:speech_to_text/speech_recognition_error.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 
 /// Modern search field with speech-to-text mic support.
@@ -25,11 +24,11 @@ class SearchWidget extends StatefulWidget {
 }
 
 class _SearchWidgetState extends State<SearchWidget> {
-  final SpeechToText _speech = SpeechToText();
+  final Object _sessionId = Object();
+  final SpeechInputService _speech = SpeechInputService.instance;
+
   bool _isListening = false;
   bool _isInitialized = false;
-  bool _initializing = false;
-  List<LocaleName> _availableLocales = [];
 
   @override
   void initState() {
@@ -41,9 +40,7 @@ class _SearchWidgetState extends State<SearchWidget> {
   @override
   void dispose() {
     widget.controller?.removeListener(_onTextChanged);
-    if (_isListening) {
-      _speech.stop();
-    }
+    _speech.release(_sessionId);
     super.dispose();
   }
 
@@ -52,121 +49,49 @@ class _SearchWidgetState extends State<SearchWidget> {
   }
 
   Future<void> _initializeSpeech() async {
-    if (_initializing) return;
-    _initializing = true;
-
-    try {
-      final micStatus = await Permission.microphone.status;
-      if (!micStatus.isGranted) {
-        await Permission.microphone.request();
-      }
-
-      bool available = await _speech.initialize(
-        onStatus: (status) {
-          debugPrint('Search Speech Status: $status');
-          if (mounted) {
-            setState(() {
-              _isListening = status == 'listening';
-            });
-          }
-        },
-        onError: (SpeechRecognitionError error) {
-          debugPrint('Search Speech Error: ${error.errorMsg}');
-          if (mounted) {
-            setState(() {
-              _isListening = false;
-            });
-          }
-        },
-      );
-
-      if (available) {
-        _availableLocales = await _speech.locales();
-      }
-
-      if (mounted) {
-        setState(() {
-          _isInitialized = available;
-        });
-      }
-    } catch (e) {
-      debugPrint('Search Speech Init Exception: $e');
-      if (mounted) {
-        setState(() {
-          _isInitialized = false;
-        });
-      }
-    } finally {
-      _initializing = false;
-    }
-  }
-
-  String? _resolveLocaleId(String desiredLocaleId) {
-    if (_availableLocales.isEmpty) return null;
-
-    final hasExact =
-        _availableLocales.any((loc) => loc.localeId == desiredLocaleId);
-    if (hasExact) return desiredLocaleId;
-
-    final langPrefix = desiredLocaleId.split('_').first;
-    for (final loc in _availableLocales) {
-      if (loc.localeId.startsWith(langPrefix)) {
-        return loc.localeId;
-      }
-    }
-
-    return _availableLocales.first.localeId;
+    final available = await _speech.ensureInitialized();
+    if (!mounted) return;
+    setState(() => _isInitialized = available);
   }
 
   Future<void> _startListening() async {
     if (!_isInitialized) {
       await _initializeSpeech();
     }
-
     if (!_isInitialized || widget.controller == null) return;
 
     final voiceCode = context.read<LanguageProvider>().voiceLanguageCode;
-    final localeId = _resolveLocaleId(voiceCode);
 
-    try {
-      if (mounted) {
-        setState(() {
-          _isListening = true;
-        });
-      }
-
-      await _speech.listen(
-        listenOptions: SpeechListenOptions(
-          localeId: localeId,
-          cancelOnError: true,
-          partialResults: true,
-          autoPunctuation: true,
-          enableHapticFeedback: true,
-        ),
-        onResult: (result) {
-          if (mounted && widget.controller != null) {
-            widget.controller!.text = result.recognizedWords;
-          }
-        },
-      );
-    } catch (e) {
-      debugPrint('Search Speech Listen Exception: $e');
-      if (mounted) {
-        setState(() {
-          _isListening = false;
-        });
-      }
-    }
+    await _speech.startListening(
+      sessionId: _sessionId,
+      desiredLocaleId: voiceCode,
+      listenMode: ListenMode.search,
+      onListeningChanged: (listening) {
+        if (!mounted) return;
+        setState(() => _isListening = listening);
+      },
+      onResult: (words, isFinal) {
+        if (!mounted || widget.controller == null) return;
+        widget.controller!.value = TextEditingValue(
+          text: words,
+          selection: TextSelection.collapsed(offset: words.length),
+        );
+        if (isFinal && _isListening) {
+          setState(() => _isListening = false);
+        }
+      },
+      onError: (message) {
+        if (!mounted) return;
+        setState(() => _isListening = false);
+        debugPrint('Search speech error: $message');
+      },
+    );
   }
 
-  void _stopListening() {
-    if (_isListening) {
-      _speech.stop();
-      if (mounted) {
-        setState(() {
-          _isListening = false;
-        });
-      }
+  Future<void> _stopListening() async {
+    await _speech.stop(_sessionId);
+    if (mounted) {
+      setState(() => _isListening = false);
     }
   }
 
@@ -242,7 +167,7 @@ class _SearchWidgetState extends State<SearchWidget> {
             mainAxisSize: MainAxisSize.min,
             children: [
               ...extraTrailing,
-              if (hasText)
+              if (hasText && !_isListening)
                 IconButton(
                   onPressed: _clearText,
                   tooltip: 'Clear',
@@ -252,8 +177,8 @@ class _SearchWidgetState extends State<SearchWidget> {
                     size: 16,
                     strokeWidth: 1.9,
                   ),
-                )
-              else if (_isInitialized)
+                ),
+              if (_isInitialized)
                 IconButton(
                   onPressed: _toggleListening,
                   tooltip: _isListening ? 'Stop' : 'Voice search',

@@ -10,8 +10,28 @@ import 'package:moi/app_utils/app_providers/language_provider.dart';
 import 'package:provider/provider.dart';
 
 /// Settings menus shared by the More tab (and Settings route).
+///
+/// Grouping:
+/// 1. App lock
+/// 2. Language, voice, color
+/// 3. About app → optional contact / rate / app name / version / logout
 class SettingsMenusPanel extends StatefulWidget {
-  const SettingsMenusPanel({super.key});
+  final VoidCallback? onContactUs;
+  final VoidCallback? onRateUs;
+  final VoidCallback? onLogout;
+  final String? contactSubtitle;
+  final String? rateUsSubtitle;
+  final String? logoutSubtitle;
+
+  const SettingsMenusPanel({
+    super.key,
+    this.onContactUs,
+    this.onRateUs,
+    this.onLogout,
+    this.contactSubtitle,
+    this.rateUsSubtitle,
+    this.logoutSubtitle,
+  });
 
   @override
   State<SettingsMenusPanel> createState() => _SettingsMenusPanelState();
@@ -48,11 +68,64 @@ class _SettingsMenusPanelState extends State<SettingsMenusPanel> {
           'voiceLanguages.${voiceCode.substring(0, 2)}',
         );
 
+        final aboutChildren = <Widget>[
+          if (widget.onContactUs != null)
+            _MenuRow(
+              icon: HugeIcons.strokeRoundedContact,
+              iconBg: const Color(0xffF0F9FF),
+              iconColor: const Color(0xff0284C7),
+              title: languageProvider.tr('menu.contactUs'),
+              subtitle: widget.contactSubtitle ??
+                  languageProvider.tr('settings.contactUs'),
+              onTap: widget.onContactUs,
+            ),
+          if (widget.onRateUs != null)
+            _MenuRow(
+              icon: HugeIcons.strokeRoundedStar,
+              iconBg: const Color(0xffFFF7ED),
+              iconColor: const Color(0xffEA580C),
+              title: languageProvider.tr('menu.rateUs'),
+              subtitle: widget.rateUsSubtitle ??
+                  languageProvider.tr('settings.rateApp'),
+              onTap: widget.onRateUs,
+            ),
+          _MenuRow(
+            icon: HugeIcons.strokeRoundedSmartPhone01,
+            iconBg: const Color(0xffEFF6FF),
+            iconColor: primary,
+            title: languageProvider.tr('settings.appName'),
+            subtitle: appName.toUpperCase(),
+            showChevron: false,
+          ),
+          _MenuRow(
+            icon: HugeIcons.strokeRoundedInformationCircle,
+            iconBg: const Color(0xffF0F9FF),
+            iconColor: const Color(0xff0284C7),
+            title: languageProvider.tr('settings.appVersion'),
+            subtitle: languageProvider.tr('settings.aboutHint'),
+            trailingLabel: appVersion,
+            showChevron: false,
+            showDivider: widget.onLogout != null,
+          ),
+          if (widget.onLogout != null)
+            _MenuRow(
+              icon: HugeIcons.strokeRoundedLogout01,
+              iconBg: AppColors.moiGivenSoft,
+              iconColor: AppColors.moiGiven,
+              title: languageProvider.tr('menu.logout'),
+              subtitle: widget.logoutSubtitle ??
+                  languageProvider.tr('menu.logout'),
+              showChevron: false,
+              showDivider: false,
+              titleColor: AppColors.moiGiven,
+              onTap: widget.onLogout,
+            ),
+        ];
+
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _SectionLabel(
-              primary: primary,
               title: languageProvider.tr('settings.security'),
             ),
             const SizedBox(height: AppSpacing.sm),
@@ -82,8 +155,7 @@ class _SettingsMenusPanelState extends State<SettingsMenusPanel> {
             ),
             const SizedBox(height: AppSpacing.lg),
             _SectionLabel(
-              primary: primary,
-              title: languageProvider.tr('settings.theme'),
+              title: languageProvider.tr('settings.preferences'),
             ),
             const SizedBox(height: AppSpacing.sm),
             _MenuCard(
@@ -140,32 +212,10 @@ class _SettingsMenusPanelState extends State<SettingsMenusPanel> {
             ),
             const SizedBox(height: AppSpacing.lg),
             _SectionLabel(
-              primary: primary,
               title: languageProvider.tr('settings.aboutApp'),
             ),
             const SizedBox(height: AppSpacing.sm),
-            _MenuCard(
-              children: [
-                _MenuRow(
-                  icon: HugeIcons.strokeRoundedSmartPhone01,
-                  iconBg: const Color(0xffEFF6FF),
-                  iconColor: primary,
-                  title: languageProvider.tr('settings.appName'),
-                  subtitle: appName.toUpperCase(),
-                  showChevron: false,
-                ),
-                _MenuRow(
-                  icon: HugeIcons.strokeRoundedInformationCircle,
-                  iconBg: const Color(0xffF0F9FF),
-                  iconColor: const Color(0xff0284C7),
-                  title: languageProvider.tr('settings.appVersion'),
-                  subtitle: languageProvider.tr('settings.aboutHint'),
-                  trailingLabel: appVersion,
-                  showChevron: false,
-                  showDivider: false,
-                ),
-              ],
-            ),
+            _MenuCard(children: aboutChildren),
           ],
         );
       },
@@ -365,19 +415,22 @@ class _SettingsMenusPanelState extends State<SettingsMenusPanel> {
 }
 
 class _SectionLabel extends StatelessWidget {
-  final Color primary;
   final String title;
 
-  const _SectionLabel({required this.primary, required this.title});
+  const _SectionLabel({required this.title});
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      title,
-      style: AppTypography.label.copyWith(
-        color: primary,
-        fontSize: 13,
-        fontWeight: FontWeight.w700,
+    return Padding(
+      padding: const EdgeInsets.only(left: 4, bottom: 2),
+      child: Text(
+        title.toUpperCase(),
+        style: AppTypography.label.copyWith(
+          color: AppColors.textPrimary,
+          fontSize: 13,
+          fontWeight: FontWeight.w800,
+          letterSpacing: 0.5,
+        ),
       ),
     );
   }
@@ -413,6 +466,7 @@ class _MenuRow extends StatelessWidget {
   final VoidCallback? onTap;
   final bool showChevron;
   final bool showDivider;
+  final Color? titleColor;
 
   const _MenuRow({
     required this.icon,
@@ -425,6 +479,7 @@ class _MenuRow extends StatelessWidget {
     this.onTap,
     this.showChevron = true,
     this.showDivider = true,
+    this.titleColor,
   });
 
   @override
@@ -463,7 +518,7 @@ class _MenuRow extends StatelessWidget {
                         Text(
                           title,
                           style: AppTypography.label.copyWith(
-                            color: AppColors.textPrimary,
+                            color: titleColor ?? AppColors.textPrimary,
                             fontSize: 14,
                             fontWeight: FontWeight.w700,
                           ),

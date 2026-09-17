@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hugeicons/hugeicons.dart';
@@ -24,12 +26,16 @@ class _AllTransactionsPageState extends State<AllTransactionsPage> {
   final TransactionServices _txServices = TransactionServices();
   final SecureStorageService _storage = SecureStorageService();
   final AlertServices _alertServices = AlertServices();
+  final TextEditingController _searchController = TextEditingController();
+  Timer? _debounce;
 
   List<dynamic> _transactions = [];
+  List<dynamic> _filtered = [];
   bool _isLoading = true;
 
   bool get _isReceived => widget.type == 'INVEST';
   bool get _isGiven => widget.type == 'RETURN';
+  bool get _isSearching => _searchController.text.trim().isNotEmpty;
 
   Color get _accent =>
       _isReceived ? AppColors.moiReceived : AppColors.moiGiven;
@@ -37,7 +43,57 @@ class _AllTransactionsPageState extends State<AllTransactionsPage> {
   @override
   void initState() {
     super.initState();
+    _searchController.addListener(_onSearchChanged);
     _loadTransactions();
+  }
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    _searchController.removeListener(_onSearchChanged);
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _onSearchChanged() {
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 350), () {
+      _applySearch(_searchController.text);
+    });
+  }
+
+  void _applySearch(String value) {
+    if (!mounted) return;
+
+    final query = value.trim().toLowerCase();
+    if (query.isEmpty) {
+      setState(() => _filtered = List<dynamic>.from(_transactions));
+      return;
+    }
+
+    setState(() {
+      _filtered = _transactions.where((t) {
+        final first = t['person']?['firstName']?.toString() ?? '';
+        final last = t['person']?['lastName']?.toString() ??
+            t['person']?['secondName']?.toString() ??
+            '';
+        final personName = '$first $last'.toLowerCase();
+        final city = t['person']?['city']?.toString().toLowerCase() ?? '';
+        final mobile = t['person']?['mobile']?.toString().toLowerCase() ?? '';
+        final amount = t['amount']?.toString().toLowerCase() ?? '';
+        final notes = t['notes']?.toString().toLowerCase() ?? '';
+        final date = t['transactionDate']?.toString().toLowerCase() ?? '';
+        final functionName = _functionName(t).toLowerCase();
+
+        return personName.contains(query) ||
+            city.contains(query) ||
+            mobile.contains(query) ||
+            amount.contains(query) ||
+            notes.contains(query) ||
+            date.contains(query) ||
+            functionName.contains(query);
+      }).toList();
+    });
   }
 
   Future<void> _loadTransactions() async {
@@ -65,9 +121,11 @@ class _AllTransactionsPageState extends State<AllTransactionsPage> {
             _transactions = list;
             _isLoading = false;
           });
+          _applySearch(_searchController.text);
         } else {
           setState(() {
             _transactions = [];
+            _filtered = [];
             _isLoading = false;
           });
         }
@@ -77,6 +135,7 @@ class _AllTransactionsPageState extends State<AllTransactionsPage> {
       if (mounted) {
         setState(() {
           _transactions = [];
+          _filtered = [];
           _isLoading = false;
         });
       }
@@ -121,7 +180,7 @@ class _AllTransactionsPageState extends State<AllTransactionsPage> {
         return;
       }
       await ExportService.exportTransactionsToPdf(
-        transactions: _transactions,
+        transactions: _isSearching ? _filtered : _transactions,
         userDetails: user,
       );
       if (mounted) {
@@ -157,61 +216,102 @@ class _AllTransactionsPageState extends State<AllTransactionsPage> {
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator(strokeWidth: 2.5))
-          : _transactions.isEmpty
-          ? MoiEmptyState(
-              title: languageProvider.tr('transactionList.empty'),
-              subtitle: languageProvider.tr('transactionList.emptyHint'),
-              icon: HugeIcons.strokeRoundedInvoice01,
-              accentColor: _accent,
-            )
-          : RefreshIndicator(
-              color: _accent,
-              onRefresh: _loadTransactions,
-              child: ListView.separated(
-                physics: const AlwaysScrollableScrollPhysics(
-                  parent: BouncingScrollPhysics(),
+          : Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.page,
+                    AppSpacing.sm,
+                    AppSpacing.page,
+                    0,
+                  ),
+                  child: SearchWidget(
+                    controller: _searchController,
+                    hintText: languageProvider.tr('transactionList.search'),
+                  ),
                 ),
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.page,
-                  AppSpacing.md,
-                  AppSpacing.page,
-                  AppSpacing.xxl,
-                ),
-                itemCount: _transactions.length,
-                separatorBuilder: (_, _) => const SizedBox(height: 12),
-                itemBuilder: (context, index) {
-                  final t = _transactions[index];
-                  final type = t['type']?.toString().toUpperCase() ?? '';
-                  final isInvest = type == 'INVEST';
-                  final amount =
-                      double.tryParse(t['amount']?.toString() ?? '0') ?? 0;
-                  final first =
-                      t['person']?['firstName']?.toString().trim() ?? '';
-                  final last =
-                      t['person']?['lastName']?.toString().trim() ??
-                      t['person']?['secondName']?.toString().trim() ??
-                      '';
-                  final personName = '$first $last'.trim();
-                  final functionName = _functionName(t);
-
-                  return MoiInvoiceListTile.moiFlow(
-                    isReceived: isInvest,
-                    title: personName.isEmpty
-                        ? languageProvider.tr('common.noData')
-                        : personName,
-                    subtitle: functionName.toUpperCase(),
-                    amount: '₹${_formatAmount(amount)}',
-                    onTap: () {
-                      Navigator.pushNamed(
-                        context,
-                        'transaction-detail-view',
-                        arguments: t,
-                      );
-                    },
-                  );
-                },
-              ),
+                const SizedBox(height: AppSpacing.sm),
+                Expanded(child: _buildList(languageProvider)),
+              ],
             ),
+    );
+  }
+
+  Widget _buildList(LanguageProvider languageProvider) {
+    if (_filtered.isEmpty) {
+      return CustomScrollView(
+        physics: const AlwaysScrollableScrollPhysics(
+          parent: BouncingScrollPhysics(),
+        ),
+        slivers: [
+          SliverFillRemaining(
+            hasScrollBody: false,
+            child: MoiEmptyState(
+              title: languageProvider.tr('transactionList.empty'),
+              subtitle: _isSearching
+                  ? languageProvider.tr('transactionList.emptyHint')
+                  : (_isReceived
+                        ? languageProvider.tr('transactions.addReceived')
+                        : _isGiven
+                        ? languageProvider.tr('transactions.addGiven')
+                        : languageProvider.tr('transactions.emptyHint')),
+              icon: _isSearching
+                  ? HugeIcons.strokeRoundedSearchRemove
+                  : HugeIcons.strokeRoundedInvoice01,
+              accentColor: _accent,
+            ),
+          ),
+        ],
+      );
+    }
+
+    return RefreshIndicator(
+      color: _accent,
+      onRefresh: _loadTransactions,
+      child: ListView.separated(
+        physics: const AlwaysScrollableScrollPhysics(
+          parent: BouncingScrollPhysics(),
+        ),
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.page,
+          0,
+          AppSpacing.page,
+          AppSpacing.xxl,
+        ),
+        itemCount: _filtered.length,
+        separatorBuilder: (_, _) => const SizedBox(height: 12),
+        itemBuilder: (context, index) {
+          final t = _filtered[index];
+          final type = t['type']?.toString().toUpperCase() ?? '';
+          final isInvest = type == 'INVEST';
+          final amount =
+              double.tryParse(t['amount']?.toString() ?? '0') ?? 0;
+          final first =
+              t['person']?['firstName']?.toString().trim() ?? '';
+          final last =
+              t['person']?['lastName']?.toString().trim() ??
+              t['person']?['secondName']?.toString().trim() ??
+              '';
+          final personName = '$first $last'.trim();
+          final functionName = _functionName(t);
+
+          return MoiInvoiceListTile.moiFlow(
+            isReceived: isInvest,
+            title: personName.isEmpty
+                ? languageProvider.tr('common.noData')
+                : personName,
+            subtitle: functionName.toUpperCase(),
+            amount: '₹${_formatAmount(amount)}',
+            onTap: () {
+              Navigator.pushNamed(
+                context,
+                'transaction-detail-view',
+                arguments: t,
+              );
+            },
+          );
+        },
+      ),
     );
   }
 }

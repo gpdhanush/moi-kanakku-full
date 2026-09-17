@@ -227,13 +227,19 @@ class AlertServices {
                 ),
                 const SizedBox(height: 28),
                 Container(
-                  width: 58,
-                  height: 58,
+                  width: 44,
+                  height: 44,
                   decoration: BoxDecoration(
                     color: colorScheme.primary.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
-                  child: HugeIcon(icon: HugeIcons.strokeRoundedLogout01, size: 29, color: colorScheme.primary, strokeWidth: 1.8),
+                  alignment: Alignment.center,
+                  child: HugeIcon(
+                    icon: HugeIcons.strokeRoundedLogout01,
+                    size: 20,
+                    color: colorScheme.primary,
+                    strokeWidth: 1.8,
+                  ),
                 ),
                 const SizedBox(height: 18),
                 Text(

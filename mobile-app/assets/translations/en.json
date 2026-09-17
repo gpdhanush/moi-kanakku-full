@@ -337,6 +337,7 @@
     "logoutHint": "Sign out of your account",
     "profileHint": "View and edit your profile",
     "rateUsHint": "Share your experience",
+    "sectionGeneral": "General",
     "settingsHint": "App tools and preferences",
     "subtitle": "Account, support and more",
     "upcomingHint": "Plan and track upcoming events"
@@ -512,6 +513,7 @@
     "language": "Language",
     "languageHint": "Choose app language",
     "permissionsNeeded": "Permissions required. Please grant permissions.",
+    "preferences": "Preferences",
     "privacyPolicy": "Privacy Policy",
     "rateApp": "Rate App",
     "removePhoto": "Remove Photo",
@@ -541,7 +543,7 @@
     "exportedSuccessfully": "Exported successfully",
     "given": "Given",
     "received": "Received",
-    "search": "Search...",
+    "search": "Search people, functions or amounts",
     "title": "Transactions",
     "unknown": "Unknown",
     "userDetailsNotFound": "User details not found"

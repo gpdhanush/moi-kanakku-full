@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:permission_handler/permission_handler.dart';
-import 'package:speech_to_text/speech_recognition_error.dart';
-import 'package:speech_to_text/speech_recognition_result.dart';
-import 'package:speech_to_text/speech_to_text.dart';
+import 'package:hugeicons/hugeicons.dart';
+import 'package:moi/app_utils/app_global/speech_input_service.dart';
 import 'package:moi/app_utils/app_providers/language_provider.dart';
 import 'package:provider/provider.dart';
-import 'package:hugeicons/hugeicons.dart';
+import 'package:speech_to_text/speech_to_text.dart';
 
-/// A widget that provides a microphone icon for speech-to-text functionality
+/// A widget that provides a microphone icon for speech-to-text functionality.
 class MicIconWidget extends StatefulWidget {
   final Function(String) onSubmit;
 
@@ -18,29 +16,30 @@ class MicIconWidget extends StatefulWidget {
 }
 
 class _MicIconWidgetState extends State<MicIconWidget> {
-  final SpeechToText speech = SpeechToText();
-  bool available = false;
-  bool isListening = false;
-  bool isInitialized = false;
+  final Object _sessionId = Object();
+  final SpeechInputService _speech = SpeechInputService.instance;
+
+  bool _isListening = false;
+  bool _isAvailable = false;
   bool _isDisposed = false;
-  bool _initializing = false;
-  String _lastWords = '';
-  List<LocaleName> _availableLocales = [];
 
   @override
   void initState() {
     super.initState();
-    micInit();
+    _prepare();
   }
 
   @override
   void dispose() {
     _isDisposed = true;
-    if (isListening) {
-      speech.stop();
-    }
-    speech.cancel();
+    _speech.release(_sessionId);
     super.dispose();
+  }
+
+  Future<void> _prepare() async {
+    final available = await _speech.ensureInitialized();
+    if (!mounted || _isDisposed) return;
+    setState(() => _isAvailable = available);
   }
 
   @override
@@ -54,11 +53,19 @@ class _MicIconWidgetState extends State<MicIconWidget> {
         visualDensity: VisualDensity.adaptivePlatformDensity,
         icon: AnimatedSwitcher(
           duration: const Duration(milliseconds: 200),
-          child: HugeIcon(key: ValueKey(isListening), icon: isListening ? HugeIcons.strokeRoundedMic01 : HugeIcons.strokeRoundedMic02, size: 14, color: isListening ? Colors.redAccent : colorScheme.primary, strokeWidth: 1.5),
+          child: HugeIcon(
+            key: ValueKey(_isListening),
+            icon: _isListening
+                ? HugeIcons.strokeRoundedMic01
+                : HugeIcons.strokeRoundedMic02,
+            size: 14,
+            color: _isListening ? Colors.redAccent : colorScheme.primary,
+            strokeWidth: 1.5,
+          ),
         ),
         onPressed: () {
           FocusScope.of(context).unfocus();
-          if (isListening) {
+          if (_isListening) {
             _stopListening();
           } else {
             _startListening();
@@ -68,160 +75,51 @@ class _MicIconWidgetState extends State<MicIconWidget> {
     );
   }
 
-  /// Initializes the microphone for speech recognition
-  Future<void> micInit() async {
-    if (_isDisposed || _initializing) return;
-    _initializing = true;
-
-    try {
-      final micStatus = await Permission.microphone.status;
-      if (!micStatus.isGranted) {
-        await _requestPermissions();
-      }
-
-      available = await speech.initialize(
-        onStatus: (status) {
-          debugPrint('Speech Status: $status');
-          if (mounted && !_isDisposed) {
-            final listening = status == 'listening';
-            setState(() {
-              isListening = listening;
-            });
-            if (!listening && _lastWords.isNotEmpty) {
-              widget.onSubmit(_lastWords);
-            }
-          }
-        },
-        onError: (SpeechRecognitionError error) {
-          debugPrint('Speech Error: ${error.errorMsg}');
-          if (mounted && !_isDisposed) {
-            setState(() {
-              isListening = false;
-            });
-            if (_lastWords.isNotEmpty) {
-              widget.onSubmit(_lastWords);
-            }
-          }
-        },
-      );
-
-      if (available) {
-        _availableLocales = await speech.locales();
-      }
-
-      if (mounted && !_isDisposed) {
-        setState(() {
-          isInitialized = available;
-        });
-      }
-    } catch (e) {
-      debugPrint('Speech Init Exception: $e');
-      if (mounted && !_isDisposed) {
-        setState(() {
-          isInitialized = false;
-          available = false;
-        });
-      }
-    } finally {
-      _initializing = false;
-    }
-  }
-
-  /// Resolves the best supported localeId for speech-to-text
-  String? _resolveLocaleId(String desiredLocaleId) {
-    if (_availableLocales.isEmpty) return null;
-
-    final hasExact =
-        _availableLocales.any((loc) => loc.localeId == desiredLocaleId);
-    if (hasExact) return desiredLocaleId;
-
-    final langPrefix = desiredLocaleId.split('_').first;
-    for (final loc in _availableLocales) {
-      if (loc.localeId.startsWith(langPrefix)) {
-        return loc.localeId;
-      }
-    }
-
-    return _availableLocales.first.localeId;
-  }
-
-  /// Starts listening for speech input
   Future<void> _startListening() async {
-    _lastWords = '';
-
-    if (!isInitialized || !available) {
-      await micInit();
-    }
-
-    if (!available) {
-      debugPrint('Speech to text is not available on this device');
-      if (mounted && !_isDisposed) {
+    if (!_isAvailable) {
+      final available = await _speech.ensureInitialized();
+      if (!mounted || _isDisposed) return;
+      setState(() => _isAvailable = available);
+      if (!available) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Speech recognition is not available on this device.'),
             duration: Duration(seconds: 2),
           ),
         );
+        return;
       }
-      return;
     }
 
     final voiceCode = context.read<LanguageProvider>().voiceLanguageCode;
-    final localeId = _resolveLocaleId(voiceCode);
 
-    try {
-      if (mounted) {
-        setState(() {
-          isListening = true;
-        });
-      }
-
-      await speech.listen(
-        listenOptions: SpeechListenOptions(
-          localeId: localeId,
-          cancelOnError: true,
-          partialResults: true,
-          autoPunctuation: true,
-          enableHapticFeedback: true,
-        ),
-        onResult: (SpeechRecognitionResult val) {
-          if (!mounted || _isDisposed) return;
-          _lastWords = val.recognizedWords;
-          if (val.recognizedWords.isNotEmpty) {
-            widget.onSubmit(val.recognizedWords);
-          }
-          if (val.finalResult) {
-            _stopListening();
-          }
-        },
-      );
-    } catch (e) {
-      debugPrint('Speech Listen Exception: $e');
-      if (mounted && !_isDisposed) {
-        setState(() {
-          isListening = false;
-        });
-      }
-    }
+    await _speech.startListening(
+      sessionId: _sessionId,
+      desiredLocaleId: voiceCode,
+      listenMode: ListenMode.dictation,
+      onListeningChanged: (listening) {
+        if (!mounted || _isDisposed) return;
+        setState(() => _isListening = listening);
+      },
+      onResult: (words, isFinal) {
+        if (!mounted || _isDisposed) return;
+        // Live preview while speaking; commit once on final.
+        widget.onSubmit(words);
+        if (isFinal && _isListening) {
+          setState(() => _isListening = false);
+        }
+      },
+      onError: (message) {
+        if (!mounted || _isDisposed) return;
+        setState(() => _isListening = false);
+        debugPrint('Mic speech error: $message');
+      },
+    );
   }
 
-  /// Stops listening for speech input
   Future<void> _stopListening() async {
-    if (_isDisposed) return;
-    if (isListening) {
-      await speech.stop();
-      if (mounted && !_isDisposed) {
-        setState(() {
-          isListening = false;
-        });
-      }
-    }
-  }
-
-  /// Requests necessary permissions for microphone and Bluetooth
-  Future<void> _requestPermissions() async {
-    await Permission.microphone.request();
-    await Permission.bluetooth.request();
-    await Permission.bluetoothConnect.request();
+    await _speech.stop(_sessionId);
+    if (!mounted || _isDisposed) return;
+    setState(() => _isListening = false);
   }
 }
