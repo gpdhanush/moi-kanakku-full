@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import 'app_colors.dart';
 import 'app_custom_themes.dart';
 
 class AppThemes {
-  /// Primary UI font — Google Inter.
-  static String get englishFontFamily =>
-      GoogleFonts.inter().fontFamily ?? 'Inter';
+  /// Primary UI font — bundled Arimo (offline-safe).
+  static const String englishFontFamily = 'Arimo';
 
-  /// Tamil script fallback (Inter does not cover Tamil glyphs).
+  /// Tamil script fallback (Latin UI font does not cover Tamil glyphs).
   static const String tamilFontFamily = 'NotoSansTamil';
 
   // Responsive breakpoints
@@ -94,6 +92,21 @@ class AppThemes {
     );
   }
 
+  static TextStyle _arimo({
+    double? fontSize,
+    FontWeight? fontWeight,
+    Color? color,
+    TextDecoration? decoration,
+  }) {
+    return TextStyle(
+      fontFamily: englishFontFamily,
+      fontSize: fontSize,
+      fontWeight: fontWeight,
+      color: color,
+      decoration: decoration,
+    );
+  }
+
   static TextTheme _textThemeWithLanguage(
     TextTheme base,
     String languageCode,
@@ -141,11 +154,11 @@ class AppThemes {
     );
   }
 
-  static TextTheme _interBaseTextTheme(bool isDark) {
+  static TextTheme _baseTextTheme(bool isDark) {
     final base = isDark
         ? ThemeData(brightness: Brightness.dark, useMaterial3: true).textTheme
         : ThemeData(brightness: Brightness.light, useMaterial3: true).textTheme;
-    return GoogleFonts.interTextTheme(base);
+    return base.apply(fontFamily: englishFontFamily);
   }
 
   static ThemeData buildTheme({
@@ -155,8 +168,8 @@ class AppThemes {
   }) {
     final brightness = isDark ? Brightness.dark : Brightness.light;
     final base = isDark ? _buildDarkTheme() : _buildLightTheme();
-    final interTheme = _textThemeWithLanguage(
-      _interBaseTextTheme(isDark),
+    final themedText = _textThemeWithLanguage(
+      _baseTextTheme(isDark),
       languageCode,
       isDark,
     );
@@ -170,11 +183,11 @@ class AppThemes {
         secondary: AppColors.logoGold,
         tertiary: AppColors.logoMint,
       ),
-      textTheme: interTheme,
-      primaryTextTheme: interTheme,
+      textTheme: themedText,
+      primaryTextTheme: themedText,
       appBarTheme: base.appBarTheme.copyWith(
         backgroundColor: isDark ? Colors.grey[900] : seedColor,
-        titleTextStyle: GoogleFonts.inter(
+        titleTextStyle: _arimo(
           fontSize: 18,
           fontWeight: FontWeight.w600,
           color: Colors.white,
@@ -199,9 +212,9 @@ class AppThemes {
   static ThemeData get darkTheme => _buildDarkTheme();
 
   static ThemeData _buildLightTheme() {
-    final inter = GoogleFonts.interTextTheme(
-      ThemeData.light(useMaterial3: true).textTheme,
-    );
+    final textTheme = ThemeData.light(
+      useMaterial3: true,
+    ).textTheme.apply(fontFamily: englishFontFamily);
 
     return ThemeData.light(useMaterial3: true).copyWith(
       scaffoldBackgroundColor: Colors.white,
@@ -212,12 +225,12 @@ class AppThemes {
         secondary: AppColors.logoGold,
         tertiary: AppColors.logoMint,
       ),
-      textTheme: inter,
-      primaryTextTheme: inter,
+      textTheme: textTheme,
+      primaryTextTheme: textTheme,
       appBarTheme: AppBarTheme(
         backgroundColor: AppColors.primary,
         elevation: 0,
-        titleTextStyle: GoogleFonts.inter(
+        titleTextStyle: _arimo(
           fontSize: 18,
           fontWeight: FontWeight.w600,
           color: Colors.white,
@@ -252,21 +265,21 @@ class AppThemes {
         headerForegroundColor: Colors.white,
         surfaceTintColor: Colors.white,
         elevation: 5,
-        dayStyle: GoogleFonts.inter(fontWeight: FontWeight.bold),
+        dayStyle: _arimo(fontWeight: FontWeight.bold),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
         todayBorder: const BorderSide(color: AppColors.primary),
         confirmButtonStyle: ButtonStyle(
           backgroundColor: const WidgetStatePropertyAll(AppColors.primary),
           foregroundColor: const WidgetStatePropertyAll(Colors.white),
           textStyle: WidgetStatePropertyAll(
-            GoogleFonts.inter(decoration: TextDecoration.none),
+            _arimo(decoration: TextDecoration.none),
           ),
         ),
         cancelButtonStyle: ButtonStyle(
           backgroundColor: const WidgetStatePropertyAll(Colors.redAccent),
           foregroundColor: const WidgetStatePropertyAll(Colors.white),
           textStyle: WidgetStatePropertyAll(
-            GoogleFonts.inter(decoration: TextDecoration.none),
+            _arimo(decoration: TextDecoration.none),
           ),
         ),
         dayOverlayColor: const WidgetStatePropertyAll(AppColors.primary),
@@ -299,9 +312,9 @@ class AppThemes {
   }
 
   static ThemeData _buildDarkTheme() {
-    final inter = GoogleFonts.interTextTheme(
-      ThemeData.dark(useMaterial3: true).textTheme,
-    );
+    final textTheme = ThemeData.dark(
+      useMaterial3: true,
+    ).textTheme.apply(fontFamily: englishFontFamily);
 
     return ThemeData.dark(useMaterial3: true).copyWith(
       scaffoldBackgroundColor: Colors.grey[900],
@@ -312,8 +325,11 @@ class AppThemes {
         secondary: AppColors.logoGold,
         tertiary: AppColors.logoMint,
       ),
-      textTheme: inter.apply(bodyColor: Colors.white, displayColor: Colors.white),
-      primaryTextTheme: inter.apply(
+      textTheme: textTheme.apply(
+        bodyColor: Colors.white,
+        displayColor: Colors.white,
+      ),
+      primaryTextTheme: textTheme.apply(
         bodyColor: Colors.white,
         displayColor: Colors.white,
       ),

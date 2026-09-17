@@ -328,11 +328,16 @@ class _FunctionsListState extends State<FunctionsList> {
           isDestructive: true,
           onPressed: (context) async {
             Navigator.pop(context);
-            bool? confirmDelete = await alertServices.confirmAlert(
-              context,
-              languageProvider.tr('functions.deleteConfirmation'),
+            final confirmDelete = await showMoiConfirmSheet(
+              context: this.context,
+              title: languageProvider.tr('functions.deleteFunction'),
+              message: languageProvider.tr('functions.deleteConfirmation'),
+              confirmLabel: languageProvider.tr('common.delete'),
+              cancelLabel: languageProvider.tr('common.cancel'),
+              icon: HugeIcons.strokeRoundedDelete02,
+              isDestructive: true,
             );
-            if (confirmDelete!) {
+            if (confirmDelete == true && mounted) {
               String id = data[0]['id'].toString();
               deleteRecord(id);
             }
