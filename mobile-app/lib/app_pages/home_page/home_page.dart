@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:moi/app_configs/index.dart';
 import 'package:moi/app_firebase/push_notification_service.dart';
-import 'package:moi/app_pages/home_page/widgets/build_side_drawer.dart';
 import 'package:moi/app_pages/home_page/widgets/home_app_header.dart';
 import 'package:moi/app_pages/home_page/widgets/home_function_totals_section.dart';
 import 'package:moi/app_pages/home_page/widgets/home_greeting_header.dart';
@@ -27,7 +26,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_exit_app/flutter_exit_app.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  /// When true, system back is handled by [MainShellPage].
+  final bool isShellTab;
+
+  const HomePage({super.key, this.isShellTab = false});
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -178,6 +180,9 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final content = _buildModernUpgradeAlert();
+    if (widget.isShellTab) return content;
+
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, res) {
@@ -185,7 +190,7 @@ class _HomePageState extends State<HomePage> {
           backButtonExit();
         }
       },
-      child: _buildModernUpgradeAlert(),
+      child: content,
     );
   }
 
@@ -270,14 +275,6 @@ class _HomePageState extends State<HomePage> {
           if (mounted) {
             await checkNotificationStatus();
           }
-        },
-      ),
-      drawer: Consumer<UserProvider>(
-        builder: (context, userProvider, _) {
-          return BuildSideDrawer(
-            userDetails: userProvider.userDetails,
-            context: context,
-          );
         },
       ),
       body: LayoutBuilder(

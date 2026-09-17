@@ -31,7 +31,7 @@ class AppRoute {
           case "permissions":
             return const PermissionPage();
           case "home":
-            return const HomePage();
+            return const MainShellPage();
           case "login":
             return const LoginPage();
           case "signup":

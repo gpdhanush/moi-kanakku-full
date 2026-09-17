@@ -311,6 +311,22 @@
     "sectionAccount": "Account",
     "sectionSupport": "Support"
   },
+  "nav": {
+    "home": "Home",
+    "function": "Function",
+    "overview": "Overview",
+    "feedbacks": "Feedbacks",
+    "more": "More"
+  },
+  "more": {
+    "subtitle": "Account, support and more",
+    "upcomingHint": "Plan and track upcoming events",
+    "profileHint": "View and edit your profile",
+    "settingsHint": "App tools and preferences",
+    "rateUsHint": "Share your experience",
+    "contactHint": "Get help from our team",
+    "logoutHint": "Sign out of your account"
+  },
   "functionDetails": {
     "title": "Function Details",
     "totalAmountReceived": "Total Amount Received",

@@ -10,6 +10,8 @@ export 'users/login/login_page.dart';
 export 'users/login/login_controller.dart';
 // HOME PAGE
 export 'home_page/home_page.dart';
+export 'main_shell/main_shell_page.dart';
+export 'more/more_page.dart';
 
 /// NO INTERNET PAGE
 export 'no_internet/no_internet_page.dart';

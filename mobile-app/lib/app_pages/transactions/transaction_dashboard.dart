@@ -14,7 +14,9 @@ import 'package:moi/app_utils/index.dart';
 import 'package:provider/provider.dart';
 
 class TransactionDashboard extends StatefulWidget {
-  const TransactionDashboard({super.key});
+  final bool embeddedInShell;
+
+  const TransactionDashboard({super.key, this.embeddedInShell = false});
 
   @override
   State<TransactionDashboard> createState() => _TransactionDashboardState();
@@ -269,25 +271,30 @@ class _TransactionDashboardState extends State<TransactionDashboard> {
   Widget build(BuildContext context) {
     return Consumer<LanguageProvider>(
       builder: (context, languageProvider, _) {
+        final scaffold = Scaffold(
+          backgroundColor: AppColors.background,
+          appBar: _MoiOverviewHeader(
+            title:
+                '${languageProvider.tr('menu.moiDashboard').toUpperCase()} ($_totalCount)',
+            showBack: !widget.embeddedInShell,
+            onBack: _goHome,
+          ),
+          body: _isLoading && persons.isEmpty
+              ? const Center(
+                  child: CircularProgressIndicator(strokeWidth: 2.5),
+                )
+              : _buildBody(languageProvider),
+        );
+
+        if (widget.embeddedInShell) return scaffold;
+
         return PopScope(
           canPop: false,
           onPopInvokedWithResult: (didPop, result) {
             if (didPop) return;
             _goHome();
           },
-          child: Scaffold(
-            backgroundColor: AppColors.background,
-            appBar: _MoiOverviewHeader(
-              title:
-                  '${languageProvider.tr('menu.moiDashboard').toUpperCase()} ($_totalCount)',
-              onBack: _goHome,
-            ),
-            body: _isLoading && persons.isEmpty
-                ? const Center(
-                    child: CircularProgressIndicator(strokeWidth: 2.5),
-                  )
-                : _buildBody(languageProvider),
-          ),
+          child: scaffold,
         );
       },
     );
@@ -478,8 +485,13 @@ class _TransactionDashboardState extends State<TransactionDashboard> {
 class _MoiOverviewHeader extends StatelessWidget implements PreferredSizeWidget {
   final String title;
   final VoidCallback onBack;
+  final bool showBack;
 
-  const _MoiOverviewHeader({required this.title, required this.onBack});
+  const _MoiOverviewHeader({
+    required this.title,
+    required this.onBack,
+    this.showBack = true,
+  });
 
   @override
   Size get preferredSize => const Size.fromHeight(72);
@@ -564,32 +576,34 @@ class _MoiOverviewHeader extends StatelessWidget implements PreferredSizeWidget 
         ),
       ),
       leadingWidth: 54,
-      leading: Padding(
-        padding: const EdgeInsets.only(left: 10),
-        child: Center(
-          child: Material(
-            color: Colors.white.withValues(alpha: 0.14),
-            shape: const CircleBorder(),
-            clipBehavior: Clip.antiAlias,
-            child: InkWell(
-              onTap: onBack,
-              customBorder: const CircleBorder(),
-              child: const SizedBox(
-                width: 42,
-                height: 42,
-                child: Center(
-                  child: HugeIcon(
-                    icon: HugeIcons.strokeRoundedArrowLeft01,
-                    color: Colors.white,
-                    size: 22,
-                    strokeWidth: 1.9,
+      leading: showBack
+          ? Padding(
+              padding: const EdgeInsets.only(left: 10),
+              child: Center(
+                child: Material(
+                  color: Colors.white.withValues(alpha: 0.14),
+                  shape: const CircleBorder(),
+                  clipBehavior: Clip.antiAlias,
+                  child: InkWell(
+                    onTap: onBack,
+                    customBorder: const CircleBorder(),
+                    child: const SizedBox(
+                      width: 42,
+                      height: 42,
+                      child: Center(
+                        child: HugeIcon(
+                          icon: HugeIcons.strokeRoundedArrowLeft01,
+                          color: Colors.white,
+                          size: 22,
+                          strokeWidth: 1.9,
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               ),
-            ),
-          ),
-        ),
-      ),
+            )
+          : const SizedBox(width: 54),
       title: Text(
         title,
         maxLines: 1,

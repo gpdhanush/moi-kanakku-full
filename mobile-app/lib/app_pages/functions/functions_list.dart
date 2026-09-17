@@ -12,7 +12,9 @@ import 'package:moi/app_utils/index.dart';
 import 'package:provider/provider.dart';
 
 class FunctionsList extends StatefulWidget {
-  const FunctionsList({super.key});
+  final bool embeddedInShell;
+
+  const FunctionsList({super.key, this.embeddedInShell = false});
 
   @override
   State<FunctionsList> createState() => _FunctionsListState();
@@ -113,17 +115,12 @@ class _FunctionsListState extends State<FunctionsList> {
 
     return Consumer<LanguageProvider>(
       builder: (context, languageProvider, _) {
-        return PopScope(
-          canPop: false,
-          onPopInvokedWithResult: (didPop, result) {
-            if (didPop) return;
-            _goHome();
-          },
-          child: Scaffold(
+        final scaffold = Scaffold(
             backgroundColor: AppColors.background,
             appBar: _FunctionsAppHeader(
               title:
                   '${languageProvider.tr('functions.title')} (${functionList.length})',
+              showBack: !widget.embeddedInShell,
               onBack: _goHome,
             ),
             body: _isLoading && functionList.isEmpty
@@ -171,7 +168,17 @@ class _FunctionsListState extends State<FunctionsList> {
                 strokeWidth: 2,
               ),
             ),
-          ),
+          );
+
+        if (widget.embeddedInShell) return scaffold;
+
+        return PopScope(
+          canPop: false,
+          onPopInvokedWithResult: (didPop, result) {
+            if (didPop) return;
+            _goHome();
+          },
+          child: scaffold,
         );
       },
     );
@@ -317,8 +324,13 @@ class _FunctionsAppHeader extends StatelessWidget
     implements PreferredSizeWidget {
   final String title;
   final VoidCallback onBack;
+  final bool showBack;
 
-  const _FunctionsAppHeader({required this.title, required this.onBack});
+  const _FunctionsAppHeader({
+    required this.title,
+    required this.onBack,
+    this.showBack = true,
+  });
 
   @override
   Size get preferredSize => const Size.fromHeight(64);
@@ -404,32 +416,34 @@ class _FunctionsAppHeader extends StatelessWidget
         ),
       ),
       leadingWidth: 54,
-      leading: Padding(
-        padding: const EdgeInsets.only(left: 10),
-        child: Center(
-          child: Material(
-            color: Colors.white.withValues(alpha: 0.14),
-            shape: const CircleBorder(),
-            clipBehavior: Clip.antiAlias,
-            child: InkWell(
-              onTap: onBack,
-              customBorder: const CircleBorder(),
-              child: const SizedBox(
-                width: 42,
-                height: 42,
-                child: Center(
-                  child: HugeIcon(
-                    icon: HugeIcons.strokeRoundedArrowLeft01,
-                    color: Colors.white,
-                    size: 22,
-                    strokeWidth: 1.9,
+      leading: showBack
+          ? Padding(
+              padding: const EdgeInsets.only(left: 10),
+              child: Center(
+                child: Material(
+                  color: Colors.white.withValues(alpha: 0.14),
+                  shape: const CircleBorder(),
+                  clipBehavior: Clip.antiAlias,
+                  child: InkWell(
+                    onTap: onBack,
+                    customBorder: const CircleBorder(),
+                    child: const SizedBox(
+                      width: 42,
+                      height: 42,
+                      child: Center(
+                        child: HugeIcon(
+                          icon: HugeIcons.strokeRoundedArrowLeft01,
+                          color: Colors.white,
+                          size: 22,
+                          strokeWidth: 1.9,
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               ),
-            ),
-          ),
-        ),
-      ),
+            )
+          : const SizedBox(width: 54),
       title: Text(
         title,
         style: AppTypography.sectionTitle.copyWith(

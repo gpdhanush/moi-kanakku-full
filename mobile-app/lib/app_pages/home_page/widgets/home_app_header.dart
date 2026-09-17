@@ -99,21 +99,7 @@ class HomeAppHeader extends StatelessWidget implements PreferredSizeWidget {
         ),
       ),
       leadingWidth: 54,
-      leading: Padding(
-        padding: const EdgeInsets.only(left: 10),
-        child: Center(
-          child: _HeaderIconButton(
-            tooltip: MaterialLocalizations.of(context).openAppDrawerTooltip,
-            onTap: () => Scaffold.of(context).openDrawer(),
-            child: const HugeIcon(
-              icon: HugeIcons.strokeRoundedMenu01,
-              color: Colors.white,
-              size: 22,
-              strokeWidth: 1.9,
-            ),
-          ),
-        ),
-      ),
+      leading: const SizedBox(width: 54),
       title: Text(
         'Moi Kanakku',
         style: AppTypography.sectionTitle.copyWith(
