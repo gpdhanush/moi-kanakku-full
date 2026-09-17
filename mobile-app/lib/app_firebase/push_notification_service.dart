@@ -48,7 +48,7 @@ class PushNotificationService {
     if (_initialized) return;
 
     const initSettings = InitializationSettings(
-      android: AndroidInitializationSettings('@mipmap/launcher_icon'),
+      android: AndroidInitializationSettings('@mipmap/ic_launcher'),
     );
     await _localNotifications.initialize(initSettings);
 
@@ -142,7 +142,7 @@ class PushNotificationService {
 
     final plugin = FlutterLocalNotificationsPlugin();
     const initSettings = InitializationSettings(
-      android: AndroidInitializationSettings('@mipmap/launcher_icon'),
+      android: AndroidInitializationSettings('@mipmap/ic_launcher'),
     );
     await plugin.initialize(initSettings);
 
@@ -164,7 +164,7 @@ class PushNotificationService {
           channelDescription: 'Important alerts such as feedback replies',
           importance: Importance.high,
           priority: Priority.high,
-          icon: '@mipmap/launcher_icon',
+          icon: '@mipmap/ic_launcher',
         ),
       ),
     );

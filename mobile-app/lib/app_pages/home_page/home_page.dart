@@ -8,12 +8,9 @@ import 'package:moi/app_pages/home_page/widgets/home_function_totals_section.dar
 import 'package:moi/app_pages/home_page/widgets/home_greeting_header.dart';
 import 'package:moi/app_pages/home_page/widgets/home_moi_overview_card.dart';
 import 'package:moi/app_pages/home_page/widgets/home_section_reveal.dart';
-import 'package:moi/app_pages/home_page/widgets/home_upcoming_section.dart';
-import 'package:moi/app_pages/upcoming_functions/models/upcoming_function_model.dart';
 import 'package:moi/app_services/moi_services.dart';
 import 'package:moi/app_services/notification_services.dart';
 import 'package:moi/app_services/transaction_services.dart';
-import 'package:moi/app_services/upcoming_function_services.dart';
 import 'package:moi/app_themes/index.dart';
 import 'package:moi/app_utils/index.dart';
 import 'package:provider/provider.dart';
@@ -41,15 +38,11 @@ class _HomePageState extends State<HomePage> {
   final MoiServices _moiServices = MoiServices();
   final NotificationServices _notificationServices = NotificationServices();
   final TransactionServices _transactionServices = TransactionServices();
-  final UpcomingFunctionServices _upcomingFunctionServices =
-      UpcomingFunctionServices();
 
   int totalAmount = 0;
   int totalMOAmount = 0;
   List<Map<String, dynamic>> _functionSummaries = [];
   bool _isLoadingFunctionSummaries = false;
-  List<UpcomingFunction> _upcomingFunctions = [];
-  bool _isLoadingUpcoming = false;
 
   bool _isInitialized = false;
   bool _needsRefresh = false;
@@ -103,7 +96,6 @@ class _HomePageState extends State<HomePage> {
 
       initialTasks.add(checkNotificationStatus());
       initialTasks.add(_loadFunctionSummaries());
-      initialTasks.add(_loadUpcomingFunctions());
 
       await Future.wait(initialTasks);
       unawaited(_initializeNotificationPipeline());
@@ -142,7 +134,6 @@ class _HomePageState extends State<HomePage> {
       await Future.wait([
         getTotalAmount(),
         _loadFunctionSummaries(),
-        _loadUpcomingFunctions(),
       ]);
     }
   }
@@ -288,7 +279,6 @@ class _HomePageState extends State<HomePage> {
               await Future.wait([
                 getTotalAmount(showLoading: false),
                 _loadFunctionSummaries(),
-                _loadUpcomingFunctions(),
               ]);
             },
             child: Consumer<LanguageProvider>(
@@ -382,34 +372,18 @@ class _HomePageState extends State<HomePage> {
                         const SizedBox(height: AppSpacing.section),
                         HomeSectionReveal(
                           index: 2,
-                          child: HomeUpcomingSection(
-                            items: _upcomingFunctions,
-                            isLoading: _isLoadingUpcoming,
-                            formatDate: formatFunctionDate,
-                            onViewAll: () async {
-                              await Navigator.pushNamed(
-                                context,
-                                'upcoming-function-list',
-                              );
-                              if (mounted) await _loadUpcomingFunctions();
-                            },
-                            onItemTap: (item) {
-                              Navigator.pushNamed(
-                                context,
-                                'upcoming-function-details',
-                                arguments: item,
-                              );
-                            },
-                          ),
-                        ),
-                        const SizedBox(height: AppSpacing.section),
-                        HomeSectionReveal(
-                          index: 3,
                           child: HomeFunctionTotalsSection(
                             summaries: _functionSummaries,
                             isLoading: _isLoadingFunctionSummaries,
                             formatAmount: (amount) =>
                                 _numberFormatter.format(amount),
+                            onViewAll: () async {
+                              await Navigator.pushNamed(
+                                context,
+                                'functions-list',
+                              );
+                              if (mounted) await _loadFunctionSummaries();
+                            },
                             onItemTap: (summary) {
                               Navigator.pushNamed(
                                 context,
@@ -429,42 +403,6 @@ class _HomePageState extends State<HomePage> {
         },
       ),
     );
-  }
-
-  Future<void> _loadUpcomingFunctions() async {
-    if (!mounted) return;
-    setState(() => _isLoadingUpcoming = true);
-    try {
-      final response = await _upcomingFunctionServices.getUpcomingFunctions(
-        showLoading: false,
-      );
-      if (!mounted) return;
-
-      if (response != null && response['responseType'] == 'S') {
-        final list = response['responseValue'] ?? [];
-        final parsed = List<UpcomingFunction>.from(
-          list.map((item) => UpcomingFunction.fromJson(item)),
-        );
-        parsed.sort((a, b) {
-          final aDate = DateTime.tryParse(a.functionDate) ?? DateTime(2100);
-          final bDate = DateTime.tryParse(b.functionDate) ?? DateTime(2100);
-          return aDate.compareTo(bDate);
-        });
-        final active = parsed
-            .where((item) => item.status.toUpperCase() == 'ACTIVE')
-            .toList();
-        setState(() {
-          _upcomingFunctions = active.isNotEmpty ? active : parsed;
-        });
-      } else {
-        setState(() => _upcomingFunctions = []);
-      }
-    } catch (e) {
-      debugPrint('Error loading upcoming functions: $e');
-      if (mounted) setState(() => _upcomingFunctions = []);
-    } finally {
-      if (mounted) setState(() => _isLoadingUpcoming = false);
-    }
   }
 
   Future<void> _loadFunctionSummaries() async {

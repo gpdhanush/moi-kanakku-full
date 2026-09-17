@@ -447,6 +447,31 @@
     "title": "Permissions Required",
     "subtitle": "Allow the permissions below for the best experience",
     "allow": "Allow Access",
-    "skip": "Skip"
+    "skip": "Skip",
+    "section": "App permissions",
+    "progress": "{granted} of {total} allowed",
+    "allGranted": "All permissions granted",
+    "continue": "Continue",
+    "allowed": "Allowed",
+    "openSettings": "Settings",
+    "allowOne": "Allow",
+    "items": {
+      "notifications": {
+        "name": "Notifications",
+        "description": "Get important alerts and updates"
+      },
+      "camera": {
+        "name": "Camera",
+        "description": "Take photos and use them in the app"
+      },
+      "microphone": {
+        "name": "Microphone",
+        "description": "Record audio and convert speech to text"
+      },
+      "photos": {
+        "name": "Photos",
+        "description": "Access and share photos"
+      }
+    }
   }
 }

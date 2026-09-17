@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
+import 'package:moi/app_configs/index.dart';
 import 'package:moi/app_themes/index.dart';
 import 'package:moi/app_utils/app_providers/language_provider.dart';
 import 'package:provider/provider.dart';
@@ -10,6 +11,7 @@ class HomeFunctionTotalsSection extends StatelessWidget {
   final bool isLoading;
   final String Function(double amount) formatAmount;
   final ValueChanged<Map<String, dynamic>> onItemTap;
+  final VoidCallback onViewAll;
 
   const HomeFunctionTotalsSection({
     super.key,
@@ -17,21 +19,67 @@ class HomeFunctionTotalsSection extends StatelessWidget {
     required this.isLoading,
     required this.formatAmount,
     required this.onItemTap,
+    required this.onViewAll,
   });
+
+  String _resolveImageUrl(Map<String, dynamic> summary) {
+    final function = summary['function'];
+    var raw = '';
+    if (function is Map) {
+      raw = (function['imageUrl'] ?? function['invitationUrl'] ?? '')
+          .toString()
+          .trim();
+    }
+    if (raw.isEmpty) {
+      raw = (summary['imageUrl'] ?? summary['invitationUrl'] ?? '')
+          .toString()
+          .trim();
+    }
+    if (raw.isEmpty) return '';
+    if (raw.startsWith('http://') || raw.startsWith('https://')) return raw;
+    return '$appImageUrl/${raw.replaceFirst(RegExp(r'^/+'), '')}';
+  }
 
   @override
   Widget build(BuildContext context) {
     final languageProvider = context.watch<LanguageProvider>();
+    final primary = Theme.of(context).colorScheme.primary;
+    final preview = summaries.take(3).toList();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          languageProvider.tr('home.functionTotals'),
-          style: AppTypography.sectionTitle.copyWith(
-            letterSpacing: -0.2,
-            color: AppColors.textPrimary,
-          ),
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                languageProvider.tr('home.functionTotals'),
+                style: AppTypography.sectionTitle.copyWith(
+                  letterSpacing: -0.2,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: onViewAll,
+              style: TextButton.styleFrom(
+                foregroundColor: primary,
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                overlayColor: primary.withValues(alpha: 0.9),
+              ),
+              child: Text(
+                languageProvider.tr('home.viewAll'),
+                style: AppTypography.label.copyWith(
+                  color: primary,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  decoration: TextDecoration.none,
+                ),
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: 4),
         Text(
@@ -47,7 +95,7 @@ class HomeFunctionTotalsSection extends StatelessWidget {
             padding: EdgeInsets.symmetric(vertical: AppSpacing.lg),
             child: Center(child: CircularProgressIndicator(strokeWidth: 2.5)),
           )
-        else if (summaries.isEmpty)
+        else if (preview.isEmpty)
           Text(
             languageProvider.tr('home.noFunctionTotals'),
             style: AppTypography.body,
@@ -55,14 +103,15 @@ class HomeFunctionTotalsSection extends StatelessWidget {
         else
           Column(
             children: [
-              for (var i = 0; i < summaries.length; i++) ...[
+              for (var i = 0; i < preview.length; i++) ...[
                 if (i > 0) const SizedBox(height: AppSpacing.sm),
                 _FunctionTotalCard(
-                  name: summaries[i]['name']?.toString() ?? '-',
-                  date: summaries[i]['date']?.toString() ?? '-',
-                  amount: summaries[i]['invest'] as double? ?? 0,
+                  name: preview[i]['name']?.toString() ?? '-',
+                  date: preview[i]['date']?.toString() ?? '-',
+                  amount: preview[i]['invest'] as double? ?? 0,
+                  imageUrl: _resolveImageUrl(preview[i]),
                   formatAmount: formatAmount,
-                  onTap: () => onItemTap(summaries[i]),
+                  onTap: () => onItemTap(preview[i]),
                 ),
               ],
             ],
@@ -76,6 +125,7 @@ class _FunctionTotalCard extends StatelessWidget {
   final String name;
   final String date;
   final double amount;
+  final String imageUrl;
   final String Function(double amount) formatAmount;
   final VoidCallback onTap;
 
@@ -83,6 +133,7 @@ class _FunctionTotalCard extends StatelessWidget {
     required this.name,
     required this.date,
     required this.amount,
+    required this.imageUrl,
     required this.formatAmount,
     required this.onTap,
   });
@@ -97,13 +148,8 @@ class _FunctionTotalCard extends StatelessWidget {
     final amountText = isPositive
         ? '₹ ${formatAmount(amount)}'
         : '-₹ ${formatAmount(amount.abs())}';
-    // final languageProvider = context.read<LanguageProvider>();
-    // final flowLabel = isPositive
-    //     ? languageProvider.tr('moi.moiIn')
-    //     : languageProvider.tr('moi.moiOut');
     final subtitleParts = <String>[
       if (date.isNotEmpty && date != '-') date,
-      // flowLabel,
     ];
     final subtitle = subtitleParts.join(' • ');
 
@@ -126,20 +172,10 @@ class _FunctionTotalCard extends StatelessWidget {
           ),
           child: Row(
             children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: soft,
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                alignment: Alignment.center,
-                child: HugeIcon(
-                  icon: HugeIcons.strokeRoundedWallet01,
-                  color: accent,
-                  size: 22,
-                  strokeWidth: 1.7,
-                ),
+              _FunctionLeading(
+                imageUrl: imageUrl,
+                accent: accent,
+                soft: soft,
               ),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
@@ -184,6 +220,54 @@ class _FunctionTotalCard extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _FunctionLeading extends StatelessWidget {
+  final String imageUrl;
+  final Color accent;
+  final Color soft;
+
+  const _FunctionLeading({
+    required this.imageUrl,
+    required this.accent,
+    required this.soft,
+  });
+
+  Widget _iconFallback() {
+    return Container(
+      decoration: BoxDecoration(
+        color: soft,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      alignment: Alignment.center,
+      child: HugeIcon(
+        icon: HugeIcons.strokeRoundedWallet01,
+        color: accent,
+        size: 22,
+        strokeWidth: 1.7,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 44,
+      height: 44,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(14),
+        color: imageUrl.isEmpty ? soft : null,
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: imageUrl.isEmpty
+          ? _iconFallback()
+          : Image.network(
+              imageUrl,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) => _iconFallback(),
+            ),
     );
   }
 }

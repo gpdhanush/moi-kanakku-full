@@ -28,7 +28,7 @@ class MorePage extends StatelessWidget {
             title: languageProvider.tr('nav.more'),
           ),
           body: SingleChildScrollView(
-            physics: const BouncingScrollPhysics(),
+            physics: const ClampingScrollPhysics(),
             padding: EdgeInsets.fromLTRB(
               AppSpacing.page,
               AppSpacing.md,

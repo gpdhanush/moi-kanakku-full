@@ -531,106 +531,112 @@ class _AmountCard extends StatelessWidget {
     final deep = Color.lerp(primary, const Color(0xff0A3D8F), 0.28)!;
     final soft = Color.lerp(primary, Colors.white, 0.22)!;
 
-    return Material(
-      color: Colors.transparent,
-      borderRadius: BorderRadius.circular(18),
-      child: InkWell(
-        onTap: onTap,
+    return SizedBox(
+      width: double.infinity,
+      child: Material(
+        color: Colors.transparent,
         borderRadius: BorderRadius.circular(18),
-        child: Ink(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(18),
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [primary, soft, deep],
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(18),
+          child: Ink(
+            width: double.infinity,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(18),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [primary, soft, deep],
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: primary.withValues(alpha: 0.32),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                ),
+                BoxShadow(
+                  color: primary.withValues(alpha: 0.12),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
-            boxShadow: [
-              BoxShadow(
-                color: primary.withValues(alpha: 0.32),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
-              ),
-              BoxShadow(
-                color: primary.withValues(alpha: 0.12),
-                blurRadius: 6,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Stack(
-            children: [
-              Positioned(
-                right: -24,
-                top: -20,
-                child: Container(
-                  width: 100,
-                  height: 100,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.white.withValues(alpha: 0.10),
-                  ),
-                ),
-              ),
-              Positioned(
-                right: 36,
-                bottom: -28,
-                child: Container(
-                  width: 72,
-                  height: 72,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.white.withValues(alpha: 0.08),
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      label,
-                      style: AppTypography.body.copyWith(
-                        color: Colors.white.withValues(alpha: 0.78),
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                      ),
+            child: Stack(
+              children: [
+                Positioned(
+                  right: -24,
+                  top: -20,
+                  child: Container(
+                    width: 100,
+                    height: 100,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white.withValues(alpha: 0.10),
                     ),
-                    const SizedBox(height: 6),
-                    if (isLoading)
-                      const SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: CircularProgressIndicator(
-                          color: Colors.white,
-                          strokeWidth: 2.4,
-                        ),
-                      )
-                    else
+                  ),
+                ),
+                Positioned(
+                  right: 36,
+                  bottom: -28,
+                  child: Container(
+                    width: 72,
+                    height: 72,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white.withValues(alpha: 0.08),
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                       Text(
-                        amountText,
-                        style: AppTypography.amountLarge.copyWith(
-                          color: Colors.white,
-                          fontSize: 30,
-                          letterSpacing: -0.7,
+                        label,
+                        style: AppTypography.body.copyWith(
+                          color: Colors.white.withValues(alpha: 0.78),
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
-                    const SizedBox(height: 4),
-                    Text(
-                      words,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTypography.body.copyWith(
-                        color: Colors.white.withValues(alpha: 0.72),
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
+                      const SizedBox(height: 6),
+                      if (isLoading)
+                        const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2.4,
+                          ),
+                        )
+                      else
+                        Text(
+                          amountText,
+                          style: AppTypography.amountLarge.copyWith(
+                            color: Colors.white,
+                            fontSize: 30,
+                            letterSpacing: -0.7,
+                          ),
+                        ),
+                      if (words.trim().isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          words,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTypography.body.copyWith(
+                            color: Colors.white.withValues(alpha: 0.72),
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

@@ -24,6 +24,14 @@ class SecureStorageService {
   static const List<String> _sessionPreserveKeys = [
     AppVariables.permissionsRequested,
     AppVariables.permissionsGranted,
+    'app_language',
+    'voice_language',
+  ];
+
+  /// ThemeProvider writes these as raw strings (not JSON).
+  static const List<String> _rawSessionPreserveKeys = [
+    'theme_color',
+    'dark_mode',
   ];
 
   /// Save dynamic value as JSON string
@@ -63,7 +71,7 @@ class SecureStorageService {
     await _storage.deleteAll(aOptions: aOptions);
   }
 
-  /// Clears login/session data but keeps device-level onboarding flags.
+  /// Clears login/session data but keeps device-level preferences.
   Future<void> clearSessionData() async {
     final preserved = <String, dynamic>{};
     for (final key in _sessionPreserveKeys) {
@@ -73,10 +81,25 @@ class SecureStorageService {
       }
     }
 
+    final rawPreserved = <String, String>{};
+    for (final key in _rawSessionPreserveKeys) {
+      final value = await _storage.read(key: key, aOptions: aOptions);
+      if (value != null) {
+        rawPreserved[key] = value;
+      }
+    }
+
     await clearAll();
 
     for (final entry in preserved.entries) {
       await save(entry.key, entry.value);
+    }
+    for (final entry in rawPreserved.entries) {
+      await _storage.write(
+        key: entry.key,
+        value: entry.value,
+        aOptions: aOptions,
+      );
     }
   }
 

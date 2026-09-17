@@ -42,8 +42,10 @@ class _FeedbacksState extends State<Feedbacks> {
     super.dispose();
   }
 
-  Future<void> _loadPreviousFeedbacks() async {
-    setState(() => _isLoading = true);
+  Future<void> _loadPreviousFeedbacks({bool showLoading = true}) async {
+    if (showLoading && mounted) {
+      setState(() => _isLoading = true);
+    }
 
     try {
       final userData = await _storage.get(AppVariables.userInformation);
@@ -134,37 +136,42 @@ class _FeedbacksState extends State<Feedbacks> {
             showBack: !widget.embeddedInShell,
             onBack: () => Navigator.pop(context),
           ),
-          body: SingleChildScrollView(
-            controller: _scrollController,
-            physics: const BouncingScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.page,
-              AppSpacing.md,
-              AppSpacing.page,
-              AppSpacing.xxl,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _FeedbackHero(
-                  primary: primary,
-                  title: languageProvider.tr('feedback.newFeedback'),
-                  subtitle: languageProvider.tr('feedback.shareFeedback'),
-                ),
-                const SizedBox(height: AppSpacing.md),
-                _buildComposerCard(languageProvider, primary),
-                const SizedBox(height: AppSpacing.lg),
-                Text(
-                  languageProvider.tr('feedback.previousFeedback'),
-                  style: AppTypography.label.copyWith(
-                    color: AppColors.textPrimary,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
+          body: MoiRefreshIndicator(
+            onRefresh: () => _loadPreviousFeedbacks(showLoading: false),
+            child: SingleChildScrollView(
+              controller: _scrollController,
+              physics: const AlwaysScrollableScrollPhysics(
+                parent: ClampingScrollPhysics(),
+              ),
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.page,
+                AppSpacing.md,
+                AppSpacing.page,
+                AppSpacing.xxl,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _FeedbackHero(
+                    primary: primary,
+                    title: languageProvider.tr('feedback.newFeedback'),
+                    subtitle: languageProvider.tr('feedback.shareFeedback'),
                   ),
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                _buildPreviousList(languageProvider, primary),
-              ],
+                  const SizedBox(height: AppSpacing.md),
+                  _buildComposerCard(languageProvider, primary),
+                  const SizedBox(height: AppSpacing.lg),
+                  Text(
+                    languageProvider.tr('feedback.previousFeedback'),
+                    style: AppTypography.label.copyWith(
+                      color: AppColors.textPrimary,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  _buildPreviousList(languageProvider, primary),
+                ],
+              ),
             ),
           ),
         );

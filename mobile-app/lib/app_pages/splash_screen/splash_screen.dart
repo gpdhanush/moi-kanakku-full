@@ -89,25 +89,11 @@ class _SplashScreenState extends State<SplashScreen>
                     child: Column(
                       children: [
                         const Spacer(flex: 2),
-                        Container(
+                        Image.asset(
+                          AppImages.appLogoImage,
                           width: 112,
                           height: 112,
-                          padding: const EdgeInsets.all(18),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(AppRadius.xl),
-                            boxShadow: [
-                              BoxShadow(
-                                color: primary.withValues(alpha: 0.14),
-                                blurRadius: 28,
-                                offset: const Offset(0, 12),
-                              ),
-                            ],
-                          ),
-                          child: Image.asset(
-                            AppImages.appLogoImage,
-                            fit: BoxFit.contain,
-                          ),
+                          fit: BoxFit.contain,
                         ),
                         const SizedBox(height: AppSpacing.lg),
                         Text(

@@ -49,8 +49,8 @@ void main() {
       // Build providers
       final themeProvider = ThemeProvider();
       final languageProvider = LanguageProvider();
+      await themeProvider.ensureLoaded();
 
-      // Start app quickly; non-critical tasks continue in background
       runApp(
         MultiProvider(
           providers: [
@@ -62,7 +62,6 @@ void main() {
       );
 
       // Non-blocking startup tasks
-      unawaited(themeProvider.ensureLoaded());
       unawaited(initializeDateFormatting('en', null));
       unawaited(initializeDateFormatting('ta', null));
     },

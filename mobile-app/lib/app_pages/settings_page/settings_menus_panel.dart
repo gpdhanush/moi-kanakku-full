@@ -323,7 +323,7 @@ class _SettingsMenusPanelState extends State<SettingsMenusPanel> {
                   itemCount: colors.length,
                   itemBuilder: (context, index) {
                     final color = colors[index];
-                    final selected = themeProvider.seedColor == color;
+                    final selected = themeProvider.isSeedColor(color);
                     return GestureDetector(
                       onTap: () {
                         themeProvider.setSeedColor(color);

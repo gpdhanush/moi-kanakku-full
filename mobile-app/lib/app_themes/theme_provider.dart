@@ -48,7 +48,17 @@ class ThemeProvider with ChangeNotifier {
   ];
 
   final _storage = const FlutterSecureStorage();
+
+  /// Isolated from session storage so logout `deleteAll` cannot wipe the accent.
   final AndroidOptions _androidOptions = const AndroidOptions(
+    enforceBiometrics: false,
+    resetOnError: false,
+    storageNamespace: "_Theme_",
+    preferencesKeyPrefix: "MOI_THEME_",
+  );
+
+  /// Previous shared namespace (wiped on logout). Used only to migrate.
+  final AndroidOptions _legacyAndroidOptions = const AndroidOptions(
     enforceBiometrics: false,
     resetOnError: true,
     storageNamespace: "_Pref_",
@@ -65,6 +75,9 @@ class ThemeProvider with ChangeNotifier {
 
   /// Returns the current seed color for the theme
   Color get seedColor => _seedColor;
+
+  /// True when [color] is the saved accent, even after a storage round-trip.
+  bool isSeedColor(Color color) => _seedColor.toARGB32() == color.toARGB32();
 
   ThemeProvider();
 
@@ -106,51 +119,32 @@ class ThemeProvider with ChangeNotifier {
   /// Loads saved theme settings from secure storage
   Future<void> _loadThemeSettings() async {
     try {
-      // Try reading with configured options first
-      String? colorValue = await _storage.read(
-        key: _colorKey,
-        aOptions: _androidOptions,
-        iOptions: _iosOptions,
-      );
-      String? darkModeValue = await _storage.read(
-        key: _darkModeKey,
-        aOptions: _androidOptions,
-        iOptions: _iosOptions,
-      );
+      String? colorValue = await _readKey(_colorKey);
+      String? darkModeValue = await _readKey(_darkModeKey);
 
-      // Fallback: read without options (legacy) and migrate to new options
+      var migrated = false;
       if (colorValue == null) {
-        final legacyColor = await _storage.read(key: _colorKey);
-        if (legacyColor != null) {
-          colorValue = legacyColor;
-          await _storage.write(
-            key: _colorKey,
-            value: legacyColor,
-            aOptions: _androidOptions,
-            iOptions: _iosOptions,
-          );
-        }
+        colorValue = await _readLegacyKey(_colorKey);
+        migrated = colorValue != null;
       }
       if (darkModeValue == null) {
-        final legacyDark = await _storage.read(key: _darkModeKey);
+        final legacyDark = await _readLegacyKey(_darkModeKey);
         if (legacyDark != null) {
           darkModeValue = legacyDark;
-          await _storage.write(
-            key: _darkModeKey,
-            value: legacyDark,
-            aOptions: _androidOptions,
-            iOptions: _iosOptions,
-          );
+          migrated = true;
         }
       }
 
-      if (colorValue != null) {
-        try {
-          _seedColor = Color(int.parse(colorValue));
-        } catch (_) {}
+      final parsedColor = _colorFromStorage(colorValue);
+      if (parsedColor != null) {
+        _seedColor = parsedColor;
       }
       if (darkModeValue != null) {
         _isDarkMode = darkModeValue == 'true';
+      }
+
+      if (migrated) {
+        await _persistTheme();
       }
       notifyListeners();
     } catch (e) {
@@ -158,17 +152,65 @@ class ThemeProvider with ChangeNotifier {
     }
   }
 
+  Future<String?> _readKey(String key) {
+    return _storage.read(
+      key: key,
+      aOptions: _androidOptions,
+      iOptions: _iosOptions,
+    );
+  }
+
+  Future<String?> _readLegacyKey(String key) async {
+    final shared = await _storage.read(
+      key: key,
+      aOptions: _legacyAndroidOptions,
+      iOptions: _iosOptions,
+    );
+    if (shared != null) return shared;
+    return _storage.read(key: key);
+  }
+
+  Future<void> _persistTheme() async {
+    await _storage.write(
+      key: _colorKey,
+      value: _colorToStorage(_seedColor),
+      aOptions: _androidOptions,
+      iOptions: _iosOptions,
+    );
+    await _storage.write(
+      key: _darkModeKey,
+      value: _isDarkMode.toString(),
+      aOptions: _androidOptions,
+      iOptions: _iosOptions,
+    );
+  }
+
+  static String _colorToStorage(Color color) =>
+      color.toARGB32().toRadixString(16).padLeft(8, '0');
+
+  static Color? _colorFromStorage(String? value) {
+    if (value == null || value.isEmpty) return null;
+    try {
+      var raw = value.startsWith('#') ? value.substring(1) : value;
+      if (raw.startsWith('0x') || raw.startsWith('0X')) {
+        return Color(int.parse(raw));
+      }
+      if (RegExp(r'^[0-9a-fA-F]{6,8}$').hasMatch(raw)) {
+        if (raw.length == 6) raw = 'ff$raw';
+        return Color(int.parse(raw, radix: 16));
+      }
+      return Color(int.parse(raw));
+    } catch (_) {
+      return null;
+    }
+  }
+
   /// Toggles between light and dark mode
   Future<void> toggleThemeMode() async {
     _isDarkMode = !_isDarkMode;
+    notifyListeners();
     try {
-      await _storage.write(
-        key: _darkModeKey,
-        value: _isDarkMode.toString(),
-        aOptions: _androidOptions,
-        iOptions: _iosOptions,
-      );
-      notifyListeners();
+      await _persistTheme();
     } catch (e) {
       // ignore
     }
@@ -177,18 +219,12 @@ class ThemeProvider with ChangeNotifier {
   /// Sets a new seed color for the theme
   /// [color] - The new color to use as the seed color
   Future<void> setSeedColor(Color color) async {
-    if (_seedColor == color) return; // Skip if color hasn't changed
+    if (isSeedColor(color)) return;
 
     _seedColor = color;
+    notifyListeners();
     try {
-      final value = color.toARGB32().toString();
-      await _storage.write(
-        key: _colorKey,
-        value: value,
-        aOptions: _androidOptions,
-        iOptions: _iosOptions,
-      );
-      notifyListeners();
+      await _persistTheme();
     } catch (e) {
       // ignore
     }
@@ -198,6 +234,7 @@ class ThemeProvider with ChangeNotifier {
   Future<void> resetTheme() async {
     _isDarkMode = false;
     _seedColor = primary;
+    notifyListeners();
     try {
       await _storage.delete(
         key: _colorKey,
@@ -209,7 +246,16 @@ class ThemeProvider with ChangeNotifier {
         aOptions: _androidOptions,
         iOptions: _iosOptions,
       );
-      notifyListeners();
+      await _storage.delete(
+        key: _colorKey,
+        aOptions: _legacyAndroidOptions,
+        iOptions: _iosOptions,
+      );
+      await _storage.delete(
+        key: _darkModeKey,
+        aOptions: _legacyAndroidOptions,
+        iOptions: _iosOptions,
+      );
     } catch (e) {
       // ignore
     }

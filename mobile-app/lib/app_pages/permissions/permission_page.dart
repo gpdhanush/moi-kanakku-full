@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:moi/app_utils/app_providers/language_provider.dart';
-import 'package:provider/provider.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:moi/app_configs/index.dart';
 import 'package:moi/app_storages/secure_storages.dart';
+import 'package:moi/app_themes/index.dart';
+import 'package:moi/app_utils/app_providers/language_provider.dart';
+import 'package:provider/provider.dart';
+
 import 'permission_controller.dart';
-import 'package:hugeicons/hugeicons.dart';
 
 class PermissionPage extends StatefulWidget {
   const PermissionPage({super.key});
@@ -52,27 +54,31 @@ class _PermissionPageState extends State<PermissionPage> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final colorScheme = Theme.of(context).colorScheme;
+    final primary = Theme.of(context).colorScheme.primary;
     final languageProvider = context.watch<LanguageProvider>();
 
     if (_isChecking || _controller == null) {
       return Scaffold(
-        backgroundColor: colorScheme.surface,
-        body: const Center(child: CircularProgressIndicator()),
+        backgroundColor: AppColors.background,
+        body: Center(
+          child: CircularProgressIndicator(
+            strokeWidth: 2.4,
+            color: primary,
+          ),
+        ),
       );
     }
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle(
+      value: SystemUiOverlayStyle.dark.copyWith(
         statusBarColor: Colors.transparent,
-        statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
-        statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
+        statusBarIconBrightness: Brightness.dark,
+        statusBarBrightness: Brightness.light,
       ),
       child: PopScope(
         canPop: false,
         child: Scaffold(
-          backgroundColor: colorScheme.surface,
+          backgroundColor: AppColors.background,
           body: SafeArea(
             child: ChangeNotifierProvider.value(
               value: _controller!,
@@ -80,70 +86,81 @@ class _PermissionPageState extends State<PermissionPage> {
                 builder: (context, controller, child) {
                   final totalCount = controller.permissions.length;
                   final grantedCount = controller.grantedPermissions.length;
-                  final allGranted = totalCount > 0 && grantedCount == totalCount;
+                  final allGranted =
+                      totalCount > 0 && grantedCount == totalCount;
 
                   return Column(
                     children: [
-                      // Header & Permission Cards Section
                       Expanded(
                         child: SingleChildScrollView(
                           physics: const BouncingScrollPhysics(),
-                          padding: const EdgeInsets.fromLTRB(20.0, 16.0, 20.0, 20.0),
+                          padding: EdgeInsets.fromLTRB(
+                            AppSpacing.page,
+                            AppSpacing.lg,
+                            AppSpacing.page,
+                            AppSpacing.md,
+                          ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              // Hero Header Card
-                              _buildHeaderCard(
-                                context,
-                                languageProvider,
-                                grantedCount,
-                                totalCount,
-                                allGranted,
+                              _PermissionIntro(
+                                title: languageProvider.tr(
+                                  'permissions.title',
+                                ),
+                                subtitle: languageProvider.tr(
+                                  'permissions.subtitle',
+                                ),
                               ),
-
-                              const SizedBox(height: 24.0),
-
-                              // Section Header Label
+                              const SizedBox(height: AppSpacing.xl),
                               Row(
                                 children: [
                                   Text(
-                                    "App Permissions",
-                                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                          fontWeight: FontWeight.bold,
-                                          color: colorScheme.onSurfaceVariant,
-                                          letterSpacing: 0.5,
-                                        ),
+                                    languageProvider.tr(
+                                      'permissions.section',
+                                    ),
+                                    style: AppTypography.label.copyWith(
+                                      color: AppColors.textSecondary,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w700,
+                                      letterSpacing: 0.4,
+                                    ),
                                   ),
                                   const Spacer(),
                                   if (controller.isLoadingPermissions)
-                                    const SizedBox(
+                                    SizedBox(
                                       width: 14,
                                       height: 14,
-                                      child: CircularProgressIndicator(strokeWidth: 2),
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: primary,
+                                      ),
                                     ),
                                 ],
                               ),
-                              const SizedBox(height: 12.0),
-
-                              // Permission List Cards
+                              const SizedBox(height: AppSpacing.sm),
                               if (controller.isLoadingPermissions)
                                 const Padding(
-                                  padding: EdgeInsets.symmetric(vertical: 40.0),
-                                  child: Center(child: CircularProgressIndicator()),
+                                  padding: EdgeInsets.symmetric(vertical: 48),
+                                  child: Center(
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2.4,
+                                    ),
+                                  ),
                                 )
                               else
-                                _buildPermissionList(context, controller),
+                                _PermissionList(
+                                  controller: controller,
+                                  languageProvider: languageProvider,
+                                ),
                             ],
                           ),
                         ),
                       ),
-
-                      // Sticky Bottom Action Bar
-                      _buildBottomActionBar(
-                        context,
-                        languageProvider,
-                        controller,
-                        allGranted,
+                      _PermissionBottomBar(
+                        primary: primary,
+                        languageProvider: languageProvider,
+                        controller: controller,
+                        allGranted: allGranted,
                       ),
                     ],
                   );
@@ -155,319 +172,254 @@ class _PermissionPageState extends State<PermissionPage> {
       ),
     );
   }
+}
 
-  /// Build modern Header Card with logo and progress counter
-  Widget _buildHeaderCard(
-    BuildContext context,
-    LanguageProvider languageProvider,
-    int grantedCount,
-    int totalCount,
-    bool allGranted,
-  ) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final primaryColor = colorScheme.primary;
+class _PermissionIntro extends StatelessWidget {
+  final String title;
+  final String subtitle;
 
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            primaryColor,
-            primaryColor.withValues(alpha: 0.85),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+  const _PermissionIntro({
+    required this.title,
+    required this.subtitle,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Container(
+          width: 64,
+          height: 64,
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: AppColors.white,
+            borderRadius: AppRadius.lgAll,
+            border: Border.all(color: AppColors.borderSubtle),
+            boxShadow: AppShadows.card,
+          ),
+          child: Image.asset(
+            AppImages.appLogoImage,
+            fit: BoxFit.contain,
+          ),
         ),
-        borderRadius: BorderRadius.circular(24.0),
-        boxShadow: [
-          BoxShadow(
-            color: primaryColor.withValues(alpha: 0.25),
-            blurRadius: 16.0,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      child: Stack(
-        children: [
-          // Background subtle decoration shapes
-          Positioned(
-            right: -20,
-            top: -20,
-            child: CircleAvatar(
-              radius: 60,
-              backgroundColor: Colors.white.withValues(alpha: 0.08),
-            ),
-          ),
-          Positioned(
-            left: -30,
-            bottom: -30,
-            child: CircleAvatar(
-              radius: 50,
-              backgroundColor: Colors.white.withValues(alpha: 0.05),
-            ),
-          ),
-
-          // Main Header Content
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 24.0, horizontal: 20.0),
-            child: Column(
-              children: [
-                // App Logo Badge
-                Container(
-                  padding: const EdgeInsets.all(12.0),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.15),
-                        blurRadius: 12.0,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Image.asset(
-                    AppImages.appLogoImage,
-                    height: 48.0,
-                    width: 48.0,
-                  ),
-                ),
-                const SizedBox(height: 16.0),
-
-                // Title
-                Text(
-                  languageProvider.tr('permissions.title'),
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 20.0,
-                    fontFamily: 'Inter',
-                    color: Colors.white,
-                    height: 1.2,
-                  ),
-                ),
-                const SizedBox(height: 8.0),
-
-                // Subtitle Description
-                Text(
-                  languageProvider.tr('permissions.subtitle'),
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 13.0,
-                    fontFamily: 'Inter',
-                    color: Colors.white.withValues(alpha: 0.9),
-                    height: 1.4,
-                  ),
-                ),
-                const SizedBox(height: 16.0),
-
-                // Progress Badge Pill
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 6.0),
-                  decoration: BoxDecoration(
-                    color: allGranted
-                        ? const Color(0xFF10B981).withValues(alpha: 0.25)
-                        : Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(20.0),
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.4),
-                      width: 1,
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      HugeIcon(icon: allGranted ? HugeIcons.strokeRoundedCheckmarkCircle02 : HugeIcons.strokeRoundedShield01, size: 16.0, color: Colors.white, strokeWidth: 1.8),
-                      const SizedBox(width: 6.0),
-                      Text(
-                        allGranted
-                            ? "All Permissions Granted"
-                            : "$grantedCount of $totalCount Allowed",
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 12.0,
-                          fontWeight: FontWeight.w600,
-                          fontFamily: 'Inter',
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+        const SizedBox(height: AppSpacing.lg),
+        Text(
+          title,
+          textAlign: TextAlign.center,
+          style: AppTypography.authTitle,
+        ),
+        const SizedBox(height: 8),
+        Text(
+          subtitle,
+          textAlign: TextAlign.center,
+          style: AppTypography.authSubtitle,
+        ),
+      ],
     );
   }
+}
 
-  /// Permission list with modern card items
-  Widget _buildPermissionList(
-    BuildContext context,
-    PermissionController controller,
-  ) {
-    final List<Color> accentColors = [
-      const Color(0xFF2563EB), // Blue for Notifications
-      const Color(0xFF7C3AED), // Purple for Camera
-      const Color(0xFFE11D48), // Rose for Microphone
-      const Color(0xFF059669), // Emerald for Photos/Storage
-    ];
+class _PermissionList extends StatelessWidget {
+  final PermissionController controller;
+  final LanguageProvider languageProvider;
 
+  const _PermissionList({
+    required this.controller,
+    required this.languageProvider,
+  });
+
+  static const List<(Color bg, Color fg)> _accents = [
+    (AppColors.primarySoft, AppColors.brandBlue),
+    (AppColors.accentVioletSoft, AppColors.accentViolet),
+    (AppColors.moiGivenSoft, AppColors.moiGiven),
+    (AppColors.moiReceivedSoft, AppColors.moiReceived),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
     return Column(
       children: controller.permissions.asMap().entries.map((entry) {
         final index = entry.key;
         final permission = entry.value;
-        final isGranted = controller.grantedPermissions.contains(permission.id);
+        final isGranted =
+            controller.grantedPermissions.contains(permission.id);
         final isPermanentlyDenied =
             controller.permanentlyDeniedPermissions.contains(permission.id);
-        final accentColor = accentColors[index % accentColors.length];
+        final accent = _accents[index % _accents.length];
 
-        return _buildPermissionCard(
-          context: context,
-          permission: permission,
-          isGranted: isGranted,
-          isPermanentlyDenied: isPermanentlyDenied,
-          accentColor: accentColor,
-          onTap: () => controller.requestSinglePermission(permission),
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: index == controller.permissions.length - 1
+                ? 0
+                : AppSpacing.sm,
+          ),
+          child: _PermissionCard(
+            permission: permission,
+            name: languageProvider.tr(permission.nameKey),
+            description: languageProvider.tr(permission.descriptionKey),
+            isGranted: isGranted,
+            isPermanentlyDenied: isPermanentlyDenied,
+            iconBg: accent.$1,
+            iconColor: accent.$2,
+            allowLabel: languageProvider.tr('permissions.allowOne'),
+            allowedLabel: languageProvider.tr('permissions.allowed'),
+            settingsLabel: languageProvider.tr('permissions.openSettings'),
+            onTap: () => controller.requestSinglePermission(permission),
+          ),
         );
       }).toList(),
     );
   }
+}
 
-  /// Individual permission card UI
-  Widget _buildPermissionCard({
-    required BuildContext context,
-    required PermissionInfo permission,
-    required bool isGranted,
-    required bool isPermanentlyDenied,
-    required Color accentColor,
-    required VoidCallback onTap,
-  }) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+class _PermissionCard extends StatelessWidget {
+  final PermissionInfo permission;
+  final String name;
+  final String description;
+  final bool isGranted;
+  final bool isPermanentlyDenied;
+  final Color iconBg;
+  final Color iconColor;
+  final String allowLabel;
+  final String allowedLabel;
+  final String settingsLabel;
+  final VoidCallback onTap;
 
-    final cardBgColor = isGranted
-        ? (isDark
-            ? const Color(0xFF065F46).withValues(alpha: 0.15)
-            : const Color(0xFFECFDF5))
-        : (isDark ? colorScheme.surfaceContainer : Colors.white);
+  const _PermissionCard({
+    required this.permission,
+    required this.name,
+    required this.description,
+    required this.isGranted,
+    required this.isPermanentlyDenied,
+    required this.iconBg,
+    required this.iconColor,
+    required this.allowLabel,
+    required this.allowedLabel,
+    required this.settingsLabel,
+    required this.onTap,
+  });
 
-    final borderColor = isGranted
-        ? const Color(0xFF10B981).withValues(alpha: 0.5)
-        : (isDark
-            ? colorScheme.outline.withValues(alpha: 0.2)
-            : colorScheme.outlineVariant.withValues(alpha: 0.5));
-
-    return InkWell(
-      onTap: isGranted ? null : onTap,
-      borderRadius: BorderRadius.circular(16.0),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        margin: const EdgeInsets.only(bottom: 12.0),
-        padding: const EdgeInsets.all(16.0),
-        decoration: BoxDecoration(
-          color: cardBgColor,
-          borderRadius: BorderRadius.circular(16.0),
-          border: Border.all(color: borderColor, width: isGranted ? 1.5 : 1.0),
-          boxShadow: [
-            if (!isGranted && !isDark)
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.04),
-                blurRadius: 8.0,
-                offset: const Offset(0, 2),
-              ),
-          ],
-        ),
-        child: Row(
-          children: [
-            // Left Icon Badge Container
-            Container(
-              width: 44.0,
-              height: 44.0,
-              decoration: BoxDecoration(
-                color: isGranted
-                    ? const Color(0xFF10B981).withValues(alpha: 0.15)
-                    : accentColor.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(12.0),
-              ),
-              child: HugeIcon(icon: isGranted ? HugeIcons.strokeRoundedCheckmarkCircle02 : permission.icon, size: 22.0, color: isGranted ? const Color(0xFF10B981) : accentColor, strokeWidth: 1.8),
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: isGranted ? null : onTap,
+        borderRadius: AppRadius.mdAll,
+        child: Ink(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: isGranted ? AppColors.moiReceivedSoft : AppColors.white,
+            borderRadius: AppRadius.mdAll,
+            border: Border.all(
+              color: isGranted
+                  ? AppColors.moiReceived.withValues(alpha: 0.28)
+                  : AppColors.borderSubtle,
             ),
-            const SizedBox(width: 14.0),
-
-            // Middle Name & Description Text
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          permission.name,
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 15.0,
-                            fontFamily: 'Inter',
-                            color: colorScheme.onSurface,
-                          ),
-                        ),
+            boxShadow: isGranted ? null : AppShadows.soft,
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: isGranted
+                      ? AppColors.moiReceived.withValues(alpha: 0.12)
+                      : iconBg,
+                  borderRadius: BorderRadius.circular(AppRadius.sm),
+                ),
+                alignment: Alignment.center,
+                child: HugeIcon(
+                  icon: isGranted
+                      ? HugeIcons.strokeRoundedCheckmarkCircle02
+                      : permission.icon,
+                  size: 20,
+                  color: isGranted ? AppColors.moiReceived : iconColor,
+                  strokeWidth: 1.8,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      name,
+                      style: AppTypography.label.copyWith(
+                        color: AppColors.textPrimary,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 4.0),
-                  Text(
-                    permission.description,
-                    style: TextStyle(
-                      fontSize: 12.5,
-                      fontFamily: 'Inter',
-                      color: colorScheme.onSurfaceVariant,
-                      height: 1.3,
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 3),
+                    Text(
+                      description,
+                      style: AppTypography.body.copyWith(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w500,
+                        height: 1.35,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(width: 10.0),
-
-            // Right Status Badge or Action Chip
-            _buildStatusChip(
-              context: context,
-              isGranted: isGranted,
-              isPermanentlyDenied: isPermanentlyDenied,
-              accentColor: accentColor,
-              onTap: onTap,
-            ),
-          ],
+              const SizedBox(width: 10),
+              _StatusChip(
+                isGranted: isGranted,
+                isPermanentlyDenied: isPermanentlyDenied,
+                allowLabel: allowLabel,
+                allowedLabel: allowedLabel,
+                settingsLabel: settingsLabel,
+                onTap: onTap,
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
+}
 
-  /// Status badge (Allowed / Settings / Enable)
-  Widget _buildStatusChip({
-    required BuildContext context,
-    required bool isGranted,
-    required bool isPermanentlyDenied,
-    required Color accentColor,
-    required VoidCallback onTap,
-  }) {
+class _StatusChip extends StatelessWidget {
+  final bool isGranted;
+  final bool isPermanentlyDenied;
+  final String allowLabel;
+  final String allowedLabel;
+  final String settingsLabel;
+  final VoidCallback onTap;
+
+  const _StatusChip({
+    required this.isGranted,
+    required this.isPermanentlyDenied,
+    required this.allowLabel,
+    required this.allowedLabel,
+    required this.settingsLabel,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
+
     if (isGranted) {
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0),
-        decoration: BoxDecoration(
-          color: const Color(0xFF10B981).withValues(alpha: 0.15),
-          borderRadius: BorderRadius.circular(20.0),
-        ),
-        child: const Row(
+      return _ChipShell(
+        background: AppColors.moiReceived.withValues(alpha: 0.12),
+        child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            HugeIcon(icon: HugeIcons.strokeRoundedCheckmarkCircle02, size: 14.0, color: Color(0xFF10B981), strokeWidth: 1.8),
-            SizedBox(width: 4.0),
+            const HugeIcon(
+              icon: HugeIcons.strokeRoundedTick02,
+              size: 13,
+              color: AppColors.moiReceived,
+              strokeWidth: 1.8,
+            ),
+            const SizedBox(width: 4),
             Text(
-              "Allowed",
-              style: TextStyle(
-                color: Color(0xFF047857),
+              allowedLabel,
+              style: AppTypography.chip.copyWith(
+                color: AppColors.moiReceived,
                 fontSize: 11.5,
-                fontWeight: FontWeight.bold,
               ),
             ),
           ],
@@ -476,27 +428,26 @@ class _PermissionPageState extends State<PermissionPage> {
     }
 
     if (isPermanentlyDenied) {
-      return InkWell(
+      return GestureDetector(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(20.0),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0),
-          decoration: BoxDecoration(
-            color: const Color(0xFFF59E0B).withValues(alpha: 0.15),
-            borderRadius: BorderRadius.circular(20.0),
-            border: Border.all(color: const Color(0xFFF59E0B), width: 1),
-          ),
-          child: const Row(
+        child: _ChipShell(
+          background: AppColors.accentAmberSoft,
+          border: AppColors.accentAmber.withValues(alpha: 0.5),
+          child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              HugeIcon(icon: HugeIcons.strokeRoundedSettings01, size: 14.0, color: Color(0xFFD97706), strokeWidth: 1.8),
-              SizedBox(width: 4.0),
+              const HugeIcon(
+                icon: HugeIcons.strokeRoundedSettings01,
+                size: 13,
+                color: AppColors.accentAmber,
+                strokeWidth: 1.8,
+              ),
+              const SizedBox(width: 4),
               Text(
-                "Settings",
-                style: TextStyle(
-                  color: Color(0xFFB45309),
+                settingsLabel,
+                style: AppTypography.chip.copyWith(
+                  color: const Color(0xffB45309),
                   fontSize: 11.5,
-                  fontWeight: FontWeight.bold,
                 ),
               ),
             ],
@@ -505,119 +456,172 @@ class _PermissionPageState extends State<PermissionPage> {
       );
     }
 
-    // Default Allow button for ungranted item
-    return InkWell(
+    return GestureDetector(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(20.0),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
-        decoration: BoxDecoration(
-          color: accentColor.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(20.0),
-          border: Border.all(color: accentColor, width: 1),
-        ),
+      child: _ChipShell(
+        background: primary.withValues(alpha: 0.08),
+        border: primary.withValues(alpha: 0.35),
         child: Text(
-          "Allow",
-          style: TextStyle(
-            color: accentColor,
-            fontSize: 12.0,
-            fontWeight: FontWeight.bold,
+          allowLabel,
+          style: AppTypography.chip.copyWith(
+            color: primary,
+            fontSize: 12,
           ),
         ),
       ),
     );
   }
+}
 
-  /// Sticky Bottom Action Bar
-  Widget _buildBottomActionBar(
-    BuildContext context,
-    LanguageProvider languageProvider,
-    PermissionController controller,
-    bool allGranted,
-  ) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+class _ChipShell extends StatelessWidget {
+  final Color background;
+  final Color? border;
+  final Widget child;
+
+  const _ChipShell({
+    required this.background,
+    required this.child,
+    this.border,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(999),
+        border: border == null ? null : Border.all(color: border!),
+      ),
+      child: child,
+    );
+  }
+}
+
+class _PermissionBottomBar extends StatelessWidget {
+  final Color primary;
+  final LanguageProvider languageProvider;
+  final PermissionController controller;
+  final bool allGranted;
+
+  const _PermissionBottomBar({
+    required this.primary,
+    required this.languageProvider,
+    required this.controller,
+    required this.allGranted,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final busy =
+        controller.isRequesting || controller.isLoadingPermissions;
+    final title = allGranted
+        ? languageProvider.tr('permissions.continue')
+        : languageProvider.tr('permissions.allow');
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(20.0, 16.0, 20.0, 16.0),
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.page,
+        AppSpacing.md,
+        AppSpacing.page,
+        AppSpacing.sm,
+      ),
       decoration: BoxDecoration(
-        color: isDark ? colorScheme.surface : Colors.white,
+        color: AppColors.white,
+        border: const Border(
+          top: BorderSide(color: AppColors.borderSubtle),
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10.0,
+            color: const Color(0xff09090B).withValues(alpha: 0.04),
+            blurRadius: 12,
             offset: const Offset(0, -4),
           ),
         ],
-        border: Border(
-          top: BorderSide(
-            color: colorScheme.outlineVariant.withValues(alpha: 0.4),
-            width: 1.0,
-          ),
-        ),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Primary Action Button
-          controller.isRequesting || controller.isLoadingPermissions
-              ? const SizedBox(
-                  height: 48.0,
-                  child: Center(child: CircularProgressIndicator()),
-                )
-              : SizedBox(
-                  width: double.infinity,
-                  height: 52.0,
-                  child: ElevatedButton(
-                    onPressed: () => controller.requestAllPermissions(),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: allGranted
-                          ? const Color(0xFF10B981)
-                          : colorScheme.primary,
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14.0),
+          Semantics(
+            button: true,
+            label: title,
+            child: Material(
+              color: Colors.transparent,
+              borderRadius: BorderRadius.circular(AppRadius.md),
+              child: InkWell(
+                onTap: busy ? null : () => controller.requestAllPermissions(),
+                borderRadius: BorderRadius.circular(AppRadius.md),
+                child: Ink(
+                  height: 56,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(AppRadius.md),
+                    color: busy
+                        ? primary.withValues(alpha: 0.72)
+                        : (allGranted ? AppColors.moiReceived : primary),
+                    boxShadow: [
+                      BoxShadow(
+                        color: (allGranted ? AppColors.moiReceived : primary)
+                            .withValues(alpha: 0.28),
+                        blurRadius: 14,
+                        offset: const Offset(0, 6),
                       ),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          allGranted
-                              ? "Continue"
-                              : languageProvider.tr('permissions.allow'),
-                          style: const TextStyle(
-                            fontSize: 16.0,
-                            fontWeight: FontWeight.bold,
-                            fontFamily: 'Inter',
+                    ],
+                  ),
+                  child: Center(
+                    child: busy
+                        ? const SizedBox(
+                            width: 22,
+                            height: 22,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2.4,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.white,
+                              ),
+                            ),
+                          )
+                        : Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                title,
+                                style: AppTypography.label.copyWith(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              HugeIcon(
+                                icon: allGranted
+                                    ? HugeIcons.strokeRoundedArrowRight01
+                                    : HugeIcons.strokeRoundedTick02,
+                                size: 18,
+                                color: Colors.white,
+                                strokeWidth: 1.8,
+                              ),
+                            ],
                           ),
-                        ),
-                        const SizedBox(width: 8.0),
-                        HugeIcon(icon: allGranted
-                              ? HugeIcons.strokeRoundedArrowRight01
-                              : HugeIcons.strokeRoundedCheckmarkCircle02, size: 20.0, strokeWidth: 1.8),
-                      ],
-                    ),
                   ),
                 ),
-          const SizedBox(height: 8.0),
-
-          // Skip Button
-          if (!controller.isRequesting && !controller.isLoadingPermissions)
+              ),
+            ),
+          ),
+          if (!busy)
             TextButton(
               onPressed: () => controller.skipPermissions(),
               style: TextButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                foregroundColor: AppColors.textSecondary,
+                minimumSize: const Size(48, 48),
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
               child: Text(
                 languageProvider.tr('permissions.skip'),
-                style: TextStyle(
-                  color: colorScheme.onSurfaceVariant,
-                  fontSize: 14.0,
-                  fontFamily: 'Inter',
+                style: AppTypography.label.copyWith(
+                  color: AppColors.textSecondary,
                   fontWeight: FontWeight.w600,
                   decoration: TextDecoration.underline,
+                  decorationColor: AppColors.textSecondary,
                 ),
               ),
             ),

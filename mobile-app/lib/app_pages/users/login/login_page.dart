@@ -73,12 +73,14 @@ class _LoginPageState extends State<LoginPage>
   Widget build(BuildContext context) {
     final languageProvider = context.watch<LanguageProvider>();
     final media = MediaQuery.of(context);
+    final primary = Theme.of(context).colorScheme.primary;
     final screenHeight = media.size.height;
     final keyboardOpen = media.viewInsets.bottom > 0;
     final heroHeight = (screenHeight * (keyboardOpen ? 0.18 : 0.32)).clamp(
       keyboardOpen ? 120.0 : 200.0,
       keyboardOpen ? 160.0 : 300.0,
     );
+    final fadeOverlap = keyboardOpen ? 36.0 : 72.0;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.light.copyWith(
@@ -91,33 +93,42 @@ class _LoginPageState extends State<LoginPage>
         child: Scaffold(
           resizeToAvoidBottomInset: true,
           backgroundColor: AppColors.white,
-          body: Column(
+          body: Stack(
             children: [
-              LoginHeroHeader(
-                height: heroHeight,
-                headline: keyboardOpen
-                    ? null
-                    : languageProvider.tr('login.heroHeadline'),
-                support: keyboardOpen
-                    ? null
-                    : languageProvider.tr('login.heroSupport'),
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                height: heroHeight + fadeOverlap,
+                child: LoginHeroHeader(
+                  height: heroHeight + fadeOverlap,
+                  headline: keyboardOpen
+                      ? null
+                      : languageProvider.tr('login.heroHeadline'),
+                  support: keyboardOpen
+                      ? null
+                      : languageProvider.tr('login.heroSupport'),
+                ),
               ),
-              Expanded(
-                child: FadeTransition(
-                  opacity: _fadeIn,
-                  child: SlideTransition(
-                    position: _slideUp,
-                    child: Column(
-                      children: [
-                        Expanded(
-                          child: SingleChildScrollView(
-                            physics: const BouncingScrollPhysics(),
-                            padding: EdgeInsets.fromLTRB(
-                              AppSpacing.page,
-                              AppSpacing.md,
-                              AppSpacing.page,
-                              AppSpacing.md,
-                            ),
+              Column(
+                children: [
+                  SizedBox(height: heroHeight),
+                  Expanded(
+                    child: FadeTransition(
+                      opacity: _fadeIn,
+                      child: SlideTransition(
+                        position: _slideUp,
+                        child: Column(
+                          children: [
+                            Expanded(
+                              child: SingleChildScrollView(
+                                physics: const BouncingScrollPhysics(),
+                                padding: EdgeInsets.fromLTRB(
+                                  AppSpacing.page,
+                                  fadeOverlap * 0.42,
+                                  AppSpacing.page,
+                                  AppSpacing.md,
+                                ),
                             child: Form(
                               key: _formKey,
                               autovalidateMode: _submitted
@@ -225,7 +236,7 @@ class _LoginPageState extends State<LoginPage>
                                           'login.forgotPassword',
                                         ),
                                         style: AppTypography.label.copyWith(
-                                          color: AppColors.primary,
+                                          color: primary,
                                           fontSize: 13,
                                           fontWeight: FontWeight.w600,
                                         ),
@@ -262,7 +273,7 @@ class _LoginPageState extends State<LoginPage>
                         ),
                         if (!keyboardOpen)
                           _LoginWavesPattern(
-                            primary: Theme.of(context).colorScheme.primary,
+                            primary: primary,
                           ),
                       ],
                     ),
@@ -270,6 +281,8 @@ class _LoginPageState extends State<LoginPage>
                 ),
               ),
             ],
+          ),
+        ],
           ),
         ),
       ),

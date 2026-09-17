@@ -78,11 +78,14 @@ class _TransactionDashboardState extends State<TransactionDashboard> {
     }
   }
 
-  Future<void> fetchPersonLists({required bool reset}) async {
+  Future<void> fetchPersonLists({
+    required bool reset,
+    bool showLoading = true,
+  }) async {
     if (reset) {
       if (mounted) {
         setState(() {
-          _isLoading = true;
+          if (showLoading) _isLoading = true;
           _page = 1;
           _hasMore = true;
         });
@@ -277,11 +280,22 @@ class _TransactionDashboardState extends State<TransactionDashboard> {
             showBack: !widget.embeddedInShell,
             onBack: _goHome,
           ),
-          body: _isLoading && persons.isEmpty
-              ? const Center(
-                  child: CircularProgressIndicator(strokeWidth: 2.5),
-                )
-              : _buildBody(languageProvider),
+          body: MoiRefreshIndicator(
+            onRefresh: () => fetchPersonLists(reset: true, showLoading: false),
+            child: _isLoading && persons.isEmpty
+                ? ListView(
+                    physics: const AlwaysScrollableScrollPhysics(
+                      parent: ClampingScrollPhysics(),
+                    ),
+                    children: const [
+                      SizedBox(height: 180),
+                      Center(
+                        child: CircularProgressIndicator(strokeWidth: 2.5),
+                      ),
+                    ],
+                  )
+                : _buildBody(languageProvider),
+          ),
         );
 
         if (widget.embeddedInShell) return scaffold;
@@ -303,7 +317,9 @@ class _TransactionDashboardState extends State<TransactionDashboard> {
 
     return CustomScrollView(
       controller: _scrollController,
-      physics: const BouncingScrollPhysics(),
+      physics: const AlwaysScrollableScrollPhysics(
+        parent: ClampingScrollPhysics(),
+      ),
       slivers: [
         SliverToBoxAdapter(
           child: Padding(

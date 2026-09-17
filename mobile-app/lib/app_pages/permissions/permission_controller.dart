@@ -8,15 +8,15 @@ import 'package:hugeicons/hugeicons.dart';
 
 class PermissionInfo {
   final String id;
-  final String name;
-  final String description;
+  final String nameKey;
+  final String descriptionKey;
   final List<List<dynamic>> icon;
   final Permission permission;
 
   PermissionInfo({
     required this.id,
-    required this.name,
-    required this.description,
+    required this.nameKey,
+    required this.descriptionKey,
     required this.icon,
     required this.permission,
   });
@@ -38,22 +38,22 @@ class PermissionController extends ChangeNotifier {
     final perms = <PermissionInfo>[
       PermissionInfo(
         id: 'notifications',
-        name: 'அறிவிப்புகள்',
-        description: 'முக்கியமான அறிவிப்புகள் மற்றும் புதுப்பித்தல்களைப் பெற',
+        nameKey: 'permissions.items.notifications.name',
+        descriptionKey: 'permissions.items.notifications.description',
         icon: HugeIcons.strokeRoundedNotification01,
         permission: Permission.notification,
       ),
       PermissionInfo(
         id: 'camera',
-        name: 'கேமரா',
-        description: 'புகைப்படங்கள் எடுக்கவும் பயன்பாட்டில் பயன்படுத்தவும்',
+        nameKey: 'permissions.items.camera.name',
+        descriptionKey: 'permissions.items.camera.description',
         icon: HugeIcons.strokeRoundedCamera01,
         permission: Permission.camera,
       ),
       PermissionInfo(
         id: 'microphone',
-        name: 'மைக்ரோஃபோன்',
-        description: 'ஒலி பதிவு மற்றும் பேச்சு-உரை மாற்றத்திற்கு',
+        nameKey: 'permissions.items.microphone.name',
+        descriptionKey: 'permissions.items.microphone.description',
         icon: HugeIcons.strokeRoundedMic01,
         permission: Permission.microphone,
       ),
@@ -66,8 +66,8 @@ class PermissionController extends ChangeNotifier {
         perms.add(
           PermissionInfo(
             id: 'photos',
-            name: 'புகைப்படங்கள்',
-            description: 'புகைப்படங்களை அணுகவும் பகிரவும்',
+            nameKey: 'permissions.items.photos.name',
+            descriptionKey: 'permissions.items.photos.description',
             icon: HugeIcons.strokeRoundedAlbum01,
             permission: Permission.storage,
           ),
@@ -77,8 +77,8 @@ class PermissionController extends ChangeNotifier {
       perms.add(
         PermissionInfo(
           id: 'photos',
-          name: 'புகைப்படங்கள்',
-          description: 'புகைப்படங்களை அணுகவும் பகிரவும்',
+          nameKey: 'permissions.items.photos.name',
+          descriptionKey: 'permissions.items.photos.description',
           icon: HugeIcons.strokeRoundedAlbum01,
           permission: Permission.photos,
         ),

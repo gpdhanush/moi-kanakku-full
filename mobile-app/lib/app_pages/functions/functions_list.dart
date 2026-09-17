@@ -45,7 +45,10 @@ class _FunctionsListState extends State<FunctionsList> {
     }
     user = [await storage.get(AppVariables.userInformation)];
     String userId = user[0]['id'].toString();
-    final response = await services.getUserFunctions({"userId": userId});
+    final response = await services.getUserFunctions(
+      {"userId": userId},
+      showLoading: showLoading,
+    );
     if (mounted) {
       setState(() {
         _isLoading = false;
@@ -123,58 +126,73 @@ class _FunctionsListState extends State<FunctionsList> {
               height: 72,
               titleFontSize: 18,
             ),
-            body: _isLoading && functionList.isEmpty
-                ? const Center(
-                    child: CircularProgressIndicator(strokeWidth: 2.5),
-                  )
-                : functionList.isEmpty
-                ? _NoFunctionsState(
-                    primary: primary,
-                    title: languageProvider.tr('functions.noFunctions'),
-                    subtitle: languageProvider.tr('functions.noFunctionsHint'),
-                    actionLabel: languageProvider.tr('functions.addFunction'),
-                    onAdd: () async {
-                      await Navigator.pushNamed(
-                        context,
-                        "add-edit-functions",
-                        arguments: [],
-                      );
-                      if (mounted) {
-                        await getUserFunctions(showLoading: false);
-                      }
-                    },
-                  )
-                : mainContent(languageProvider, primary),
+            body: MoiRefreshIndicator(
+              onRefresh: () => getUserFunctions(showLoading: false),
+              child: _isLoading && functionList.isEmpty
+                  ? ListView(
+                      physics: const AlwaysScrollableScrollPhysics(
+                        parent: ClampingScrollPhysics(),
+                      ),
+                      children: const [
+                        SizedBox(height: 180),
+                        Center(
+                          child: CircularProgressIndicator(strokeWidth: 2.5),
+                        ),
+                      ],
+                    )
+                  : functionList.isEmpty
+                  ? ListView(
+                      physics: const AlwaysScrollableScrollPhysics(
+                        parent: ClampingScrollPhysics(),
+                      ),
+                      children: [
+                        SizedBox(
+                          height: MediaQuery.sizeOf(context).height * 0.65,
+                          child: _NoFunctionsState(
+                            primary: primary,
+                            title: languageProvider.tr('functions.noFunctions'),
+                            subtitle:
+                                languageProvider.tr('functions.noFunctionsHint'),
+                            actionLabel:
+                                languageProvider.tr('functions.addFunction'),
+                            onAdd: () async {
+                              await Navigator.pushNamed(
+                                context,
+                                "add-edit-functions",
+                                arguments: [],
+                              );
+                              if (mounted) {
+                                await getUserFunctions(showLoading: false);
+                              }
+                            },
+                          ),
+                        ),
+                      ],
+                    )
+                  : mainContent(languageProvider, primary),
+            ),
             floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-            floatingActionButton: Padding(
-              // Keep Add FAB above the floating bottom nav pill.
-              padding: EdgeInsets.only(
-                bottom: widget.embeddedInShell
-                    ? MoiBottomNavBar.barHeight + MoiBottomNavBar.bottomGap
-                    : 0,
+            floatingActionButton: FloatingActionButton(
+              onPressed: () async {
+                await Navigator.pushNamed(
+                  context,
+                  "add-edit-functions",
+                  arguments: [],
+                );
+                if (mounted) await getUserFunctions(showLoading: false);
+              },
+              elevation: 2,
+              highlightElevation: 3,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
               ),
-              child: FloatingActionButton(
-                onPressed: () async {
-                  await Navigator.pushNamed(
-                    context,
-                    "add-edit-functions",
-                    arguments: [],
-                  );
-                  if (mounted) await getUserFunctions(showLoading: false);
-                },
-                elevation: 2,
-                highlightElevation: 3,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                backgroundColor: primary,
-                tooltip: languageProvider.tr('functions.addFunction'),
-                child: const HugeIcon(
-                  icon: HugeIcons.strokeRoundedAdd01,
-                  color: Colors.white,
-                  size: 24,
-                  strokeWidth: 2,
-                ),
+              backgroundColor: primary,
+              tooltip: languageProvider.tr('functions.addFunction'),
+              child: const HugeIcon(
+                icon: HugeIcons.strokeRoundedAdd01,
+                color: Colors.white,
+                size: 24,
+                strokeWidth: 2,
               ),
             ),
           );
@@ -208,7 +226,9 @@ class _FunctionsListState extends State<FunctionsList> {
           if (searchHistory.isEmpty)
             Expanded(
               child: CustomScrollView(
-                physics: const BouncingScrollPhysics(),
+                physics: const AlwaysScrollableScrollPhysics(
+                  parent: ClampingScrollPhysics(),
+                ),
                 slivers: [
                   SliverFillRemaining(
                     hasScrollBody: false,
@@ -226,7 +246,9 @@ class _FunctionsListState extends State<FunctionsList> {
           else
             Expanded(
               child: ListView.separated(
-                physics: const BouncingScrollPhysics(),
+                physics: const AlwaysScrollableScrollPhysics(
+                  parent: ClampingScrollPhysics(),
+                ),
                 padding: const EdgeInsets.only(bottom: 88),
                 itemCount: searchHistory.length,
                 separatorBuilder: (_, _) =>
