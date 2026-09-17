@@ -43,18 +43,6 @@ class _TransactionPersonDetailsState extends State<TransactionPersonDetails> {
     return '$first $second'.trim().toTitleCase();
   }
 
-  String get _personSubtitle {
-    final parts = <String>[
-      if ((widget.person.city ?? '').trim().isNotEmpty)
-        widget.person.city!.trim().toTitleCase(),
-      if ((widget.person.mobile ?? '').trim().isNotEmpty)
-        widget.person.mobile!.trim(),
-      if ((widget.person.business ?? '').trim().isNotEmpty)
-        widget.person.business!.trim().toTitleCase(),
-    ];
-    return parts.join(' · ');
-  }
-
   String _formatDate(String? iso) {
     if (iso == null || iso.isEmpty) return '';
     try {
@@ -135,7 +123,6 @@ class _TransactionPersonDetailsState extends State<TransactionPersonDetails> {
           backgroundColor: AppColors.background,
           appBar: _PersonDetailsHeader(
             title: title,
-            subtitle: _personSubtitle,
             onBack: () => Navigator.pop(context),
           ),
           body: Column(
@@ -153,7 +140,9 @@ class _TransactionPersonDetailsState extends State<TransactionPersonDetails> {
                     _buildActionButtons(languageProvider),
                     const SizedBox(height: AppSpacing.sm),
                     Text(
-                      languageProvider.tr('transactions.transactionsSection'),
+                      languageProvider
+                          .tr('transactions.transactionsSection')
+                          .toUpperCase(),
                       style: AppTypography.label.copyWith(
                         color: AppColors.textPrimary,
                         fontSize: 14,
@@ -261,7 +250,7 @@ class _TransactionPersonDetailsState extends State<TransactionPersonDetails> {
         final accent = isInvest ? AppColors.moiReceived : AppColors.moiGiven;
 
         return _TransactionCard(
-          title: functionName.toString().toTitleCase(),
+          title: functionName.toString().toUpperCase(),
           subtitle: date,
           amountText: amount != null && amount.toString().isNotEmpty
               ? '₹ ${_formatNumber(amount)}'
@@ -415,12 +404,10 @@ class _TransactionPersonDetailsState extends State<TransactionPersonDetails> {
 class _PersonDetailsHeader extends StatelessWidget
     implements PreferredSizeWidget {
   final String title;
-  final String subtitle;
   final VoidCallback onBack;
 
   const _PersonDetailsHeader({
     required this.title,
-    required this.subtitle,
     required this.onBack,
   });
 
@@ -533,38 +520,18 @@ class _PersonDetailsHeader extends StatelessWidget
           ),
         ),
       ),
-      title: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            title,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            textAlign: TextAlign.center,
-            style: AppTypography.sectionTitle.copyWith(
-              color: Colors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              letterSpacing: -0.2,
-              height: 1.15,
-            ),
-          ),
-          if (subtitle.isNotEmpty) ...[
-            const SizedBox(height: 2),
-            Text(
-              subtitle,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
-              style: AppTypography.body.copyWith(
-                color: Colors.white.withValues(alpha: 0.82),
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                height: 1.1,
-              ),
-            ),
-          ],
-        ],
+      title: Text(
+        title,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        textAlign: TextAlign.center,
+        style: AppTypography.sectionTitle.copyWith(
+          color: Colors.white,
+          fontSize: 16,
+          fontWeight: FontWeight.w700,
+          letterSpacing: -0.2,
+          height: 1.15,
+        ),
       ),
       actions: const [SizedBox(width: 54)],
     );
@@ -723,8 +690,9 @@ class _TransactionCard extends StatelessWidget {
                 const SizedBox(width: 8),
                 Text(
                   amountText!,
-                  style: AppTypography.label.copyWith(
+                  style: AppTypography.amountMedium.copyWith(
                     color: accent,
+                    fontFamily: AppTypography.fontFamily,
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
                   ),
