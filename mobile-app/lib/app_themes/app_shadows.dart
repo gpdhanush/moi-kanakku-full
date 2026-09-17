@@ -26,7 +26,7 @@ class AppShadows {
 
   static List<BoxShadow> hero = [
     BoxShadow(
-      color: AppColors.brandBlue.withValues(alpha: 0.18),
+      color: AppColors.primary.withValues(alpha: 0.18),
       blurRadius: 16,
       offset: const Offset(0, 8),
     ),

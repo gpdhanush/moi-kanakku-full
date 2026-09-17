@@ -29,7 +29,7 @@ class HomeMoiOverviewCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final languageProvider = context.watch<LanguageProvider>();
     final primary = Theme.of(context).colorScheme.primary;
-    final primaryDeep = Color.lerp(primary, const Color(0xff0A3D8F), 0.28)!;
+    final primaryDeep = AppColors.deepenAccent(primary, amount: 0.28);
     final primarySoft = Color.lerp(primary, Colors.white, 0.22)!;
 
     return Semantics(

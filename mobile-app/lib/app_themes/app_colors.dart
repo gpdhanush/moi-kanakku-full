@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
 
 class AppColors {
-  static const Color primary = Color(0xff075BCB);
+  /// Primary brand from app logo (`assets/logo/moi_kanakku.png` / adaptive icon).
+  static const Color logoGreen = Color(0xff087F5B);
+  static const Color logoGreenDeep = Color(0xff065F46);
+  static const Color logoMint = Color(0xff34D399);
+  static const Color logoGold = Color(0xffE8B923);
+
+  static const Color primary = logoGreen;
   static const Color brandBlue = Color(0xff075BCB);
-  static const Color brandGreen = Color(0xff009C3B);
-  static const Color primaryOption2 = brandGreen;
+  static const Color brandGreen = logoGreen;
+  static const Color primaryOption2 = brandBlue;
   static const Color primaryOption3 = Color(0xffd23156);
   static const Color primaryOption4 = Color(0xff13d0c1);
   static const Color primaryOption5 = Color(0xffe5672f);
@@ -24,17 +30,19 @@ class AppColors {
   static const Color accentAmberSoft = Color(0xffFFF7ED);
   static const Color accentViolet = Color(0xff7C3AED);
   static const Color accentVioletSoft = Color(0xffF5F3FF);
-  static const Color primarySoft = Color(0xffDBEAFE);
-  static const Color primaryMid = Color(0xff3B82F6);
-  /// Soft colorful canvas
-  static const Color background = Color(0xffF3F7FF);
+  static const Color primarySoft = Color(0xffD1FAE5);
+  static const Color primaryMid = Color(0xff10B981);
+
+  /// Soft colorful canvas (logo-green tinted)
+  static const Color background = Color(0xffF3FBF7);
   static const Color surface = Color(0xffffffff);
-  static const Color surfaceBlue = Color(0xffEAF2FF);
-  static const Color borderSubtle = Color(0xffD6E4F7);
+  static const Color surfaceBlue = Color(0xffECFDF5);
+  static const Color borderSubtle = Color(0xffCDEBD9);
   static const Color textPrimary = Color(0xff0F172A);
   static const Color textSecondary = Color(0xff64748B);
+
   /// Auth page heading colors (Welcome Back / Create account)
-  static const Color authTitle = Color(0xff000B3E);
+  static const Color authTitle = Color(0xff022C22);
   static const Color authSubtitle = Color(0xff758095);
 
   static const Color white = Color(0xffffffff);
@@ -68,4 +76,9 @@ class AppColors {
     primaryOption8,
     primaryOption9,
   ];
+
+  /// Darken any accent for header / hero gradients (works for any seed color).
+  static Color deepenAccent(Color accent, {double amount = 0.35}) {
+    return Color.lerp(accent, const Color(0xff022C22), amount)!;
+  }
 }

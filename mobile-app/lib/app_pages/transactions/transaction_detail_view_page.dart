@@ -381,7 +381,7 @@ class _DetailsAppHeader extends StatelessWidget implements PreferredSizeWidget {
             end: Alignment.bottomRight,
             colors: [
               primary,
-              Color.lerp(primary, const Color(0xff0A3D8F), 0.35)!,
+              AppColors.deepenAccent(primary, amount: 0.35),
             ],
           ),
           borderRadius: const BorderRadius.only(
@@ -489,7 +489,7 @@ class _AmountHeaderCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final deep = Color.lerp(accent, const Color(0xff0A3D8F), 0.18)!;
+    final deep = AppColors.deepenAccent(accent, amount: 0.18);
     final soft = Color.lerp(accent, Colors.white, 0.22)!;
 
     return Container(
@@ -757,7 +757,7 @@ class _ExportButton extends StatelessWidget {
               end: Alignment.bottomRight,
               colors: [
                 primary,
-                Color.lerp(primary, const Color(0xff0A3D8F), 0.28)!,
+                AppColors.deepenAccent(primary, amount: 0.28),
               ],
             ),
             boxShadow: [

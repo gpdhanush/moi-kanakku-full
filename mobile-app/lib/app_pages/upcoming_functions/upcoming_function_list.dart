@@ -705,7 +705,7 @@ class _UpcomingAppHeader extends StatelessWidget implements PreferredSizeWidget 
             end: Alignment.bottomRight,
             colors: [
               primary,
-              Color.lerp(primary, const Color(0xff0A3D8F), 0.35)!,
+              AppColors.deepenAccent(primary, amount: 0.35),
             ],
           ),
           borderRadius: const BorderRadius.only(
@@ -1005,7 +1005,7 @@ class _EmptyUpcomingState extends StatelessWidget {
                       end: Alignment.bottomRight,
                       colors: [
                         primary,
-                        Color.lerp(primary, const Color(0xff0A3D8F), 0.28)!,
+                        AppColors.deepenAccent(primary, amount: 0.28),
                       ],
                     ),
                     boxShadow: [

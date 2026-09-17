@@ -364,7 +364,7 @@ class _FeedbackHero extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final deep = Color.lerp(primary, const Color(0xff0A3D8F), 0.28)!;
+    final deep = AppColors.deepenAccent(primary, amount: 0.28);
     final soft = Color.lerp(primary, Colors.white, 0.22)!;
 
     return Container(
@@ -826,7 +826,7 @@ class _GradientActionButton extends StatelessWidget {
               end: Alignment.bottomRight,
               colors: [
                 primary,
-                Color.lerp(primary, const Color(0xff0A3D8F), 0.28)!,
+                AppColors.deepenAccent(primary, amount: 0.28),
               ],
             ),
             boxShadow: [

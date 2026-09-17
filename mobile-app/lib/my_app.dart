@@ -20,6 +20,11 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
+  /// Preserves the single EasyLoading Host across MaterialApp rebuilds.
+  final GlobalKey _easyLoadingHostKey = GlobalKey(
+    debugLabel: 'EasyLoadingHost',
+  );
+
   final SystemUiOverlayStyle _overlayStyle = const SystemUiOverlayStyle(
     statusBarColor: Colors.black,
     statusBarIconBrightness: Brightness.light,
@@ -70,7 +75,27 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
                     title: appName,
                     debugShowCheckedModeBanner: false,
                     initialRoute: 'splash',
-                    builder: EasyLoading.init(),
+                    // Keep a single FlutterEasyLoading Host (GlobalKey) so
+                    // theme/language rebuilds do not remount it. Apply Tamil
+                    // text scale on the child only — never wrap the Host.
+                    builder: (context, child) {
+                      final langScale = AppThemes.textScaleForLanguage(
+                        languageProvider.currentLanguage,
+                      );
+                      final media = MediaQuery.of(context);
+                      final systemFactor = media.textScaler.scale(14) / 14;
+                      return FlutterEasyLoading(
+                        key: _easyLoadingHostKey,
+                        child: MediaQuery(
+                          data: media.copyWith(
+                            textScaler: TextScaler.linear(
+                              systemFactor * langScale,
+                            ),
+                          ),
+                          child: child ?? const SizedBox.shrink(),
+                        ),
+                      );
+                    },
                     onGenerateRoute: AppRoute.allRoutes,
                     navigatorKey: navigatorKey,
                   );

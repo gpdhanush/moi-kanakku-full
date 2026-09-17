@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:moi/app_configs/index.dart';
 import 'package:moi/app_services/user_services.dart';
+import 'package:moi/app_themes/app_colors.dart';
 import 'package:moi/app_utils/index.dart';
 import 'package:moi/app_utils/app_providers/language_provider.dart';
 import 'package:provider/provider.dart';
@@ -150,7 +151,7 @@ class _VerifyForgotOtpState extends State<VerifyForgotOtp> {
                   end: Alignment.bottomRight,
                   colors: [
                     const Color(0xff0B1220),
-                    Color.lerp(primary, const Color(0xff0A3D8F), 0.45)!,
+                    AppColors.deepenAccent(primary, amount: 0.45),
                     primary,
                   ],
                 ),

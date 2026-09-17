@@ -1,4 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="ic_launcher_background">#087F5B</color>
+    <!-- Soft logo-green canvas shown before Flutter paints the first frame -->
+    <color name="splash_background">#F3FBF7</color>
+    <!-- Tints the monochrome notification small icon -->
+    <color name="notification_color">#087F5B</color>
 </resources>

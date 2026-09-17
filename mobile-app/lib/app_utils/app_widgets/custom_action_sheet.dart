@@ -436,11 +436,10 @@ Future<bool?> showMoiConfirmSheet({
                                         ]
                                       : [
                                           primary,
-                                          Color.lerp(
+                                          AppColors.deepenAccent(
                                             primary,
-                                            const Color(0xff0A3D8F),
-                                            0.28,
-                                          )!,
+                                            amount: 0.28,
+                                          ),
                                         ],
                                 ),
                                 boxShadow: [

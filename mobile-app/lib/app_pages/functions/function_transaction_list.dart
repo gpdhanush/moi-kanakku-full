@@ -393,7 +393,7 @@ class _FunctionListHeader extends StatelessWidget
             end: Alignment.bottomRight,
             colors: [
               primary,
-              Color.lerp(primary, const Color(0xff0A3D8F), 0.35)!,
+              AppColors.deepenAccent(primary, amount: 0.35),
             ],
           ),
           borderRadius: const BorderRadius.only(

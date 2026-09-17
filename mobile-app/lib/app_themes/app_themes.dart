@@ -17,13 +17,23 @@ class AppThemes {
   static const double tabletBreakpoint = 768;
   static const double desktopBreakpoint = 1024;
 
+  /// Tamil glyphs render visually larger than Latin at the same size.
+  /// Scale the whole UI text down slightly for a friendlier Tamil layout.
+  static const double tamilTextScale = 0.88;
+
   static double _fontDelta(String languageCode) {
-    return languageCode.toLowerCase() == 'ta' ? 2.0 : 0.0;
+    // Kept for callers; Tamil sizing is handled via [textScaleForLanguage].
+    return 0.0;
   }
 
   /// Public font delta getter for language-specific font sizing
   static double getFontDelta(String languageCode) {
     return _fontDelta(languageCode);
+  }
+
+  /// Multiplier applied on top of the system text scaler for a language.
+  static double textScaleForLanguage(String languageCode) {
+    return languageCode.toLowerCase() == 'ta' ? tamilTextScale : 1.0;
   }
 
   /// Clamp font sizes to ensure readability
@@ -96,17 +106,18 @@ class AppThemes {
     TextStyle? mapStyle(TextStyle? style) {
       if (style == null) return null;
 
-      final fontSize = clampFontSize((style.fontSize ?? 14) + 0);
+      final fontSize = clampFontSize(
+        (style.fontSize ?? 14) + _fontDelta(languageCode),
+      );
 
       return style.copyWith(
         fontFamily: family,
         fontSize: fontSize,
-        fontWeight: isTamil
-            ? ((style.fontWeight ?? FontWeight.w500).value >=
-                      FontWeight.w600.value
-                  ? style.fontWeight
-                  : FontWeight.w600)
-            : style.fontWeight,
+        // Tamil script needs a bit less line height to avoid a bulky look.
+        height: isTamil
+            ? ((style.height ?? 1.35) * 0.95).clamp(1.15, 1.4)
+            : style.height,
+        fontWeight: style.fontWeight,
         color: style.color ?? textColor,
       );
     }
@@ -156,8 +167,8 @@ class AppThemes {
         seedColor: seedColor,
         brightness: brightness,
         primary: seedColor,
-        secondary: AppColors.brandGreen,
-        tertiary: AppColors.brandBlue,
+        secondary: AppColors.logoGold,
+        tertiary: AppColors.logoMint,
       ),
       textTheme: interTheme,
       primaryTextTheme: interTheme,
@@ -195,11 +206,11 @@ class AppThemes {
     return ThemeData.light(useMaterial3: true).copyWith(
       scaffoldBackgroundColor: Colors.white,
       colorScheme: ColorScheme.fromSeed(
-        seedColor: Colors.blueAccent,
+        seedColor: AppColors.primary,
         brightness: Brightness.light,
         primary: AppColors.primary,
-        secondary: AppColors.brandGreen,
-        tertiary: AppColors.brandBlue,
+        secondary: AppColors.logoGold,
+        tertiary: AppColors.logoMint,
       ),
       textTheme: inter,
       primaryTextTheme: inter,
@@ -295,11 +306,11 @@ class AppThemes {
     return ThemeData.dark(useMaterial3: true).copyWith(
       scaffoldBackgroundColor: Colors.grey[900],
       colorScheme: ColorScheme.fromSeed(
-        seedColor: Colors.blueAccent,
+        seedColor: AppColors.primary,
         brightness: Brightness.dark,
-        primary: AppColors.brandBlue,
-        secondary: AppColors.brandGreen,
-        tertiary: AppColors.brandBlue,
+        primary: AppColors.primary,
+        secondary: AppColors.logoGold,
+        tertiary: AppColors.logoMint,
       ),
       textTheme: inter.apply(bodyColor: Colors.white, displayColor: Colors.white),
       primaryTextTheme: inter.apply(

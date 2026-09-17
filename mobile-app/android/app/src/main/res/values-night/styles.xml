@@ -17,8 +17,8 @@
     </style>
     <style name="UCropTheme" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="android:windowBackground">@android:color/white</item>
-        <item name="colorPrimary">#075BCB</item>
-        <item name="colorPrimaryDark">#075BCB</item>
-        <item name="colorAccent">#075BCB</item>
+        <item name="colorPrimary">#087F5B</item>
+        <item name="colorPrimaryDark">#065F46</item>
+        <item name="colorAccent">#087F5B</item>
     </style>
 </resources>

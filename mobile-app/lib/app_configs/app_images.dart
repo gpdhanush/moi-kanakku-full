@@ -1,5 +1,5 @@
 class AppImages {
-  static const String appLogoImage = "assets/img/new logo.png";
+  static const String appLogoImage = "assets/logo/moi_kanakku.png";
   static const String loginBackgroundImage = "assets/img/login_bg.webp";
   static const String weddingHeroImage = "assets/images/wedding_hero.webp";
   static const String signupHeroImage = "assets/images/signup-image.png";

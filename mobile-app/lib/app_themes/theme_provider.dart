@@ -8,8 +8,8 @@ class ThemeProvider with ChangeNotifier {
   static const String _colorKey = 'theme_color';
   static const String _darkModeKey = 'dark_mode';
 
-  // Theme color options - Dark color palette
-  static const Color primary = Color(0xff075BCB);
+  // Theme color options — default is logo green from moi_kanakku.png
+  static const Color primary = AppColors.logoGreen;
   static const Color primaryOption2 = Color(0xFF1565C0); // Dark Blue
   static const Color primaryOption3 = Color(0xFF2E7D32); // Dark Green
   static const Color primaryOption4 = Color(0xFF6A1B9A); // Dark Purple
@@ -26,10 +26,10 @@ class ThemeProvider with ChangeNotifier {
   static const Color primaryOption15 = Color(0xFFC62828); // Dark Red Variant
   static const Color primaryOption16 = Color(0xFF1565C0); // Dark Light Blue
 
-  // List of all available theme colors
+  // List of all available theme colors (logo green first = default)
   static const List<Color> availableColors = [
     primary,
-    AppColors.brandGreen,
+    AppColors.brandBlue,
     primaryOption2,
     primaryOption3,
     primaryOption4,
@@ -37,14 +37,10 @@ class ThemeProvider with ChangeNotifier {
     primaryOption6,
     primaryOption7,
     primaryOption8,
-    // primaryOption9,
     primaryOption10,
     primaryOption11,
     primaryOption12,
-    // primaryOption13,
     primaryOption14,
-    // primaryOption15,
-    // primaryOption16,
   ];
 
   final _storage = const FlutterSecureStorage();

@@ -68,8 +68,8 @@ class _SplashScreenState extends State<SplashScreen>
                 end: Alignment.bottomCenter,
                 colors: [
                   Colors.white,
-                  AppColors.surfaceBlue.withValues(alpha: 0.55),
-                  Color.lerp(AppColors.primarySoft, Colors.white, 0.35)!,
+                  AppColors.surfaceBlue.withValues(alpha: 0.7),
+                  Color.lerp(AppColors.primarySoft, Colors.white, 0.25)!,
                 ],
                 stops: const [0.0, 0.55, 1.0],
               ),
@@ -101,7 +101,7 @@ class _SplashScreenState extends State<SplashScreen>
                           textAlign: TextAlign.center,
                           style: AppTypography.authTitle.copyWith(
                             fontSize: 24,
-                            color: AppColors.authTitle,
+                            color: AppColors.logoGreenDeep,
                           ),
                         ),
                         const SizedBox(height: 6),

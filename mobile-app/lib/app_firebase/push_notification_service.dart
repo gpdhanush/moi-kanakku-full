@@ -9,6 +9,7 @@ import 'package:moi/app_configs/app_variables.dart';
 import 'package:moi/app_firebase/firebase_options.dart';
 import 'package:moi/app_services/user_services.dart';
 import 'package:moi/app_storages/secure_storages.dart';
+import 'package:moi/app_themes/app_colors.dart';
 import 'package:moi/app_utils/device_info_service.dart';
 
 /// Handles FCM background messages (must be a top-level function).
@@ -23,6 +24,12 @@ class PushNotificationService {
   PushNotificationService._();
 
   static final PushNotificationService instance = PushNotificationService._();
+
+  /// White-on-transparent silhouette from [moi_kanakku_monochrome.png].
+  static const String androidSmallIcon = '@drawable/ic_stat_moi_kanakku';
+
+  /// Full-color app logo from [moi_kanakku.png] shown as the large icon.
+  static const String androidLargeIcon = '@drawable/ic_notification_logo';
 
   static const String channelId = 'high_importance_channel';
   static const String channelName = 'High Importance Notifications';
@@ -48,9 +55,9 @@ class PushNotificationService {
     if (_initialized) return;
 
     const initSettings = InitializationSettings(
-      android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+      android: AndroidInitializationSettings(androidSmallIcon),
     );
-    await _localNotifications.initialize(initSettings);
+    await _localNotifications.initialize(settings: initSettings);
 
     final androidPlugin = _localNotifications
         .resolvePlatformSpecificImplementation<
@@ -142,9 +149,9 @@ class PushNotificationService {
 
     final plugin = FlutterLocalNotificationsPlugin();
     const initSettings = InitializationSettings(
-      android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+      android: AndroidInitializationSettings(androidSmallIcon),
     );
-    await plugin.initialize(initSettings);
+    await plugin.initialize(settings: initSettings);
 
     final androidPlugin = plugin.resolvePlatformSpecificImplementation<
         AndroidFlutterLocalNotificationsPlugin>();
@@ -152,19 +159,27 @@ class PushNotificationService {
 
     final notificationId =
         message.messageId?.hashCode ?? DateTime.now().millisecondsSinceEpoch;
+    final resolvedTitle = title ?? 'Moi Kanakku';
+    final resolvedBody = body ?? '';
 
     await plugin.show(
-      notificationId,
-      title ?? 'Moi Kanakku',
-      body ?? '',
-      NotificationDetails(
+      id: notificationId,
+      title: resolvedTitle,
+      body: resolvedBody,
+      notificationDetails: NotificationDetails(
         android: AndroidNotificationDetails(
           channelId,
           channelName,
           channelDescription: 'Important alerts such as feedback replies',
           importance: Importance.high,
           priority: Priority.high,
-          icon: '@mipmap/ic_launcher',
+          icon: androidSmallIcon,
+          largeIcon: const DrawableResourceAndroidBitmap(androidLargeIcon),
+          color: AppColors.logoGreen,
+          styleInformation: BigTextStyleInformation(
+            resolvedBody,
+            contentTitle: resolvedTitle,
+          ),
         ),
       ),
     );

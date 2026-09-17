@@ -229,7 +229,7 @@ class _PermissionList extends StatelessWidget {
   });
 
   static const List<(Color bg, Color fg)> _accents = [
-    (AppColors.primarySoft, AppColors.brandBlue),
+    (AppColors.primarySoft, AppColors.primary),
     (AppColors.accentVioletSoft, AppColors.accentViolet),
     (AppColors.moiGivenSoft, AppColors.moiGiven),
     (AppColors.moiReceivedSoft, AppColors.moiReceived),
