@@ -19,12 +19,23 @@ class MorePage extends StatelessWidget {
   Widget build(BuildContext context) {
     final primary = Theme.of(context).colorScheme.primary;
 
-    return Consumer<LanguageProvider>(
-      builder: (context, languageProvider, _) {
+    return Consumer2<LanguageProvider, UserProvider>(
+      builder: (context, languageProvider, userProvider, _) {
+        final user = userProvider.userDetails.isNotEmpty
+            ? Map<String, dynamic>.from(userProvider.userDetails[0] as Map)
+            : null;
+        final name = user?['name']?.toString().trim().isNotEmpty == true
+            ? user!['name'].toString().trim()
+            : languageProvider.tr('menu.guestUser');
+
         return Scaffold(
           backgroundColor: AppColors.background,
           appBar: _MoreAppHeader(
-            title: languageProvider.tr('nav.more').toUpperCase(),
+            title: languageProvider.tr('nav.more'),
+            subtitle: languageProvider.tr('more.subtitle'),
+            name: name,
+            user: user,
+            onProfileTap: () => Navigator.pushNamed(context, 'profile'),
           ),
           body: SingleChildScrollView(
             physics: const BouncingScrollPhysics(),
@@ -37,14 +48,6 @@ class MorePage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  languageProvider.tr('more.subtitle'),
-                  style: AppTypography.body.copyWith(
-                    color: AppColors.textSecondary,
-                    fontSize: 14,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.lg),
                 _MoreCard(
                   children: [
                     _MoreRow(
@@ -186,16 +189,51 @@ class MorePage extends StatelessWidget {
 
 class _MoreAppHeader extends StatelessWidget implements PreferredSizeWidget {
   final String title;
+  final String subtitle;
+  final String name;
+  final Map<String, dynamic>? user;
+  final VoidCallback onProfileTap;
 
-  const _MoreAppHeader({required this.title});
+  const _MoreAppHeader({
+    required this.title,
+    required this.subtitle,
+    required this.name,
+    required this.user,
+    required this.onProfileTap,
+  });
 
   @override
-  Size get preferredSize => const Size.fromHeight(64);
+  Size get preferredSize => const Size.fromHeight(118);
+
+  String _resolveProfileImageUrl() {
+    if (user == null) return '';
+    final path = (user!['profile_image_url'] ?? user!['profile_image'])
+            ?.toString()
+            .trim() ??
+        '';
+    if (path.isEmpty) return '';
+    if (path.startsWith('http://') || path.startsWith('https://')) {
+      return path;
+    }
+    return '$appImageUrl/${path.replaceFirst(RegExp(r'^/+'), '')}';
+  }
+
+  String get _contactLine {
+    final email = user?['email']?.toString().trim() ?? '';
+    if (email.isNotEmpty) return email;
+    final phone = user?['phone']?.toString().trim() ??
+        user?['mobile']?.toString().trim() ??
+        '';
+    return phone;
+  }
 
   @override
   Widget build(BuildContext context) {
     final primary = Theme.of(context).colorScheme.primary;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final imageUrl = _resolveProfileImageUrl();
+    final contact = _contactLine;
+    final initial = name.isNotEmpty ? name[0].toUpperCase() : 'U';
 
     return AppBar(
       toolbarHeight: preferredSize.height,
@@ -203,7 +241,7 @@ class _MoreAppHeader extends StatelessWidget implements PreferredSizeWidget {
       scrolledUnderElevation: 0,
       surfaceTintColor: Colors.transparent,
       backgroundColor: Colors.transparent,
-      centerTitle: true,
+      centerTitle: false,
       automaticallyImplyLeading: false,
       titleSpacing: 0,
       systemOverlayStyle: SystemUiOverlayStyle.light.copyWith(
@@ -236,6 +274,49 @@ class _MoreAppHeader extends StatelessWidget implements PreferredSizeWidget {
             ),
           ],
         ),
+        child: Stack(
+          children: [
+            Positioned(
+              top: -28,
+              right: -18,
+              child: Container(
+                width: 110,
+                height: 110,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withValues(alpha: 0.08),
+                ),
+              ),
+            ),
+            Positioned(
+              bottom: -40,
+              left: -20,
+              child: Container(
+                width: 96,
+                height: 96,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withValues(alpha: 0.06),
+                ),
+              ),
+            ),
+            Positioned(
+              top: 18,
+              right: 56,
+              child: Container(
+                width: 46,
+                height: 46,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.12),
+                    width: 10,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.only(
@@ -243,16 +324,132 @@ class _MoreAppHeader extends StatelessWidget implements PreferredSizeWidget {
           bottomRight: Radius.circular(22),
         ),
       ),
-      title: Text(
-        title,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        textAlign: TextAlign.center,
-        style: AppTypography.sectionTitle.copyWith(
-          color: Colors.white,
-          fontSize: 16,
-          fontWeight: FontWeight.w700,
-          letterSpacing: -0.2,
+      title: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              title,
+              style: AppTypography.label.copyWith(
+                color: Colors.white.withValues(alpha: 0.78),
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.4,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: onProfileTap,
+                borderRadius: BorderRadius.circular(16),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 52,
+                      height: 52,
+                      padding: const EdgeInsets.all(2.5),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.55),
+                          width: 1.5,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.14),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: ClipOval(
+                        child: imageUrl.isEmpty
+                            ? Container(
+                                color: Colors.white.withValues(alpha: 0.2),
+                                alignment: Alignment.center,
+                                child: Text(
+                                  initial,
+                                  style: AppTypography.sectionTitle.copyWith(
+                                    color: Colors.white,
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              )
+                            : Image.network(
+                                imageUrl,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Container(
+                                    color: Colors.white.withValues(alpha: 0.2),
+                                    alignment: Alignment.center,
+                                    child: Text(
+                                      initial,
+                                      style:
+                                          AppTypography.sectionTitle.copyWith(
+                                        color: Colors.white,
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTypography.sectionTitle.copyWith(
+                              color: Colors.white,
+                              fontSize: 17,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: -0.3,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            contact.isNotEmpty ? contact : subtitle,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTypography.body.copyWith(
+                              color: Colors.white.withValues(alpha: 0.78),
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      width: 34,
+                      height: 34,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.14),
+                        shape: BoxShape.circle,
+                      ),
+                      alignment: Alignment.center,
+                      child: const HugeIcon(
+                        icon: HugeIcons.strokeRoundedArrowRight01,
+                        color: Colors.white,
+                        size: 16,
+                        strokeWidth: 1.9,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

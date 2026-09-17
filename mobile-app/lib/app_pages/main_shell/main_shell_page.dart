@@ -83,20 +83,34 @@ class _MainShellPageState extends State<MainShellPage> {
           onPopInvokedWithResult: (didPop, _) {
             if (!didPop) _onBack();
           },
-          child: Scaffold(
-            backgroundColor: Colors.transparent,
-            body: IndexedStack(
-              index: _currentIndex.clamp(0, _tabCount - 1),
-              children: _pages,
-            ),
-            bottomNavigationBar: MoiBottomNavBar(
-              currentIndex: _currentIndex,
-              items: items,
-              onTap: (index) {
-                if (index == _currentIndex) return;
-                setState(() => _currentIndex = index);
-              },
-            ),
+          child: Builder(
+            builder: (context) {
+              final mq = MediaQuery.of(context);
+              // Pill height (~56) + float gap (14) + safe inset.
+              final navClearance = 70.0 + mq.padding.bottom + 14;
+
+              return Scaffold(
+                backgroundColor: Colors.transparent,
+                extendBody: true,
+                body: MediaQuery(
+                  data: mq.copyWith(
+                    padding: mq.padding.copyWith(bottom: navClearance),
+                  ),
+                  child: IndexedStack(
+                    index: _currentIndex.clamp(0, _tabCount - 1),
+                    children: _pages,
+                  ),
+                ),
+                bottomNavigationBar: MoiBottomNavBar(
+                  currentIndex: _currentIndex,
+                  items: items,
+                  onTap: (index) {
+                    if (index == _currentIndex) return;
+                    setState(() => _currentIndex = index);
+                  },
+                ),
+              );
+            },
           ),
         );
       },
