@@ -74,15 +74,55 @@ export const emailApi = {
 
   sendVerifyEmail: async (
     userId: string
-  ): Promise<{ message?: string; sent_to?: string; expires_in_hours?: number }> => {
-    const response = await apiClient.post<
-      MoiApiResponse<{
-        message?: string;
-        sent_to?: string;
-        expires_in_hours?: number;
-      }>
-    >('/email/admin/send-verify-email', { userId: String(userId) });
-    return assertSuccess(response.data);
+  ): Promise<{
+    message?: string;
+    sent_to?: string;
+    expires_in_hours?: number;
+    sent?: boolean;
+    queued?: boolean;
+  }> => {
+    try {
+      const response = await apiClient.post<
+        MoiApiResponse<{
+          message?: string;
+          sent_to?: string;
+          expires_in_hours?: number;
+          sent?: boolean;
+          queued?: boolean;
+        }>
+      >(
+        '/email/admin/send-verify-email',
+        { userId: String(userId) },
+        {
+          // SMTP on cPanel can take longer than the default 30s.
+          timeout: 60000,
+          skipErrorHandler: true,
+        }
+      );
+      return assertSuccess(response.data);
+    } catch (error) {
+      if (error && typeof error === 'object' && 'response' in error) {
+        const data = (error as { response?: { data?: MoiApiResponse<unknown> } })
+          .response?.data;
+        if (data) {
+          const value = data.responseValue;
+          if (value && typeof value === 'object' && 'message' in value) {
+            throw new Error(String((value as { message: string }).message));
+          }
+          if (typeof value === 'string') throw new Error(value);
+          throw new Error(data.responseMessage || 'Failed to send verification email');
+        }
+      }
+      if (error instanceof Error) {
+        if (/timeout/i.test(error.message)) {
+          throw new Error(
+            'Email server timed out. Please try again in a moment.'
+          );
+        }
+        throw error;
+      }
+      throw new Error('Failed to send verification email');
+    }
   },
 };
 

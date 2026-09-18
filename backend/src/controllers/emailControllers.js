@@ -9,6 +9,7 @@ const {
     normalizeEmailAddress,
     getEmailVerificationContent,
     queueEmail,
+    sendEmail,
 } = require('../services/emailService');
 const { enqueueBulkIsolate } = require('../services/backgroundJobQueue');
 const { queuePushNotification } = require('./notificationController');
@@ -456,25 +457,45 @@ exports.controller = {
                 expiresInHours: EMAIL_VERIFY_HOURS,
             });
 
-            const jobId = queueEmail({
-                from: formatEmailFrom('Admin - Moi Kanakku Team'),
-                to: targetEmail,
-                subject: 'Moi Kanakku - Verify your email',
-                text: `Verify your Moi Kanakku email by opening this link: ${verifyLink}`,
-                html,
-            }, `admin-verify:${user.id}`);
-            logger.info(`Verification email queued for user ${user.id} (job ${jobId})`);
+            // Await the actual SMTP send so admin sees real success/failure
+            // (background queue previously returned success even when SMTP failed).
+            try {
+                const result = await sendEmail({
+                    from: formatEmailFrom('Admin - Moi Kanakku Team'),
+                    to: targetEmail,
+                    subject: 'Moi Kanakku - Verify your email',
+                    text: `Verify your Moi Kanakku email by opening this link: ${verifyLink}`,
+                    html,
+                });
+                logger.info(
+                    `Verification email sent to ${targetEmail} for user ${user.id}: ${result?.response || 'ok'}`,
+                );
 
-            return res.status(200).json({
-                responseType: 'S',
-                responseValue: {
-                    message: 'Verification email queued for delivery.',
-                    queued: true,
-                    jobId,
-                    sent_to: targetEmail,
-                    expires_in_hours: EMAIL_VERIFY_HOURS,
-                },
-            });
+                return res.status(200).json({
+                    responseType: 'S',
+                    responseValue: {
+                        message: `Verification email sent to ${targetEmail}.`,
+                        queued: false,
+                        sent: true,
+                        sent_to: targetEmail,
+                        messageId: result?.messageId || null,
+                        expires_in_hours: EMAIL_VERIFY_HOURS,
+                    },
+                });
+            } catch (sendError) {
+                logger.error(
+                    `sendAdminVerifyEmail SMTP failed for user ${user.id} (${targetEmail}):`,
+                    sendError,
+                );
+                const reason = String(sendError?.message || sendError || 'SMTP send failed');
+                return res.status(502).json({
+                    responseType: 'F',
+                    responseValue: {
+                        message: `Unable to send verification email: ${reason}`,
+                        sent_to: targetEmail,
+                    },
+                });
+            }
         } catch (error) {
             logger.error('sendAdminVerifyEmail failed', error);
             return res.status(500).json({
