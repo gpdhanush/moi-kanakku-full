@@ -91,7 +91,12 @@ class _MicIconWidgetState extends State<MicIconWidget> {
       }
     }
 
-    final voiceCode = context.read<LanguageProvider>().voiceLanguageCode;
+    final languageProvider = context.read<LanguageProvider>();
+    await languageProvider.ensureReady();
+    if (!mounted || _isDisposed) return;
+
+    final voiceCode = languageProvider.voiceLanguageCode;
+    debugPrint('MicIconWidget voice language=$voiceCode');
 
     await _speech.startListening(
       sessionId: _sessionId,
@@ -113,6 +118,12 @@ class _MicIconWidgetState extends State<MicIconWidget> {
         if (!mounted || _isDisposed) return;
         setState(() => _isListening = false);
         debugPrint('Mic speech error: $message');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(message),
+            duration: const Duration(seconds: 3),
+          ),
+        );
       },
     );
   }

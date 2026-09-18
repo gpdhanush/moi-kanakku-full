@@ -59,7 +59,7 @@ class SpeechInputService {
       );
 
       if (_available) {
-        _availableLocales = await _speech.locales();
+        await _refreshLocales();
       }
 
       _initialized = true;
@@ -74,10 +74,25 @@ class SpeechInputService {
     }
   }
 
+  Future<void> _refreshLocales() async {
+    try {
+      _availableLocales = await _speech.locales();
+      if (kDebugMode) {
+        final ids = _availableLocales.map((e) => e.localeId).join(', ');
+        debugPrint('SpeechInputService locales: $ids');
+      }
+    } catch (e) {
+      debugPrint('SpeechInputService locales error: $e');
+    }
+  }
+
   /// Starts a listen session owned by [sessionId].
   ///
   /// Partial results are reported with [isFinal] = false.
   /// The final transcript is reported once with [isFinal] = true.
+  ///
+  /// [desiredLocaleId] comes from Settings → Voice language (e.g. `ta_IN`),
+  /// independent of the in-app UI language.
   Future<bool> startListening({
     required Object sessionId,
     required String desiredLocaleId,
@@ -92,6 +107,9 @@ class SpeechInputService {
       return false;
     }
 
+    // Locales can change after the user installs a language pack.
+    await _refreshLocales();
+
     if (_speech.isListening) {
       await _speech.stop();
       await Future<void>.delayed(const Duration(milliseconds: 150));
@@ -105,10 +123,15 @@ class SpeechInputService {
     _onListeningChanged = onListeningChanged;
 
     final localeId = _resolveLocaleId(desiredLocaleId);
-    debugPrint('SpeechInputService listening locale=$localeId');
+    debugPrint(
+      'SpeechInputService listening locale=$localeId '
+      '(requested=$desiredLocaleId)',
+    );
 
     try {
       onListeningChanged?.call(true);
+      // Pass localeId both on options and the deprecated top-level arg so
+      // Android/iOS always receive the voice-language setting.
       await _speech.listen(
         onResult: _handleResult,
         listenOptions: SpeechListenOptions(
@@ -211,25 +234,65 @@ class SpeechInputService {
     _resultCommitted = false;
   }
 
-  /// Picks the closest installed locale, or null for the system default.
-  /// Never falls back to an unrelated first locale (that caused wrong language).
-  String? _resolveLocaleId(String desiredLocaleId) {
-    if (_availableLocales.isEmpty) return desiredLocaleId;
-
+  /// Picks the best installed locale for [desiredLocaleId].
+  ///
+  /// Never silently falls back to the device default (often English) — that
+  /// ignored the Settings voice language. Always returns a concrete id.
+  ///
+  /// Avoids Latin-script packs (e.g. `ta_Latn_IN`) which return English
+  /// letters for Tamil speech.
+  String _resolveLocaleId(String desiredLocaleId) {
     final desired = _normalize(desiredLocaleId);
-    for (final loc in _availableLocales) {
-      if (_normalize(loc.localeId) == desired) return loc.localeId;
+    final lang = desired.split('_').first;
+
+    if (_availableLocales.isEmpty) {
+      return desiredLocaleId;
     }
 
-    final lang = desired.split('_').first;
+    // 1) Exact match (ta_IN == ta-IN == ta_in).
     for (final loc in _availableLocales) {
-      if (_normalize(loc.localeId).startsWith('${lang}_') ||
-          _normalize(loc.localeId) == lang) {
+      if (_normalize(loc.localeId) == desired) {
         return loc.localeId;
       }
     }
 
-    return null;
+    // 2) Same language + native script only (skip Latn / Latin / Romaji).
+    final nativeMatches = _availableLocales.where((loc) {
+      final id = _normalize(loc.localeId);
+      final name = loc.name.toLowerCase();
+      if (_isLatinScriptLocale(id, name)) return false;
+      return id == lang ||
+          id.startsWith('${lang}_') ||
+          id.startsWith('$lang-');
+    }).toList();
+
+    if (nativeMatches.isNotEmpty) {
+      // Prefer same region when present (e.g. IN).
+      final parts = desired.split('_');
+      if (parts.length >= 2) {
+        final region = parts[1];
+        for (final loc in nativeMatches) {
+          final id = _normalize(loc.localeId);
+          if (id.contains('_$region') || id.endsWith('-$region')) {
+            return loc.localeId;
+          }
+        }
+      }
+      return nativeMatches.first.localeId;
+    }
+
+    // 3) Force the requested id so the OS tries that language online,
+    // instead of defaulting to the device UI language (English).
+    return desiredLocaleId;
+  }
+
+  bool _isLatinScriptLocale(String normalizedId, String name) {
+    return normalizedId.contains('_latn') ||
+        normalizedId.contains('-latn') ||
+        normalizedId.contains('latn_') ||
+        name.contains('latin') ||
+        name.contains('latn') ||
+        name.contains('roman');
   }
 
   String _normalize(String localeId) =>
