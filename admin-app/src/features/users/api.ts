@@ -7,6 +7,12 @@ export interface MoiApiResponse<T> {
   count?: number;
 }
 
+export type AppInstallStatus =
+  | 'ACTIVE'
+  | 'INACTIVE'
+  | 'LIKELY_UNINSTALLED'
+  | 'UNKNOWN';
+
 export interface UserListItem {
   id: string;
   mobile: string | null;
@@ -15,6 +21,12 @@ export interface UserListItem {
   city: string | null;
   profile_image_url: string | null;
   device_name: string | null;
+  status?: string | null;
+  app_status?: AppInstallStatus | string | null;
+  last_seen_at?: string | null;
+  device_count?: number | null;
+  platforms?: string[] | null;
+  app_version?: string | null;
 }
 
 export interface UserProfile {
@@ -31,7 +43,6 @@ export interface UserProfile {
 
 export interface UserDevice {
   id?: string;
-  fcm_token?: string | null;
   device_name?: string | null;
   device_id?: string | null;
   is_active?: number | boolean | null;
@@ -40,7 +51,14 @@ export interface UserDevice {
   model?: string | null;
   manufacturer?: string | null;
   androidVersion?: string | null;
+  android_version?: string | null;
   ram_size?: string | null;
+  platform?: string | null;
+  app_version?: string | null;
+  token_status?: string | null;
+  uninstalled_at?: string | null;
+  created_at?: string | null;
+  install_status?: AppInstallStatus | string | null;
 }
 
 export interface UserDetail {
@@ -59,6 +77,12 @@ export interface UserDetail {
   referral_code?: string | null;
   is_verified?: number | boolean | null;
   email_verified_at?: string | null;
+  devices?: UserDevice[] | null;
+  app_status?: AppInstallStatus | string | null;
+  last_seen_at?: string | null;
+  device_count?: number | null;
+  platforms?: string[] | null;
+  app_version?: string | null;
 }
 
 function extractErrorMessage(data: MoiApiResponse<unknown>): string {
@@ -89,6 +113,32 @@ export const usersApi = {
     const response = await apiClient.get<MoiApiResponse<UserDetail>>(
       `/users/admin/all-user-lists/${userId}`
     );
+    return assertSuccess(response.data);
+  },
+
+  updateStatus: async (
+    userId: string,
+    status: "ACTIVE" | "INACTIVE"
+  ): Promise<{ message?: string; userId?: string; status?: string }> => {
+    const response = await apiClient.post<
+      MoiApiResponse<{ message?: string; userId?: string; status?: string }>
+    >("/users/admin/update-status", {
+      userId: String(userId),
+      status,
+    });
+    return assertSuccess(response.data);
+  },
+
+  deleteUser: async (
+    userId: string,
+    mode: "soft" | "permanent"
+  ): Promise<{ message?: string; userId?: string; mode?: string }> => {
+    const response = await apiClient.post<
+      MoiApiResponse<{ message?: string; userId?: string; mode?: string }>
+    >("/users/admin/delete", {
+      userId: String(userId),
+      mode,
+    });
     return assertSuccess(response.data);
   },
 };

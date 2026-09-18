@@ -69,6 +69,18 @@ function extractErrorMessage(data: MoiApiResponse<unknown>): string {
   return data.responseMessage || 'Request failed';
 }
 
+function rethrowApiError(error: unknown): never {
+  if (error && typeof error === 'object' && 'response' in error) {
+    const data = (error as { response?: { data?: MoiApiResponse<unknown> } }).response
+      ?.data;
+    if (data) {
+      throw new Error(extractErrorMessage(data));
+    }
+  }
+  if (error instanceof Error) throw error;
+  throw new Error('Request failed');
+}
+
 function parseListResult<T>(
   data: MoiApiResponse<T[]>,
   page: number,
@@ -146,31 +158,64 @@ export const notificationsApi = {
   },
 
   deleteOne: async (notificationId: string): Promise<NotificationDeleteResult> => {
-    const response = await apiClient.post<MoiApiResponse<NotificationDeleteResult>>(
-      '/notification/admin/delete',
-      { notificationId: String(notificationId) }
-    );
-    return (
-      assertSuccess(response.data) ?? {
-        message: 'Notification deleted successfully',
-        notificationId: String(notificationId),
-      }
-    );
+    try {
+      const response = await apiClient.post<MoiApiResponse<NotificationDeleteResult>>(
+        '/notification/admin/delete',
+        { notificationId: String(notificationId) },
+        { skipErrorHandler: true }
+      );
+      return (
+        assertSuccess(response.data) ?? {
+          message: 'Notification deleted successfully',
+          notificationId: String(notificationId),
+        }
+      );
+    } catch (error) {
+      rethrowApiError(error);
+    }
   },
 
   deleteBulk: async (
     notificationIds: string[]
   ): Promise<NotificationDeleteResult> => {
-    const response = await apiClient.post<MoiApiResponse<NotificationDeleteResult>>(
-      '/notification/admin/delete-bulk',
-      { notificationIds: notificationIds.map(String) }
-    );
-    return (
-      assertSuccess(response.data) ?? {
-        message: 'Selected notifications deleted successfully',
-        deletedCount: notificationIds.length,
+    try {
+      const response = await apiClient.post<MoiApiResponse<NotificationDeleteResult>>(
+        '/notification/admin/delete-bulk',
+        { notificationIds: notificationIds.map(String) },
+        { skipErrorHandler: true }
+      );
+      const result =
+        assertSuccess(response.data) ?? {
+          message: 'Selected notifications deleted successfully',
+          deletedCount: notificationIds.length,
+        };
+      if (typeof result.deletedCount === 'number' && result.deletedCount < 1) {
+        throw new Error('Unable to delete selected notifications.');
       }
-    );
+      return result;
+    } catch (error) {
+      rethrowApiError(error);
+    }
+  },
+
+  deleteByScope: async (
+    scope: 'read' | 'unread' | 'all'
+  ): Promise<NotificationDeleteResult> => {
+    try {
+      const response = await apiClient.post<MoiApiResponse<NotificationDeleteResult>>(
+        '/notification/admin/delete-by-scope',
+        { scope },
+        { skipErrorHandler: true }
+      );
+      return (
+        assertSuccess(response.data) ?? {
+          message: 'Notifications deleted successfully',
+          deletedCount: 0,
+        }
+      );
+    } catch (error) {
+      rethrowApiError(error);
+    }
   },
 };
 

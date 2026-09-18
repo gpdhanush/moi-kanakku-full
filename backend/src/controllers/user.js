@@ -13,7 +13,13 @@ const path = require("path");
 const fs = require("fs");
 const logger = require("../config/logger");
 const { validateUuid, sendUuidError } = require("../helpers/idParams");
+const { isInactiveStatus, sendInactiveError } = require("../helpers/accountStatus");
+const {
+  summarizeDevices,
+  toAdminDevice,
+} = require("../helpers/deviceInstallStatus");
 const cache = require("../utils/cache");
+const { recordAuditLog } = require("../helpers/auditLog");
 
 function clearAdminUserListCache() {
   cache.delByPrefix("admin:all-user-lists");
@@ -51,15 +57,53 @@ const formatPublicUserDetails = (details) => ({
   email_verified_at: details.email_verified_at || null,
 });
 
-const formatAdminUserListItem = (details) => ({
-  id: details.id,
-  mobile: details.mobile,
-  name: details.full_name,
-  last_login: details.last_activity_at,
-  city: details.profile?.city || null,
-  profile_image_url: details.profile?.profile_image_url || null,
-  device_name: details.device?.device_name || null,
-});
+const formatAdminUserListItem = (details) => {
+  const devices = details.devices || (details.device ? [details.device] : []);
+  const summary = summarizeDevices(devices);
+  return {
+    id: details.id,
+    mobile: details.mobile,
+    name: details.full_name,
+    last_login: details.last_activity_at,
+    city: details.profile?.city || null,
+    profile_image_url: details.profile?.profile_image_url || null,
+    device_name: details.device?.device_name || null,
+    status: details.status || "ACTIVE",
+    app_status: summary.app_status,
+    last_seen_at: summary.last_seen_at,
+    device_count: summary.device_count,
+    platforms: summary.platforms,
+    app_version: summary.app_version,
+  };
+};
+
+const formatAdminUserDetails = (details) => {
+  const devices = details.devices || (details.device ? [details.device] : []);
+  const summary = summarizeDevices(devices);
+  return {
+    id: details.id,
+    name: details.full_name,
+    email: details.email,
+    mobile: details.mobile,
+    last_login: details.last_activity_at,
+    profile: details.profile,
+    device: toAdminDevice(details.device),
+    devices: devices.map((row) => toAdminDevice(row)).filter(Boolean),
+    referrer_id: details.referrer_id,
+    referred_count: details.referred_count,
+    create_date: details.created_at,
+    update_date: details.updated_at,
+    status: details.status,
+    referral_code: details.referral_code || null,
+    is_verified: details.is_verified || 0,
+    email_verified_at: details.email_verified_at || null,
+    app_status: summary.app_status,
+    last_seen_at: summary.last_seen_at,
+    device_count: summary.device_count,
+    platforms: summary.platforms,
+    app_version: summary.app_version,
+  };
+};
 
 exports.userController = {
   /**
@@ -91,6 +135,10 @@ exports.userController = {
           responseType: "F",
           responseValue: { message: "தவறான மின்னஞ்சல் ஐடி!" },
         });
+      }
+
+      if (isInactiveStatus(user.status)) {
+        return sendInactiveError(res);
       }
 
       // CHECK IF ACCOUNT IS BLOCKED (BEFORE PASSWORD VERIFICATION)
@@ -202,6 +250,16 @@ exports.userController = {
         // Continue even if session creation fails - not critical
       }
 
+      recordAuditLog({
+        userId: userID,
+        action: "LOGIN",
+        entityType: "user",
+        entityId: userID,
+        summary: "User logged in",
+        metadata: { email: user.email || null },
+        req,
+      });
+
       return res
         .status(200)
         .json({ responseType: "S", responseValue: response });
@@ -248,6 +306,15 @@ exports.userController = {
         logger.error("Error invalidating token:", tokenErr);
         // Continue even if token invalidation fails
       }
+
+      recordAuditLog({
+        userId,
+        action: "LOGOUT",
+        entityType: "user",
+        entityId: userId,
+        summary: "User logged out",
+        req,
+      });
 
       return res.status(200).json({
         responseType: "S",
@@ -369,6 +436,8 @@ exports.userController = {
         manufacturer: manufacturer || null,
         ram_size: ram_size ?? null,
         android_version: normalizedAndroidVersion,
+        platform: req.body.platform || 'android',
+        app_version: req.body.app_version || req.body.appVersion || null,
       };
 
       // Save user details (generates unique referral_code)
@@ -463,6 +532,17 @@ exports.userController = {
               // Don't rollback for FCM errors - non-critical
             }
           }
+
+          recordAuditLog({
+            userId,
+            action: "SIGNUP",
+            entityType: "user",
+            entityId: userId,
+            summary: "New user registered",
+            metadata: { email: email || null, mobile: mobile || null },
+            deviceId: device_id || null,
+            req,
+          });
 
           return res.status(200).json({
             responseType: "S",
@@ -575,6 +655,18 @@ exports.userController = {
           // referral_code: updatedUser.referral_code || null,
           message: "பயனர் தகவல் வெற்றிகரமாக புதுப்பிக்கப்பட்டது.",
         };
+        recordAuditLog({
+          userId: id,
+          action: "PROFILE_UPDATE",
+          entityType: "user",
+          entityId: id,
+          summary: "Profile updated",
+          metadata: {
+            name: updatedUser?.full_name || name || null,
+            email: updatedUser?.email || email || null,
+          },
+          req,
+        });
         return res
           .status(200)
           .json({ responseType: "S", responseValue: response });
@@ -693,6 +785,14 @@ exports.userController = {
             );
           }
         }
+        recordAuditLog({
+          userId: id,
+          action: "PASSWORD_UPDATE",
+          entityType: "user",
+          entityId: id,
+          summary: "Password changed",
+          req,
+        });
         return res.status(200).json({
           responseType: "S",
           responseValue: {
@@ -733,6 +833,15 @@ exports.userController = {
         // Remove token from memory when user is deleted (security best practice)
         tokenService.removeToken(chk.id);
         clearAdminUserListCache();
+        recordAuditLog({
+          userId: chk.id,
+          action: "ACCOUNT_DELETE",
+          entityType: "user",
+          entityId: chk.id,
+          summary: "Account soft deleted",
+          metadata: { email: chk.email || email || null },
+          req,
+        });
         return res.status(200).json({
           responseType: "S",
           responseValue: { message: "பயனர் கணக்கு நீக்கப்பட்டது." },
@@ -797,6 +906,15 @@ exports.userController = {
           message:
             "உங்கள் கணக்கு வெற்றிகரமாக மீட்டமைக்கப்பட்டது. இப்போது நீங்கள் உள்நுழைய முடியும்.",
         };
+        recordAuditLog({
+          userId: user.id,
+          action: "ACCOUNT_RESTORE",
+          entityType: "user",
+          entityId: user.id,
+          summary: "Account restored",
+          metadata: { email: restoredUser?.email || email || null },
+          req,
+        });
         return res
           .status(200)
           .json({ responseType: "S", responseValue: response });
@@ -825,6 +943,10 @@ exports.userController = {
       return res
         .status(404)
         .json({ responseType: "F", responseValue: { message: userError } });
+    }
+
+    if (isInactiveStatus(user.status)) {
+      return sendInactiveError(res);
     }
 
     // Hash the provided password
@@ -856,6 +978,15 @@ exports.userController = {
             );
           }
         }
+        recordAuditLog({
+          userId: user.id,
+          action: "PASSWORD_RESET",
+          entityType: "user",
+          entityId: user.id,
+          summary: "Password reset",
+          metadata: { email: user.email || email || null },
+          req,
+        });
         return res.status(200).json({
           responseType: "S",
           responseValue: {
@@ -881,8 +1012,8 @@ exports.userController = {
    * Body: { userId, token }
    */
   updateNotificationToken: async (req, res) => {
+    const userId = req.user?.userId;
     const {
-      userId,
       token,
       device_id,
       device_name,
@@ -891,17 +1022,32 @@ exports.userController = {
       model,
       android_version,
       ram_size,
+      platform,
+      app_version,
+      appVersion,
     } = req.body;
 
-    if (!userId || !token || !device_id) {
-      return res.status(400).json({
+    if (!userId) {
+      return res.status(401).json({
         responseType: "F",
-        responseValue: { message: "userId, device_id and token are required!" },
+        responseValue: { message: "JWT டோக்கன் தேவையானது." },
       });
     }
 
-    const idCheck = validateUuid(userId, "userId");
-    if (!idCheck.ok) return sendUuidError(res, idCheck.message);
+    if (!token || !device_id) {
+      return res.status(400).json({
+        responseType: "F",
+        responseValue: { message: "device_id and token are required!" },
+      });
+    }
+
+    const tokenValue = String(token).trim();
+    if (tokenValue.length < 20 || tokenValue.length > 4096) {
+      return res.status(400).json({
+        responseType: "F",
+        responseValue: { message: "Invalid FCM token." },
+      });
+    }
 
     const user = await User.findById(userId);
     if (!user) {
@@ -914,16 +1060,35 @@ exports.userController = {
       const query = await User.updateToken(
         userId,
         device_id,
-        token,
+        tokenValue,
         device_name ?? null,
         brand ?? null,
         manufacturer ?? null,
         model ?? null,
         android_version ?? null,
         ram_size ?? null,
+        {
+          platform: platform || "android",
+          app_version: app_version || appVersion || null,
+        },
       );
 
-      if (query) {
+      if (query && !query.error) {
+        logger.info("Device registration successful", { userId: String(userId) });
+        recordAuditLog({
+          userId,
+          action: "DEVICE_REGISTER",
+          entityType: "device",
+          entityId: device_id || null,
+          summary: "Device registered or refreshed",
+          metadata: {
+            device_name: device_name || null,
+            platform: platform || "android",
+            app_version: app_version || appVersion || null,
+          },
+          deviceId: device_id || null,
+          req,
+        });
         return res.status(200).json({
           responseType: "S",
           responseValue: {
@@ -939,6 +1104,10 @@ exports.userController = {
         });
       }
     } catch (error) {
+      logger.error("Device registration failed", {
+        userId: String(userId),
+        error: error?.message || String(error),
+      });
       return res.status(500).json({
         responseType: "F",
         responseValue: { message: error.toString() },
@@ -1105,6 +1274,15 @@ exports.userController = {
             postal_code: updatedUser.postal_code || null,
           };
 
+          recordAuditLog({
+            userId,
+            action: "PROFILE_PHOTO_UPDATE",
+            entityType: "user",
+            entityId: userId,
+            summary: "Profile photo updated",
+            req,
+          });
+
           return res.status(200).json({
             responseType: "S",
             responseValue: {
@@ -1245,7 +1423,7 @@ exports.userController = {
    */
   adminAllUserLists: async (req, res) => {
     try {
-      const cacheKey = "admin:all-user-lists:v1";
+      const cacheKey = "admin:all-user-lists:v3";
       const cached = cache.get(cacheKey);
       if (cached) {
         return res.status(200).json(cached);
@@ -1284,10 +1462,173 @@ exports.userController = {
 
       return res.status(200).json({
         responseType: "S",
-        responseValue: formatPublicUserDetails(details),
+        responseValue: formatAdminUserDetails(details),
       });
     } catch (error) {
       logger.error("adminUserDetails failure", error);
+      return res.status(500).json({
+        responseType: "F",
+        responseValue: { message: error.toString() },
+      });
+    }
+  },
+
+  /**
+   * ADMIN: activate or deactivate an app user.
+   * Body: { userId, status } where status is ACTIVE or INACTIVE
+   */
+  adminUpdateUserStatus: async (req, res) => {
+    const userId = req.body?.userId || req.body?.id || req.params?.id;
+    const status = req.body?.status;
+
+    const idCheck = validateUuid(userId, "userId");
+    if (!idCheck.ok) return sendUuidError(res, idCheck.message);
+
+    const normalized = String(status || "").toUpperCase();
+    if (!["ACTIVE", "INACTIVE"].includes(normalized)) {
+      return res.status(400).json({
+        responseType: "F",
+        responseValue: { message: "status must be ACTIVE or INACTIVE." },
+      });
+    }
+
+    try {
+      const user = await User.findById(userId);
+      if (!user) {
+        return res.status(404).json({
+          responseType: "F",
+          responseValue: { message: userError },
+        });
+      }
+
+      const result = await User.updateStatus(userId, normalized);
+      if (!result || result.affectedRows < 1) {
+        return res.status(404).json({
+          responseType: "F",
+          responseValue: { message: "Could not update user status." },
+        });
+      }
+
+      if (normalized === "INACTIVE") {
+        try {
+          tokenService.removeToken(userId);
+        } catch (tokenErr) {
+          logger.warn("Failed to invalidate token after deactivate:", tokenErr);
+        }
+        try {
+          await SessionModel.endSession(userId);
+        } catch (sessionErr) {
+          logger.warn("Failed to end session after deactivate:", sessionErr);
+        }
+      }
+
+      clearAdminUserListCache();
+
+      return res.status(200).json({
+        responseType: "S",
+        responseValue: {
+          message:
+            normalized === "INACTIVE"
+              ? "User deactivated. They cannot log in or reset password until reactivated."
+              : "User activated. They can log in from the mobile app.",
+          userId: String(userId),
+          status: normalized,
+        },
+      });
+    } catch (error) {
+      logger.error("adminUpdateUserStatus failure", error);
+      return res.status(500).json({
+        responseType: "F",
+        responseValue: { message: error.toString() },
+      });
+    }
+  },
+
+  /**
+   * ADMIN: soft-delete (keep related records) or permanently wipe a user.
+   * Body: { userId, mode: "soft" | "permanent" }
+   */
+  adminDeleteUser: async (req, res) => {
+    const userId = req.body?.userId || req.body?.id || req.params?.id;
+    const mode = String(req.body?.mode || "").toLowerCase();
+
+    const idCheck = validateUuid(userId, "userId");
+    if (!idCheck.ok) return sendUuidError(res, idCheck.message);
+
+    if (!["soft", "permanent"].includes(mode)) {
+      return res.status(400).json({
+        responseType: "F",
+        responseValue: { message: "mode must be soft or permanent." },
+      });
+    }
+
+    try {
+      const user = await User.findByIdIncludingDeleted(userId);
+      if (!user) {
+        return res.status(404).json({
+          responseType: "F",
+          responseValue: { message: userError },
+        });
+      }
+
+      if (mode === "soft") {
+        if (
+          user.is_deleted === 1 ||
+          user.is_deleted === true ||
+          String(user.status || "").toUpperCase() === "DELETED"
+        ) {
+          return res.status(400).json({
+            responseType: "F",
+            responseValue: { message: "User is already soft deleted." },
+          });
+        }
+
+        const result = await User.deleteUser(userId);
+        if (!result || result.affectedRows < 1) {
+          return res.status(404).json({
+            responseType: "F",
+            responseValue: { message: "Could not delete user." },
+          });
+        }
+      } else {
+        const result = await User.hardDeleteUser(userId);
+        if (!result || result.affectedRows < 1) {
+          return res.status(404).json({
+            responseType: "F",
+            responseValue: { message: "Could not permanently delete user." },
+          });
+        }
+      }
+
+      try {
+        tokenService.removeToken(userId);
+      } catch (tokenErr) {
+        logger.warn("Failed to invalidate token after admin delete:", tokenErr);
+      }
+
+      if (mode === "soft") {
+        try {
+          await SessionModel.endSession(userId);
+        } catch (sessionErr) {
+          logger.warn("Failed to end session after admin delete:", sessionErr);
+        }
+      }
+
+      clearAdminUserListCache();
+
+      return res.status(200).json({
+        responseType: "S",
+        responseValue: {
+          message:
+            mode === "permanent"
+              ? "User and related records were permanently deleted."
+              : "User was soft deleted. Related records were kept.",
+          userId: String(userId),
+          mode,
+        },
+      });
+    } catch (error) {
+      logger.error("adminDeleteUser failure", error);
       return res.status(500).json({
         responseType: "F",
         responseValue: { message: error.toString() },
@@ -1442,7 +1783,7 @@ exports.userController = {
       }
 
       tokenService.invalidatePreviousToken(userID);
-      const jwtToken = tokenService.generateToken(userID);
+      const { accessToken, refreshToken } = tokenService.generateTokenPair(userID);
       logger.debug(`admin login for ${userID}, token generated`);
 
       const now = new Date();
@@ -1465,7 +1806,9 @@ exports.userController = {
         last_login_at: now,
         last_activity_at: now,
         created_at: user.created_at,
-        token: jwtToken,
+        token: accessToken,
+        accessToken,
+        refreshToken,
       };
 
       return res
@@ -1476,6 +1819,71 @@ exports.userController = {
       return res.status(500).json({
         responseType: "F",
         responseValue: { message: error.toString() },
+      });
+    }
+  },
+
+  /**
+   * ADMIN REFRESH TOKEN - issue a new access token from a valid refresh token.
+   * Body: { refreshToken }
+   * Survives access-token expiry and in-memory session loss after server restart.
+   */
+  adminRefreshToken: async (req, res) => {
+    const refreshToken = req.body?.refreshToken || req.body?.refresh_token;
+
+    if (!refreshToken) {
+      return res.status(400).json({
+        responseType: "F",
+        responseValue: { message: "Refresh token is required." },
+      });
+    }
+
+    try {
+      const decoded = tokenService.verifyRefreshToken(refreshToken);
+      const userId = decoded.userId;
+      const admin = await Admin.findById(userId);
+
+      if (!admin || admin.is_deleted === 1 || admin.is_deleted === true) {
+        tokenService.removeToken(userId);
+        return res.status(401).json({
+          responseType: "F",
+          responseValue: { message: "Invalid refresh token. Please login again." },
+        });
+      }
+
+      if (isInactiveStatus(admin.status)) {
+        tokenService.removeToken(userId);
+        return sendInactiveError(res);
+      }
+
+      const pair = tokenService.generateTokenPair(userId);
+      const now = new Date();
+
+      return res.status(200).json({
+        responseType: "S",
+        responseValue: {
+          id: admin.id,
+          full_name: admin.full_name,
+          name: admin.full_name,
+          email: admin.email,
+          mobile: admin.mobile,
+          status: admin.status,
+          last_login_at: admin.last_login_at || now,
+          token: pair.accessToken,
+          accessToken: pair.accessToken,
+          refreshToken: pair.refreshToken,
+        },
+      });
+    } catch (error) {
+      const expired = error?.name === "TokenExpiredError";
+      logger.warn("adminRefreshToken failed", { name: error?.name, message: error?.message });
+      return res.status(401).json({
+        responseType: "F",
+        responseValue: {
+          message: expired
+            ? "Refresh token expired. Please login again."
+            : "Invalid refresh token. Please login again.",
+        },
       });
     }
   },

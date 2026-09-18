@@ -46,7 +46,7 @@ router.get("/admin/user-notifications", authenticateAdminToken, controller.getNo
 router.get("/admin/user-notifications/:userId", authenticateAdminToken, controller.getNotificationsByUserId);
 router.post("/admin/user-notifications", authenticateAdminToken, controller.getNotificationsByUserId);
 
-// Delete single notification (soft delete)
+// Delete single notification (hard delete)
 // Body/Query/Params: { notificationId } or /delete/:notificationId
 router.post('/delete', authenticateToken, controller.delete);
 router.delete('/delete', authenticateToken, controller.delete);
@@ -54,10 +54,11 @@ router.delete('/delete/:notificationId', authenticateToken, controller.delete);
 router.post('/admin/delete', authenticateAdminToken, controller.delete);
 router.delete('/admin/delete/:notificationId', authenticateAdminToken, controller.delete);
 
-// Delete multiple notifications (soft delete)
+// Delete multiple notifications (hard delete)
 // Body: { notificationIds: ["uuid1", "uuid2"] }
 router.post('/delete-multiple', authenticateToken, controller.deleteMultiple);
 router.post('/delete-bulk', authenticateToken, controller.deleteMultiple);
 router.post('/admin/delete-bulk', authenticateAdminToken, controller.deleteMultiple);
+router.post('/admin/delete-by-scope', authenticateAdminToken, controller.deleteByScope);
 
 module.exports = router;

@@ -201,21 +201,20 @@ const Notification = {
     },
 
     /**
-     * Delete notification (soft delete)
+     * Delete notification (hard delete)
      * @param {string} notificationId - The notification ID (UUID)
      * @returns {Promise} Database result
      */
     async delete(notificationId) {
         const [result] = await db.query(
-            `UPDATE notifications SET is_deleted = 1, deleted_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
-             WHERE id = ?`,
+            `DELETE FROM notifications WHERE id = ?`,
             [toBinaryUUID(notificationId)]
         );
         return result;
     },
 
     /**
-     * Delete multiple notifications (soft delete)
+     * Delete multiple notifications (hard delete)
      * @param {Array<string>} notificationIds - Array of notification UUIDs
      * @returns {Promise} Database result
      */
@@ -227,8 +226,7 @@ const Notification = {
         const placeholders = binaryIds.map(() => '?').join(',');
         
         const [result] = await db.query(
-            `UPDATE notifications SET is_deleted = 1, deleted_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
-             WHERE id IN (${placeholders})`,
+            `DELETE FROM notifications WHERE id IN (${placeholders})`,
             binaryIds
         );
         return result;
@@ -269,15 +267,34 @@ const Notification = {
     },
 
     /**
-     * Delete all notifications for a user (soft delete)
+     * Delete all notifications for a user (hard delete)
      * @param {string} userId - The user ID (UUID)
      * @returns {Promise} Database result
      */
     async deleteAllByUser(userId) {
         const [result] = await db.query(
-            `UPDATE notifications SET is_deleted = 1, deleted_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
-             WHERE user_id = ? AND (is_deleted = 0 OR is_deleted IS NULL)`,
+            `DELETE FROM notifications WHERE user_id = ?`,
             [toBinaryUUID(userId)]
+        );
+        return result;
+    },
+
+    /**
+     * Hard-delete notifications by admin scope: read, unread, or all.
+     */
+    async deleteByScope(scope) {
+        const normalized = String(scope || '').toLowerCase();
+        let where = '1=1';
+        if (normalized === 'read') {
+            where = 'is_read = 1';
+        } else if (normalized === 'unread') {
+            where = 'is_read = 0';
+        } else if (normalized !== 'all') {
+            return { affectedRows: 0, invalid: true };
+        }
+
+        const [result] = await db.query(
+            `DELETE FROM notifications WHERE ${where}`
         );
         return result;
     },

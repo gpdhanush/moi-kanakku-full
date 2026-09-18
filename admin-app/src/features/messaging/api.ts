@@ -57,12 +57,31 @@ function assertSuccess<T>(data: MoiApiResponse<T>): T {
   return data.responseValue;
 }
 
+const BULK_SEND_TIMEOUT_MS = 5 * 60 * 1000;
+
 export const emailApi = {
   sendBulk: async (payload: SendBulkEmailPayload): Promise<BulkSendResult> => {
     const response = await apiClient.post<MoiApiResponse<BulkSendResult>>(
       '/email/admin/send-bulk',
-      payload
+      payload,
+      {
+        timeout: BULK_SEND_TIMEOUT_MS,
+        skipErrorHandler: true,
+      }
     );
+    return assertSuccess(response.data);
+  },
+
+  sendVerifyEmail: async (
+    userId: string
+  ): Promise<{ message?: string; sent_to?: string; expires_in_hours?: number }> => {
+    const response = await apiClient.post<
+      MoiApiResponse<{
+        message?: string;
+        sent_to?: string;
+        expires_in_hours?: number;
+      }>
+    >('/email/admin/send-verify-email', { userId: String(userId) });
     return assertSuccess(response.data);
   },
 };
@@ -81,7 +100,11 @@ export const adminNotificationsApi = {
     }
     const response = await apiClient.post<MoiApiResponse<BulkSendResult>>(
       '/notification/admin/send-bulk',
-      body
+      body,
+      {
+        timeout: BULK_SEND_TIMEOUT_MS,
+        skipErrorHandler: true,
+      }
     );
     return assertSuccess(response.data);
   },

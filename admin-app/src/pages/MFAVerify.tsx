@@ -15,10 +15,10 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { mfaApi } from "@/features/auth/api";
 import { toast } from "@/hooks/use-toast";
-import { secureStorageWithCache } from "@/lib/secureStorage";
 import {
   clearMfaPendingLogin,
   getMfaPendingLogin,
+  persistAdminSession,
   type MfaPendingLogin,
 } from "@/lib/auth";
 
@@ -77,17 +77,11 @@ export default function MFAVerify() {
       );
 
       const accessToken = response.accessToken || response.token;
-      await secureStorageWithCache.setItem("auth_token", accessToken);
-      await secureStorageWithCache.setItem(
-        "user",
-        JSON.stringify(response.user)
-      );
-      if (response.refreshToken) {
-        await secureStorageWithCache.setItem(
-          "refresh_token",
-          response.refreshToken
-        );
-      }
+      await persistAdminSession({
+        token: accessToken,
+        user: response.user,
+        refreshToken: response.refreshToken,
+      });
       clearMfaPendingLogin();
 
       toast({

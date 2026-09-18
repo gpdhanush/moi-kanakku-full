@@ -100,10 +100,10 @@ const Model = {
      * Admin: Get all upcoming functions across all users
      */
     async getAllFunctions(options = {}) {
-        const { limit = 50, offset = 0, status = null, userId = null } = options;
+        const { limit = null, offset = 0, status = null, userId = null, search = null } = options;
         let query = `SELECT f.id, f.user_id, f.title, f.description, f.function_date, 
                            f.location, f.invitation_url, f.status, f.created_at, f.updated_at, 
-                           u.full_name, u.email
+                           u.full_name, u.email, u.mobile
                     FROM upcoming_functions f
                     LEFT JOIN users u ON f.user_id = u.id
                     WHERE (f.is_deleted = 0 OR f.is_deleted IS NULL)`;
@@ -119,8 +119,25 @@ const Model = {
             params.push(toBinaryUUID(userId));
         }
 
-        query += ` ORDER BY f.function_date DESC, f.created_at DESC LIMIT ? OFFSET ?`;
-        params.push(limit, offset);
+        if (search) {
+            const like = `%${String(search).trim()}%`;
+            query += ` AND (
+                f.title LIKE ? OR
+                f.description LIKE ? OR
+                f.location LIKE ? OR
+                u.full_name LIKE ? OR
+                u.email LIKE ? OR
+                u.mobile LIKE ?
+            )`;
+            params.push(like, like, like, like, like, like);
+        }
+
+        query += ` ORDER BY f.function_date DESC, f.created_at DESC`;
+
+        if (limit != null) {
+            query += ` LIMIT ? OFFSET ?`;
+            params.push(Number(limit), Number(offset) || 0);
+        }
 
         const [rows] = await db.query(query, params);
         return rows.map(r => ({
@@ -128,6 +145,7 @@ const Model = {
             userId: fromBinaryUUID(r.user_id),
             userName: r.full_name,
             userEmail: r.email,
+            userMobile: r.mobile,
             title: r.title,
             description: r.description,
             functionDate: r.function_date,

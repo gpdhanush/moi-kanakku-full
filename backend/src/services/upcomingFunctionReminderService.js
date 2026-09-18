@@ -22,6 +22,9 @@ function getTomorrowInIndia() {
 }
 
 async function sendUpcomingFunctionReminders() {
+    const Model = require('../models/upcomingFunction');
+    await Model.updateStatusByDate();
+
     const tomorrow = getTomorrowInIndia();
     const [rows] = await db.query(
         `SELECT f.user_id, f.title, f.function_date, f.location, ud.fcm_token

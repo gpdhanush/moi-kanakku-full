@@ -23,9 +23,13 @@ const Dashboard = lazy(() => import("./pages/Dashboard"));
 const UsersMaster = lazy(() => import("./pages/UsersMaster"));
 const UserDetail = lazy(() => import("./pages/UserDetail"));
 const Transactions = lazy(() => import("./pages/Transactions"));
+const Functions = lazy(() => import("./pages/Functions"));
+const UpcomingFunctions = lazy(() => import("./pages/UpcomingFunctions"));
 const Feedback = lazy(() => import("./pages/Feedback"));
 const Notifications = lazy(() => import("./pages/Notifications"));
 const UserOtps = lazy(() => import("./pages/UserOtps"));
+const AuditLogs = lazy(() => import("./pages/AuditLogs"));
+const DatabaseBackup = lazy(() => import("./pages/DatabaseBackup"));
 const Settings = lazy(() => import("./pages/Settings"));
 const MFASetup = lazy(() => import("./pages/MFASetup"));
 const MFAVerify = lazy(() => import("./pages/MFAVerify"));
@@ -65,9 +69,13 @@ const AppContent = () => {
           <Route path="/users" element={<LazyRoute><UsersMaster /></LazyRoute>} />
           <Route path="/users/:userId" element={<LazyRoute><UserDetail /></LazyRoute>} />
           <Route path="/transactions" element={<LazyRoute><Transactions /></LazyRoute>} />
+          <Route path="/functions" element={<LazyRoute><Functions /></LazyRoute>} />
+          <Route path="/upcoming-functions" element={<LazyRoute><UpcomingFunctions /></LazyRoute>} />
           <Route path="/feedback" element={<LazyRoute><Feedback /></LazyRoute>} />
           <Route path="/notifications" element={<LazyRoute><Notifications /></LazyRoute>} />
           <Route path="/user-otps" element={<LazyRoute><UserOtps /></LazyRoute>} />
+          <Route path="/audit-logs" element={<LazyRoute><AuditLogs /></LazyRoute>} />
+          <Route path="/database-backup" element={<LazyRoute><DatabaseBackup /></LazyRoute>} />
           <Route path="/settings" element={<LazyRoute><Settings /></LazyRoute>} />
           <Route path="/mfa/setup" element={<LazyRoute><MFASetup /></LazyRoute>} />
         </Route>

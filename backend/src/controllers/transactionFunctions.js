@@ -3,6 +3,7 @@ const DefaultModel = require('../models/moiDefaultFunctions');
 const User = require('../models/user');
 const logger = require('../config/logger');
 const { validateUuid, validateUuidFields, sendUuidError } = require('../helpers/idParams');
+const { recordAuditLog } = require('../helpers/auditLog');
 
 exports.controller = {
     /**
@@ -42,6 +43,16 @@ exports.controller = {
             };
 
             const result = await Model.create(payload);
+
+            recordAuditLog({
+                userId,
+                action: 'FUNCTION_CREATE',
+                entityType: 'function',
+                entityId: result.insertId,
+                summary: `Function created: ${functionName}`,
+                metadata: { location: location || null },
+                req,
+            });
 
             return res.status(201).json({
                 responseType: "S",
@@ -228,6 +239,14 @@ exports.controller = {
             const success = await Model.update(functionId, payload);
 
             if (success) {
+                recordAuditLog({
+                    userId: func.user_id || func.userId || req.user?.userId,
+                    action: 'FUNCTION_UPDATE',
+                    entityType: 'function',
+                    entityId: functionId,
+                    summary: `Function updated: ${functionName}`,
+                    req,
+                });
                 return res.status(200).json({
                     responseType: "S",
                     responseValue: { message: "Event updated successfully." }
@@ -277,6 +296,14 @@ exports.controller = {
             const success = await Model.delete(functionId);
 
             if (success) {
+                recordAuditLog({
+                    userId: func.user_id || func.userId || req.user?.userId,
+                    action: 'FUNCTION_DELETE',
+                    entityType: 'function',
+                    entityId: functionId,
+                    summary: `Function deleted: ${func.function_name || func.functionName || functionId}`,
+                    req,
+                });
                 return res.status(200).json({
                     responseType: "S",
                     responseValue: { message: "Event deleted successfully." }

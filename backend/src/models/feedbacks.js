@@ -198,16 +198,46 @@ const Model = {
     },
 
     /**
-     * Admin: Delete feedback (soft delete)
+     * Admin: Delete feedback (hard delete)
      */
     async delete(id) {
         const [result] = await db.query(
-            `UPDATE feedbacks 
-             SET is_deleted = 1, deleted_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
-             WHERE id = ?`,
+            `DELETE FROM feedbacks WHERE id = ?`,
             [toBinaryUUID(id)]
         );
-        return result.changedRows > 0;
+        return (result.affectedRows || 0) > 0;
+    },
+
+    /**
+     * Admin: Delete multiple feedbacks (hard delete)
+     */
+    async deleteMultiple(ids = []) {
+        const list = (ids || []).map((id) => String(id).trim()).filter(Boolean);
+        if (list.length === 0) return 0;
+        const placeholders = list.map(() => '?').join(',');
+        const [result] = await db.query(
+            `DELETE FROM feedbacks WHERE id IN (${placeholders})`,
+            list.map((id) => toBinaryUUID(id))
+        );
+        return result.affectedRows || 0;
+    },
+
+    /**
+     * Admin: Delete by scope — pending, resolved, or all (hard delete)
+     */
+    async deleteByScope(scope) {
+        const normalized = String(scope || '').toLowerCase();
+        let where = '1=1';
+        if (normalized === 'resolved') {
+            where = `status = 'RESOLVED'`;
+        } else if (normalized === 'pending') {
+            where = `status <> 'RESOLVED'`;
+        } else if (normalized !== 'all') {
+            return { affectedRows: 0, invalid: true };
+        }
+
+        const [result] = await db.query(`DELETE FROM feedbacks WHERE ${where}`);
+        return result;
     }
 };
 

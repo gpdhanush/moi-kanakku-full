@@ -1,0 +1,57 @@
+# Apache fallback for the Vite SPA on cPanel.
+# Copied into dist/ on build. Place this next to index.html on the server.
+
+Options -MultiViews
+DirectoryIndex index.html
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # Relative rewrite so this works at domain root or in a subdirectory.
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^ index.html [L]
+</IfModule>
+
+# Some cPanel hosts ignore rewrite and serve a real 404.
+# Map those back to the SPA so refresh/deep links still load.
+<IfModule mod_alias.c>
+  ErrorDocument 404 /index.html
+</IfModule>
+
+# Set proper MIME types
+<IfModule mod_mime.c>
+  AddType application/javascript js mjs
+  AddType application/json json
+  AddType text/css css
+  AddType image/png png
+  AddType image/jpeg jpg jpeg
+  AddType image/svg+xml svg
+  AddType image/x-icon ico
+  AddType font/woff woff
+  AddType font/woff2 woff2
+  AddType application/manifest+json webmanifest json
+</IfModule>
+
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css
+  AddOutputFilterByType DEFLATE application/javascript application/json
+  AddOutputFilterByType DEFLATE image/svg+xml
+</IfModule>
+
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresByType image/png "access plus 1 year"
+  ExpiresByType image/jpeg "access plus 1 year"
+  ExpiresByType image/svg+xml "access plus 1 year"
+  ExpiresByType text/css "access plus 1 month"
+  ExpiresByType application/javascript "access plus 1 month"
+  ExpiresByType application/json "access plus 0 seconds"
+  ExpiresByType text/html "access plus 0 seconds"
+</IfModule>
+
+<IfModule mod_headers.c>
+  Header set X-Content-Type-Options "nosniff"
+  Header set X-XSS-Protection "1; mode=block"
+  Header set X-Frame-Options "SAMEORIGIN"
+</IfModule>

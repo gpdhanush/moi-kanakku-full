@@ -1,5 +1,6 @@
 {
   "auth": {
+    "accountDeactivated": "Your account has been deactivated. Please contact the admin.",
     "accountRestored": "Account restored successfully",
     "alreadyHaveAccount": "Already have an account?",
     "backToLogin": "Back to Login",

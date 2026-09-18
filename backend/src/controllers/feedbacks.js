@@ -7,6 +7,7 @@ const { sendPushNotification } = require('./notificationController');
 const { Notification, NotificationType } = require('../models/notificationModels');
 const { sendFeedbackConfirmationEmail, sendFeedbackReplyEmail } = require('../services/emailService');
 const logger = require('../config/logger');
+const { recordAuditLog } = require('../helpers/auditLog');
 
 const FEEDBACK_TYPES = ['GENERAL', 'BUG', 'FEATURE', 'COMPLAINT'];
 const FEEDBACK_STATUSES = ['OPEN', 'IN_PROGRESS', 'RESOLVED', 'REJECTED'];
@@ -69,6 +70,16 @@ exports.controller = {
                 if (user.um_email) {
                     sendFeedbackConfirmationEmail(user.um_email, user.um_full_name).catch(() => {});
                 }
+
+                recordAuditLog({
+                    userId,
+                    action: 'FEEDBACK_CREATE',
+                    entityType: 'feedback',
+                    entityId: query.insertId,
+                    summary: `Feedback submitted (${type})`,
+                    metadata: { type },
+                    req,
+                });
 
                 return res.status(200).json({
                     responseType: "S",
@@ -470,6 +481,89 @@ exports.controller = {
                 });
             } catch (error) {
                 logger.error('Error deleting feedback: ', error);
+                return res.status(500).json({
+                    responseType: "F",
+                    responseValue: { message: error.toString() }
+                });
+            }
+        },
+
+        adminDeleteBulk: async (req, res) => {
+            try {
+                const ids = Array.isArray(req.body?.feedbackIds)
+                    ? req.body.feedbackIds
+                    : Array.isArray(req.body?.ids)
+                        ? req.body.ids
+                        : [];
+                const uniqueIds = [...new Set(ids.map((id) => String(id).trim()).filter(Boolean))];
+
+                if (uniqueIds.length === 0) {
+                    return res.status(400).json({
+                        responseType: "F",
+                        responseValue: { message: "Select at least one feedback to delete." }
+                    });
+                }
+
+                for (const id of uniqueIds) {
+                    const idCheck = validateUuid(id, 'feedbackId');
+                    if (!idCheck.ok) return sendUuidError(res, idCheck.message);
+                }
+
+                const deletedCount = await Model.deleteMultiple(uniqueIds);
+                if (!deletedCount) {
+                    return res.status(404).json({
+                        responseType: "F",
+                        responseValue: { message: "No matching feedbacks were deleted." }
+                    });
+                }
+
+                return res.status(200).json({
+                    responseType: "S",
+                    responseValue: {
+                        message: `Deleted ${deletedCount} feedback record(s).`,
+                        deletedCount
+                    }
+                });
+            } catch (error) {
+                logger.error('Error bulk deleting feedback: ', error);
+                return res.status(500).json({
+                    responseType: "F",
+                    responseValue: { message: error.toString() }
+                });
+            }
+        },
+
+        adminDeleteByScope: async (req, res) => {
+            try {
+                const scope = String(req.body?.scope || '').toLowerCase();
+                if (!['pending', 'resolved', 'all'].includes(scope)) {
+                    return res.status(400).json({
+                        responseType: "F",
+                        responseValue: { message: "Scope must be pending, resolved, or all." }
+                    });
+                }
+
+                const result = await Model.deleteByScope(scope);
+                const deletedCount = result?.affectedRows || 0;
+                if (!deletedCount) {
+                    return res.status(404).json({
+                        responseType: "F",
+                        responseValue: {
+                            message: `No ${scope === 'all' ? '' : scope + ' '}feedbacks found to delete.`
+                        }
+                    });
+                }
+
+                return res.status(200).json({
+                    responseType: "S",
+                    responseValue: {
+                        message: `Deleted ${deletedCount} ${scope} feedback record(s).`,
+                        deletedCount,
+                        scope
+                    }
+                });
+            } catch (error) {
+                logger.error('Error deleting feedbacks by scope: ', error);
                 return res.status(500).json({
                     responseType: "F",
                     responseValue: { message: error.toString() }

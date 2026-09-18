@@ -48,6 +48,9 @@ temp/
 *.tmp
 restart.txt
 
+# Database backups
+backups/*.sql.gz
+
 
 # OS generated files
 .DS_Store

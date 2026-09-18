@@ -323,10 +323,52 @@ const User = {
             `INSERT INTO user_profiles (user_id, city) VALUES (?, ?)`,
             [userIdForFk, city || null]
         );
-        if (fcm_token) {
-            await db.query(
-                `
-                    INSERT INTO user_devices (
+        await this.upsertDevice(userIdForFk, {
+            fcm_token,
+            device_name,
+            device_id,
+            brand,
+            manufacturer,
+            model,
+            ram_size,
+            android_version,
+            platform: payload.platform,
+            app_version: payload.app_version,
+            last_used_at: now,
+        });
+        return { insertId: String(userId) };
+    },
+
+    /**
+     * Insert or update a user device row.
+     * Saves the device even when FCM token is missing so signup still records the phone.
+     */
+    async upsertDevice(userIdForFk, device = {}) {
+        const deviceId = device.device_id != null && String(device.device_id).trim() !== ''
+            ? String(device.device_id).trim()
+            : null;
+        const fcmToken = device.fcm_token != null && String(device.fcm_token).trim() !== ''
+            ? String(device.fcm_token).trim()
+            : '';
+        const hasDevice = Boolean(
+            deviceId ||
+            fcmToken ||
+            (device.device_name && String(device.device_name).trim())
+        );
+        if (!hasDevice) return { skipped: true };
+
+        const resolvedDeviceId = deviceId || `unknown-${Date.now()}`;
+        const lastUsedAt = device.last_used_at || new Date();
+        const platform = device.platform != null && String(device.platform).trim() !== ''
+            ? String(device.platform).trim().toLowerCase()
+            : 'android';
+        const appVersion = device.app_version != null && String(device.app_version).trim() !== ''
+            ? String(device.app_version).trim().slice(0, 32)
+            : null;
+
+        try {
+            const [result] = await db.query(
+                `INSERT INTO user_devices (
                     user_id,
                     device_name,
                     device_id,
@@ -336,42 +378,68 @@ const User = {
                     ram_size,
                     fcm_token,
                     android_version,
+                    platform,
+                    app_version,
                     is_active,
+                    token_status,
                     last_used_at,
+                    uninstalled_at,
                     is_deleted,
                     deleted_at
-                    )
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, 0, NULL)
-                    ON DUPLICATE KEY UPDATE
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 'active', ?, NULL, 0, NULL)
+                ON DUPLICATE KEY UPDATE
                     last_used_at = VALUES(last_used_at),
                     is_active = 1,
+                    token_status = 'active',
+                    uninstalled_at = NULL,
                     is_deleted = 0,
                     deleted_at = NULL,
                     updated_at = CURRENT_TIMESTAMP,
-
                     device_name = COALESCE(VALUES(device_name), device_name),
                     brand = COALESCE(VALUES(brand), brand),
                     manufacturer = COALESCE(VALUES(manufacturer), manufacturer),
                     model = COALESCE(VALUES(model), model),
                     ram_size = COALESCE(VALUES(ram_size), ram_size),
                     android_version = COALESCE(VALUES(android_version), android_version),
-                    fcm_token = COALESCE(VALUES(fcm_token), fcm_token)
-    `,
+                    platform = COALESCE(VALUES(platform), platform),
+                    app_version = COALESCE(VALUES(app_version), app_version),
+                    fcm_token = IF(VALUES(fcm_token) = '', fcm_token, VALUES(fcm_token))`,
                 [
                     userIdForFk,
-                    device_name ?? null,
-                    device_id ?? null,
-                    brand ?? null,
-                    manufacturer ?? null,
-                    model ?? null,
-                    ram_size ?? null,
-                    fcm_token,
-                    android_version ?? null,
-                    now
+                    device.device_name ?? null,
+                    resolvedDeviceId,
+                    device.brand ?? null,
+                    device.manufacturer ?? null,
+                    device.model ?? null,
+                    device.ram_size ?? null,
+                    fcmToken,
+                    device.android_version ?? null,
+                    platform,
+                    appVersion,
+                    lastUsedAt,
                 ]
             );
+            return result;
+        } catch (error) {
+            console.error('Failed to save user device:', error?.message || error);
+            return { skipped: true, error };
         }
-        return { insertId: String(userId) };
+    },
+
+    async updateStatus(userId, status) {
+        const normalized = String(status || '').toUpperCase();
+        if (!['ACTIVE', 'INACTIVE'].includes(normalized)) {
+            const error = new Error('Invalid status. Allowed values: ACTIVE, INACTIVE.');
+            error.code = 'INVALID_STATUS';
+            throw error;
+        }
+        const [result] = await db.query(
+            `UPDATE users SET status = ?, updated_at = CURRENT_TIMESTAMP
+             WHERE id = ? AND (is_deleted = 0 OR is_deleted IS NULL)`,
+            [normalized, toBinaryUUID(userId)]
+        );
+        return { ...result, status: normalized };
     },
 
     async update(payload) {
@@ -462,54 +530,16 @@ const User = {
                 );
             }
 
-            // Update user_devices table if fcm_token provided
-            if (fcm_token) {
-                await db.query(
-                    `
-    INSERT INTO user_devices (
-      user_id,
-      device_name,
-      device_id,
-      brand,
-      manufacturer,
-      model,
-      ram_size,
-      fcm_token,
-      android_version,
-      is_active,
-      last_used_at,
-      is_deleted,
-      deleted_at
-    )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, CURRENT_TIMESTAMP, 0, NULL)
-    ON DUPLICATE KEY UPDATE
-      last_used_at = CURRENT_TIMESTAMP,
-      is_active = 1,
-      is_deleted = 0,
-      deleted_at = NULL,
-      updated_at = CURRENT_TIMESTAMP,
-
-      device_name = COALESCE(VALUES(device_name), device_name),
-      brand = COALESCE(VALUES(brand), brand),
-      model = COALESCE(VALUES(model), model),
-      manufacturer = COALESCE(VALUES(manufacturer), manufacturer),
-      ram_size = COALESCE(VALUES(ram_size), ram_size),
-      android_version = COALESCE(VALUES(android_version), android_version),
-      fcm_token = COALESCE(VALUES(fcm_token), fcm_token)
-    `,
-                    [
-                        idBin,
-                        device_name ?? null,
-                        device_id ?? null,
-                        brand ?? null,
-                        manufacturer ?? null,
-                        model ?? null,
-                        ram_size ?? null,
-                        fcm_token,
-                        android_version ?? null
-                    ]
-                );
-            }
+            await this.upsertDevice(idBin, {
+                fcm_token,
+                device_name,
+                device_id,
+                brand,
+                manufacturer,
+                model,
+                ram_size,
+                android_version,
+            });
 
             return { success: true };
         } catch (error) {
@@ -566,17 +596,48 @@ const User = {
     },
 
     /**
-     * Hard delete a user and all dependent rows.
-     * Used to roll back failed signups so the email/mobile are freed for retry.
+     * Hard delete a user and all dependent rows in one transaction.
+     * Used for admin permanent delete and to roll back failed signups.
      */
     async hardDeleteUser(userId) {
         const idForFk = toBinaryUUID(userId);
-        await db.query(`DELETE FROM user_devices WHERE user_id = ?`, [idForFk]);
-        await db.query(`DELETE FROM user_otps WHERE user_id = ?`, [idForFk]);
-        await db.query(`DELETE FROM user_profiles WHERE user_id = ?`, [idForFk]);
-        await db.query(`DELETE FROM user_credentials WHERE user_id = ?`, [idForFk]);
-        const [result] = await db.query(`DELETE FROM users WHERE id = ?`, [idForFk]);
-        return result;
+        const userIdStr = String(userId);
+        const conn = await db.getConnection();
+        try {
+            await conn.beginTransaction();
+
+            // Child rows first so foreign keys are not left pointing at the user.
+            const childTables = [
+                'transactions',
+                'transaction_functions',
+                'persons',
+                'upcoming_functions',
+                'notifications',
+                'feedbacks',
+                'user_otps',
+                'user_devices',
+                'user_sessions',
+                'user_profiles',
+                'user_credentials',
+            ];
+            for (const table of childTables) {
+                await conn.query(`DELETE FROM ${table} WHERE user_id = ?`, [idForFk]);
+            }
+
+            await conn.query(`DELETE FROM user_mfa WHERE user_id = ?`, [userIdStr]);
+            await conn.query(
+                `DELETE FROM user_referrals WHERE referrer_user_id = ? OR referred_user_id = ?`,
+                [idForFk, idForFk]
+            );
+            const [result] = await conn.query(`DELETE FROM users WHERE id = ?`, [idForFk]);
+            await conn.commit();
+            return result;
+        } catch (error) {
+            await conn.rollback();
+            throw error;
+        } finally {
+            conn.release();
+        }
     },
 
     /**
@@ -590,41 +651,19 @@ const User = {
         return result;
     },
 
-    async updateToken(userId, device_id, token, device_name = null, brand = null, manufacturer = null, model = null, android_version = null, ram_size = null) {
-        // Keep only one active device per user: delete all existing, then insert new
-        const idBin = toBinaryUUID(userId);
-        await db.query(`DELETE FROM user_devices WHERE user_id = ?`, [idBin]);
-        const [result] = await db.query(
-            `INSERT INTO user_devices (
-        user_id,
-        device_name,
-        device_id,
-        brand,
-        manufacturer,
-        model,
-        ram_size,
-        fcm_token,
-        android_version,
-        is_active,
-        last_used_at,
-        is_deleted,
-        deleted_at
-      )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, CURRENT_TIMESTAMP, 0, NULL)
-      `,
-            [
-                idBin,
-                device_name ?? null,
-                device_id,
-                brand ?? null,
-                manufacturer ?? null,
-                model ?? null,
-                ram_size ?? null,
-                token,
-                android_version ?? null
-            ]
-        );
-        return result;
+    async updateToken(userId, device_id, token, device_name = null, brand = null, manufacturer = null, model = null, android_version = null, ram_size = null, extra = {}) {
+        return this.upsertDevice(toBinaryUUID(userId), {
+            device_id,
+            fcm_token: token,
+            device_name,
+            brand,
+            manufacturer,
+            model,
+            android_version,
+            ram_size,
+            platform: extra.platform,
+            app_version: extra.app_version,
+        });
     },
 
     /**
@@ -894,26 +933,17 @@ const User = {
         );
         const profile = pRows[0] || {};
 
-        // Fetch only the most recently used active device (if any)
+        // All known devices (active, inactive, and likely uninstalled)
         const [dRows] = await db.query(
-            `SELECT id,
-                    fcm_token,
-                    device_name,
-                    device_id,
-                    is_active,
-                    last_used_at,
-                    created_at,
-                    brand,
-                    model,
-                    manufacturer,
-                    android_version,
-                    ram_size
+            `SELECT id, user_id, fcm_token, device_name, device_id, is_active, token_status,
+                    last_used_at, uninstalled_at, created_at, brand, model, manufacturer,
+                    android_version, ram_size, platform, app_version
              FROM user_devices
-             WHERE user_id = ? AND is_active = 1
-             ORDER BY last_used_at DESC
-             LIMIT 1`,
+             WHERE user_id = ? AND (is_deleted = 0 OR is_deleted IS NULL)
+             ORDER BY last_used_at DESC, updated_at DESC`,
             [idBin]
         );
+        const devices = (dRows || []).map(mapDeviceRow);
 
         const [referrerRows] = await db.query(
             `SELECT referrer_user_id FROM user_referrals WHERE referred_user_id = ? LIMIT 1`,
@@ -948,19 +978,8 @@ const User = {
                 postal_code: profile.postal_code || null,
                 profile_image_url: profile.profile_image_url || null
             },
-            device: dRows && dRows[0] ? {
-                id: dRows[0].id ? fromBinaryUUID(dRows[0].id) : null,
-                fcm_token: dRows[0].fcm_token || null,
-                device_name: dRows[0].device_name || null,
-                device_id: dRows[0].device_id || null,
-                is_active: dRows[0].is_active,
-                last_used_at: dRows[0].last_used_at,
-                brand: dRows[0].brand || null,
-                model: dRows[0].model || null,
-                manufacturer: dRows[0].manufacturer || null,
-                androidVersion: dRows[0].android_version || null,
-                ram_size: dRows[0].ram_size || null,
-            } : null,
+            device: devices[0] || null,
+            devices,
             referrer_id: referrerRows && referrerRows[0] ? fromBinaryUUID(referrerRows[0].referrer_user_id) : null,
             referred_count: referredCountRows && referredCountRows[0] ? referredCountRows[0].cnt : 0
         };
@@ -973,26 +992,36 @@ const User = {
                 u.id, u.full_name, u.email, u.mobile, u.referral_code, u.status, 
                 u.is_verified, u.email_verified_at, u.last_activity_at, u.created_at, u.updated_at,
                 up.gender, up.date_of_birth, up.address_line1, up.address_line2, 
-                up.city, up.state, up.country, up.postal_code, up.profile_image_url,
-                ud.id AS device_id_raw, ud.fcm_token, ud.device_name, ud.device_id, 
-                ud.is_active AS device_is_active, ud.last_used_at AS device_last_used_at, 
-                ud.brand, ud.model, ud.manufacturer, ud.android_version, ud.ram_size
+                up.city, up.state, up.country, up.postal_code, up.profile_image_url
              FROM users u
              LEFT JOIN user_profiles up ON up.user_id = u.id
-             LEFT JOIN user_devices ud ON ud.user_id = u.id 
-                 AND ud.id = (
-                     SELECT ud2.id 
-                     FROM user_devices ud2 
-                     WHERE ud2.user_id = u.id AND ud2.is_active = 1 
-                     ORDER BY ud2.last_used_at DESC 
-                     LIMIT 1
-                 )
              WHERE (u.is_deleted = 0 OR u.is_deleted IS NULL)
              ORDER BY u.created_at DESC`
         );
 
-        return rows.map(r => ({
-            id: fromBinaryUUID(r.id),
+        const [deviceRows] = await db.query(
+            `SELECT id, user_id, fcm_token, device_name, device_id, is_active, token_status,
+                    last_used_at, uninstalled_at, created_at, brand, model, manufacturer,
+                    android_version, ram_size, platform, app_version
+             FROM user_devices
+             WHERE (is_deleted = 0 OR is_deleted IS NULL)
+             ORDER BY last_used_at DESC, updated_at DESC`
+        );
+
+        const devicesByUser = new Map();
+        for (const row of deviceRows || []) {
+            const mapped = mapDeviceRow(row);
+            const userId = mapped.user_id;
+            if (!userId) continue;
+            if (!devicesByUser.has(userId)) devicesByUser.set(userId, []);
+            devicesByUser.get(userId).push(mapped);
+        }
+
+        return rows.map(r => {
+            const id = fromBinaryUUID(r.id);
+            const devices = devicesByUser.get(id) || [];
+            return {
+            id,
             full_name: r.full_name,
             email: r.email,
             mobile: r.mobile,
@@ -1014,22 +1043,12 @@ const User = {
                 postal_code: r.postal_code || null,
                 profile_image_url: r.profile_image_url || null
             },
-            device: (r.device_name || r.fcm_token || r.device_id_raw) ? {
-                id: r.device_id_raw ? fromBinaryUUID(r.device_id_raw) : null,
-                fcm_token: r.fcm_token || null,
-                device_name: r.device_name || null,
-                device_id: r.device_id || null,
-                is_active: r.device_is_active,
-                last_used_at: r.device_last_used_at,
-                brand: r.brand || null,
-                model: r.model || null,
-                manufacturer: r.manufacturer || null,
-                androidVersion: r.android_version || null,
-                ram_size: r.ram_size || null,
-            } : null,
+            device: devices[0] || null,
+            devices,
             referrer_id: null,
             referred_count: 0
-        }));
+            };
+        });
     },
 
     /**
@@ -1069,6 +1088,29 @@ const User = {
         return result;
     }
 };
+
+function mapDeviceRow(row) {
+    if (!row) return null;
+    return {
+        id: row.id != null ? fromBinaryUUID(row.id) : null,
+        user_id: row.user_id != null ? fromBinaryUUID(row.user_id) : null,
+        fcm_token: row.fcm_token || null,
+        device_name: row.device_name || null,
+        device_id: row.device_id || null,
+        is_active: row.is_active,
+        token_status: row.token_status || null,
+        last_used_at: row.last_used_at || null,
+        uninstalled_at: row.uninstalled_at || null,
+        created_at: row.created_at || null,
+        brand: row.brand || null,
+        model: row.model || null,
+        manufacturer: row.manufacturer || null,
+        androidVersion: row.android_version || null,
+        ram_size: row.ram_size || null,
+        platform: row.platform || 'android',
+        app_version: row.app_version || null,
+    };
+}
 
 function mapUserRow(r, includeSensitive = true) {
     const id = fromBinaryUUID(r.id);

@@ -44,6 +44,13 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      unawaited(PushNotificationService.instance.syncTokenForCurrentUser());
+    }
+  }
+
+  @override
   void dispose() {
     PushNotificationService.instance.dispose();
     WidgetsBinding.instance.removeObserver(this);

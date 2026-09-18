@@ -6,6 +6,7 @@ const User = require('../models/user');
 const logger = require('../config/logger');
 const { validateUuid, validateUuidFields, sendUuidError } = require('../helpers/idParams');
 const cache = require('../utils/cache');
+const { recordAuditLog } = require('../helpers/auditLog');
 
 function clearTransactionCaches(userId) {
     if (userId) {
@@ -166,6 +167,21 @@ exports.controller = {
 
             const result = await Model.create(payload);
 
+            recordAuditLog({
+                userId,
+                action: 'TRANSACTION_CREATE',
+                entityType: 'transaction',
+                entityId: result.insertId,
+                summary: `Transaction created (${type})`,
+                metadata: {
+                    type,
+                    itemType,
+                    amount: amount ?? null,
+                    personId,
+                },
+                req,
+            });
+
             return res.status(201).json({
                 responseType: "S",
                 responseValue: {
@@ -319,6 +335,20 @@ exports.controller = {
 
             // Fetch full transaction details to return
             const transaction = await Model.readById(result.insertId);
+
+            recordAuditLog({
+                userId,
+                action: 'TRANSACTION_CREATE',
+                entityType: 'transaction',
+                entityId: result.insertId,
+                summary: `Transaction created (${type})`,
+                metadata: {
+                    type,
+                    amount: amount ?? null,
+                    personId: finalPersonId || personId || null,
+                },
+                req,
+            });
 
             return res.status(201).json({
                 responseType: "S",
@@ -549,6 +579,22 @@ exports.controller = {
 
             clearTransactionCaches(transactions[0]?.userId);
 
+            if (results.length > 0 && transactions[0]?.userId) {
+                recordAuditLog({
+                    userId: transactions[0].userId,
+                    action: 'TRANSACTION_CREATE',
+                    entityType: 'transaction',
+                    entityId: null,
+                    summary: `Bulk transactions created: ${results.length}`,
+                    metadata: {
+                        created: results.length,
+                        errors: errors.length,
+                        total: transactions.length,
+                    },
+                    req,
+                });
+            }
+
             return res.status(201).json({
                 responseType: "S",
                 responseValue: {
@@ -757,6 +803,15 @@ exports.controller = {
             if (success) {
                 // Fetch full transaction details to return
                 const updatedTransaction = await Model.readById(transactionId);
+                recordAuditLog({
+                    userId: transaction.user_id || transaction.userId || req.user?.userId,
+                    action: 'TRANSACTION_UPDATE',
+                    entityType: 'transaction',
+                    entityId: transactionId,
+                    summary: `Transaction updated (${type || transaction.type || 'N/A'})`,
+                    metadata: { type: type || transaction.type || null, amount: amount ?? null },
+                    req,
+                });
                 return res.status(200).json({
                     responseType: "S",
                     responseValue: {
@@ -809,6 +864,14 @@ exports.controller = {
             const success = await Model.delete(transactionId);
 
             if (success) {
+                recordAuditLog({
+                    userId: transaction.user_id || transaction.userId || req.user?.userId,
+                    action: 'TRANSACTION_DELETE',
+                    entityType: 'transaction',
+                    entityId: transactionId,
+                    summary: 'Transaction deleted',
+                    req,
+                });
                 return res.status(200).json({
                     responseType: "S",
                     responseValue: { message: "Transaction deleted successfully." }

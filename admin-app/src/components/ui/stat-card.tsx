@@ -203,15 +203,17 @@ export function StatCard({
           <p
             className={cn(
               compact
-                ? "text-xl font-bold tracking-tight break-all"
-                : "text-3xl font-bold tracking-tight",
+                ? "text-xl font-bold tracking-tight leading-tight break-words"
+                : "text-3xl font-bold tracking-tight leading-tight break-words",
               tone.value
             )}
           >
             {value}
           </p>
           {description && (
-            <p className={cn("text-xs", tone.title)}>{description}</p>
+            <p className={cn("truncate text-xs", tone.title)} title={description}>
+              {description}
+            </p>
           )}
           {trend && (
             <p

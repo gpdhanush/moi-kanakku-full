@@ -272,6 +272,21 @@ class _ForgotPasswordState extends State<ForgotPassword> {
           'verify_forgot_otp',
           arguments: emailCtrl.text,
         );
+      } else if (response != null &&
+          response['responseValue'] != null &&
+          response['responseValue']['account_status'] == 'INACTIVE') {
+        alertServices.errorToast(
+          Provider.of<LanguageProvider>(
+            context,
+            listen: false,
+          ).tr('auth.accountDeactivated'),
+        );
+      } else if (response != null &&
+          response['responseValue'] != null &&
+          response['responseValue']['message'] != null) {
+        alertServices.errorToast(
+          response['responseValue']['message'].toString(),
+        );
       }
     } catch (_) {
       alertServices.hideLoading();

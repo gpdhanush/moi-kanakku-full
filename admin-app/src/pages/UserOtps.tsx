@@ -13,6 +13,7 @@ import {
   ArrowDown,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
 } from "lucide-react";
 import { PageTitle } from "@/components/ui/page-title";
 import { StatCard, StatCardSkeleton } from "@/components/ui/stat-card";
@@ -44,6 +45,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { toast } from "@/hooks/use-toast";
 import { otpsApi, type OtpRecord } from "@/features/otps/api";
@@ -115,6 +122,9 @@ export default function UserOtps() {
   const [sortKey, setSortKey] = useState<SortKey>("created_at");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [showCleanupDialog, setShowCleanupDialog] = useState(false);
+  const [clearScope, setClearScope] = useState<
+    "used" | "unused" | "all" | "expired" | null
+  >(null);
   const queryClient = useQueryClient();
   const metaElement = usePageMeta({
     title: "User OTPs",
@@ -146,12 +156,35 @@ export default function UserOtps() {
       });
       queryClient.invalidateQueries({ queryKey: ["admin", "otps"] });
       setShowCleanupDialog(false);
+      setClearScope(null);
+    },
+  });
+
+  const clearMutation = useMutation({
+    mutationFn: (scope: "used" | "unused" | "all") =>
+      otpsApi.clearByScope(scope),
+    onSuccess: (result, scope) => {
+      toast({
+        title: "OTPs cleared",
+        description:
+          result.message ||
+          `Deleted ${result.deleted_count ?? 0} ${scope} OTP record(s).`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["admin", "otps"] });
+      setShowCleanupDialog(false);
+      setClearScope(null);
+    },
+    onError: (err: Error) => {
+      toast({
+        title: "Clear failed",
+        description: err.message || "Unable to clear OTPs.",
+        variant: "destructive",
+      });
     },
   });
 
   const rows = data?.data ?? [];
   const pagination = data?.pagination;
-  const message = data?.message;
   const totalPages = Math.max(1, pagination?.pages ?? 1);
   const totalItems = pagination?.total ?? 0;
 
@@ -301,25 +334,18 @@ export default function UserOtps() {
           )}
         </div>
 
-        <div className="glass-card p-4 sm:p-6">
-          <div className="mb-4 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-            <div>
-              <h2 className="text-lg font-semibold">OTP List</h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {message || "OTP list"}
-              </p>
+        <div>
+          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="relative w-full sm:max-w-sm">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search name, email, code..."
+                className="pl-9"
+              />
             </div>
-
-            <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
-              <div className="relative w-full sm:w-64">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search name, email, code..."
-                  className="pl-9"
-                />
-              </div>
+            <div className="flex flex-wrap items-center justify-end gap-2">
               <Button
                 variant="outline"
                 size="sm"
@@ -334,16 +360,52 @@ export default function UserOtps() {
                 )}
                 Refresh
               </Button>
-              <Button
-                variant="destructive"
-                size="sm"
-                className="gap-2"
-                onClick={() => setShowCleanupDialog(true)}
-                disabled={cleanupMutation.isPending}
-              >
-                <Trash2 className="h-4 w-4" />
-                Cleanup Expired
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    className="gap-2"
+                    disabled={clearMutation.isPending || cleanupMutation.isPending}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Delete
+                    <ChevronDown className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-44">
+                  <DropdownMenuItem
+                    className="gap-2"
+                    onSelect={() => {
+                      setClearScope("used");
+                      setShowCleanupDialog(true);
+                    }}
+                  >
+                    <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                    Used
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="gap-2"
+                    onSelect={() => {
+                      setClearScope("unused");
+                      setShowCleanupDialog(true);
+                    }}
+                  >
+                    <Clock3 className="h-4 w-4 text-amber-600" />
+                    Unused
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="gap-2 text-destructive focus:text-destructive"
+                    onSelect={() => {
+                      setClearScope("all");
+                      setShowCleanupDialog(true);
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    All
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
 
@@ -508,28 +570,53 @@ export default function UserOtps() {
         </div>
       </div>
 
-      <AlertDialog open={showCleanupDialog} onOpenChange={setShowCleanupDialog}>
+      <AlertDialog
+        open={showCleanupDialog}
+        onOpenChange={(open) => {
+          setShowCleanupDialog(open);
+          if (!open) setClearScope(null);
+        }}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Cleanup expired OTPs?</AlertDialogTitle>
+            <AlertDialogTitle>
+              {clearScope === "used"
+                ? "Delete used OTPs?"
+                : clearScope === "unused"
+                  ? "Delete unused OTPs?"
+                  : "Delete all OTPs?"}
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete all expired OTP records. This action
-              cannot be undone.
+              {clearScope === "used"
+                ? "This will permanently delete all used OTP records."
+                : clearScope === "unused"
+                  ? "This will permanently delete all unused OTP records, including active codes."
+                  : "This will permanently delete every OTP record. This action cannot be undone."}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={cleanupMutation.isPending}>
+            <AlertDialogCancel
+              disabled={clearMutation.isPending || cleanupMutation.isPending}
+            >
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              disabled={cleanupMutation.isPending}
+              disabled={
+                clearMutation.isPending ||
+                cleanupMutation.isPending ||
+                !clearScope
+              }
               onClick={(e) => {
                 e.preventDefault();
-                cleanupMutation.mutate();
+                if (clearScope === "expired") {
+                  cleanupMutation.mutate();
+                  return;
+                }
+                if (clearScope) clearMutation.mutate(clearScope);
               }}
             >
-              {cleanupMutation.isPending ? (
+              {clearMutation.isPending || cleanupMutation.isPending ? (
                 <span className="inline-flex items-center gap-2">
                   <Loader2 className="h-4 w-4 animate-spin" />
                   Deleting...

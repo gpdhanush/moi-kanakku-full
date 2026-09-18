@@ -3,9 +3,86 @@ const User = require('../models/user');
 const logger = require('../config/logger');
 const { sendPushNotification } = require('./notificationController');
 const { validateUuid, validateUuidList, sendUuidError } = require('../helpers/idParams');
-const { createEmailTransporter, formatEmailFrom, buildMailOptions, normalizeEmailAddress } = require('../services/emailService');
+const { isInactiveStatus, sendInactiveError } = require('../helpers/accountStatus');
+const jwt = require('jsonwebtoken');
+const {
+    createEmailTransporter,
+    formatEmailFrom,
+    buildMailOptions,
+    normalizeEmailAddress,
+    getEmailVerificationContent,
+    escapeHtml,
+} = require('../services/emailService');
+const { mapWithConcurrency } = require('../helpers/concurrency');
+
+const cache = require('../utils/cache');
 
 const userError = 'User not found!';
+const EMAIL_VERIFY_TYPE = 'email_verify';
+const EMAIL_VERIFY_EXPIRES = process.env.EMAIL_VERIFY_EXPIRES || '24h';
+const EMAIL_VERIFY_HOURS = Number(process.env.EMAIL_VERIFY_HOURS) || 24;
+
+function clearAdminUserListCache() {
+    cache.delByPrefix('admin:all-user-lists');
+}
+
+function getEmailVerifyLink(req, token) {
+    const configured = (process.env.EMAIL_VERIFY_URL || '').trim().replace(/\/$/, '');
+    const base = configured || (() => {
+        const proto = String(req.get('x-forwarded-proto') || req.protocol || 'https')
+            .split(',')[0]
+            .trim();
+        const host = String(req.get('x-forwarded-host') || req.get('host') || '')
+            .split(',')[0]
+            .trim();
+        return `${proto}://${host}/apis/email/verify-email`;
+    })();
+    const separator = base.includes('?') ? '&' : '?';
+    return `${base}${separator}token=${encodeURIComponent(token)}`;
+}
+
+function renderVerifyEmailPage({ success, title, message }) {
+    const headingColor = success ? '#166534' : '#991b1b';
+    const badgeBg = success ? '#dcfce7' : '#fee2e2';
+    return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>${title}</title>
+</head>
+<body style="margin:0;padding:0;background:#f5f7fb;font-family:Arial,Helvetica,sans-serif;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="padding:40px 16px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#ffffff;border:1px solid #eaeaea;border-radius:12px;overflow:hidden;">
+          <tr>
+            <td style="background:#2f3490;color:#ffffff;text-align:center;padding:22px;">
+              <h1 style="margin:0;font-size:22px;">Moi Kanakku</h1>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:32px 28px;text-align:center;">
+              <div style="display:inline-block;background:${badgeBg};color:${headingColor};padding:8px 14px;border-radius:999px;font-size:13px;font-weight:700;margin-bottom:16px;">
+                ${title}
+              </div>
+              <p style="margin:0;font-size:16px;line-height:1.6;color:#333;">${message}</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+}
+
+function sendVerifyEmailPage(res, { success, title, message, status = 200 }) {
+    res.status(status);
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.setHeader('Content-Security-Policy', "default-src 'none'; style-src 'unsafe-inline'");
+    return res.send(renderVerifyEmailPage({ success, title, message }));
+}
 
 exports.controller = {
     /**
@@ -42,6 +119,10 @@ exports.controller = {
             
             if (!user) {
                 return res.status(404).json({ responseType: "F", responseValue: { message: 'Invalid email ID!' } });
+            }
+
+            if (verifyType === 'forgot' && isInactiveStatus(user.status)) {
+                return sendInactiveError(res);
             }
             
             if (!otp) {
@@ -172,6 +253,9 @@ exports.controller = {
                 if (!targetEmail) return res.status(400).json({ responseType: "F", responseValue: { message: 'email is required for forgot' } });
                 const user = await User.findByEmail(targetEmail);
                 if (!user) return res.status(404).json({ responseType: "F", responseValue: { message: 'Invalid email ID!' } });
+                if (isInactiveStatus(user.status)) {
+                    return sendInactiveError(res);
+                }
 
                 // Create forgot OTP using unified method
                 const otpData = await User.createForgotOTP(user.id);
@@ -271,10 +355,12 @@ exports.controller = {
                 });
             }
 
-            // Setup email transporter (same as sendEmail)
-            const transporter = createEmailTransporter();
+            const transporter = createEmailTransporter({
+                pool: true,
+                maxConnections: 3,
+                maxMessages: 200,
+            });
 
-            // Process each email
             const results = {
                 totalRequested: userIds.length,
                 usersFound: users.length,
@@ -284,33 +370,47 @@ exports.controller = {
                 successfulUsers: []
             };
 
-            for (const user of users) {
-                try {
-                    const mailOptions = buildMailOptions({
-                      from: formatEmailFrom('Moi Kanakku'),
-                      to: user.email,
-                      subject: subject,
-                      html: `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Moi Kanakku</title></head><body style="margin:0;padding:0;background-color:#f5f7fb;font-family:Arial,Helvetica,sans-serif;"><div style="display:none;font-size:1px;color:#f5f7fb;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;">Moi Kanakku notification</div><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="padding:30px 10px;"><tr><td align="center"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:620px;background:#ffffff;border:1px solid #eaeaea;border-radius:8px;overflow:hidden;"><tr><td style="background:#2f3490;color:#ffffff;text-align:center;padding:20px;"><h2 style="margin:0;font-size:22px;">📧 Moi Kanakku</h2><p style="margin:5px 0 0;font-size:13px;color:#dcdcff;">Manage events, relations & gifts easily</p></td></tr><tr><td style="padding:30px;color:#333333;line-height:1.6;"><p style="margin:0 0 15px;font-size:16px;">Hi <strong>${user.full_name || "User"}</strong>,</p><div style="margin:20px 0;font-size:15px;color:#555;">${body}</div></td></tr><tr><td style="border-top:1px solid #f1f1f1;padding:20px;font-size:14px;color:#666;">Regards,<br><strong style="color:#2f3490;">Moi Kanakku Team</strong></td></tr></table><p style="max-width:620px;margin:20px auto 0;text-align:center;font-size:12px;color:#9ca3af;">© 2026 Moi Kanakku. All rights reserved.<br>If you received this email by mistake, please ignore it.</p></td></tr></table></body></html>`,
-                    });
+            try {
+                await mapWithConcurrency(users, 3, async (user) => {
+                    const userId = fromBinaryUUID(user.id);
+                    const targetEmail = normalizeEmailAddress(user.email);
+                    if (!targetEmail) {
+                        results.failed++;
+                        results.failedUsers.push({
+                            userId,
+                            email: user.email || 'N/A',
+                            reason: 'Email address not found',
+                        });
+                        return;
+                    }
 
-                    await transporter.sendMail(mailOptions);
-                    results.successful++;
-                    results.successfulUsers.push({
-                        userId: fromBinaryUUID(user.id),
-                        email: user.email
-                    });
+                    try {
+                        const safeName = escapeHtml(user.full_name || 'User');
+                        const mailOptions = buildMailOptions({
+                            from: formatEmailFrom('Moi Kanakku'),
+                            to: targetEmail,
+                            subject: subject,
+                            html: `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Moi Kanakku</title></head><body style="margin:0;padding:0;background-color:#f5f7fb;font-family:Arial,Helvetica,sans-serif;"><div style="display:none;font-size:1px;color:#f5f7fb;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;">Moi Kanakku notification</div><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="padding:30px 10px;"><tr><td align="center"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:620px;background:#ffffff;border:1px solid #eaeaea;border-radius:8px;overflow:hidden;"><tr><td style="background:#2f3490;color:#ffffff;text-align:center;padding:20px;"><h2 style="margin:0;font-size:22px;">Moi Kanakku</h2><p style="margin:5px 0 0;font-size:13px;color:#dcdcff;">Manage events, relations & gifts easily</p></td></tr><tr><td style="padding:30px;color:#333333;line-height:1.6;"><p style="margin:0 0 15px;font-size:16px;">Hi <strong>${safeName}</strong>,</p><div style="margin:20px 0;font-size:15px;color:#555;">${body}</div></td></tr><tr><td style="border-top:1px solid #f1f1f1;padding:20px;font-size:14px;color:#666;">Regards,<br><strong style="color:#2f3490;">Moi Kanakku Team</strong></td></tr></table><p style="max-width:620px;margin:20px auto 0;text-align:center;font-size:12px;color:#9ca3af;">© 2026 Moi Kanakku. All rights reserved.<br>If you received this email by mistake, please ignore it.</p></td></tr></table></body></html>`,
+                        });
 
-                    logger.info(`Email sent to ${user.email} (${user.id})`);
-
-                } catch (emailError) {
-                    logger.error(`Failed to send email to ${user.email}:`, emailError);
-                    results.failed++;
-                    results.failedUsers.push({
-                        userId: fromBinaryUUID(user.id),
-                        email: user.email,
-                        reason: emailError.message || 'Unknown error'
-                    });
-                }
+                        await transporter.sendMail(mailOptions);
+                        results.successful++;
+                        results.successfulUsers.push({
+                            userId,
+                            email: targetEmail,
+                        });
+                    } catch (emailError) {
+                        logger.error(`Failed to send email to ${targetEmail}:`, emailError);
+                        results.failed++;
+                        results.failedUsers.push({
+                            userId,
+                            email: targetEmail,
+                            reason: emailError.message || 'Unknown error',
+                        });
+                    }
+                });
+            } finally {
+                transporter.close();
             }
 
             return res.status(200).json({
@@ -326,6 +426,184 @@ exports.controller = {
             return res.status(500).json({
                 responseType: "F",
                 responseValue: { message: error.toString() }
+            });
+        }
+    },
+
+    /**
+     * Admin: send a verification email with a clickable token link.
+     * Body: { userId }
+     */
+    sendAdminVerifyEmail: async (req, res) => {
+        const userId = req.body?.userId || req.body?.id || req.params?.id;
+        const idCheck = validateUuid(userId, 'userId');
+        if (!idCheck.ok) return sendUuidError(res, idCheck.message);
+
+        try {
+            const user = await User.findById(userId);
+            if (!user) {
+                return res.status(404).json({
+                    responseType: 'F',
+                    responseValue: { message: userError },
+                });
+            }
+
+            if (Number(user.is_verified) === 1) {
+                return res.status(400).json({
+                    responseType: 'F',
+                    responseValue: { message: 'This email is already verified.' },
+                });
+            }
+
+            const targetEmail = normalizeEmailAddress(user.email);
+            if (!targetEmail) {
+                return res.status(400).json({
+                    responseType: 'F',
+                    responseValue: { message: 'This user does not have an email address.' },
+                });
+            }
+
+            if (!process.env.JWT_SECRET) {
+                logger.error('sendAdminVerifyEmail: JWT_SECRET is not set');
+                return res.status(500).json({
+                    responseType: 'F',
+                    responseValue: { message: 'Email verification is not configured.' },
+                });
+            }
+
+            const token = jwt.sign(
+                {
+                    userId: String(user.id),
+                    email: targetEmail,
+                    type: EMAIL_VERIFY_TYPE,
+                },
+                process.env.JWT_SECRET,
+                { expiresIn: EMAIL_VERIFY_EXPIRES }
+            );
+            const verifyLink = getEmailVerifyLink(req, token);
+            const html = getEmailVerificationContent({
+                name: user.full_name,
+                verifyLink,
+                expiresInHours: EMAIL_VERIFY_HOURS,
+            });
+
+            const transporter = createEmailTransporter();
+            const mailOptions = buildMailOptions({
+                from: formatEmailFrom('Admin - Moi Kanakku Team'),
+                to: targetEmail,
+                subject: 'Moi Kanakku - Verify your email',
+                text: `Verify your Moi Kanakku email by opening this link: ${verifyLink}`,
+                html,
+            });
+            await transporter.sendMail(mailOptions);
+            logger.info(`Verification email sent to user ${user.id}`);
+
+            return res.status(200).json({
+                responseType: 'S',
+                responseValue: {
+                    message: 'Verification email sent.',
+                    sent_to: targetEmail,
+                    expires_in_hours: EMAIL_VERIFY_HOURS,
+                },
+            });
+        } catch (error) {
+            logger.error('sendAdminVerifyEmail failed', error);
+            return res.status(500).json({
+                responseType: 'F',
+                responseValue: { message: error.toString() },
+            });
+        }
+    },
+
+    /**
+     * Public: verify email from the link in the verification email.
+     * Query: ?token=
+     */
+    verifyEmailByToken: async (req, res) => {
+        const token = String(req.query?.token || req.body?.token || '').trim();
+        if (!token) {
+            return sendVerifyEmailPage(res, {
+                success: false,
+                status: 400,
+                title: 'Invalid link',
+                message: 'This verification link is missing a token. Please request a new verification email.',
+            });
+        }
+
+        try {
+            const decoded = jwt.verify(token, process.env.JWT_SECRET);
+            if (!decoded || decoded.type !== EMAIL_VERIFY_TYPE || !decoded.userId) {
+                return sendVerifyEmailPage(res, {
+                    success: false,
+                    status: 400,
+                    title: 'Invalid link',
+                    message: 'This verification link is not valid. Please request a new verification email.',
+                });
+            }
+
+            const idCheck = validateUuid(decoded.userId, 'userId');
+            if (!idCheck.ok) {
+                return sendVerifyEmailPage(res, {
+                    success: false,
+                    status: 400,
+                    title: 'Invalid link',
+                    message: 'This verification link is not valid. Please request a new verification email.',
+                });
+            }
+
+            const user = await User.findById(decoded.userId);
+            if (!user) {
+                return sendVerifyEmailPage(res, {
+                    success: false,
+                    status: 404,
+                    title: 'Account not found',
+                    message: 'We could not find this account. The user may have been removed.',
+                });
+            }
+
+            const currentEmail = normalizeEmailAddress(user.email);
+            if (decoded.email && currentEmail !== String(decoded.email).toLowerCase()) {
+                return sendVerifyEmailPage(res, {
+                    success: false,
+                    status: 400,
+                    title: 'Email changed',
+                    message: 'This link was issued for a previous email address. Please request a new verification email.',
+                });
+            }
+
+            if (Number(user.is_verified) === 1) {
+                return sendVerifyEmailPage(res, {
+                    success: true,
+                    title: 'Already verified',
+                    message: 'This email address is already verified. You can close this page.',
+                });
+            }
+
+            await User.markEmailVerified(user.id);
+            clearAdminUserListCache();
+
+            return sendVerifyEmailPage(res, {
+                success: true,
+                title: 'Email verified',
+                message: 'Your email address was verified successfully. You can close this page and return to the app.',
+            });
+        } catch (error) {
+            if (error && (error.name === 'TokenExpiredError' || error.name === 'JsonWebTokenError')) {
+                return sendVerifyEmailPage(res, {
+                    success: false,
+                    status: 400,
+                    title: error.name === 'TokenExpiredError' ? 'Link expired' : 'Invalid link',
+                    message: error.name === 'TokenExpiredError'
+                        ? 'This verification link has expired. Please ask an administrator to send a new one.'
+                        : 'This verification link is not valid. Please request a new verification email.',
+                });
+            }
+            logger.error('verifyEmailByToken failed', error);
+            return sendVerifyEmailPage(res, {
+                success: false,
+                status: 500,
+                title: 'Something went wrong',
+                message: 'We could not verify this email right now. Please try again later.',
             });
         }
     },

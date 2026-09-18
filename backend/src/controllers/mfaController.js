@@ -381,9 +381,13 @@ exports.mfaController = {
         });
       }
 
-      // Generate JWT session token upon successful MFA verification
+      // Generate JWT session tokens upon successful MFA verification
       tokenService.invalidatePreviousToken(userId);
-      const jwtToken = tokenService.generateToken(userId);
+      const pair =
+        accountType === "admin" && typeof tokenService.generateTokenPair === "function"
+          ? tokenService.generateTokenPair(userId)
+          : { token: tokenService.generateToken(userId), accessToken: null, refreshToken: null };
+      const jwtToken = pair.accessToken || pair.token;
 
       // Fetch user or admin details to return full login response object
       let accountPayload = {
@@ -411,6 +415,8 @@ exports.mfaController = {
             last_activity_at: now,
             created_at: admin.created_at,
             token: jwtToken,
+            accessToken: jwtToken,
+            refreshToken: pair.refreshToken,
           };
         }
       } else {

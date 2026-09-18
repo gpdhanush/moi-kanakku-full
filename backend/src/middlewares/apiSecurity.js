@@ -11,7 +11,7 @@ const generalRateLimiter = rateLimit({
     skip: (req) => {
         // Never rate limit login or auth endpoints
         const url = req.originalUrl || req.url || req.path;
-        return url.includes('/login') || url.includes('/auth') || url.includes('/forgot-password') || url.includes('/reset-password');
+        return url.includes('/login') || url.includes('/auth') || url.includes('/forgot-password') || url.includes('/reset-password') || url.includes('/verify-email');
     },
     message: {
         responseType: "F",

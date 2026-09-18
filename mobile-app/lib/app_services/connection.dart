@@ -18,6 +18,9 @@ class Connection {
   // Base header without API key (will be added dynamically)
   final Map<String, String> _baseHeader = {'Content-Type': 'application/json'};
   String? _cachedToken;
+  /// Prevents duplicate "session expired" toasts / login redirects when many
+  /// in-flight requests fail with 401 at once (timeout or backend restart).
+  bool _isHandlingUnauthorized = false;
   late final Dio _dio;
 
   /// Shared singleton used by all *Services to avoid multiple Dio clients.
@@ -80,9 +83,12 @@ class Connection {
         },
         onError: (DioException e, handler) async {
           if (e.response?.statusCode == 401) {
-            clearCachedToken();
-            await secureStorage.clearSessionData();
-            gotoLogin();
+            final useToken =
+                e.requestOptions.extra['useToken'] as bool? ?? true;
+            if (useToken) {
+              // Fire-and-forget; guard inside dedupes concurrent 401s.
+              unawaited(_handleUnauthorized(e));
+            }
             return handler.reject(e);
           }
           return handler.next(e);
@@ -130,6 +136,8 @@ class Connection {
     final token = await secureStorage.getToken();
     if (token.isNotEmpty) {
       _cachedToken = token;
+      // New session available — allow a future unauthorized toast/redirect.
+      _isHandlingUnauthorized = false;
       return _cachedToken;
     }
     return null;
@@ -523,6 +531,9 @@ class Connection {
   }
 
   void _handleError(DioException e) {
+    // Already logging out from a 401 — skip further toasts from in-flight requests.
+    if (_isHandlingUnauthorized) return;
+
     if (_isStartupConfigBlocked(e)) {
       printContent('API request blocked: startup configuration invalid');
       return;
@@ -558,15 +569,22 @@ class Connection {
           );
           break;
         case 401:
-          _alertServices.errorToast(
-            responseData?['responseValue']?['message'] ??
-                _tr('network.unauthorized', 'Unauthorized'),
-          );
-          gotoLogin();
+          final useToken =
+              e.requestOptions.extra['useToken'] as bool? ?? true;
+          if (useToken) {
+            // Interceptor may already be handling this; guard prevents duplicates.
+            unawaited(_handleUnauthorized(e));
+          } else {
+            _alertServices.errorToast(
+              responseData?['responseValue']?['message'] ??
+                  _tr('network.unauthorized', 'Unauthorized'),
+            );
+          }
           break;
         case 403:
           _alertServices.errorToast(
-            _tr('network.forbidden', 'Access Forbidden'),
+            responseData?['responseValue']?['message'] ??
+                _tr('network.forbidden', 'Access Forbidden'),
           );
           break;
         case 404:
@@ -594,7 +612,38 @@ class Connection {
     }
   }
 
+  /// Shows one session-expired toast and navigates to login at most once
+  /// while concurrent 401 responses are still arriving.
+  Future<void> _handleUnauthorized(DioException e) async {
+    if (_isHandlingUnauthorized) return;
+    _isHandlingUnauthorized = true;
+
+    final responseData = e.response?.data;
+    String? message;
+    if (responseData is Map) {
+      message = responseData['responseValue']?['message']?.toString();
+    }
+
+    _alertServices.errorToast(
+      (message != null && message.trim().isNotEmpty)
+          ? message
+          : _tr('network.unauthorized', 'Unauthorized'),
+    );
+
+    clearCachedToken();
+    await secureStorage.clearSessionData();
+
+    final overlay = navigatorKey.currentState?.overlay;
+    if (overlay == null) return;
+    final ctx = overlay.context;
+    if (ctx.mounted) {
+      Navigator.pushNamedAndRemoveUntil(ctx, "login", (r) => false);
+    }
+  }
+
   Future<void> gotoLogin() async {
+    if (_isHandlingUnauthorized) return;
+    _isHandlingUnauthorized = true;
     clearCachedToken();
     final overlay = navigatorKey.currentState?.overlay;
     if (overlay == null) {

@@ -38,7 +38,14 @@ export function handleApiError(
     if (data) {
       errorMessage = data.error || data.message || data.details || errorMessage || 'An unexpected error occurred';
     } else {
-      errorMessage = errorMessage || error.message || 'Network error occurred';
+      if (error.code === "ECONNABORTED") {
+        errorTitle = "Request timed out";
+        errorMessage =
+          errorMessage ||
+          "The request took too long. Please try again.";
+      } else {
+        errorMessage = errorMessage || error.message || "Network error occurred";
+      }
     }
 
     // Customize title based on status code

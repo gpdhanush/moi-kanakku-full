@@ -11,6 +11,7 @@ import 'package:moi/app_services/user_services.dart';
 import 'package:moi/app_storages/secure_storages.dart';
 import 'package:moi/app_themes/app_colors.dart';
 import 'package:moi/app_utils/device_info_service.dart';
+import 'package:moi/app_utils/device_heartbeat.dart';
 
 /// Handles FCM background messages (must be a top-level function).
 @pragma('vm:entry-point')
@@ -48,6 +49,7 @@ class PushNotificationService {
   UserServices? _userServices;
 
   bool _initialized = false;
+  DateTime? _lastHeartbeatAt;
   StreamSubscription<RemoteMessage>? _foregroundSubscription;
   StreamSubscription<String>? _tokenRefreshSubscription;
 
@@ -83,7 +85,7 @@ class PushNotificationService {
     _tokenRefreshSubscription ??=
         FirebaseMessaging.instance.onTokenRefresh.listen((token) async {
       await _secureStorage.saveNotificationToken(token);
-      await _syncTokenWithBackend();
+      await _syncTokenWithBackend(force: true);
     });
 
     FirebaseMessaging.onMessageOpenedApp.listen(_logOpenedMessage);
@@ -96,12 +98,19 @@ class PushNotificationService {
     printContent('PushNotificationService initialized');
   }
 
-  Future<void> syncTokenForCurrentUser() async {
-    await _syncTokenWithBackend();
+  Future<void> syncTokenForCurrentUser({bool force = false}) async {
+    await _syncTokenWithBackend(force: force);
   }
 
-  Future<void> _syncTokenWithBackend() async {
+  Future<void> _syncTokenWithBackend({bool force = false}) async {
     try {
+      if (!shouldSendDeviceHeartbeat(
+        force: force,
+        lastSentAt: _lastHeartbeatAt,
+      )) {
+        return;
+      }
+
       final user = await _secureStorage.get(AppVariables.userInformation);
       if (user == null || user['id'] == null) return;
 
@@ -111,15 +120,11 @@ class PushNotificationService {
         return;
       }
 
-      final localToken = await _secureStorage.getNotificationToken();
-      if (localToken == token) return;
-
       await _secureStorage.saveNotificationToken(token);
       final device = await DeviceService.getDeviceInfo();
       _userServices ??= UserServices();
       await _userServices!.updateUserNotificationToken(
         {
-          'userId': user['id'].toString(),
           'token': token,
           'device_id': device.device_id,
           'device_name': device.device_name,
@@ -128,20 +133,32 @@ class PushNotificationService {
           'manufacturer': device.manufacturer,
           'android_version': device.android_version,
           'ram_size': device.ram_size,
+          'platform': device.platform,
+          'app_version': device.app_version,
         },
         showLoading: false,
       );
+      _lastHeartbeatAt = DateTime.now();
     } catch (e) {
-      debugPrint('Error syncing FCM token: $e');
+      debugPrint('Error syncing device heartbeat');
     }
   }
 
   Future<void> _handleForegroundMessage(RemoteMessage message) async {
-    await showMessageNotification(message);
+    await showMessageNotification(message, fromForeground: true);
   }
 
-  static Future<void> showMessageNotification(RemoteMessage message) async {
+  static Future<void> showMessageNotification(
+    RemoteMessage message, {
+    bool fromForeground = false,
+  }) async {
     if (kIsWeb) return;
+    if (message.data['type'] == 'device_health_check') return;
+
+    // FCM already displays notification-payload messages in the system tray
+    // when the app is backgrounded or killed. Showing another local
+    // notification here makes the same alert appear twice.
+    if (!fromForeground && message.notification != null) return;
 
     final title = _resolveTitle(message);
     final body = _resolveBody(message);

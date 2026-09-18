@@ -12,6 +12,8 @@ router.post('/create', authenticateToken, controller.create);
 router.get("/admin/all-feedback-lists", authenticateAdminToken, controller.adminAllFeedbackLists);
 router.post("/admin/reply-feedback", authenticateAdminToken, controller.adminReplyFeedback);
 router.post("/admin/delete-feedback", authenticateAdminToken, controller.adminDeleteFeedback);
+router.post("/admin/delete-bulk", authenticateAdminToken, controller.adminDeleteBulk);
+router.post("/admin/delete-by-scope", authenticateAdminToken, controller.adminDeleteByScope);
 
 
 module.exports = router;

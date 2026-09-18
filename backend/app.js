@@ -15,6 +15,9 @@ const {
 const {
   sendUpcomingFunctionReminders,
 } = require("./src/services/upcomingFunctionReminderService");
+const {
+  runFcmTokenHealthCheck,
+} = require("./src/services/fcmTokenHealthService");
 
 const app = express();
 
@@ -145,7 +148,7 @@ cron.schedule(
     try {
       logger.info("Running scheduled daily jobs...");
       await checkAndNotifyPasswordExpiration();
-      // upcoming functions reminder removed
+      await runFcmTokenHealthCheck();
       logger.info("Daily cron jobs completed successfully.");
     } catch (err) {
       logger.error("Error in daily cron:", err);

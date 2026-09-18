@@ -3,6 +3,7 @@ const User = require('../models/user');
 const moment = require('moment');
 const logger = require('../config/logger');
 const { validateUuid, sendUuidError } = require('../helpers/idParams');
+const { recordAuditLog } = require('../helpers/auditLog');
 
 // Valid status enum values
 const VALID_STATUSES = ['ACTIVE', 'CANCELLED', 'COMPLETED'];
@@ -64,7 +65,8 @@ exports.controller = {
                 });
             }
 
-            // Fetch all functions for user
+            // Fetch all functions for user — mark past ACTIVE rows as COMPLETED first
+            await Model.updateStatusByDate();
             const result = await Model.readAll(userId);
             
             // Transform to camelCase response
@@ -164,6 +166,15 @@ exports.controller = {
             const query = await Model.create(payload);
             
             if (query) {
+                recordAuditLog({
+                    userId,
+                    action: 'UPCOMING_CREATE',
+                    entityType: 'upcoming_function',
+                    entityId: query.insertId,
+                    summary: `Upcoming function created: ${title}`,
+                    metadata: { location, functionDate },
+                    req,
+                });
                 return res.status(201).json({ 
                     responseType: "S", 
                     responseValue: { 
@@ -254,6 +265,14 @@ exports.controller = {
             const query = await Model.update(payload);
             
             if (query && query.affectedRows > 0) {
+                recordAuditLog({
+                    userId: existingFunction.user_id || userId,
+                    action: 'UPCOMING_UPDATE',
+                    entityType: 'upcoming_function',
+                    entityId: functionId,
+                    summary: `Upcoming function updated: ${payload.title || existingFunction.title || functionId}`,
+                    req,
+                });
                 return res.status(200).json({ 
                     responseType: "S", 
                     responseValue: { message: "Data updated successfully." } 
@@ -315,6 +334,14 @@ exports.controller = {
             const del = await Model.delete(id);
             
             if (del && del.affectedRows > 0) {
+                recordAuditLog({
+                    userId,
+                    action: 'UPCOMING_DELETE',
+                    entityType: 'upcoming_function',
+                    entityId: id,
+                    summary: `Upcoming function deleted: ${existingFunction.title || id}`,
+                    req,
+                });
                 return res.status(200).json({ 
                     responseType: "S", 
                     responseValue: { message: "Item deleted successfully." } 
@@ -393,6 +420,15 @@ exports.controller = {
             const query = await Model.updateStatus(id, upperStatus);
             
             if (query && query.affectedRows > 0) {
+                recordAuditLog({
+                    userId: existingFunction.user_id || userId,
+                    action: 'UPCOMING_STATUS',
+                    entityType: 'upcoming_function',
+                    entityId: id,
+                    summary: `Upcoming function status set to ${upperStatus}`,
+                    metadata: { status: upperStatus },
+                    req,
+                });
                 return res.status(200).json({ 
                     responseType: "S", 
                     responseValue: { message: "Status updated successfully." } 
@@ -412,5 +448,52 @@ exports.controller = {
                 responseValue: { message: error.toString() } 
             });
         }
-    }
-}
+    },
+
+    /**
+     * Admin: list upcoming functions across users
+     * Body: { search?, userId?, status? }
+     */
+    adminList: async (req, res) => {
+        try {
+            const search = req.body.search ? String(req.body.search).trim() : null;
+            const userId = req.body.userId ? String(req.body.userId).trim() : null;
+            const status = req.body.status ? String(req.body.status).trim().toUpperCase() : null;
+
+            if (userId) {
+                const idCheck = validateUuid(userId, 'userId');
+                if (!idCheck.ok) return sendUuidError(res, idCheck.message);
+            }
+
+            if (status && !VALID_STATUSES.includes(status)) {
+                return res.status(400).json({
+                    responseType: "F",
+                    responseValue: {
+                        message: `Invalid status. Allowed: ${VALID_STATUSES.join(', ')}`,
+                    },
+                });
+            }
+
+            // Past-dated ACTIVE functions become COMPLETED before listing
+            await Model.updateStatusByDate();
+
+            const functions = await Model.getAllFunctions({
+                search: search || null,
+                userId: userId || null,
+                status: status || null,
+            });
+
+            return res.status(200).json({
+                responseType: "S",
+                count: functions.length,
+                responseValue: functions,
+            });
+        } catch (error) {
+            logger.error('Error fetching admin upcoming function list:', error);
+            return res.status(500).json({
+                responseType: "F",
+                responseValue: { message: error.toString() },
+            });
+        }
+    },
+};

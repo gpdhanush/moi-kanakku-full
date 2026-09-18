@@ -23,6 +23,12 @@ if (!admin.apps.length) {
     });
 }
 
+const {
+    isInvalidFcmTokenError,
+    deactivateUnregisteredFcmToken,
+} = require('../helpers/fcmTokenInvalidation');
+const { mapWithConcurrency } = require('../helpers/concurrency');
+
 /**
  * Helper function to send push notification (can be called directly without HTTP request/response)
  * @param {Object} params - { userId, title, body, token, type, skipDbSave, traceId }
@@ -128,19 +134,8 @@ async function sendPushNotification({ userId, title, body, token, type, skipDbSa
             message: error?.message || String(error)
         });
 
-        // If the token is invalid, deactivate it in the database
-        if (error.code === 'messaging/invalid-registration-token' ||
-            error.code === 'messaging/registration-token-not-registered') {
-            try {
-                const db = require('../config/database');
-                await db.query(
-                    'UPDATE user_devices SET is_active = 0, updated_at = CURRENT_TIMESTAMP WHERE fcm_token = ?',
-                    [token]
-                );
-                logger.info('Deactivated invalid FCM token', { traceId, userId });
-            } catch (dbError) {
-                logger.error('Error deactivating FCM token:', { traceId, userId, error: dbError?.message || String(dbError) });
-            }
+        if (isInvalidFcmTokenError(error)) {
+            await deactivateUnregisteredFcmToken(token, { userId, traceId });
         }
 
         // Return success if notification was saved to DB, even if FCM failed
@@ -165,6 +160,12 @@ async function sendPushNotification({ userId, title, body, token, type, skipDbSa
 }
 
 exports.sendPushNotification = sendPushNotification;
+exports.isInvalidFcmTokenError = isInvalidFcmTokenError;
+exports.deactivateUnregisteredFcmToken = deactivateUnregisteredFcmToken;
+
+function isAdminRequest(req) {
+    return req.user?.accountType === 'admin' || Boolean(req.admin);
+}
 
 exports.controller = {
     /**
@@ -471,7 +472,7 @@ exports.controller = {
     },
 
     /**
-     * Delete a single notification (soft delete)
+     * Delete a single notification (hard delete)
      * Body/Query/Params: { notificationId } or /delete/:notificationId
      */
     delete: async (req, res) => {
@@ -497,16 +498,16 @@ exports.controller = {
                 });
             }
 
-            // Check if notification belongs to the authenticated user (if req.user is set)
+            // Users may only delete their own notifications. Admins can delete any.
             const userId = req.user?.userId;
-            if (userId && notification.userId !== userId) {
+            if (!isAdminRequest(req) && userId && String(notification.userId) !== String(userId)) {
                 return res.status(403).json({
                     responseType: "F",
                     responseValue: { message: 'You do not have permission to delete this notification.' }
                 });
             }
 
-            // Soft delete notification
+            // Delete notification
             const result = await Notification.delete(notificationId);
 
             if (result && result.affectedRows > 0) {
@@ -530,7 +531,7 @@ exports.controller = {
     },
 
     /**
-     * Delete multiple notifications (soft delete)
+     * Delete multiple notifications (hard delete)
      * Body: { notificationIds: [] } or { ids: [] }
      */
     deleteMultiple: async (req, res) => {
@@ -548,15 +549,14 @@ exports.controller = {
             if (!listCheck.ok) return sendUuidError(res, listCheck.message);
 
             const userId = req.user?.userId;
-            if (userId) {
+            if (!isAdminRequest(req) && userId) {
                 const db = require('../config/database');
                 const { toBinaryUUID } = require('../helpers/uuid');
                 const binaryIds = notificationIds.map(id => toBinaryUUID(id));
                 const placeholders = binaryIds.map(() => '?').join(',');
 
                 const [result] = await db.query(
-                    `UPDATE notifications SET is_deleted = 1, deleted_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
-                     WHERE id IN (${placeholders}) AND user_id = ?`,
+                    `DELETE FROM notifications WHERE id IN (${placeholders}) AND user_id = ?`,
                     [...binaryIds, toBinaryUUID(userId)]
                 );
 
@@ -580,6 +580,45 @@ exports.controller = {
             });
         } catch (error) {
             logger.error('Error deleting multiple notifications:', error);
+            return res.status(500).json({
+                responseType: "F",
+                responseValue: { message: error.toString() }
+            });
+        }
+    },
+
+    /**
+     * Admin: hard-delete notifications by scope (read, unread, all)
+     * Body: { scope: 'read' | 'unread' | 'all' }
+     */
+    deleteByScope: async (req, res) => {
+        try {
+            if (!isAdminRequest(req)) {
+                return res.status(403).json({
+                    responseType: "F",
+                    responseValue: { message: 'Admin access is required.' }
+                });
+            }
+
+            const scope = String(req.body?.scope || req.query?.scope || '').toLowerCase();
+            if (!['read', 'unread', 'all'].includes(scope)) {
+                return res.status(400).json({
+                    responseType: "F",
+                    responseValue: { message: "scope must be read, unread, or all." }
+                });
+            }
+
+            const result = await Notification.deleteByScope(scope);
+            return res.status(200).json({
+                responseType: "S",
+                responseValue: {
+                    message: `Deleted ${result.affectedRows || 0} ${scope} notification(s).`,
+                    deletedCount: result.affectedRows || 0,
+                    scope
+                }
+            });
+        } catch (error) {
+            logger.error('Error deleting notifications by scope:', error);
             return res.status(500).json({
                 responseType: "F",
                 responseValue: { message: error.toString() }
@@ -697,7 +736,7 @@ exports.controller = {
 
             const notificationsToSave = [];
 
-            for (const user of users) {
+            await mapWithConcurrency(users, 8, async (user) => {
                 const userId = fromBinaryUUID(user.id);
                 notificationsToSave.push({
                     userId: userId,
@@ -706,18 +745,16 @@ exports.controller = {
                     type: type || NotificationType.GENERAL
                 });
 
-                // Check if user has FCM token
                 if (!user.fcm_token) {
                     results.noDeviceToken++;
                     results.failedUsers.push({
                         userId: userId,
                         reason: 'FCM device token not found'
                     });
-                    continue;
+                    return;
                 }
 
                 try {
-                    // Send FCM notification with both notification and data payload
                     const message = {
                         notification: {
                             title: title,
@@ -758,31 +795,18 @@ exports.controller = {
                         }
                     };
 
-                    logger.info(`Sending FCM to user ${userId} with token ${user.fcm_token.substring(0, 20)}...`);
                     await admin.messaging().send(message);
-                    logger.info(`FCM sent successfully to user ${userId}`);
 
                     results.successful++;
                     results.successfulUsers.push({
                         userId: userId,
                         email: user.email || 'N/A'
                     });
-
                 } catch (fcmError) {
                     logger.error(`FCM send error for user ${userId}:`, fcmError);
 
-                    // Handle invalid token
-                    if (fcmError.code === 'messaging/invalid-registration-token' ||
-                        fcmError.code === 'messaging/registration-token-not-registered') {
-                        try {
-                            await db.query(
-                                'UPDATE user_devices SET is_active = 0, updated_at = CURRENT_TIMESTAMP WHERE fcm_token = ?',
-                                [user.fcm_token]
-                            );
-                            logger.info(`Deactivated invalid FCM token for user ${userId}`);
-                        } catch (dbError) {
-                            logger.error('Error deactivating FCM token:', dbError);
-                        }
+                    if (isInvalidFcmTokenError(fcmError)) {
+                        await deactivateUnregisteredFcmToken(user.fcm_token, { userId });
                     }
 
                     results.failed++;
@@ -792,7 +816,7 @@ exports.controller = {
                         reason: fcmError.message || 'Unknown FCM error'
                     });
                 }
-            }
+            });
 
             // Save all notifications to database in a single bulk query
             if (notificationsToSave.length > 0) {

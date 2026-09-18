@@ -76,8 +76,11 @@ function buildMailOptions({ to, subject, html, from, text }) {
     return mailOptions;
 }
 
-function createEmailTransporter() {
+function createEmailTransporter(overrides = {}) {
     const port = Number(process.env.EMAIL_PORT) || 465;
+    const connectionTimeout = Number(process.env.EMAIL_CONN_TIMEOUT) || 15000;
+    const greetingTimeout = Number(process.env.EMAIL_GREETING_TIMEOUT) || 15000;
+    const socketTimeout = Number(process.env.EMAIL_SOCKET_TIMEOUT) || 20000;
     return nodemailer.createTransport({
         host: process.env.EMAIL_HOST,
         port,
@@ -86,9 +89,13 @@ function createEmailTransporter() {
             user: process.env.EMAIL_USER,
             pass: process.env.EMAIL_PASS,
         },
+        connectionTimeout,
+        greetingTimeout,
+        socketTimeout,
         tls: {
             rejectUnauthorized: false,
         },
+        ...overrides,
     });
 }
 
@@ -189,6 +196,72 @@ function getWelcomeEmailContent(name) {
 }
 
 /**
+ * Generate email-verification HTML with a clickable Verify Email button.
+ * @param {{ name?: string, verifyLink: string, expiresInHours?: number }} options
+ * @returns {string} HTML email content
+ */
+function getEmailVerificationContent({ name, verifyLink, expiresInHours = 24 }) {
+    const safeName = escapeHtml(name || 'User');
+    const safeLink = escapeHtml(verifyLink || '#');
+    const hours = Number(expiresInHours) || 24;
+
+    return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body style="margin:0;padding:0;font-family:Arial,Helvetica,sans-serif;background-color:#f5f7fb;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="padding:30px 10px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:620px;background:#ffffff;border:1px solid #eaeaea;border-radius:8px;overflow:hidden;">
+          <tr>
+            <td style="background:#2f3490;color:#ffffff;text-align:center;padding:20px;">
+              <h2 style="margin:0;font-size:22px;">Verify your email</h2>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:30px;color:#333333;">
+              <p style="margin:0 0 15px 0;font-size:16px;">Hi <strong>${safeName}</strong>,</p>
+              <p style="margin:0 0 20px 0;font-size:15px;color:#555;">
+                Please confirm this email address for your Moi Kanakku account by clicking the button below.
+              </p>
+              <div style="text-align:center;margin:30px 0;">
+                <a href="${safeLink}" style="display:inline-block;background:#2f3490;color:#ffffff;text-decoration:none;padding:14px 28px;border-radius:8px;font-size:16px;font-weight:700;">
+                  Verify Email
+                </a>
+              </div>
+              <p style="text-align:center;font-size:14px;color:#666;margin:0;">
+                This link will expire in <strong>${hours} hour${hours === 1 ? '' : 's'}</strong>.
+              </p>
+              <p style="margin-top:20px;font-size:13px;color:#777;word-break:break-all;">
+                If the button does not work, copy and paste this link into your browser:<br>
+                <a href="${safeLink}" style="color:#2f3490;">${safeLink}</a>
+              </p>
+              <p style="margin-top:20px;font-size:14px;color:#777;">
+                If you did not expect this email, you can ignore it.
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td style="border-top:1px solid #f1f1f1;padding:20px;font-size:14px;color:#666;">
+              Regards,<br>
+              <strong style="color:#2f3490;">Moi Kanakku Team</strong>
+            </td>
+          </tr>
+        </table>
+        <p style="max-width:620px;margin:20px auto 0;text-align:center;font-size:12px;color:#9ca3af;">
+          © 2026 Moi Kanakku. All rights reserved.
+        </p>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+}
+
+/**
  * Generate admin notification email HTML for new user registration
  * @param {Object} userData - User registration data { userId, name, email, mobile, city, referred_by, brand, model, device_name, normalizedAndroidVersion, registrationTime }
  * @returns {string} HTML email content
@@ -216,6 +289,7 @@ module.exports = {
     sendFeedbackReplyEmail,
     sendEmail,
     getWelcomeEmailContent,
+    getEmailVerificationContent,
     getAdminRegistrationEmailContent,
     createEmailTransporter,
     formatEmailFrom,
@@ -223,4 +297,5 @@ module.exports = {
     normalizeEmailAddress,
     buildMailOptions,
     verifyEmailTransport,
+    escapeHtml,
 };

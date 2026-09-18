@@ -84,9 +84,24 @@ export function clearMfaPendingLogin(): void {
 
 export async function clearAuth(): Promise<void> {
   await secureStorageWithCache.removeItem('auth_token');
+  await secureStorageWithCache.removeItem('refresh_token');
   await secureStorageWithCache.removeItem('user');
   await secureStorageWithCache.removeItem('remember_me');
   clearMfaPendingLogin();
+}
+
+export async function persistAdminSession(options: {
+  token: string;
+  user: unknown;
+  refreshToken?: string | null;
+}): Promise<void> {
+  await secureStorageWithCache.setItem('auth_token', options.token);
+  await secureStorageWithCache.setItem('user', JSON.stringify(options.user));
+  if (options.refreshToken) {
+    await secureStorageWithCache.setItem('refresh_token', options.refreshToken);
+  } else {
+    await secureStorageWithCache.removeItem('refresh_token');
+  }
 }
 
 export async function forceLogout(reason?: string): Promise<void> {
@@ -94,6 +109,7 @@ export async function forceLogout(reason?: string): Promise<void> {
     logger.warn('Force logout triggered', reason ? `Reason: ${reason}` : '');
     await clearAuth();
     localStorage.removeItem('auth_token');
+    localStorage.removeItem('refresh_token');
     localStorage.removeItem('user');
     localStorage.removeItem('remember_me');
     sessionStorage.clear();

@@ -1,6 +1,7 @@
 const Model = require("../models/moiPersons");
 const User = require("../models/user");
 const { validateUuid, validateUuidFields, sendUuidError } = require("../helpers/idParams");
+const { recordAuditLog } = require("../helpers/auditLog");
 
 const formatPersonSummary = (person) => ({
   id: person.mp_id,
@@ -137,6 +138,15 @@ exports.controller = {
 
       const result = await Model.create(data);
       if (result && result.insertId) {
+        recordAuditLog({
+          userId,
+          action: "PERSON_CREATE",
+          entityType: "person",
+          entityId: result.insertId,
+          summary: `Person added: ${firstName}${secondName ? ` ${secondName}` : ""}`.trim(),
+          metadata: { city: city || null, mobile: mobile || null },
+          req,
+        });
         return res.status(200).json({
           responseType: "S",
           responseValue: {
@@ -212,6 +222,14 @@ exports.controller = {
 
       const result = await Model.update(data);
       if (result) {
+        recordAuditLog({
+          userId,
+          action: "PERSON_UPDATE",
+          entityType: "person",
+          entityId: id,
+          summary: `Person updated: ${firstName}${secondName ? ` ${secondName}` : ""}`.trim(),
+          req,
+        });
         return res.status(200).json({
           responseType: "S",
           responseValue: {
@@ -257,6 +275,14 @@ exports.controller = {
 
       const result = await Model.delete(id);
       if (result && result.affectedRows > 0) {
+        recordAuditLog({
+          userId: existing.mp_um_id || existing.user_id || existing.userId || req.user?.userId,
+          action: "PERSON_DELETE",
+          entityType: "person",
+          entityId: id,
+          summary: `Person deleted: ${existing.mp_first_name || existing.firstName || id}`,
+          req,
+        });
         return res.status(200).json({
           responseType: "S",
           responseValue: { message: "Person deleted successfully." },

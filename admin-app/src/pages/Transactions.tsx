@@ -8,7 +8,6 @@ import {
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
-  Eye,
   ChevronLeft,
   ChevronRight,
   TrendingUp,
@@ -307,17 +306,28 @@ export default function Transactions() {
   const SortableHead = ({
     label,
     column,
+    align = "left",
     className,
   }: {
     label: string;
     column: SortKey;
+    align?: "left" | "center";
     className?: string;
   }) => (
-    <TableHead className={className}>
+    <TableHead
+      className={cn(
+        "text-slate-100",
+        align === "center" ? "text-center" : "text-left",
+        className
+      )}
+    >
       <button
         type="button"
         onClick={() => handleSort(column)}
-        className="inline-flex items-center gap-1.5 font-medium text-inherit hover:text-white"
+        className={cn(
+          "inline-flex items-center gap-1.5 font-medium text-inherit hover:text-white",
+          align === "center" && "w-full justify-center"
+        )}
       >
         {label}
         <SortIcon active={sortKey === column} direction={sortDir} />
@@ -381,28 +391,21 @@ export default function Transactions() {
           )}
         </div>
 
-        <div className="glass-card p-4 sm:p-6">
-          <div className="mb-4 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-            <div>
-              <h2 className="text-lg font-semibold">Transaction Management</h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Browse all invest and return transaction records
-              </p>
+        <div>
+          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="relative w-full sm:max-w-sm">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setPage(1);
+                }}
+                placeholder="Search transactions..."
+                className="pl-9"
+              />
             </div>
-
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-              <div className="relative w-full sm:w-72">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  value={search}
-                  onChange={(e) => {
-                    setSearch(e.target.value);
-                    setPage(1);
-                  }}
-                  placeholder="Search transactions..."
-                  className="pl-9"
-                />
-              </div>
+            <div className="flex flex-wrap items-center justify-end gap-2">
               <Button
                 variant="outline"
                 size="sm"
@@ -430,27 +433,18 @@ export default function Transactions() {
             <Table>
               <TableHeader>
                 <TableRow className="border-b border-slate-700/80 bg-slate-800 hover:bg-slate-800 dark:bg-slate-900 dark:hover:bg-slate-900">
-                  <TableHead className="w-16 text-slate-100">S.No</TableHead>
-                  <SortableHead label="Category" column="type" className="text-slate-100" />
-                  <SortableHead label="Name" column="userName" className="text-slate-100" />
-                  <SortableHead
-                    label="Function Name"
-                    column="transactionFunctionName"
-                    className="text-slate-100"
-                  />
-                  <SortableHead
-                    label="Date"
-                    column="functionDate"
-                    className="text-slate-100"
-                  />
-                  <SortableHead label="Amount" column="amount" className="text-slate-100" />
-                  <TableHead className="w-[80px] text-center text-slate-100">Action</TableHead>
+                  <TableHead className="w-16 text-center text-slate-100">S.No</TableHead>
+                  <SortableHead label="Category" column="type" align="center" />
+                  <SortableHead label="Name" column="userName" align="left" />
+                  <SortableHead label="Function Name" column="transactionFunctionName" align="left" />
+                  <SortableHead label="Date" column="functionDate" align="left" />
+                  <SortableHead label="Amount" column="amount" align="left" />
                 </TableRow>
               </TableHeader>
-              <TableBody>
+              <TableBody className="[&_td]:py-2">
                 {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="h-28 text-center text-muted-foreground">
+                    <TableCell colSpan={6} className="h-20 text-center text-muted-foreground">
                       <div className="inline-flex items-center gap-2">
                         <Loader2 className="h-4 w-4 animate-spin" />
                         Loading transactions...
@@ -459,7 +453,7 @@ export default function Transactions() {
                   </TableRow>
                 ) : pageRows.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="h-28 text-center text-muted-foreground">
+                    <TableCell colSpan={6} className="h-20 text-center text-muted-foreground">
                       {search.trim()
                         ? "No transactions match your search."
                         : "No transactions found."}
@@ -474,10 +468,10 @@ export default function Transactions() {
                         key={item.id}
                         className={cn(index % 2 === 1 && "bg-muted/20")}
                       >
-                        <TableCell className="font-medium tabular-nums">
+                        <TableCell className="text-center font-medium tabular-nums">
                           {serialNo}
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="text-center">
                           <Badge
                             className={cn(
                               "border-transparent",
@@ -489,33 +483,25 @@ export default function Transactions() {
                             {formatLabel(item.type)}
                           </Badge>
                         </TableCell>
-                        <TableCell>
-                          <p className="font-medium">{item.userName || "N/A"}</p>
+                        <TableCell className="text-left">
+                          <button
+                            type="button"
+                            onClick={() => setViewItem(item)}
+                            className="font-medium text-primary hover:underline"
+                          >
+                            {item.userName || "N/A"}
+                          </button>
                         </TableCell>
-                        <TableCell className="max-w-[240px]">
-                          <p className="line-clamp-2 text-sm font-medium">
+                        <TableCell className="max-w-[240px] text-left">
+                          <p className="line-clamp-1 text-sm font-medium">
                             {item.transactionFunctionName || "N/A"}
                           </p>
                         </TableCell>
-                        <TableCell className="whitespace-nowrap text-muted-foreground">
+                        <TableCell className="whitespace-nowrap text-left text-muted-foreground">
                           {formatDateOnly(item.function?.date || item.transactionDate)}
                         </TableCell>
-                        <TableCell className="font-semibold tabular-nums">
+                        <TableCell className="text-right font-semibold tabular-nums">
                           {formatAmount(item.amount)}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex justify-center">
-                            <Button
-                              size="icon"
-                              variant="outline"
-                              title="View"
-                              aria-label="View"
-                              className="h-8 w-8 border-sky-300 bg-sky-50 text-sky-700 hover:bg-sky-100 dark:border-sky-700 dark:bg-sky-950/40 dark:text-sky-300"
-                              onClick={() => setViewItem(item)}
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                          </div>
                         </TableCell>
                       </TableRow>
                     );

@@ -16,6 +16,7 @@ import {
   Send,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
 } from "lucide-react";
 import { PageTitle } from "@/components/ui/page-title";
 import { StatCard, StatCardSkeleton } from "@/components/ui/stat-card";
@@ -24,6 +25,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -57,6 +59,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { toast } from "@/hooks/use-toast";
 import {
@@ -138,6 +146,11 @@ export default function Feedback() {
   const [viewItem, setViewItem] = useState<FeedbackItem | null>(null);
   const [replyItem, setReplyItem] = useState<FeedbackItem | null>(null);
   const [deleteItem, setDeleteItem] = useState<FeedbackItem | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+  const [scopeDelete, setScopeDelete] = useState<
+    "pending" | "resolved" | "all" | null
+  >(null);
   const [replyStatus, setReplyStatus] = useState<FeedbackStatus>("IN_PROGRESS");
   const [replyText, setReplyText] = useState("");
 
@@ -188,12 +201,62 @@ export default function Feedback() {
       });
       setDeleteItem(null);
       setViewItem(null);
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        if (deleteItem) next.delete(String(deleteItem.id));
+        return next;
+      });
       queryClient.invalidateQueries({ queryKey: ["admin", "feedbacks"] });
     },
     onError: (err: Error) => {
       toast({
         title: "Delete failed",
         description: err.message || "Unable to delete feedback",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteBulkMutation = useMutation({
+    mutationFn: (feedbackIds: string[]) => feedbacksApi.deleteBulk(feedbackIds),
+    onSuccess: (result) => {
+      toast({
+        title: "Feedbacks deleted",
+        description:
+          result?.message ||
+          `Deleted ${result?.deletedCount ?? selectedIds.size} feedback record(s).`,
+      });
+      setBulkDeleteOpen(false);
+      setSelectedIds(new Set());
+      queryClient.invalidateQueries({ queryKey: ["admin", "feedbacks"] });
+    },
+    onError: (err: Error) => {
+      toast({
+        title: "Bulk delete failed",
+        description: err.message || "Unable to delete selected feedbacks.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteScopeMutation = useMutation({
+    mutationFn: (scope: "pending" | "resolved" | "all") =>
+      feedbacksApi.deleteByScope(scope),
+    onSuccess: (result, scope) => {
+      toast({
+        title: "Feedbacks deleted",
+        description:
+          result?.message ||
+          `Deleted ${result?.deletedCount ?? 0} ${scope} feedback record(s).`,
+      });
+      setScopeDelete(null);
+      setSelectedIds(new Set());
+      queryClient.invalidateQueries({ queryKey: ["admin", "feedbacks"] });
+    },
+    onError: (err: Error) => {
+      toast({
+        title: "Delete failed",
+        description: err.message || "Unable to delete feedbacks.",
         variant: "destructive",
       });
     },
@@ -265,6 +328,37 @@ export default function Feedback() {
   );
   const fromItem = totalItems === 0 ? 0 : (currentPage - 1) * limit + 1;
   const toItem = Math.min(currentPage * limit, totalItems);
+
+  const selectedCount = selectedIds.size;
+  const pageIds = pageRows.map((item) => String(item.id));
+  const allPageSelected =
+    pageIds.length > 0 && pageIds.every((id) => selectedIds.has(id));
+  const somePageSelected =
+    pageIds.some((id) => selectedIds.has(id)) && !allPageSelected;
+  const isDeleting =
+    deleteMutation.isPending ||
+    deleteBulkMutation.isPending ||
+    deleteScopeMutation.isPending;
+
+  const toggleRow = (id: string, checked: boolean) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (checked) next.add(id);
+      else next.delete(id);
+      return next;
+    });
+  };
+
+  const togglePage = (checked: boolean) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      pageIds.forEach((id) => {
+        if (checked) next.add(id);
+        else next.delete(id);
+      });
+      return next;
+    });
+  };
 
   const handleSort = (key: SortKey) => {
     if (sortKey === key) {
@@ -341,28 +435,41 @@ export default function Feedback() {
           )}
         </div>
 
-        <div className="glass-card p-4 sm:p-6">
-          <div className="mb-4 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-            <div>
-              <h2 className="text-lg font-semibold">All Feedbacks</h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Manage user feedback messages and admin replies
-              </p>
+        <div>
+          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="relative w-full sm:max-w-sm">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setPage(1);
+                }}
+                placeholder="Search user, message, status..."
+                className="pl-9"
+              />
             </div>
-
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-              <div className="relative w-full sm:w-64">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  value={search}
-                  onChange={(e) => {
-                    setSearch(e.target.value);
-                    setPage(1);
-                  }}
-                  placeholder="Search user, message, status..."
-                  className="pl-9"
-                />
-              </div>
+            <div className="flex flex-wrap items-center justify-end gap-2">
+              {selectedCount > 0 && (
+                <>
+                  <p className="text-sm text-muted-foreground">
+                    Selected:{" "}
+                    <span className="font-semibold text-foreground">
+                      {selectedCount}
+                    </span>
+                  </p>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    className="gap-2"
+                    onClick={() => setBulkDeleteOpen(true)}
+                    disabled={isDeleting}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Delete Selected
+                  </Button>
+                </>
+              )}
               <Button
                 variant="outline"
                 size="sm"
@@ -377,6 +484,43 @@ export default function Feedback() {
                 )}
                 Refresh
               </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    className="gap-2"
+                    disabled={isDeleting}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Delete
+                    <ChevronDown className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-44">
+                  <DropdownMenuItem
+                    className="gap-2"
+                    onSelect={() => setScopeDelete("resolved")}
+                  >
+                    <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                    Resolved
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="gap-2"
+                    onSelect={() => setScopeDelete("pending")}
+                  >
+                    <Clock3 className="h-4 w-4 text-amber-600" />
+                    Pending
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="gap-2 text-destructive focus:text-destructive"
+                    onSelect={() => setScopeDelete("all")}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    All
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
 
@@ -390,17 +534,31 @@ export default function Feedback() {
             <Table>
               <TableHeader>
                 <TableRow className="border-b border-slate-700/80 bg-slate-800 hover:bg-slate-800 dark:bg-slate-900 dark:hover:bg-slate-900">
+                  <TableHead className="w-12 text-slate-100">
+                    <Checkbox
+                      checked={
+                        allPageSelected
+                          ? true
+                          : somePageSelected
+                            ? "indeterminate"
+                            : false
+                      }
+                      onCheckedChange={(value) => togglePage(value === true)}
+                      aria-label="Select all feedbacks on this page"
+                      className="border-slate-300 data-[state=checked]:bg-primary data-[state=indeterminate]:bg-primary"
+                    />
+                  </TableHead>
                   <TableHead className="w-16 text-slate-100">S.No</TableHead>
                   <SortableHead label="User" column="userName" className="text-slate-100" />
                   <SortableHead label="Status" column="status" className="text-slate-100" />
                   <SortableHead label="Message" column="message" className="text-slate-100" />
-                  <TableHead className="w-[120px] text-center text-slate-100">Actions</TableHead>
+                  <TableHead className="w-[140px] text-center text-slate-100">Action</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="h-28 text-center text-muted-foreground">
+                    <TableCell colSpan={6} className="h-28 text-center text-muted-foreground">
                       <div className="inline-flex items-center gap-2">
                         <Loader2 className="h-4 w-4 animate-spin" />
                         Loading feedbacks...
@@ -409,7 +567,7 @@ export default function Feedback() {
                   </TableRow>
                 ) : pageRows.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="h-28 text-center text-muted-foreground">
+                    <TableCell colSpan={6} className="h-28 text-center text-muted-foreground">
                       {search.trim()
                         ? "No feedbacks match your search."
                         : "No feedbacks found."}
@@ -419,11 +577,25 @@ export default function Feedback() {
                   pageRows.map((item, index) => {
                     const pending = isPendingStatus(item.status);
                     const serialNo = (currentPage - 1) * limit + index + 1;
+                    const id = String(item.id);
+                    const checked = selectedIds.has(id);
                     return (
                       <TableRow
                         key={item.id}
-                        className={cn(index % 2 === 1 && "bg-muted/20")}
+                        className={cn(
+                          index % 2 === 1 && "bg-muted/20",
+                          checked && "bg-primary/5"
+                        )}
                       >
+                        <TableCell>
+                          <Checkbox
+                            checked={checked}
+                            onCheckedChange={(value) =>
+                              toggleRow(id, value === true)
+                            }
+                            aria-label={`Select feedback ${id}`}
+                          />
+                        </TableCell>
                         <TableCell className="font-medium tabular-nums">
                           {serialNo}
                         </TableCell>
@@ -761,6 +933,90 @@ export default function Feedback() {
                 </span>
               ) : (
                 "Yes, Delete"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={bulkDeleteOpen} onOpenChange={setBulkDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete selected feedbacks?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete{" "}
+              <span className="font-medium text-foreground">
+                {selectedCount}
+              </span>{" "}
+              selected feedback{selectedCount === 1 ? "" : "s"}. This action
+              cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteBulkMutation.isPending}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={deleteBulkMutation.isPending || selectedCount === 0}
+              onClick={(e) => {
+                e.preventDefault();
+                deleteBulkMutation.mutate(Array.from(selectedIds));
+              }}
+            >
+              {deleteBulkMutation.isPending ? (
+                <span className="inline-flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Deleting...
+                </span>
+              ) : (
+                "Confirm delete"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        open={!!scopeDelete}
+        onOpenChange={(open) => !open && setScopeDelete(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {scopeDelete === "resolved"
+                ? "Delete resolved feedbacks?"
+                : scopeDelete === "pending"
+                  ? "Delete pending feedbacks?"
+                  : "Delete all feedbacks?"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {scopeDelete === "resolved"
+                ? "This will permanently delete every resolved feedback."
+                : scopeDelete === "pending"
+                  ? "This will permanently delete every pending feedback."
+                  : "This will permanently delete every feedback. This action cannot be undone."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteScopeMutation.isPending}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={deleteScopeMutation.isPending || !scopeDelete}
+              onClick={(e) => {
+                e.preventDefault();
+                if (scopeDelete) deleteScopeMutation.mutate(scopeDelete);
+              }}
+            >
+              {deleteScopeMutation.isPending ? (
+                <span className="inline-flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Deleting...
+                </span>
+              ) : (
+                "Confirm delete"
               )}
             </AlertDialogAction>
           </AlertDialogFooter>

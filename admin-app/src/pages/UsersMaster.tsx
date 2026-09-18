@@ -6,14 +6,16 @@ import {
   RefreshCw,
   Loader2,
   Search,
-  Eye,
   ChevronLeft,
   ChevronRight,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
   Smartphone,
-  MapPin,
   Mail,
   Bell,
   Send,
+  UserX,
 } from "lucide-react";
 import { PageTitle } from "@/components/ui/page-title";
 import { StatCard, StatCardSkeleton } from "@/components/ui/stat-card";
@@ -45,19 +47,27 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { toast } from "@/hooks/use-toast";
-import { usersApi, type UserListItem } from "@/features/users/api";
+import { usersApi, type AppInstallStatus, type UserListItem } from "@/features/users/api";
 import {
   adminNotificationsApi,
   emailApi,
   type BulkEmailType,
   type BulkNotificationType,
 } from "@/features/messaging/api";
-import { formatDateTime, displayValue, resolveImageUrl } from "@/lib/formatters";
+import { formatDateTime, displayValue, resolveImageUrl, formatAppStatus, appStatusClassName } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
 
 const PAGE_LIMITS = [5, 10, 20, 50] as const;
+const APP_STATUS_FILTERS: { value: "ALL" | AppInstallStatus; label: string }[] = [
+  { value: "ALL", label: "Status" },
+  { value: "ACTIVE", label: "Installed" },
+  { value: "INACTIVE", label: "Inactive" },
+  { value: "LIKELY_UNINSTALLED", label: "Likely Uninstalled" },
+  { value: "UNKNOWN", label: "Unknown" },
+];
 
 const EMAIL_TYPES: { value: BulkEmailType; label: string }[] = [
   { value: "notification", label: "Notification" },
@@ -74,9 +84,44 @@ const NOTIFICATION_TYPES: { value: BulkNotificationType; label: string }[] = [
   { value: "general", label: "general" },
 ];
 
+type SortKey =
+  | "sno"
+  | "name"
+  | "app_status"
+  | "last_seen_at"
+  | "last_login"
+  | "city"
+  | "status";
+
+type SortDir = "asc" | "desc";
+
+function compareValues(a: string | number, b: string | number, dir: SortDir) {
+  if (a < b) return dir === "asc" ? -1 : 1;
+  if (a > b) return dir === "asc" ? 1 : -1;
+  return 0;
+}
+
+function toSortTime(value?: string | null): number {
+  if (!value) return 0;
+  const time = new Date(value).getTime();
+  return Number.isNaN(time) ? 0 : time;
+}
+
+function SortIcon({ active, direction }: { active: boolean; direction: SortDir }) {
+  if (!active) return <ArrowUpDown className="h-3.5 w-3.5 opacity-50" />;
+  return direction === "asc" ? (
+    <ArrowUp className="h-3.5 w-3.5" />
+  ) : (
+    <ArrowDown className="h-3.5 w-3.5" />
+  );
+}
+
 export default function UsersMaster() {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
+  const [appStatusFilter, setAppStatusFilter] = useState<"ALL" | AppInstallStatus>("ALL");
+  const [sortKey, setSortKey] = useState<SortKey>("sno");
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -106,14 +151,55 @@ export default function UsersMaster() {
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return data;
-    return data.filter((user) =>
-      [user.name, user.mobile, user.city, user.device_name]
+    const list = data.filter((user) => {
+      const appStatus = String(user.app_status || "UNKNOWN").toUpperCase();
+      if (appStatusFilter !== "ALL" && appStatus !== appStatusFilter) return false;
+      if (!q) return true;
+      return [user.name, user.mobile, user.city, user.device_name, user.status, user.app_status]
         .join(" ")
         .toLowerCase()
-        .includes(q)
-    );
-  }, [data, search]);
+        .includes(q);
+    });
+
+    list.sort((a, b) => {
+      switch (sortKey) {
+        case "sno":
+          return compareValues(Number(a.id) || 0, Number(b.id) || 0, sortDir);
+        case "name":
+          return compareValues(
+            (a.name || "").toLowerCase(),
+            (b.name || "").toLowerCase(),
+            sortDir
+          );
+        case "app_status":
+          return compareValues(
+            String(a.app_status || "UNKNOWN").toUpperCase(),
+            String(b.app_status || "UNKNOWN").toUpperCase(),
+            sortDir
+          );
+        case "last_seen_at":
+          return compareValues(toSortTime(a.last_seen_at), toSortTime(b.last_seen_at), sortDir);
+        case "last_login":
+          return compareValues(toSortTime(a.last_login), toSortTime(b.last_login), sortDir);
+        case "city":
+          return compareValues(
+            (a.city || "").toLowerCase(),
+            (b.city || "").toLowerCase(),
+            sortDir
+          );
+        case "status":
+          return compareValues(
+            (a.status || "ACTIVE").toUpperCase(),
+            (b.status || "ACTIVE").toUpperCase(),
+            sortDir
+          );
+        default:
+          return 0;
+      }
+    });
+
+    return list;
+  }, [data, search, appStatusFilter, sortKey, sortDir]);
 
   const totalItems = filtered.length;
   const totalPages = Math.max(1, Math.ceil(totalItems / limit));
@@ -151,6 +237,14 @@ export default function UsersMaster() {
   };
 
   const selectedUserIds = useMemo(() => Array.from(selectedIds), [selectedIds]);
+  const recipientUserIds = useMemo(
+    () =>
+      selectedCount > 0
+        ? selectedUserIds
+        : filtered.map((user) => String(user.id)),
+    [selectedCount, selectedUserIds, filtered]
+  );
+  const sendingToAll = selectedCount === 0;
 
   const resetEmailForm = () => {
     setEmailSubject("");
@@ -167,7 +261,7 @@ export default function UsersMaster() {
   const emailMutation = useMutation({
     mutationFn: () =>
       emailApi.sendBulk({
-        userIds: selectedUserIds,
+        userIds: recipientUserIds,
         subject: emailSubject.trim(),
         body: emailBody.trim(),
         type: emailType,
@@ -177,16 +271,19 @@ export default function UsersMaster() {
         title: "Email sent",
         description:
           result.message ||
-          `Successfully sent to ${result.successful ?? selectedCount} user(s).`,
+          `Successfully sent to ${result.successful ?? recipientUserIds.length} user(s).`,
       });
       setEmailOpen(false);
       resetEmailForm();
       setSelectedIds(new Set());
     },
     onError: (err: Error) => {
+      const timedOut = /timeout/i.test(err.message || "");
       toast({
-        title: "Failed to send email",
-        description: err.message || "Something went wrong.",
+        title: timedOut ? "Email request timed out" : "Failed to send email",
+        description: timedOut
+          ? "Sending to all users is still running on the server. Wait a moment before trying again."
+          : err.message || "Something went wrong.",
         variant: "destructive",
       });
     },
@@ -195,7 +292,7 @@ export default function UsersMaster() {
   const notificationMutation = useMutation({
     mutationFn: () =>
       adminNotificationsApi.sendBulk({
-        userIds: selectedUserIds,
+        userIds: recipientUserIds,
         title: notificationTitle.trim(),
         body: notificationBody.trim(),
         type: notificationType,
@@ -205,22 +302,33 @@ export default function UsersMaster() {
         title: "Notification sent",
         description:
           result.message ||
-          `Successfully sent to ${result.successful ?? selectedCount} user(s).`,
+          `Successfully sent to ${result.successful ?? recipientUserIds.length} user(s).`,
       });
       setNotificationOpen(false);
       resetNotificationForm();
       setSelectedIds(new Set());
     },
     onError: (err: Error) => {
+      const timedOut = /timeout/i.test(err.message || "");
       toast({
-        title: "Failed to send notification",
-        description: err.message || "Something went wrong.",
+        title: timedOut ? "Notification request timed out" : "Failed to send notification",
+        description: timedOut
+          ? "Sending to all users is still running on the server. Wait a moment before trying again."
+          : err.message || "Something went wrong.",
         variant: "destructive",
       });
     },
   });
 
   const handleSendEmail = () => {
+    if (!recipientUserIds.length) {
+      toast({
+        title: "No users to email",
+        description: "There are no users matching the current list.",
+        variant: "destructive",
+      });
+      return;
+    }
     if (!emailSubject.trim() || !emailBody.trim()) {
       toast({
         title: "Missing fields",
@@ -233,6 +341,14 @@ export default function UsersMaster() {
   };
 
   const handleSendNotification = () => {
+    if (!recipientUserIds.length) {
+      toast({
+        title: "No users to notify",
+        description: "There are no users matching the current list.",
+        variant: "destructive",
+      });
+      return;
+    }
     if (!notificationTitle.trim() || !notificationBody.trim()) {
       toast({
         title: "Missing fields",
@@ -243,6 +359,37 @@ export default function UsersMaster() {
     }
     notificationMutation.mutate();
   };
+
+  const handleSort = (key: SortKey) => {
+    if (sortKey === key) {
+      setSortDir((prev) => (prev === "asc" ? "desc" : "asc"));
+    } else {
+      setSortKey(key);
+      setSortDir("asc");
+    }
+    setPage(1);
+  };
+
+  const SortableHead = ({
+    label,
+    column,
+    className,
+  }: {
+    label: string;
+    column: SortKey;
+    className?: string;
+  }) => (
+    <TableHead className={cn("text-center text-slate-100", className)}>
+      <button
+        type="button"
+        onClick={() => handleSort(column)}
+        className="inline-flex w-full items-center justify-center gap-1.5 font-medium text-inherit hover:text-white"
+      >
+        {label}
+        <SortIcon active={sortKey === column} direction={sortDir} />
+      </button>
+    </TableHead>
+  );
 
   return (
     <>
@@ -262,71 +409,64 @@ export default function UsersMaster() {
               <StatCard size="sm" title="Total Users" value={data.length} icon={Users} color="blue" />
               <StatCard
                 size="sm"
-                title="With Device"
-                value={data.filter((u) => !!u.device_name).length}
+                title="Installed"
+                value={data.filter((u) => String(u.app_status || "").toUpperCase() === "ACTIVE").length}
                 icon={Smartphone}
                 color="emerald"
               />
               <StatCard
                 size="sm"
-                title="With City"
-                value={data.filter((u) => !!u.city).length}
-                icon={MapPin}
+                title="Likely Uninstalled"
+                value={
+                  data.filter(
+                    (u) => String(u.app_status || "").toUpperCase() === "LIKELY_UNINSTALLED"
+                  ).length
+                }
+                icon={UserX}
                 color="violet"
               />
             </>
           )}
         </div>
 
-        <div className="glass-card p-4 sm:p-6">
-          <div className="mb-4 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-            <div>
-              <h2 className="text-lg font-semibold">
-                User Management{" "}
-                {/* <span className="font-normal text-muted-foreground">
-                  (Total: {data.length})
-                </span> */}
-              </h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Select users to send email or notification
-              </p>
+        <div>
+          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="relative w-full sm:max-w-sm">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setPage(1);
+                }}
+                placeholder="Search users..."
+                className="pl-9"
+              />
             </div>
-            <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
+            <div className="flex flex-wrap items-center justify-end gap-2">
               {selectedCount > 0 && (
-                <>
-                  <p className="text-sm text-muted-foreground sm:mr-1">
-                    Selected: <span className="font-semibold text-foreground">{selectedCount}</span>
-                  </p>
-                  <Button
-                    size="sm"
-                    className="gap-2 bg-emerald-600 text-white hover:bg-emerald-700"
-                    onClick={() => setEmailOpen(true)}
-                  >
-                    <Mail className="h-4 w-4" />
-                    Send Email
-                  </Button>
-                  <Button
-                    size="sm"
-                    className="gap-2 bg-orange-500 text-white hover:bg-orange-600"
-                    onClick={() => setNotificationOpen(true)}
-                  >
-                    <Bell className="h-4 w-4" />
-                    Send Notification
-                  </Button>
-                </>
+                <p className="text-sm text-muted-foreground sm:mr-1">
+                  Selected: <span className="font-semibold text-foreground">{selectedCount}</span>
+                </p>
               )}
-              <div className="relative w-full sm:w-64">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  value={search}
-                  onChange={(e) => {
-                    setSearch(e.target.value);
-                    setPage(1);
-                  }}
-                  placeholder="Search users..."
-                  className="pl-9"
-                />
-              </div>
+              <Select
+                value={appStatusFilter}
+                onValueChange={(value) => {
+                  setAppStatusFilter(value as "ALL" | AppInstallStatus);
+                  setPage(1);
+                }}
+              >
+                <SelectTrigger className="h-9 w-full sm:w-44">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  {APP_STATUS_FILTERS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <Button
                 variant="outline"
                 size="sm"
@@ -336,6 +476,24 @@ export default function UsersMaster() {
               >
                 {isFetching ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
                 Refresh
+              </Button>
+              <Button
+                size="sm"
+                className="gap-2 bg-emerald-600 text-white hover:bg-emerald-700"
+                onClick={() => setEmailOpen(true)}
+                disabled={recipientUserIds.length === 0}
+              >
+                <Mail className="h-4 w-4" />
+                Send Email
+              </Button>
+              <Button
+                size="sm"
+                className="gap-2 bg-orange-500 text-white hover:bg-orange-600"
+                onClick={() => setNotificationOpen(true)}
+                disabled={recipientUserIds.length === 0}
+              >
+                <Bell className="h-4 w-4" />
+                Send Notification
               </Button>
             </div>
           </div>
@@ -350,27 +508,29 @@ export default function UsersMaster() {
             <Table>
               <TableHeader>
                 <TableRow className="border-b border-slate-700/80 bg-slate-800 hover:bg-slate-800">
-                  <TableHead className="w-12 text-slate-100">
-                    <Checkbox
-                      checked={
-                        allPageSelected
-                          ? true
-                          : somePageSelected
-                            ? "indeterminate"
-                            : false
-                      }
-                      onCheckedChange={(value) => togglePage(value === true)}
-                      aria-label="Select all users on this page"
-                      className="border-slate-300 data-[state=checked]:bg-primary data-[state=indeterminate]:bg-primary"
-                    />
+                  <TableHead className="w-12 text-center text-slate-100">
+                    <div className="flex justify-center">
+                      <Checkbox
+                        checked={
+                          allPageSelected
+                            ? true
+                            : somePageSelected
+                              ? "indeterminate"
+                              : false
+                        }
+                        onCheckedChange={(value) => togglePage(value === true)}
+                        aria-label="Select all users on this page"
+                        className="border-slate-300 data-[state=checked]:bg-primary data-[state=indeterminate]:bg-primary"
+                      />
+                    </div>
                   </TableHead>
-                  <TableHead className="w-16 text-slate-100">S.No</TableHead>
-                  <TableHead className="text-slate-100">Name</TableHead>
-                  <TableHead className="text-slate-100">Mobile</TableHead>
-                  <TableHead className="text-slate-100">Device Name</TableHead>
-                  <TableHead className="text-slate-100">Last Login</TableHead>
-                  <TableHead className="text-slate-100">City</TableHead>
-                  <TableHead className="w-[80px] text-center text-slate-100">Action</TableHead>
+                  <SortableHead label="S.No" column="sno" className="w-16" />
+                  <SortableHead label="Name" column="name" />
+                  <SortableHead label="App Status" column="app_status" />
+                  <SortableHead label="Last Seen" column="last_seen_at" />
+                  <SortableHead label="Last Login" column="last_login" />
+                  <SortableHead label="City" column="city" />
+                  <SortableHead label="Status" column="status" />
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -400,6 +560,8 @@ export default function UsersMaster() {
                       .join("")
                       .slice(0, 2)
                       .toUpperCase();
+                    const isActive =
+                      (user.status || "ACTIVE").toUpperCase() === "ACTIVE";
                     return (
                       <TableRow
                         key={id}
@@ -417,37 +579,52 @@ export default function UsersMaster() {
                             aria-label={`Select ${user.name || id}`}
                           />
                         </TableCell>
-                        <TableCell className="font-medium tabular-nums">{serialNo}</TableCell>
+                        <TableCell className="text-center font-medium tabular-nums">{serialNo}</TableCell>
                         <TableCell>
-                          <div className="flex items-center gap-3">
+                          <button
+                            type="button"
+                            onClick={() => navigate(`/users/${user.id}`)}
+                            className="flex items-center gap-3 text-left"
+                          >
                             <Avatar className="h-9 w-9">
                               <AvatarImage src={resolveImageUrl(user.profile_image_url)} />
                               <AvatarFallback className="bg-primary/10 text-xs font-semibold text-primary">
                                 {initials}
                               </AvatarFallback>
                             </Avatar>
-                            <p className="font-medium">{user.name || "N/A"}</p>
-                          </div>
+                            <p className="font-medium text-primary hover:underline">
+                              {user.name || "N/A"}
+                            </p>
+                          </button>
                         </TableCell>
-                        <TableCell>{displayValue(user.mobile)}</TableCell>
-                        <TableCell>{displayValue(user.device_name)}</TableCell>
+                        <TableCell className="text-center">
+                          <Badge
+                            className={cn(
+                              "border-transparent",
+                              appStatusClassName(user.app_status)
+                            )}
+                          >
+                            {formatAppStatus(user.app_status)}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap text-muted-foreground">
+                          {formatDateTime(user.last_seen_at)}
+                        </TableCell>
                         <TableCell className="whitespace-nowrap text-muted-foreground">
                           {formatDateTime(user.last_login)}
                         </TableCell>
                         <TableCell>{displayValue(user.city)}</TableCell>
                         <TableCell>
-                          <div className="flex justify-center">
-                            <Button
-                              size="icon"
-                              variant="outline"
-                              title="View"
-                              aria-label="View"
-                              className="h-8 w-8 border-sky-300 bg-sky-50 text-sky-700 hover:bg-sky-100"
-                              onClick={() => navigate(`/users/${user.id}`)}
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                          </div>
+                          <Badge
+                            className={cn(
+                              "border-transparent",
+                              isActive
+                                ? "bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/20"
+                                : "bg-rose-500/15 text-rose-700 hover:bg-rose-500/20"
+                            )}
+                          >
+                            {isActive ? "Active" : "Inactive"}
+                          </Badge>
                         </TableCell>
                       </TableRow>
                     );
@@ -523,11 +700,32 @@ export default function UsersMaster() {
       >
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>Send Email to Selected Users</DialogTitle>
+            <DialogTitle>
+              {sendingToAll
+                ? "Send Email to All Users"
+                : "Send Email to Selected Users"}
+            </DialogTitle>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">
-            Sending to <span className="font-semibold text-foreground">{selectedCount}</span>{" "}
-            users.
+            {sendingToAll ? (
+              <>
+                Sending to all{" "}
+                <span className="font-semibold text-foreground">
+                  {recipientUserIds.length}
+                </span>{" "}
+                users
+                {appStatusFilter !== "ALL" || search.trim()
+                  ? " matching the current filters"
+                  : ""}
+                .
+              </>
+            ) : (
+              <>
+                Sending to{" "}
+                <span className="font-semibold text-foreground">{selectedCount}</span>{" "}
+                selected users.
+              </>
+            )}
           </p>
           <div className="space-y-4 py-2">
             <div className="space-y-2">
@@ -601,11 +799,32 @@ export default function UsersMaster() {
       >
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>Send Notification to Selected Users</DialogTitle>
+            <DialogTitle>
+              {sendingToAll
+                ? "Send Notification to All Users"
+                : "Send Notification to Selected Users"}
+            </DialogTitle>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">
-            Sending to <span className="font-semibold text-foreground">{selectedCount}</span>{" "}
-            users.
+            {sendingToAll ? (
+              <>
+                Sending to all{" "}
+                <span className="font-semibold text-foreground">
+                  {recipientUserIds.length}
+                </span>{" "}
+                users
+                {appStatusFilter !== "ALL" || search.trim()
+                  ? " matching the current filters"
+                  : ""}
+                .
+              </>
+            ) : (
+              <>
+                Sending to{" "}
+                <span className="font-semibold text-foreground">{selectedCount}</span>{" "}
+                selected users.
+              </>
+            )}
           </p>
           <div className="space-y-4 py-2">
             <div className="space-y-2">

@@ -3,6 +3,7 @@ const tokenService = require('./tokenService');
 const User = require('../models/user');
 const Admin = require('../models/admin');
 const logger = require('../config/logger');
+const { isInactiveStatus, sendInactiveError } = require('../helpers/accountStatus');
 
 const LOGIN_REQUIRED_MESSAGE = "அணுகல் மறுக்கப்பட்டது. தயவுசெய்து தொடர உள்நுழையவும்.";
 const EXPIRED_TOKEN_MESSAGE = "டோக்கன் காலாவதியாகிவிட்டது. தயவுசெய்து தொடர உள்நுழையவும்.";
@@ -41,6 +42,13 @@ function authenticateRequest(req, res, next, { resolveAccount, accountType }) {
             return res.status(401).json({ 
                 responseType: "F", 
                 responseValue: { message: INVALID_TOKEN_MESSAGE } 
+            });
+        }
+
+        if (decoded.type && decoded.type !== 'access') {
+            return res.status(401).json({
+                responseType: "F",
+                responseValue: { message: INVALID_TOKEN_MESSAGE }
             });
         }
 
@@ -85,6 +93,11 @@ function authenticateRequest(req, res, next, { resolveAccount, accountType }) {
                     responseType: "F", 
                     responseValue: { message: ACCOUNT_DELETED_MESSAGE } 
                 });
+            }
+
+            if (isInactiveStatus(account.status)) {
+                tokenService.removeToken(userId);
+                return sendInactiveError(res);
             }
         } catch (dbError) {
             logger.error('Database error in auth middleware:', dbError);

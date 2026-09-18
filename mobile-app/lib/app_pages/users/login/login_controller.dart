@@ -42,7 +42,7 @@ class LoginController {
         secureStorage.save(AppVariables.isLogin, true),
         secureStorage.saveToken(response['responseValue']['token']),
       ]);
-      unawaited(PushNotificationService.instance.syncTokenForCurrentUser());
+      unawaited(PushNotificationService.instance.syncTokenForCurrentUser(force: true));
       if (!context.mounted) return false;
       Navigator.pushNamedAndRemoveUntil(context, "home", (route) => false);
       return true;
@@ -56,6 +56,18 @@ class LoginController {
         context,
         "restore_account_send_otp",
         arguments: emailCtrl.text.trim(),
+      );
+      return false;
+    } else if (response != null &&
+        response['responseType'] == "F" &&
+        response['responseValue'] != null &&
+        response['responseValue']['account_status'] == "INACTIVE") {
+      if (!context.mounted) return false;
+      alertServices.errorToast(
+        Provider.of<LanguageProvider>(
+          context,
+          listen: false,
+        ).tr('auth.accountDeactivated'),
       );
       return false;
     } else if (response != null &&

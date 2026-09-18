@@ -2,6 +2,7 @@
 const db = require('../config/database');
 const { fromBinaryUUID } = require('../helpers/uuid');
 const logger = require('../config/logger');
+const AuditLogs = require('../models/auditLogs');
 
 exports.adminControllers = {
   /**
@@ -137,6 +138,90 @@ exports.adminControllers = {
       logger.error("Error deleting expired OTPs:", error);
       return res.status(500).json({
         responseType: "F",
+        responseValue: { message: error.toString() },
+      });
+    }
+  },
+
+  /**
+   * Clear OTPs by scope: used | unused | all
+   * Body: { scope }
+   */
+  clearOTPs: async (req, res) => {
+    try {
+      const scope = String(req.body?.scope || req.query?.scope || '').toLowerCase();
+      let query;
+      let label;
+
+      if (scope === 'used') {
+        query = 'DELETE FROM user_otps WHERE is_used = 1';
+        label = 'used';
+      } else if (scope === 'unused') {
+        query = 'DELETE FROM user_otps WHERE is_used = 0';
+        label = 'unused';
+      } else if (scope === 'all') {
+        query = 'DELETE FROM user_otps';
+        label = 'all';
+      } else {
+        return res.status(400).json({
+          responseType: 'F',
+          responseValue: { message: 'scope must be used, unused, or all.' },
+        });
+      }
+
+      const [result] = await db.query(query);
+      logger.info(`Cleared ${result.affectedRows} ${label} OTPs`);
+
+      return res.status(200).json({
+        responseType: 'S',
+        responseValue: {
+          message: `Deleted ${result.affectedRows} ${label} OTP record(s).`,
+          deleted_count: result.affectedRows,
+          scope,
+        },
+      });
+    } catch (error) {
+      logger.error('Error clearing OTPs:', error);
+      return res.status(500).json({
+        responseType: 'F',
+        responseValue: { message: error.toString() },
+      });
+    }
+  },
+
+  /**
+   * List mobile user audit logs
+   * Query: ?page=1&limit=25&userId=&action=&q=
+   */
+  listAuditLogs: async (req, res) => {
+    try {
+      const { page = 1, limit = 25, userId, action, q } = req.query;
+      const result = await AuditLogs.listAdmin({
+        page,
+        limit,
+        userId,
+        action,
+        q,
+      });
+
+      return res.status(200).json({
+        responseType: 'S',
+        responseValue: {
+          message: 'Audit logs retrieved successfully',
+          data: result.data,
+          pagination: result.pagination,
+        },
+      });
+    } catch (error) {
+      if (error?.code === 'INVALID_USER_ID') {
+        return res.status(400).json({
+          responseType: 'F',
+          responseValue: { message: error.message },
+        });
+      }
+      logger.error('Error listing audit logs:', error);
+      return res.status(500).json({
+        responseType: 'F',
         responseValue: { message: error.toString() },
       });
     }

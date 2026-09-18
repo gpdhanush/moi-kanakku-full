@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Bell,
@@ -15,6 +15,7 @@ import {
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
+  ChevronDown,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { PageTitle } from "@/components/ui/page-title";
@@ -56,6 +57,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { toast } from "@/hooks/use-toast";
 import {
@@ -112,6 +119,9 @@ export default function Notifications() {
     null
   );
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+  const [scopeDelete, setScopeDelete] = useState<"read" | "unread" | "all" | null>(
+    null
+  );
 
   const metaElement = usePageMeta({
     title: "Notifications",
@@ -186,10 +196,41 @@ export default function Notifications() {
     },
   });
 
+  const deleteScopeMutation = useMutation({
+    mutationFn: (scope: "read" | "unread" | "all") =>
+      notificationsApi.deleteByScope(scope),
+    onSuccess: (result, scope) => {
+      toast({
+        title: "Notifications deleted",
+        description:
+          result?.message ||
+          `Deleted ${result?.deletedCount ?? 0} ${scope} notification(s).`,
+      });
+      setScopeDelete(null);
+      setSelectedIds(new Set());
+      queryClient.invalidateQueries({
+        queryKey: ["admin", "notifications"],
+      });
+    },
+    onError: (err: Error) => {
+      toast({
+        title: "Delete failed",
+        description: err.message || "Unable to delete notifications.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const rows = data?.data ?? [];
   const totalItems = data?.totalCount ?? 0;
   const totalPages = Math.max(1, data?.pages ?? 1);
   const unreadCount = data?.unreadCount ?? 0;
+
+  useEffect(() => {
+    if (!isError && !isLoading && page > 1 && rows.length === 0) {
+      setPage((current) => Math.max(1, current - 1));
+    }
+  }, [isError, isLoading, page, rows.length]);
 
   const summary = useMemo(() => {
     const read = rows.filter((item) => item.isRead).length;
@@ -303,7 +344,9 @@ export default function Notifications() {
   const fromItem = totalItems === 0 ? 0 : (page - 1) * limit + 1;
   const toItem = Math.min(page * limit, totalItems);
   const isDeleting =
-    deleteOneMutation.isPending || deleteBulkMutation.isPending;
+    deleteOneMutation.isPending ||
+    deleteBulkMutation.isPending ||
+    deleteScopeMutation.isPending;
 
   const SortableHead = ({
     label,
@@ -369,19 +412,21 @@ export default function Notifications() {
           )}
         </div>
 
-        <div className="glass-card p-4 sm:p-6">
-          <div className="mb-4 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-            <div>
-              <h2 className="text-lg font-semibold">Notification List</h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Server-paginated list of all notifications
-              </p>
+        <div>
+          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="relative w-full sm:max-w-sm">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search title, user, type..."
+                className="pl-9"
+              />
             </div>
-
-            <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+            <div className="flex flex-wrap items-center justify-end gap-2">
               {selectedCount > 0 && (
                 <>
-                  <p className="text-sm text-muted-foreground sm:mr-1">
+                  <p className="text-sm text-muted-foreground">
                     Selected:{" "}
                     <span className="font-semibold text-foreground">
                       {selectedCount}
@@ -395,19 +440,10 @@ export default function Notifications() {
                     disabled={isDeleting}
                   >
                     <Trash2 className="h-4 w-4" />
-                    Delete All
+                    Delete Selected
                   </Button>
                 </>
               )}
-              <div className="relative w-full sm:w-72">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search title, user, type..."
-                  className="pl-9"
-                />
-              </div>
               <Button
                 variant="outline"
                 size="sm"
@@ -422,6 +458,43 @@ export default function Notifications() {
                 )}
                 Refresh
               </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    className="gap-2"
+                    disabled={isDeleting}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Delete
+                    <ChevronDown className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-44">
+                  <DropdownMenuItem
+                    className="gap-2"
+                    onSelect={() => setScopeDelete("read")}
+                  >
+                    <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                    Read
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="gap-2"
+                    onSelect={() => setScopeDelete("unread")}
+                  >
+                    <BellRing className="h-4 w-4 text-amber-600" />
+                    Unread
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="gap-2 text-destructive focus:text-destructive"
+                    onSelect={() => setScopeDelete("all")}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    All
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
 
@@ -806,7 +879,53 @@ export default function Notifications() {
                   Deleting...
                 </span>
               ) : (
-                "Delete All"
+                "Confirm delete"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        open={!!scopeDelete}
+        onOpenChange={(open) => !open && setScopeDelete(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {scopeDelete === "read"
+                ? "Delete read notifications?"
+                : scopeDelete === "unread"
+                  ? "Delete unread notifications?"
+                  : "Delete all notifications?"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {scopeDelete === "read"
+                ? "This will permanently delete every read notification across all users."
+                : scopeDelete === "unread"
+                  ? "This will permanently delete every unread notification across all users."
+                  : "This will permanently delete every notification across all users. This action cannot be undone."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteScopeMutation.isPending}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={deleteScopeMutation.isPending || !scopeDelete}
+              onClick={(e) => {
+                e.preventDefault();
+                if (scopeDelete) deleteScopeMutation.mutate(scopeDelete);
+              }}
+            >
+              {deleteScopeMutation.isPending ? (
+                <span className="inline-flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Deleting...
+                </span>
+              ) : (
+                "Confirm delete"
               )}
             </AlertDialogAction>
           </AlertDialogFooter>

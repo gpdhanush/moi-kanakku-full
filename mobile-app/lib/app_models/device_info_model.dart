@@ -7,6 +7,8 @@ class DeviceInfoModel {
   final String? android_version;
   final String? ram_size;
   final String? token;
+  final String platform;
+  final String? app_version;
 
   DeviceInfoModel({
     required this.brand,
@@ -17,6 +19,8 @@ class DeviceInfoModel {
     this.ram_size,
     this.android_version,
     this.token,
+    this.platform = 'android',
+    this.app_version,
   });
 
   /// Convert JSON to Model
@@ -30,6 +34,8 @@ class DeviceInfoModel {
       ram_size: json['physicalRamSize'] ?? '',
       android_version: json['androidVersion'] ?? '',
       token: json['token'] ?? '',
+      platform: json['platform'] ?? 'android',
+      app_version: json['app_version'],
     );
   }
 
@@ -44,6 +50,8 @@ class DeviceInfoModel {
       'ram_size': ram_size,
       'android_version': android_version,
       'token': token,
+      'platform': platform,
+      'app_version': app_version,
     };
   }
 }

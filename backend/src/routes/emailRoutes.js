@@ -32,4 +32,17 @@ router.post('/verifyOtp', controller.verifyOtp);
  */
 router.post('/admin/send-bulk', authenticateAdminToken, controller.sendBulkEmails);
 
+/**
+ * Send a token-link verification email to one user
+ * POST /api/email/admin/send-verify-email
+ * Body: { userId }
+ */
+router.post('/admin/send-verify-email', authenticateAdminToken, controller.sendAdminVerifyEmail);
+
+/**
+ * Verify email from the link in the verification email
+ * GET /api/email/verify-email?token=
+ */
+router.get('/verify-email', controller.verifyEmailByToken);
+
 module.exports = router;

@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
   Users,
@@ -50,6 +51,7 @@ function formatCount(count: number | string): string {
 }
 
 export default function Dashboard() {
+  const navigate = useNavigate();
   const currentUser = getCurrentUser();
   const userName = currentUser?.name || "Admin";
   const metaElement = usePageMeta({
@@ -115,6 +117,11 @@ export default function Dashboard() {
                   value={formatCount(stat.count)}
                   icon={resolveIcon(stat.title)}
                   colorIndex={index}
+                  onClick={
+                    stat.title === "Total Users"
+                      ? () => navigate("/users")
+                      : undefined
+                  }
                 />
               ))}
         </div>

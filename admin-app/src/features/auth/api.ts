@@ -22,6 +22,7 @@ export interface AdminUser {
 export interface LoginResult {
   mfaRequired: false;
   token: string;
+  refreshToken?: string;
   user: Omit<AdminUser, 'token'>;
 }
 
@@ -75,6 +76,8 @@ type LoginApiUser = {
   last_login?: string;
   profile_image?: string | null;
   token?: string;
+  accessToken?: string;
+  refreshToken?: string;
   mfa_required?: boolean;
   is_mfa_required?: boolean;
   account_type?: string;
@@ -97,7 +100,7 @@ function extractMessage(
 }
 
 function normalizeUser(value: LoginApiUser): AdminUser {
-  const token = value.token || '';
+  const token = value.accessToken || value.token || '';
   return {
     id: String(value.id ?? ''),
     name: value.full_name || value.name || 'Admin',
@@ -203,7 +206,10 @@ export const authApi = {
       }
 
       const { token, ...rest } = user;
-      return { mfaRequired: false, token, user: rest };
+      const refreshToken = value.refreshToken
+        ? String(value.refreshToken)
+        : undefined;
+      return { mfaRequired: false, token, refreshToken, user: rest };
     } catch (error) {
       if (error instanceof AuthLoginError) throw error;
       throw toLoginError(error);
@@ -212,6 +218,7 @@ export const authApi = {
 
   logout: async (): Promise<void> => {
     await secureStorageWithCache.removeItem('auth_token');
+    await secureStorageWithCache.removeItem('refresh_token');
     await secureStorageWithCache.removeItem('user');
     await secureStorageWithCache.removeItem('remember_me');
   },

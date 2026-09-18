@@ -298,7 +298,6 @@ class _SignupState extends State<Signup> with SingleTickerProviderStateMixin {
 
   Future<void> submitForm() async {
     try {
-      final fcmToken = await FirebaseMessaging.instance.getToken();
       final device = await DeviceService.getDeviceInfo();
       requestModel.device_id = device.device_id;
       requestModel.device_name = device.device_name;
@@ -307,15 +306,30 @@ class _SignupState extends State<Signup> with SingleTickerProviderStateMixin {
       requestModel.manufacturer = device.manufacturer;
       requestModel.android_version = device.android_version;
       requestModel.ram_size = device.ram_size;
-      if (fcmToken != null) {
-        await secureStorage.saveNotificationToken(fcmToken);
-        requestModel.fcm_token = fcmToken;
+      requestModel.platform = device.platform;
+      requestModel.app_version = device.app_version;
+      requestModel.fcm_token =
+          (device.token != null && device.token!.isNotEmpty)
+          ? device.token
+          : '';
+    } catch (e) {
+      printContent('Error getting device info: $e');
+      requestModel.fcm_token = requestModel.fcm_token ?? '';
+    }
+    try {
+      if (requestModel.fcm_token == null ||
+          requestModel.fcm_token!.isEmpty) {
+        final fcmToken = await FirebaseMessaging.instance.getToken();
+        if (fcmToken != null && fcmToken.isNotEmpty) {
+          await secureStorage.saveNotificationToken(fcmToken);
+          requestModel.fcm_token = fcmToken;
+        }
       } else {
-        requestModel.fcm_token = '';
+        await secureStorage.saveNotificationToken(requestModel.fcm_token!);
       }
     } catch (e) {
       printContent('Error getting FCM token: $e');
-      requestModel.fcm_token = '';
+      requestModel.fcm_token = requestModel.fcm_token ?? '';
     }
     printDirect(requestModel.toJson().toString());
     final response = await userServices.signup(

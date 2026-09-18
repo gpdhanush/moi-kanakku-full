@@ -44,6 +44,18 @@ function assertSuccess<T>(data: MoiApiResponse<T>): T {
   return data.responseValue;
 }
 
+function rethrowApiError(error: unknown): never {
+  if (error && typeof error === 'object' && 'response' in error) {
+    const data = (error as { response?: { data?: MoiApiResponse<unknown> } }).response
+      ?.data;
+    if (data) {
+      throw new Error(extractErrorMessage(data));
+    }
+  }
+  if (error instanceof Error) throw error;
+  throw new Error('Request failed');
+}
+
 export const feedbacksApi = {
   list: async (): Promise<FeedbackListResult> => {
     const response = await apiClient.get<MoiApiResponse<FeedbackItem[]>>(
@@ -72,9 +84,47 @@ export const feedbacksApi = {
   },
 
   delete: async (feedbackId: string): Promise<{ message?: string; feedbackId?: string }> => {
-    const response = await apiClient.post<
-      MoiApiResponse<{ message?: string; feedbackId?: string }>
-    >('/feedbacks/admin/delete-feedback', { feedbackId });
-    return assertSuccess(response.data);
+    try {
+      const response = await apiClient.post<
+        MoiApiResponse<{ message?: string; feedbackId?: string }>
+      >('/feedbacks/admin/delete-feedback', { feedbackId }, { skipErrorHandler: true });
+      return assertSuccess(response.data);
+    } catch (error) {
+      rethrowApiError(error);
+    }
+  },
+
+  deleteBulk: async (
+    feedbackIds: string[]
+  ): Promise<{ message?: string; deletedCount?: number }> => {
+    try {
+      const response = await apiClient.post<
+        MoiApiResponse<{ message?: string; deletedCount?: number }>
+      >(
+        '/feedbacks/admin/delete-bulk',
+        { feedbackIds },
+        { skipErrorHandler: true }
+      );
+      return assertSuccess(response.data);
+    } catch (error) {
+      rethrowApiError(error);
+    }
+  },
+
+  deleteByScope: async (
+    scope: 'pending' | 'resolved' | 'all'
+  ): Promise<{ message?: string; deletedCount?: number; scope?: string }> => {
+    try {
+      const response = await apiClient.post<
+        MoiApiResponse<{ message?: string; deletedCount?: number; scope?: string }>
+      >(
+        '/feedbacks/admin/delete-by-scope',
+        { scope },
+        { skipErrorHandler: true }
+      );
+      return assertSuccess(response.data);
+    } catch (error) {
+      rethrowApiError(error);
+    }
   },
 };

@@ -64,4 +64,14 @@ export const otpsApi = {
     const response = await apiClient.delete<MoiApiResponse<OtpCleanupResult>>('/admin/otps/cleanup');
     return assertSuccess(response.data);
   },
+
+  clearByScope: async (
+    scope: "used" | "unused" | "all"
+  ): Promise<OtpCleanupResult> => {
+    const response = await apiClient.post<MoiApiResponse<OtpCleanupResult>>(
+      "/admin/otps/clear",
+      { scope }
+    );
+    return assertSuccess(response.data);
+  },
 };

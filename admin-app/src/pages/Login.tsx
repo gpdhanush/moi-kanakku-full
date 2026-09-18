@@ -26,12 +26,12 @@ import {
 import { authApi, AuthLoginError } from "@/features/auth/api";
 import { toast } from "@/hooks/use-toast";
 import {
-  secureStorageWithCache,
   initializeSecureStorage,
 } from "@/lib/secureStorage";
 import {
   getAuthTokenAsync,
   getCurrentUserAsync,
+  persistAdminSession,
   setMfaPendingLogin,
   clearMfaPendingLogin,
 } from "@/lib/auth";
@@ -214,11 +214,11 @@ export default function Login() {
       clearMfaPendingLogin();
 
       if ("token" in result) {
-        await secureStorageWithCache.setItem("auth_token", result.token);
-        await secureStorageWithCache.setItem(
-          "user",
-          JSON.stringify(result.user)
-        );
+        await persistAdminSession({
+          token: result.token,
+          user: result.user,
+          refreshToken: result.refreshToken,
+        });
         storeBlockUntil(null);
         setBlockedUntil(null);
         setAttemptsRemaining(null);

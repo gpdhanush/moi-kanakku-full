@@ -47,6 +47,22 @@ export function formatAmount(value?: string | number | null): string {
   });
 }
 
+export function formatAppStatus(value?: string | null, { device = false } = {}): string {
+  const status = String(value || "UNKNOWN").toUpperCase();
+  if (status === "ACTIVE") return device ? "Active" : "Installed";
+  if (status === "INACTIVE") return "Inactive";
+  if (status === "LIKELY_UNINSTALLED") return "Likely Uninstalled";
+  return "Unknown";
+}
+
+export function appStatusClassName(value?: string | null): string {
+  const status = String(value || "UNKNOWN").toUpperCase();
+  if (status === "ACTIVE") return "bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/20";
+  if (status === "INACTIVE") return "bg-amber-500/15 text-amber-800 hover:bg-amber-500/20";
+  if (status === "LIKELY_UNINSTALLED") return "bg-rose-500/15 text-rose-700 hover:bg-rose-500/20";
+  return "bg-slate-500/15 text-slate-700 hover:bg-slate-500/20";
+}
+
 export function formatLabel(value?: string | null): string {
   if (!value) return "N/A";
   return value
