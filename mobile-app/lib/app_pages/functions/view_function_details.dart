@@ -69,32 +69,22 @@ class _ViewFunctionDetailsState extends State<ViewFunctionDetails> {
       String userId = user['id'].toString();
       String functionId = widget.data[0]['id'].toString();
 
-      final response = await transactionServices.listTransactions({
+      final response = await transactionServices.getTransactionStats({
         "userId": userId,
         "transactionFunctionId": functionId,
-      });
+      }, showLoading: false);
 
       if (mounted) {
         if (response != null && response['responseType'] == "S") {
-          List transactionList = response['responseValue'] ?? [];
-
-          double investTotal = 0.0;
-          double returnTotal = 0.0;
-
-          for (var transaction in transactionList) {
-            try {
-              String type = transaction['type']?.toString().toUpperCase() ?? '';
-              double amount = double.parse(
-                transaction['amount']?.toString() ?? '0',
-              );
-
-              if (type == 'INVEST') {
-                investTotal += amount;
-              } else if (type == 'RETURN') {
-                returnTotal += amount;
-              }
-            } catch (_) {}
-          }
+          final stats = response['responseValue'];
+          final investTotal = double.tryParse(
+                stats is Map ? (stats['investTotal']?.toString() ?? '0') : '0',
+              ) ??
+              0.0;
+          final returnTotal = double.tryParse(
+                stats is Map ? (stats['returnTotal']?.toString() ?? '0') : '0',
+              ) ??
+              0.0;
 
           setState(() {
             totalAmountReceived = investTotal + returnTotal;

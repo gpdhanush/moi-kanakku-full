@@ -37,11 +37,7 @@ class EmailVerifyCard extends StatefulWidget {
   final String? email;
   final EdgeInsetsGeometry? margin;
 
-  const EmailVerifyCard({
-    super.key,
-    this.email,
-    this.margin,
-  });
+  const EmailVerifyCard({super.key, this.email, this.margin});
 
   @override
   State<EmailVerifyCard> createState() => _EmailVerifyCardState();

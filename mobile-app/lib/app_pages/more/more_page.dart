@@ -142,14 +142,30 @@ class MorePage extends StatelessWidget {
         return;
       }
 
-      final response = await txServices.listTransactions({
-        'userId': user['id'].toString(),
-      }, showLoading: false);
+      final transactions = <Map<String, dynamic>>[];
+      var page = 1;
+      var hasMore = true;
+      while (hasMore) {
+        final response = await txServices.listTransactions({
+          'userId': user['id'].toString(),
+          'page': page,
+          'limit': 100,
+        }, showLoading: false);
 
-      final List transactions = (response != null &&
-              response['responseType'] == 'S')
-          ? (response['responseValue'] as List? ?? [])
-          : [];
+        if (response == null ||
+            response is! Map ||
+            response['responseType'] != 'S') {
+          break;
+        }
+
+        final chunk = PaginatedResponseParser.mapChunk(
+          response['responseValue'],
+        );
+        transactions.addAll(chunk);
+        hasMore = response['hasMore'] == true && chunk.isNotEmpty;
+        page += 1;
+        if (page > 500) break;
+      }
 
       if (transactions.isEmpty) {
         await alertServices.hideLoading();

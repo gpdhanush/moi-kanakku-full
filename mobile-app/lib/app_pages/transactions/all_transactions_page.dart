@@ -23,15 +23,17 @@ class AllTransactionsPage extends StatefulWidget {
 }
 
 class _AllTransactionsPageState extends State<AllTransactionsPage> {
+  static const int _pageSize = 30;
+
   final TransactionServices _txServices = TransactionServices();
   final SecureStorageService _storage = SecureStorageService();
   final AlertServices _alertServices = AlertServices();
   final TextEditingController _searchController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
+  final PaginatedListState<Map<String, dynamic>> _paging =
+      PaginatedListState(pageSize: _pageSize);
   Timer? _debounce;
-
-  List<dynamic> _transactions = [];
-  List<dynamic> _filtered = [];
-  bool _isLoading = true;
+  String? _userId;
 
   bool get _isReceived => widget.type == 'INVEST';
   bool get _isGiven => widget.type == 'RETURN';
@@ -44,7 +46,8 @@ class _AllTransactionsPageState extends State<AllTransactionsPage> {
   void initState() {
     super.initState();
     _searchController.addListener(_onSearchChanged);
-    _loadTransactions();
+    _scrollController.addListener(_onScroll);
+    _loadTransactions(reset: true);
   }
 
   @override
@@ -52,94 +55,108 @@ class _AllTransactionsPageState extends State<AllTransactionsPage> {
     _debounce?.cancel();
     _searchController.removeListener(_onSearchChanged);
     _searchController.dispose();
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
     super.dispose();
   }
 
   void _onSearchChanged() {
     _debounce?.cancel();
-    _debounce = Timer(const Duration(milliseconds: 350), () {
-      _applySearch(_searchController.text);
+    _debounce = Timer(const Duration(milliseconds: 450), () {
+      _loadTransactions(reset: true);
     });
   }
 
-  void _applySearch(String value) {
-    if (!mounted) return;
+  void _onScroll() {
+    if (!_scrollController.hasClients) return;
+    if (!_paging.hasMore || _paging.isLoadingMore || _paging.isLoading) return;
+    final position = _scrollController.position;
+    if (position.pixels >= position.maxScrollExtent - 400) {
+      _loadTransactions(reset: false);
+    }
+  }
 
-    final query = value.trim().toLowerCase();
-    if (query.isEmpty) {
-      setState(() => _filtered = List<dynamic>.from(_transactions));
-      return;
+  Future<void> _loadTransactions({
+    required bool reset,
+    bool showLoading = true,
+  }) async {
+    if (reset) {
+      if (mounted) {
+        setState(() => _paging.prepareReset(showLoading: showLoading));
+      }
+    } else {
+      if (!_paging.prepareLoadMore()) return;
+      if (mounted) setState(() {});
     }
 
-    setState(() {
-      _filtered = _transactions.where((t) {
-        final first = t['person']?['firstName']?.toString() ?? '';
-        final last = t['person']?['lastName']?.toString() ??
-            t['person']?['secondName']?.toString() ??
-            '';
-        final personName = '$first $last'.toLowerCase();
-        final city = t['person']?['city']?.toString().toLowerCase() ?? '';
-        final mobile = t['person']?['mobile']?.toString().toLowerCase() ?? '';
-        final amount = t['amount']?.toString().toLowerCase() ?? '';
-        final notes = t['notes']?.toString().toLowerCase() ?? '';
-        final date = t['transactionDate']?.toString().toLowerCase() ?? '';
-        final functionName = _functionName(t).toLowerCase();
-
-        return personName.contains(query) ||
-            city.contains(query) ||
-            mobile.contains(query) ||
-            amount.contains(query) ||
-            notes.contains(query) ||
-            date.contains(query) ||
-            functionName.contains(query);
-      }).toList();
-    });
-  }
-
-  Future<void> _loadTransactions() async {
-    setState(() => _isLoading = true);
     try {
-      final user = await _storage.get(AppVariables.userInformation);
-      if (user == null) {
-        setState(() => _isLoading = false);
+      _userId ??= await _resolveUserId();
+      if (_userId == null || _userId!.isEmpty) {
+        if (mounted) {
+          setState(() => _paging.applyFailure(reset: reset));
+        }
         return;
       }
-      final userId = user['id'].toString();
-      final response = await _txServices.listTransactions({
-        "userId": userId,
-      }, showLoading: false);
-      if (mounted) {
-        if (response != null && response['responseType'] == 'S') {
-          List list = response['responseValue'] ?? [];
-          if (widget.type == 'INVEST' || widget.type == 'RETURN') {
-            list = list.where((t) {
-              final tType = t['type']?.toString().toUpperCase() ?? '';
-              return tType == widget.type;
-            }).toList();
-          }
-          setState(() {
-            _transactions = list;
-            _isLoading = false;
-          });
-          _applySearch(_searchController.text);
-        } else {
-          setState(() {
-            _transactions = [];
-            _filtered = [];
-            _isLoading = false;
-          });
-        }
+
+      final pageToLoad = _paging.nextPageToLoad(reset: reset);
+      final searchQuery = _searchController.text.trim();
+      final params = <String, dynamic>{
+        'userId': _userId,
+        'page': pageToLoad,
+        'limit': _pageSize,
+        if (widget.type == 'INVEST' || widget.type == 'RETURN')
+          'type': widget.type,
+        if (searchQuery.isNotEmpty) 'search': searchQuery,
+      };
+
+      final response = await _txServices.listTransactions(
+        params,
+        showLoading: false,
+      );
+
+      if (!mounted) return;
+
+      if (response != null &&
+          response is Map &&
+          response['responseType'] == 'S') {
+        final chunk = PaginatedResponseParser.mapChunk(
+          response['responseValue'],
+        );
+        final total = PaginatedResponseParser.parseTotal(
+          response['count'],
+          fallback: reset ? chunk.length : _paging.totalCount,
+        );
+        final hasMore = PaginatedResponseParser.parseHasMore(
+          hasMore: response['hasMore'],
+          chunkLength: chunk.length,
+          pageSize: _pageSize,
+          total: total,
+          offsetAfter: (pageToLoad - 1) * _pageSize + chunk.length,
+        );
+        setState(() {
+          _paging.applySuccess(
+            reset: reset,
+            chunk: chunk,
+            total: total,
+            responseHasMore: hasMore,
+            pageLoaded: pageToLoad,
+          );
+        });
+      } else {
+        setState(() => _paging.applyFailure(reset: reset));
       }
     } catch (e) {
       debugPrint('Error fetching transactions: $e');
       if (mounted) {
-        setState(() {
-          _transactions = [];
-          _filtered = [];
-          _isLoading = false;
-        });
+        setState(() => _paging.applyFailure(reset: reset));
       }
     }
+  }
+
+  Future<String?> _resolveUserId() async {
+    final user = await _storage.get(AppVariables.userInformation);
+    if (user == null || user is! Map) return null;
+    return user['id']?.toString();
   }
 
   String _formatAmount(double amt) {
@@ -161,6 +178,40 @@ class _AllTransactionsPageState extends State<AllTransactionsPage> {
     return '-';
   }
 
+  /// Loads all pages for PDF export (server-side filters applied).
+  Future<List<Map<String, dynamic>>> _fetchAllForExport() async {
+    final userId = _userId ?? await _resolveUserId();
+    if (userId == null || userId.isEmpty) return [];
+
+    final all = <Map<String, dynamic>>[];
+    var page = 1;
+    var hasMore = true;
+    final searchQuery = _searchController.text.trim();
+
+    while (hasMore) {
+      final response = await _txServices.listTransactions({
+        'userId': userId,
+        'page': page,
+        'limit': 100,
+        if (widget.type == 'INVEST' || widget.type == 'RETURN')
+          'type': widget.type,
+        if (searchQuery.isNotEmpty) 'search': searchQuery,
+      }, showLoading: false);
+
+      if (response == null ||
+          response is! Map ||
+          response['responseType'] != 'S') {
+        break;
+      }
+      final chunk = PaginatedResponseParser.mapChunk(response['responseValue']);
+      all.addAll(chunk);
+      hasMore = response['hasMore'] == true && chunk.isNotEmpty;
+      page += 1;
+      if (page > 500) break;
+    }
+    return all;
+  }
+
   Future<void> _exportPdf() async {
     try {
       showDialog(
@@ -170,6 +221,7 @@ class _AllTransactionsPageState extends State<AllTransactionsPage> {
       );
 
       final user = await _storage.get(AppVariables.userInformation);
+      final transactions = await _fetchAllForExport();
       if (!mounted) return;
       Navigator.pop(context);
 
@@ -180,7 +232,7 @@ class _AllTransactionsPageState extends State<AllTransactionsPage> {
         return;
       }
       await ExportService.exportTransactionsToPdf(
-        transactions: _isSearching ? _filtered : _transactions,
+        transactions: transactions,
         userDetails: user,
       );
       if (mounted) {
@@ -214,7 +266,7 @@ class _AllTransactionsPageState extends State<AllTransactionsPage> {
         onExport: _exportPdf,
         exportTooltip: languageProvider.tr('home.exportData'),
       ),
-      body: _isLoading
+      body: _paging.isLoading && _paging.items.isEmpty
           ? const Center(child: CircularProgressIndicator(strokeWidth: 2.5))
           : Column(
               children: [
@@ -238,7 +290,7 @@ class _AllTransactionsPageState extends State<AllTransactionsPage> {
   }
 
   Widget _buildList(LanguageProvider languageProvider) {
-    if (_filtered.isEmpty) {
+    if (_paging.items.isEmpty) {
       return CustomScrollView(
         physics: const AlwaysScrollableScrollPhysics(
           parent: BouncingScrollPhysics(),
@@ -265,10 +317,14 @@ class _AllTransactionsPageState extends State<AllTransactionsPage> {
       );
     }
 
+    final itemCount =
+        _paging.items.length + (_paging.isLoadingMore || _paging.hasMore ? 1 : 0);
+
     return RefreshIndicator(
       color: _accent,
-      onRefresh: _loadTransactions,
+      onRefresh: () => _loadTransactions(reset: true, showLoading: false),
       child: ListView.separated(
+        controller: _scrollController,
         physics: const AlwaysScrollableScrollPhysics(
           parent: BouncingScrollPhysics(),
         ),
@@ -278,10 +334,28 @@ class _AllTransactionsPageState extends State<AllTransactionsPage> {
           AppSpacing.page,
           AppSpacing.xxl,
         ),
-        itemCount: _filtered.length,
+        itemCount: itemCount,
         separatorBuilder: (_, _) => const SizedBox(height: 12),
         itemBuilder: (context, index) {
-          final t = _filtered[index];
+          if (index >= _paging.items.length) {
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: Center(
+                child: _paging.isLoadingMore
+                    ? SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2.5,
+                          color: _accent,
+                        ),
+                      )
+                    : const SizedBox.shrink(),
+              ),
+            );
+          }
+
+          final t = _paging.items[index];
           final type = t['type']?.toString().toUpperCase() ?? '';
           final isInvest = type == 'INVEST';
           final amount =

@@ -22,7 +22,7 @@ class TransactionDashboard extends StatefulWidget {
 }
 
 class _TransactionDashboardState extends State<TransactionDashboard> {
-  static const int _pageSize = 40;
+  static const int _pageSize = 30;
 
   final SecureStorageService storage = SecureStorageService();
   final AlertServices alertServices = AlertServices();

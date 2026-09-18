@@ -181,4 +181,17 @@ class TransactionServices {
       showLoading: showLoading,
     );
   }
+
+  Future<dynamic> getTransactionStats(
+    Map<String, dynamic> params, {
+    bool showLoading = true,
+  }) async {
+    String url = '$appBaseUri/transactions/stats';
+    return await connection.postData(
+      url,
+      params,
+      useToken: true,
+      showLoading: showLoading,
+    );
+  }
 }

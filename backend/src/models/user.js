@@ -986,9 +986,20 @@ const User = {
     },
 
     // retrieve public details for all active users (admin use)
-    async getAllPublicDetails() {
-        const [rows] = await db.query(
-            `SELECT 
+    async getAllPublicDetails(filters = {}) {
+        const { limit = null, offset = 0 } = filters;
+
+        let total = null;
+        if (limit != null) {
+            const [countRows] = await db.query(
+                `SELECT COUNT(*) AS total FROM users u
+                 WHERE (u.is_deleted = 0 OR u.is_deleted IS NULL)`
+            );
+            total = Number(countRows[0]?.total || 0);
+        }
+
+        let userQuery = `
+             SELECT 
                 u.id, u.full_name, u.email, u.mobile, u.referral_code, u.status, 
                 u.is_verified, u.email_verified_at, u.last_activity_at, u.created_at, u.updated_at,
                 up.gender, up.date_of_birth, up.address_line1, up.address_line2, 
@@ -996,20 +1007,34 @@ const User = {
              FROM users u
              LEFT JOIN user_profiles up ON up.user_id = u.id
              WHERE (u.is_deleted = 0 OR u.is_deleted IS NULL)
-             ORDER BY u.created_at DESC`
-        );
+             ORDER BY u.created_at DESC`;
+        const userParams = [];
+        if (limit != null) {
+            userQuery += ` LIMIT ? OFFSET ?`;
+            userParams.push(Number(limit), Number(offset) || 0);
+        }
 
-        const [deviceRows] = await db.query(
-            `SELECT id, user_id, fcm_token, device_name, device_id, is_active, token_status,
-                    last_used_at, uninstalled_at, created_at, brand, model, manufacturer,
-                    android_version, ram_size, platform, app_version
-             FROM user_devices
-             WHERE (is_deleted = 0 OR is_deleted IS NULL)
-             ORDER BY last_used_at DESC, updated_at DESC`
-        );
+        const [rows] = await db.query(userQuery, userParams);
+
+        const userIds = (rows || []).map((r) => fromBinaryUUID(r.id)).filter(Boolean);
+        let deviceRows = [];
+        if (userIds.length > 0) {
+            const placeholders = userIds.map(() => '?').join(',');
+            const [devices] = await db.query(
+                `SELECT id, user_id, fcm_token, device_name, device_id, is_active, token_status,
+                        last_used_at, uninstalled_at, created_at, brand, model, manufacturer,
+                        android_version, ram_size, platform, app_version
+                 FROM user_devices
+                 WHERE (is_deleted = 0 OR is_deleted IS NULL)
+                   AND user_id IN (${placeholders})
+                 ORDER BY last_used_at DESC, updated_at DESC`,
+                userIds.map((id) => toBinaryUUID(id))
+            );
+            deviceRows = devices || [];
+        }
 
         const devicesByUser = new Map();
-        for (const row of deviceRows || []) {
+        for (const row of deviceRows) {
             const mapped = mapDeviceRow(row);
             const userId = mapped.user_id;
             if (!userId) continue;
@@ -1017,7 +1042,7 @@ const User = {
             devicesByUser.get(userId).push(mapped);
         }
 
-        return rows.map(r => {
+        const mapped = rows.map(r => {
             const id = fromBinaryUUID(r.id);
             const devices = devicesByUser.get(id) || [];
             return {
@@ -1049,6 +1074,11 @@ const User = {
             referred_count: 0
             };
         });
+
+        if (limit != null) {
+            return { rows: mapped, total };
+        }
+        return mapped;
     },
 
     /**

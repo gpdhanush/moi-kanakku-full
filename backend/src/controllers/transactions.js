@@ -613,8 +613,8 @@ exports.controller = {
     },
 
     /**
-     * Get all transactions with filters
-     * Body: { userId, personId?, transactionFunctionId?, type?, startDate?, endDate?, limit, offset }
+     * Get all transactions with filters + pagination
+     * Body: { userId, personId?, transactionFunctionId?, type?, startDate?, endDate?, search?, page?, limit? }
      */
     list: async (req, res) => {
         try {
@@ -624,7 +624,10 @@ exports.controller = {
                 transactionFunctionId,
                 type,
                 startDate,
-                endDate
+                endDate,
+                search,
+                page,
+                limit,
             } = req.body;
 
             if (!userId) {
@@ -646,20 +649,31 @@ exports.controller = {
                 });
             }
 
+            const pageNum = Math.max(1, parseInt(page, 10) || 1);
+            const pageSize = Math.min(100, Math.max(1, parseInt(limit, 10) || 30));
+            const offset = (pageNum - 1) * pageSize;
+
             const filters = {
                 personId: personId || null,
                 transactionFunctionId: transactionFunctionId || null,
                 type: type || null,
                 startDate: startDate || null,
-                endDate: endDate || null
+                endDate: endDate || null,
+                search: typeof search === 'string' ? search : null,
+                limit: pageSize,
+                offset,
             };
 
-            const transactions = await Model.readAll(userId, filters);
+            const { rows, total } = await Model.readAll(userId, filters);
+            const hasMore = offset + rows.length < total;
 
             return res.status(200).json({
                 responseType: "S",
-                count: transactions.length,
-                responseValue: transactions
+                count: total,
+                page: pageNum,
+                limit: pageSize,
+                hasMore,
+                responseValue: rows,
             });
         } catch (error) {
             logger.error('Error fetching transactions:', error);
@@ -1007,11 +1021,17 @@ exports.controller = {
                 transactionFunctionId,
                 type,
                 startDate,
-                endDate
+                endDate,
+                page,
+                limit,
             } = req.body;
 
             const idCheck = validateUuidFields({ userId, personId, transactionFunctionId });
             if (!idCheck.ok) return sendUuidError(res, idCheck.message);
+
+            const pageNum = Math.max(1, parseInt(page, 10) || 1);
+            const pageSize = Math.min(100, Math.max(1, parseInt(limit, 10) || 30));
+            const offset = (pageNum - 1) * pageSize;
 
             const filters = {
                 search: search ? String(search).trim() : null,
@@ -1020,15 +1040,21 @@ exports.controller = {
                 transactionFunctionId: transactionFunctionId ? String(transactionFunctionId).trim() : null,
                 type: type || null,
                 startDate: startDate || null,
-                endDate: endDate || null
+                endDate: endDate || null,
+                limit: pageSize,
+                offset,
             };
 
-            const transactions = await Model.readAllForAdmin(filters);
+            const { rows, total } = await Model.readAllForAdmin(filters);
+            const hasMore = offset + rows.length < total;
 
             return res.status(200).json({
                 responseType: "S",
-                count: transactions.length,
-                responseValue: transactions
+                count: total,
+                page: pageNum,
+                limit: pageSize,
+                hasMore,
+                responseValue: rows
             });
         } catch (error) {
             logger.error('Error fetching admin transactions:', error);

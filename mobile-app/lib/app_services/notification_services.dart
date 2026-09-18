@@ -4,15 +4,21 @@ import 'package:moi/app_services/connection.dart';
 class NotificationServices {
   final Connection connection = Connection();
 
-  // Get all notifications for user
+  // Get notifications for user (server-side pagination via limit/offset).
   Future<dynamic> getNotificationList(
     String userId, {
+    int limit = 30,
+    int offset = 0,
     bool showLoading = true,
   }) async {
     String url = '$appBaseUri/notification/list';
     return await connection.postData(
       url,
-      {"userId": userId},
+      {
+        "userId": userId,
+        "limit": limit,
+        "offset": offset,
+      },
       useToken: true,
       showLoading: showLoading,
     );

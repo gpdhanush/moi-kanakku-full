@@ -491,18 +491,10 @@ class _HomePageState extends State<HomePage> {
 
     setState(() => _isLoadingFunctionSummaries = true);
     try {
-      // Two calls total (functions + all transactions) instead of N+1 per function.
-      final results = await Future.wait([
-        _transactionServices.listTransactionFunctions({
-          'userId': userId,
-        }, showLoading: false),
-        _transactionServices.listTransactions({
-          'userId': userId,
-        }, showLoading: false),
-      ]);
-
-      final functionsResponse = results[0];
-      final transactionsResponse = results[1];
+      // Functions list includes server-side invest totals — no full txn fetch.
+      final functionsResponse = await _transactionServices.listTransactionFunctions({
+        'userId': userId,
+      }, showLoading: false);
 
       final rawFunctions =
           functionsResponse is Map && functionsResponse['responseType'] == 'S'
@@ -515,36 +507,18 @@ class _HomePageState extends State<HomePage> {
         return;
       }
 
-      final investByFunctionId = <String, double>{};
-      final rawTransactions =
-          transactionsResponse is Map &&
-              transactionsResponse['responseType'] == 'S'
-          ? transactionsResponse['responseValue']
-          : null;
-      if (rawTransactions is List) {
-        for (final transaction in rawTransactions.whereType<Map>()) {
-          if (transaction['type']?.toString().toUpperCase() != 'INVEST') {
-            continue;
-          }
-          final functionId =
-              transaction['transactionFunctionId']?.toString() ??
-              transaction['transaction_function_id']?.toString() ??
-              '';
-          if (functionId.isEmpty) continue;
-          final amount =
-              double.tryParse(transaction['amount']?.toString() ?? '0') ?? 0;
-          investByFunctionId[functionId] =
-              (investByFunctionId[functionId] ?? 0) + amount;
-        }
-      }
-
       final summaries = rawFunctions.whereType<Map>().map((function) {
-        final functionId = function['id']?.toString() ?? '';
+        final invest = double.tryParse(
+              function['totalInvest']?.toString() ??
+                  function['total_invest']?.toString() ??
+                  '0',
+            ) ??
+            0;
         return {
           'function': Map<String, dynamic>.from(function),
           'name': function['functionName']?.toString() ?? '-',
           'date': formatFunctionDate(function['functionDate']?.toString()),
-          'invest': investByFunctionId[functionId] ?? 0,
+          'invest': invest,
         };
       }).toList();
 

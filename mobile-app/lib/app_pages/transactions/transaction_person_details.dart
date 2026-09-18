@@ -22,19 +22,31 @@ class TransactionPersonDetails extends StatefulWidget {
 }
 
 class _TransactionPersonDetailsState extends State<TransactionPersonDetails> {
+  static const int _pageSize = 30;
+
   final AlertServices alertServices = AlertServices();
   final SecureStorageService storage = SecureStorageService();
   final TransactionServices txServices = TransactionServices();
+  final ScrollController _scrollController = ScrollController();
+  final PaginatedListState<Map<String, dynamic>> _paging =
+      PaginatedListState(pageSize: _pageSize);
 
-  List<Map<String, dynamic>> transactions = [];
-  bool _isLoading = true;
+  String? _userId;
 
   @override
   void initState() {
     super.initState();
     pageTitleLogs('Transaction Person Details');
     printContent('Person ID: ${widget.person.id}');
-    _fetchTransactions();
+    _scrollController.addListener(_onScroll);
+    _fetchTransactions(reset: true);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
   }
 
   String get _displayName {
@@ -62,53 +74,80 @@ class _TransactionPersonDetailsState extends State<TransactionPersonDetails> {
     return NumberFormat('#,##,000.00').format(numVal);
   }
 
-  Future<void> _fetchTransactions() async {
-    if (mounted) setState(() => _isLoading = true);
+  void _onScroll() {
+    if (!_scrollController.hasClients) return;
+    if (!_paging.hasMore || _paging.isLoadingMore || _paging.isLoading) return;
+    final position = _scrollController.position;
+    if (position.pixels >= position.maxScrollExtent - 400) {
+      _fetchTransactions(reset: false);
+    }
+  }
+
+  Future<void> _fetchTransactions({
+    required bool reset,
+    bool showLoading = true,
+  }) async {
+    if (reset) {
+      if (mounted) {
+        setState(() => _paging.prepareReset(showLoading: showLoading));
+      }
+    } else {
+      if (!_paging.prepareLoadMore()) return;
+      if (mounted) setState(() {});
+    }
 
     try {
       final userData = await storage.get(AppVariables.userInformation);
       if (userData == null || userData is! Map) {
-        if (mounted) setState(() => _isLoading = false);
+        if (mounted) setState(() => _paging.applyFailure(reset: reset));
         return;
       }
 
+      _userId = userData['id']?.toString();
+      final pageToLoad = _paging.nextPageToLoad(reset: reset);
+
       final response = await txServices.listTransactions({
-        'userId': userData['id']?.toString(),
+        'userId': _userId,
         'personId': widget.person.id,
+        'page': pageToLoad,
+        'limit': _pageSize,
       }, showLoading: false);
 
-      if (response != null && response['responseType'] == 'S') {
-        final rv = response['responseValue'];
-        if (rv is List) {
-          final txList = List<Map<String, dynamic>>.from(
-            rv.map(
-              (e) =>
-                  e is Map ? Map<String, dynamic>.from(e) : <String, dynamic>{},
-            ),
-          );
-          txList.sort((a, b) {
-            final aDate = a['createdAt']?.toString() ?? '';
-            final bDate = b['createdAt']?.toString() ?? '';
-            return bDate.compareTo(aDate);
-          });
-          if (mounted) {
-            setState(() {
-              transactions = txList;
-              _isLoading = false;
-            });
-          }
-          return;
-        }
-      }
+      if (!mounted) return;
 
-      if (mounted) {
+      if (response != null &&
+          response is Map &&
+          response['responseType'] == 'S') {
+        final chunk = PaginatedResponseParser.mapChunk(
+          response['responseValue'],
+        );
+        final total = PaginatedResponseParser.parseTotal(
+          response['count'],
+          fallback: reset ? chunk.length : _paging.totalCount,
+        );
+        final hasMore = PaginatedResponseParser.parseHasMore(
+          hasMore: response['hasMore'],
+          chunkLength: chunk.length,
+          pageSize: _pageSize,
+          total: total,
+          offsetAfter: (pageToLoad - 1) * _pageSize + chunk.length,
+        );
         setState(() {
-          transactions = [];
-          _isLoading = false;
+          _paging.applySuccess(
+            reset: reset,
+            chunk: chunk,
+            total: total,
+            responseHasMore: hasMore,
+            pageLoaded: pageToLoad,
+          );
         });
+      } else {
+        setState(() => _paging.applyFailure(reset: reset));
       }
     } catch (_) {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _paging.applyFailure(reset: reset));
+      }
     }
   }
 
@@ -175,7 +214,9 @@ class _TransactionPersonDetailsState extends State<TransactionPersonDetails> {
                 'add-transaction',
                 arguments: {'type': 'INVEST', 'person': widget.person},
               );
-              if (result == true && mounted) await _fetchTransactions();
+              if (result == true && mounted) {
+                await _fetchTransactions(reset: true, showLoading: false);
+              }
             },
           ),
         ),
@@ -191,7 +232,9 @@ class _TransactionPersonDetailsState extends State<TransactionPersonDetails> {
                 'add-transaction',
                 arguments: {'type': 'RETURN', 'person': widget.person},
               );
-              if (result == true && mounted) await _fetchTransactions();
+              if (result == true && mounted) {
+                await _fetchTransactions(reset: true, showLoading: false);
+              }
             },
           ),
         ),
@@ -203,13 +246,13 @@ class _TransactionPersonDetailsState extends State<TransactionPersonDetails> {
     LanguageProvider languageProvider,
     Color primary,
   ) {
-    if (_isLoading) {
+    if (_paging.isLoading && _paging.items.isEmpty) {
       return const Center(
         child: CircularProgressIndicator(strokeWidth: 2.5),
       );
     }
 
-    if (transactions.isEmpty) {
+    if (_paging.items.isEmpty) {
       return CustomScrollView(
         physics: const BouncingScrollPhysics(),
         slivers: [
@@ -226,41 +269,67 @@ class _TransactionPersonDetailsState extends State<TransactionPersonDetails> {
       );
     }
 
-    return ListView.separated(
-      physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.page,
-        0,
-        AppSpacing.page,
-        AppSpacing.xxl,
-      ),
-      itemCount: transactions.length,
-      separatorBuilder: (_, _) => const SizedBox(height: 12),
-      itemBuilder: (context, index) {
-        final tx = transactions[index];
-        final type = tx['type']?.toString() ?? '';
-        final isInvest = type == 'INVEST';
-        final isCustom =
-            tx['isCustom'] == true || tx['isCustom']?.toString() == 'true';
-        final functionName = isCustom
-            ? tx['customFunction'] ?? '—'
-            : tx['transactionFunctionName']?.toString() ?? '—';
-        final date = _formatDate(tx['transactionDate']?.toString());
-        final amount = tx['amount'];
-        final subtitleParts = <String>[
-          if (date.isNotEmpty && date != '-') date,
-        ];
+    return RefreshIndicator(
+      color: primary,
+      onRefresh: () => _fetchTransactions(reset: true, showLoading: false),
+      child: ListView.separated(
+        controller: _scrollController,
+        physics: const AlwaysScrollableScrollPhysics(
+          parent: BouncingScrollPhysics(),
+        ),
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.page,
+          0,
+          AppSpacing.page,
+          AppSpacing.xxl,
+        ),
+        itemCount: _paging.items.length +
+            (_paging.isLoadingMore || _paging.hasMore ? 1 : 0),
+        separatorBuilder: (_, _) => const SizedBox(height: 12),
+        itemBuilder: (context, index) {
+          if (index >= _paging.items.length) {
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: Center(
+                child: _paging.isLoadingMore
+                    ? SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2.5,
+                          color: primary,
+                        ),
+                      )
+                    : const SizedBox.shrink(),
+              ),
+            );
+          }
 
-        return MoiInvoiceListTile.moiFlow(
-          isReceived: isInvest,
-          title: functionName.toString().toUpperCase(),
-          subtitle: subtitleParts.join(' • '),
-          amount: amount != null && amount.toString().isNotEmpty
-              ? '₹${_formatNumber(amount)}'
-              : '₹0',
-          onTap: () => _showTransactionSheet(tx),
-        );
-      },
+          final tx = _paging.items[index];
+          final type = tx['type']?.toString() ?? '';
+          final isInvest = type == 'INVEST';
+          final isCustom =
+              tx['isCustom'] == true || tx['isCustom']?.toString() == 'true';
+          final functionName = isCustom
+              ? tx['customFunction'] ?? '—'
+              : tx['transactionFunctionName']?.toString() ?? '—';
+          final date = _formatDate(tx['transactionDate']?.toString());
+          final amount = tx['amount'];
+          final subtitleParts = <String>[
+            if (date.isNotEmpty && date != '-') date,
+          ];
+
+          return MoiInvoiceListTile.moiFlow(
+            isReceived: isInvest,
+            title: functionName.toString().toUpperCase(),
+            subtitle: subtitleParts.join(' • '),
+            amount: amount != null && amount.toString().isNotEmpty
+                ? '₹${_formatNumber(amount)}'
+                : '₹0',
+            onTap: () => _showTransactionSheet(tx),
+          );
+        },
+      ),
     );
   }
 
@@ -336,7 +405,7 @@ class _TransactionPersonDetailsState extends State<TransactionPersonDetails> {
     );
 
     if (result == true && mounted) {
-      await _fetchTransactions();
+      await _fetchTransactions(reset: true, showLoading: false);
     }
   }
 
@@ -386,7 +455,7 @@ class _TransactionPersonDetailsState extends State<TransactionPersonDetails> {
             response['responseValue']?['message']?.toString() ??
             languageProvider.tr('transactions.transactionDeleted');
         alertServices.successToast(message);
-        await _fetchTransactions();
+        await _fetchTransactions(reset: true, showLoading: false);
       } else {
         final errorMessage =
             response?['responseValue']?['message']?.toString() ??

@@ -459,6 +459,8 @@ exports.controller = {
             const search = req.body.search ? String(req.body.search).trim() : null;
             const userId = req.body.userId ? String(req.body.userId).trim() : null;
             const status = req.body.status ? String(req.body.status).trim().toUpperCase() : null;
+            const page = req.body.page;
+            const limit = req.body.limit;
 
             if (userId) {
                 const idCheck = validateUuid(userId, 'userId');
@@ -477,16 +479,26 @@ exports.controller = {
             // Past-dated ACTIVE functions become COMPLETED before listing
             await Model.updateStatusByDate();
 
-            const functions = await Model.getAllFunctions({
+            const pageNum = Math.max(1, parseInt(page, 10) || 1);
+            const pageSize = Math.min(100, Math.max(1, parseInt(limit, 10) || 30));
+            const offset = (pageNum - 1) * pageSize;
+
+            const { rows, total } = await Model.getAllFunctions({
                 search: search || null,
                 userId: userId || null,
                 status: status || null,
+                limit: pageSize,
+                offset,
             });
+            const hasMore = offset + rows.length < total;
 
             return res.status(200).json({
                 responseType: "S",
-                count: functions.length,
-                responseValue: functions,
+                count: total,
+                page: pageNum,
+                limit: pageSize,
+                hasMore,
+                responseValue: rows,
             });
         } catch (error) {
             logger.error('Error fetching admin upcoming function list:', error);

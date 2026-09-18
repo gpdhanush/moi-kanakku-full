@@ -1462,18 +1462,25 @@ exports.userController = {
    */
   adminAllUserLists: async (req, res) => {
     try {
-      const cacheKey = "admin:all-user-lists:v3";
-      const cached = cache.get(cacheKey);
-      if (cached) {
-        return res.status(200).json(cached);
-      }
+      const pageNum = Math.max(1, parseInt(req.query.page, 10) || 1);
+      const pageSize = Math.min(100, Math.max(1, parseInt(req.query.limit, 10) || 30));
+      const offset = (pageNum - 1) * pageSize;
 
-      const users = await User.getAllPublicDetails();
-      const formatted = users.map(formatAdminUserListItem);
-      const response = { responseType: "S", responseValue: formatted };
+      const { rows, total } = await User.getAllPublicDetails({
+        limit: pageSize,
+        offset,
+      });
+      const formatted = rows.map(formatAdminUserListItem);
+      const hasMore = offset + formatted.length < total;
 
-      cache.set(cacheKey, response, cache.TTL.USER_STATS || 60);
-      return res.status(200).json(response);
+      return res.status(200).json({
+        responseType: "S",
+        count: total,
+        page: pageNum,
+        limit: pageSize,
+        hasMore,
+        responseValue: formatted,
+      });
     } catch (error) {
       logger.error('adminAllUserLists failure', error);
       return res.status(500).json({

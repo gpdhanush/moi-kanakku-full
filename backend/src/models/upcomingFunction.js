@@ -140,7 +140,7 @@ const Model = {
         }
 
         const [rows] = await db.query(query, params);
-        return rows.map(r => ({
+        const mapped = rows.map(r => ({
             id: fromBinaryUUID(r.id),
             userId: fromBinaryUUID(r.user_id),
             userName: r.full_name,
@@ -155,6 +155,38 @@ const Model = {
             createdAt: r.created_at,
             updatedAt: r.updated_at
         }));
+
+        if (limit != null) {
+            // Rebuild count with same filters (without LIMIT)
+            let countQuery = `SELECT COUNT(*) AS total
+                    FROM upcoming_functions f
+                    LEFT JOIN users u ON f.user_id = u.id
+                    WHERE (f.is_deleted = 0 OR f.is_deleted IS NULL)`;
+            const countParams = [];
+            if (status) {
+                countQuery += ` AND f.status = ?`;
+                countParams.push(status);
+            }
+            if (userId) {
+                countQuery += ` AND f.user_id = ?`;
+                countParams.push(toBinaryUUID(userId));
+            }
+            if (search) {
+                const like = `%${String(search).trim()}%`;
+                countQuery += ` AND (
+                    f.title LIKE ? OR
+                    f.description LIKE ? OR
+                    f.location LIKE ? OR
+                    u.full_name LIKE ? OR
+                    u.email LIKE ? OR
+                    u.mobile LIKE ?
+                )`;
+                countParams.push(like, like, like, like, like, like);
+            }
+            const [countRows] = await db.query(countQuery, countParams);
+            return { rows: mapped, total: Number(countRows[0]?.total || 0) };
+        }
+        return mapped;
     },
 
     /**

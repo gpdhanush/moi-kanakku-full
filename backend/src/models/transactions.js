@@ -77,7 +77,9 @@ const Model = {
     },
 
     /**
-     * Get all transactions for a user
+     * Get transactions for a user with optional filters + SQL pagination.
+     * Returns { rows, total } when limit is provided; otherwise returns mapped array
+     * for backward compatibility with callers that expect a plain list.
      */
     async readAll(userId, filters = {}) {
         const {
@@ -85,8 +87,73 @@ const Model = {
             transactionFunctionId = null,
             type = null,
             startDate = null,
-            endDate = null
+            endDate = null,
+            search = null,
+            limit = null,
+            offset = 0,
         } = filters;
+
+        let where = `WHERE t.user_id = ? AND (t.is_deleted = 0 OR t.is_deleted IS NULL)`;
+        const params = [toBinaryUUID(userId)];
+
+        if (personId) {
+            where += ` AND t.person_id = ?`;
+            params.push(toBinaryUUID(personId));
+        }
+
+        if (transactionFunctionId) {
+            where += ` AND t.transaction_function_id = ?
+                AND (tf.id IS NULL OR t.transaction_function_name = tf.function_name)`;
+            params.push(toBinaryUUID(transactionFunctionId));
+        }
+
+        if (type) {
+            where += ` AND t.type = ?`;
+            params.push(type);
+        }
+
+        if (startDate) {
+            where += ` AND t.transaction_date >= ?`;
+            params.push(startDate.includes(' ') || startDate.length > 10 ? startDate : `${startDate} 00:00:00`);
+        }
+
+        if (endDate) {
+            where += ` AND t.transaction_date <= ?`;
+            params.push(endDate.includes(' ') || endDate.length > 10 ? endDate : `${endDate} 23:59:59`);
+        }
+
+        if (search && typeof search === 'string' && search.trim()) {
+            const searchTerm = `%${search.trim()}%`;
+            where += ` AND (
+                p.first_name LIKE ? OR p.last_name LIKE ? OR p.mobile LIKE ? OR p.city LIKE ?
+                OR t.item_name LIKE ? OR t.notes LIKE ? OR t.transaction_function_name LIKE ?
+                OR tf.function_name LIKE ? OR df.name LIKE ?
+            )`;
+            params.push(
+                searchTerm, searchTerm, searchTerm, searchTerm,
+                searchTerm, searchTerm, searchTerm,
+                searchTerm, searchTerm,
+            );
+        }
+
+        const joinSql = `
+            FROM transactions t
+            LEFT JOIN persons p ON t.person_id = p.id
+            LEFT JOIN transaction_functions tf ON t.transaction_function_id = tf.id
+                AND tf.user_id = t.user_id
+                AND (tf.is_deleted = 0 OR tf.is_deleted IS NULL)
+            LEFT JOIN default_functions df ON t.transaction_function_id = df.id AND df.is_deleted = 0
+            ${where}
+        `;
+
+        let total = null;
+        if (limit != null) {
+            const [countRows] = await db.query(
+                `SELECT COUNT(*) AS total ${joinSql}`,
+                params,
+            );
+            total = Number(countRows[0]?.total || 0);
+        }
 
         let query = `
                  SELECT t.id, t.user_id, t.person_id, t.transaction_function_id, t.transaction_function_name,
@@ -95,49 +162,19 @@ const Model = {
                      p.first_name, p.last_name, p.mobile, p.city, p.occupation,
                      tf.function_name AS user_function_name, tf.function_date, tf.location,
                      df.name AS default_function_name
-            FROM transactions t
-            LEFT JOIN persons p ON t.person_id = p.id
-            LEFT JOIN transaction_functions tf ON t.transaction_function_id = tf.id
-                AND tf.user_id = t.user_id
-                AND (tf.is_deleted = 0 OR tf.is_deleted IS NULL)
-            LEFT JOIN default_functions df ON t.transaction_function_id = df.id AND df.is_deleted = 0
-            WHERE t.user_id = ? AND (t.is_deleted = 0 OR t.is_deleted IS NULL)
+            ${joinSql}
+            ORDER BY t.transaction_date DESC, t.id DESC
         `;
+        const dataParams = [...params];
 
-        const params = [toBinaryUUID(userId)];
-
-        if (personId) {
-            query += ` AND t.person_id = ?`;
-            params.push(toBinaryUUID(personId));
+        if (limit != null) {
+            query += ` LIMIT ? OFFSET ?`;
+            dataParams.push(Number(limit), Number(offset));
         }
 
-        if (transactionFunctionId) {
-            query += ` AND t.transaction_function_id = ?
-                AND (tf.id IS NULL OR t.transaction_function_name = tf.function_name)`;
-            params.push(toBinaryUUID(transactionFunctionId));
-        }
+        const [rows] = await db.query(query, dataParams);
 
-        if (type) {
-            query += ` AND t.type = ?`;
-            params.push(type);
-        }
-
-        if (startDate) {
-            query += ` AND t.transaction_date >= ?`;
-            params.push(startDate.includes(' ') || startDate.length > 10 ? startDate : `${startDate} 00:00:00`);
-        }
-
-        if (endDate) {
-            query += ` AND t.transaction_date <= ?`;
-            params.push(endDate.includes(' ') || endDate.length > 10 ? endDate : `${endDate} 23:59:59`);
-        }
-
-        query += ` ORDER BY t.transaction_date DESC`;
-        // params.push(limit, offset);
-
-        const [rows] = await db.query(query, params);
-
-        return rows.map(r => {
+        const mapped = rows.map(r => {
             const functionName = resolveFunctionName(r);
 
             return {
@@ -169,6 +206,11 @@ const Model = {
                 updatedAt: r.updated_at
             };
         });
+
+        if (limit != null) {
+            return { rows: mapped, total };
+        }
+        return mapped;
     },
 
     /**
@@ -182,59 +224,46 @@ const Model = {
             transactionFunctionId = null,
             type = null,
             startDate = null,
-            endDate = null
+            endDate = null,
+            limit = null,
+            offset = 0,
         } = filters;
 
-        let query = `
-            SELECT t.id, t.user_id, t.person_id, t.transaction_function_id, t.transaction_function_name,
-                   t.transaction_date, t.type, t.amount, t.item_name, t.notes, t.is_custom, t.custom_function,
-                   t.created_at, t.updated_at,
-                   p.first_name, p.last_name, p.mobile, p.city, p.occupation,
-                   tf.function_name AS user_function_name, tf.function_date, tf.location,
-                   df.name AS default_function_name,
-                   u.full_name AS user_full_name, u.email AS user_email, u.mobile AS user_mobile
-            FROM transactions t
-            LEFT JOIN persons p ON t.person_id = p.id
-            LEFT JOIN transaction_functions tf ON t.transaction_function_id = tf.id
-            LEFT JOIN default_functions df ON t.transaction_function_id = df.id
-            LEFT JOIN users u ON t.user_id = u.id
-            WHERE (t.is_deleted = 0 OR t.is_deleted IS NULL)
-        `;
-
+        let where = `WHERE (t.is_deleted = 0 OR t.is_deleted IS NULL)`;
         const params = [];
 
         if (userId) {
-            query += ` AND t.user_id = ?`;
+            where += ` AND t.user_id = ?`;
             params.push(toBinaryUUID(userId));
         }
 
         if (personId) {
-            query += ` AND t.person_id = ?`;
+            where += ` AND t.person_id = ?`;
             params.push(toBinaryUUID(personId));
         }
 
         if (transactionFunctionId) {
-            query += ` AND t.transaction_function_id = ?`;
+            where += ` AND t.transaction_function_id = ?`;
             params.push(toBinaryUUID(transactionFunctionId));
         }
 
         if (type) {
-            query += ` AND t.type = ?`;
+            where += ` AND t.type = ?`;
             params.push(type);
         }
 
         if (startDate) {
-            query += ` AND t.transaction_date >= ?`;
+            where += ` AND t.transaction_date >= ?`;
             params.push(startDate.includes(' ') || startDate.length > 10 ? startDate : `${startDate} 00:00:00`);
         }
 
         if (endDate) {
-            query += ` AND t.transaction_date <= ?`;
+            where += ` AND t.transaction_date <= ?`;
             params.push(endDate.includes(' ') || endDate.length > 10 ? endDate : `${endDate} 23:59:59`);
         }
 
         if (search) {
-            query += ` AND (
+            where += ` AND (
                 p.first_name LIKE ? OR
                 p.last_name LIKE ? OR
                 p.mobile LIKE ? OR
@@ -253,29 +282,50 @@ const Model = {
             )`;
             const searchTerm = `%${search}%`;
             params.push(
-                searchTerm,
-                searchTerm,
-                searchTerm,
-                searchTerm,
-                searchTerm,
-                searchTerm,
-                searchTerm,
-                searchTerm,
-                searchTerm,
-                searchTerm,
-                searchTerm,
-                searchTerm,
-                searchTerm,
-                searchTerm,
-                searchTerm
+                searchTerm, searchTerm, searchTerm, searchTerm, searchTerm,
+                searchTerm, searchTerm, searchTerm, searchTerm, searchTerm,
+                searchTerm, searchTerm, searchTerm, searchTerm, searchTerm
             );
         }
 
-        query += ` ORDER BY t.transaction_date DESC, t.created_at DESC`;
+        const joinSql = `
+            FROM transactions t
+            LEFT JOIN persons p ON t.person_id = p.id
+            LEFT JOIN transaction_functions tf ON t.transaction_function_id = tf.id
+            LEFT JOIN default_functions df ON t.transaction_function_id = df.id
+            LEFT JOIN users u ON t.user_id = u.id
+            ${where}
+        `;
 
-        const [rows] = await db.query(query, params);
+        let total = null;
+        if (limit != null) {
+            const [countRows] = await db.query(
+                `SELECT COUNT(*) AS total ${joinSql}`,
+                params,
+            );
+            total = Number(countRows[0]?.total || 0);
+        }
 
-        return rows.map(r => {
+        let query = `
+            SELECT t.id, t.user_id, t.person_id, t.transaction_function_id, t.transaction_function_name,
+                   t.transaction_date, t.type, t.amount, t.item_name, t.notes, t.is_custom, t.custom_function,
+                   t.created_at, t.updated_at,
+                   p.first_name, p.last_name, p.mobile, p.city, p.occupation,
+                   tf.function_name AS user_function_name, tf.function_date, tf.location,
+                   df.name AS default_function_name,
+                   u.full_name AS user_full_name, u.email AS user_email, u.mobile AS user_mobile
+            ${joinSql}
+            ORDER BY t.transaction_date DESC, t.created_at DESC
+        `;
+        const dataParams = [...params];
+        if (limit != null) {
+            query += ` LIMIT ? OFFSET ?`;
+            dataParams.push(Number(limit), Number(offset) || 0);
+        }
+
+        const [rows] = await db.query(query, dataParams);
+
+        const mapped = rows.map(r => {
             const resolvedFunctionName = resolveFunctionName(r);
 
             return {
@@ -306,6 +356,11 @@ const Model = {
                 updatedAt: r.updated_at
             };
         });
+
+        if (limit != null) {
+            return { rows: mapped, total };
+        }
+        return mapped;
     },
 
     /**

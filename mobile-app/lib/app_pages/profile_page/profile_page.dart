@@ -99,8 +99,9 @@ class _ProfilePageState extends State<ProfilePage> {
             if (dobString != null) {
               _selectedDateOfBirth = AppDatePicker.parseDisplay(dobString);
               if (_selectedDateOfBirth != null) {
-                _dobCtrl.text =
-                    AppDatePicker.formatForDisplay(_selectedDateOfBirth!);
+                _dobCtrl.text = AppDatePicker.formatForDisplay(
+                  _selectedDateOfBirth!,
+                );
               }
             }
           } catch (e) {
@@ -171,8 +172,9 @@ class _ProfilePageState extends State<ProfilePage> {
                   final dobString = profileData["date_of_birth"].toString();
                   _selectedDateOfBirth = AppDatePicker.parseDisplay(dobString);
                   if (_selectedDateOfBirth != null) {
-                    _dobCtrl.text =
-                        AppDatePicker.formatForDisplay(_selectedDateOfBirth!);
+                    _dobCtrl.text = AppDatePicker.formatForDisplay(
+                      _selectedDateOfBirth!,
+                    );
                   }
                 } catch (e) {
                   printContent("Error parsing date of birth: $e");
@@ -349,11 +351,15 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  // Profile Header Card
+  // Profile Header Card — avatar + full name + email (previous layout)
   Widget _buildProfileHeader(LanguageProvider languageProvider) {
     final primary = Theme.of(context).colorScheme.primary;
     final deep = AppColors.deepenAccent(primary, amount: 0.28);
     final soft = Color.lerp(primary, Colors.white, 0.22)!;
+    final name =
+        (_user?["name"]?.toString() ?? languageProvider.tr('profile.user'))
+            .trim();
+    final email = _user?["email"]?.toString() ?? '';
 
     return Container(
       decoration: BoxDecoration(
@@ -462,8 +468,12 @@ class _ProfilePageState extends State<ProfilePage> {
                             borderRadius: BorderRadius.circular(8),
                           ),
                           alignment: Alignment.center,
-                          child: HugeIcon(icon: HugeIcons.strokeRoundedPencilEdit02,
-                            strokeWidth: 1.8, size: 14, color: primary),
+                          child: HugeIcon(
+                            icon: HugeIcons.strokeRoundedPencilEdit02,
+                            strokeWidth: 1.8,
+                            size: 14,
+                            color: primary,
+                          ),
                         ),
                       ),
                     ],
@@ -474,19 +484,25 @@ class _ProfilePageState extends State<ProfilePage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // Text(
+                      //   languageProvider.tr('profile.name'),
+                      //   style: AppTypography.body.copyWith(
+                      //     color: Colors.white.withValues(alpha: 0.82),
+                      //     fontSize: 12,
+                      //     fontWeight: FontWeight.w600,
+                      //   ),
+                      // ),
+                      // const SizedBox(height: 4),
                       Row(
                         children: [
-                          if (isUserEmailVerified(_user)) ...[
-                            const EmailVerifiedBadge(size: 18),
-                            const SizedBox(width: 6),
-                          ],
                           Expanded(
                             child: Text(
-                              _user?["email"]?.toString() ?? '',
-                              style: AppTypography.body.copyWith(
-                                color: Colors.white.withValues(alpha: 0.95),
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
+                              name.toUpperCase(),
+                              style: AppTypography.sectionTitle.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w700,
+                                fontSize: 17,
+                                height: 1.2,
                               ),
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
@@ -494,17 +510,20 @@ class _ProfilePageState extends State<ProfilePage> {
                           ),
                         ],
                       ),
-                      if (isUserEmailVerified(_user)) ...[
-                        const SizedBox(height: 4),
-                        Text(
-                          languageProvider.tr('emailVerify.verified'),
-                          style: AppTypography.label.copyWith(
-                            color: Colors.white.withValues(alpha: 0.8),
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                          ),
+                      const SizedBox(height: 4),
+                      // if (isUserEmailVerified(_user)) ...[
+                      //   const EmailVerifiedBadge(size: 18),
+                      //   const SizedBox(width: 6),
+                      // ],
+                      Text(
+                        email,
+                        style: AppTypography.body.copyWith(
+                          color: Colors.white.withValues(alpha: 0.85),
+                          fontSize: 13,
                         ),
-                      ],
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ],
                   ),
                 ),
@@ -533,64 +552,64 @@ class _ProfilePageState extends State<ProfilePage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-            // Name input field
-            TextFormWidget(
-              title: languageProvider.tr('profile.name'),
-              controller: _nameCtrl,
-              required: true,
-              // prefixIcon: HugeIcons.strokeRoundedUser, // removed
-              validator: (value) => value?.isEmpty == true
-                  ? languageProvider.tr('profile.enterValidName')
-                  : null,
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildGenderDropdown(
-                    theme,
-                    colorScheme,
-                    languageProvider,
-                  ),
+          // Name input field
+          TextFormWidget(
+            title: languageProvider.tr('profile.name'),
+            controller: _nameCtrl,
+            required: true,
+            // prefixIcon: HugeIcons.strokeRoundedUser, // removed
+            validator: (value) => value?.isEmpty == true
+                ? languageProvider.tr('profile.enterValidName')
+                : null,
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: _buildGenderDropdown(
+                  theme,
+                  colorScheme,
+                  languageProvider,
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildDateOfBirthField(
-                    theme,
-                    colorScheme,
-                    languageProvider,
-                  ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildDateOfBirthField(
+                  theme,
+                  colorScheme,
+                  languageProvider,
                 ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            // Mobile number input field
-            TextFormWidget(
-              title: languageProvider.tr('profile.mobile'),
-              controller: _mobileCtrl,
-              required: false,
-              // prefixIcon: HugeIcons.strokeRoundedCall, // removed
-              keyboardType: TextInputType.phone,
-              validator: (value) {
-                return PhoneValidator.validatePhone(value, required: false);
-              },
-            ),
-            const SizedBox(height: 16),
-            // Email field (read-only) with verified badge before the label/value
-            TextFormWidget(
-              title: languageProvider.tr('profile.email'),
-              controller: _emailCtrl,
-              required: false,
-              readOnly: true,
-              enabled: false,
-              prefixIcon: isUserEmailVerified(_user)
-                  ? HugeIcons.strokeRoundedCheckmarkBadge01
-                  : HugeIcons.strokeRoundedMail01,
-              iconColor: isUserEmailVerified(_user)
-                  ? AppColors.moiReceived
-                  : AppColors.textSecondary,
-            ),
-          ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          // Mobile number input field
+          TextFormWidget(
+            title: languageProvider.tr('profile.mobile'),
+            controller: _mobileCtrl,
+            required: false,
+            // prefixIcon: HugeIcons.strokeRoundedCall, // removed
+            keyboardType: TextInputType.phone,
+            validator: (value) {
+              return PhoneValidator.validatePhone(value, required: false);
+            },
+          ),
+          const SizedBox(height: 16),
+          // Email field (read-only) with verified badge before the label/value
+          TextFormWidget(
+            title: languageProvider.tr('profile.email'),
+            controller: _emailCtrl,
+            required: false,
+            readOnly: true,
+            enabled: false,
+            prefixIcon: isUserEmailVerified(_user)
+                ? HugeIcons.strokeRoundedCheckmarkBadge01
+                : HugeIcons.strokeRoundedMail01,
+            iconColor: isUserEmailVerified(_user)
+                ? AppColors.moiReceived
+                : AppColors.textSecondary,
+          ),
+        ],
       ),
     );
   }
@@ -746,9 +765,7 @@ class _ProfilePageState extends State<ProfilePage> {
             final confirm = await showMoiConfirmSheet(
               context: context,
               title: languageProvider.tr('profile.deleteAccount'),
-              message: languageProvider.tr(
-                'profile.deleteAccountConfirmation',
-              ),
+              message: languageProvider.tr('profile.deleteAccountConfirmation'),
               confirmLabel: languageProvider.tr('common.yes'),
               cancelLabel: languageProvider.tr('common.no'),
               icon: HugeIcons.strokeRoundedDelete02,
@@ -831,10 +848,14 @@ class _ProfilePageState extends State<ProfilePage> {
                   ],
                 ),
               ),
-              HugeIcon(icon: HugeIcons.strokeRoundedArrowRight01,
-                strokeWidth: 1.9, size: 16, color: isDestructive
+              HugeIcon(
+                icon: HugeIcons.strokeRoundedArrowRight01,
+                strokeWidth: 1.9,
+                size: 16,
+                color: isDestructive
                     ? AppColors.moiGiven.withValues(alpha: 0.55)
-                    : const Color(0xffA1A1AA)),
+                    : const Color(0xffA1A1AA),
+              ),
             ],
           ),
         ),
@@ -923,9 +944,7 @@ class _ProfilePageState extends State<ProfilePage> {
     }
 
     if (_user == null || _user?["id"] == null) {
-      _alertServices.errorToast(
-        languageProvider.tr('profile.userInfoMissing'),
-      );
+      _alertServices.errorToast(languageProvider.tr('profile.userInfoMissing'));
       return;
     }
 
@@ -953,21 +972,21 @@ class _ProfilePageState extends State<ProfilePage> {
         await _storage.save(AppVariables.userInformation, _user);
         if (mounted) {
           await context.read<UserProvider>().clearProfileImage(
-                missingUrl: previousUrl,
-              );
+            missingUrl: previousUrl,
+          );
         }
 
         _alertServices.successToast(
           response['responseValue'] is Map
               ? (response['responseValue']['message']?.toString() ??
-                  languageProvider.tr('profile.photoRemoved'))
+                    languageProvider.tr('profile.photoRemoved'))
               : languageProvider.tr('profile.photoRemoved'),
         );
       } else {
         final errorMessage = response is Map
             ? (response['responseValue'] is Map
-                ? response['responseValue']['message']
-                : response['message'] ?? response['responseValue'])
+                  ? response['responseValue']['message']
+                  : response['message'] ?? response['responseValue'])
             : null;
         _alertServices.errorToast(
           errorMessage?.toString() ??
@@ -1363,74 +1382,74 @@ class _ProfilePageState extends State<ProfilePage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-            // Text(
-            //   "முகவரி விவரங்கள்",
-            //   style: theme.textTheme.titleMedium?.copyWith(
-            //     fontWeight: FontWeight.bold,
-            //     fontFamily: 'Inter',
-            //     color: colorScheme.primary,
-            //   ),
-            // ),
-            // const SizedBox(height: 16),
-            TextFormWidget(
-              title: languageProvider.tr('profile.addressLine1'),
-              controller: _addressLine1Ctrl,
-              required: false,
-              enableMic: true,
-            ),
-            const SizedBox(height: 12),
+          // Text(
+          //   "முகவரி விவரங்கள்",
+          //   style: theme.textTheme.titleMedium?.copyWith(
+          //     fontWeight: FontWeight.bold,
+          //     fontFamily: 'Inter',
+          //     color: colorScheme.primary,
+          //   ),
+          // ),
+          // const SizedBox(height: 16),
+          TextFormWidget(
+            title: languageProvider.tr('profile.addressLine1'),
+            controller: _addressLine1Ctrl,
+            required: false,
+            enableMic: true,
+          ),
+          const SizedBox(height: 12),
 
-            TextFormWidget(
-              title: languageProvider.tr('profile.addressLine2'),
-              controller: _addressLine2Ctrl,
-              required: false,
-              enableMic: true,
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: TextFormWidget(
-                    title: languageProvider.tr('profile.city'),
-                    controller: _cityCtrl,
-                    required: false,
-                    enableMic: true,
-                  ),
+          TextFormWidget(
+            title: languageProvider.tr('profile.addressLine2'),
+            controller: _addressLine2Ctrl,
+            required: false,
+            enableMic: true,
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: TextFormWidget(
+                  title: languageProvider.tr('profile.city'),
+                  controller: _cityCtrl,
+                  required: false,
+                  enableMic: true,
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: TextFormWidget(
-                    title: languageProvider.tr('profile.state'),
-                    controller: _stateCtrl,
-                    required: false,
-                    enableMic: true,
-                  ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: TextFormWidget(
+                  title: languageProvider.tr('profile.state'),
+                  controller: _stateCtrl,
+                  required: false,
+                  enableMic: true,
                 ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: TextFormWidget(
-                    title: languageProvider.tr('profile.country'),
-                    controller: _countryCtrl,
-                    required: false,
-                    enableMic: true,
-                  ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: TextFormWidget(
+                  title: languageProvider.tr('profile.country'),
+                  controller: _countryCtrl,
+                  required: false,
+                  enableMic: true,
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: TextFormWidget(
-                    title: languageProvider.tr('profile.postalCode'),
-                    controller: _postalCodeCtrl,
-                    required: false,
-                    keyboardType: TextInputType.number,
-                  ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: TextFormWidget(
+                  title: languageProvider.tr('profile.postalCode'),
+                  controller: _postalCodeCtrl,
+                  required: false,
+                  keyboardType: TextInputType.number,
                 ),
-              ],
-            ),
-          ],
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -1464,18 +1483,16 @@ class _ProfileAppHeader extends StatelessWidget implements PreferredSizeWidget {
         statusBarIconBrightness: Brightness.light,
         statusBarBrightness: Brightness.dark,
         systemNavigationBarColor: isDark ? Colors.black : Colors.white,
-        systemNavigationBarIconBrightness:
-            isDark ? Brightness.light : Brightness.dark,
+        systemNavigationBarIconBrightness: isDark
+            ? Brightness.light
+            : Brightness.dark,
       ),
       flexibleSpace: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              primary,
-              AppColors.deepenAccent(primary, amount: 0.35),
-            ],
+            colors: [primary, AppColors.deepenAccent(primary, amount: 0.35)],
           ),
           borderRadius: const BorderRadius.only(
             bottomLeft: Radius.circular(22),
@@ -1539,8 +1556,12 @@ class _ProfileAppHeader extends StatelessWidget implements PreferredSizeWidget {
                 width: 42,
                 height: 42,
                 child: Center(
-                  child: HugeIcon(icon: HugeIcons.strokeRoundedArrowLeft01,
-                    strokeWidth: 1.9, size: 22, color: Colors.white),
+                  child: HugeIcon(
+                    icon: HugeIcons.strokeRoundedArrowLeft01,
+                    strokeWidth: 1.9,
+                    size: 22,
+                    color: Colors.white,
+                  ),
                 ),
               ),
             ),
