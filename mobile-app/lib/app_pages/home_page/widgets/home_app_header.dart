@@ -21,11 +21,17 @@ class HomeAppHeader extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     final primary = Theme.of(context).colorScheme.primary;
+    final labelWidth =
+        (MediaQuery.sizeOf(context).width * 0.42).clamp(132.0, 176.0);
 
     return MoiAppHeader(
-      title: appName,
       height: 72,
-      titleFontSize: 18,
+      titleWidget: Image.asset(
+        AppImages.splashLightText,
+        width: labelWidth,
+        fit: BoxFit.contain,
+        filterQuality: FilterQuality.high,
+      ),
       actions: [
         MoiAppHeader.notificationButton(
           onTap: onNotificationsTap,

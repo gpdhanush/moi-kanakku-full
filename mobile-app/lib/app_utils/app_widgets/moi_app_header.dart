@@ -8,6 +8,7 @@ import 'package:moi/app_themes/index.dart';
 class MoiAppHeader extends StatelessWidget implements PreferredSizeWidget {
   final String title;
   final String? subtitle;
+  final Widget? titleWidget;
   final bool showBack;
   final VoidCallback? onBack;
   final List<Widget>? actions;
@@ -19,8 +20,9 @@ class MoiAppHeader extends StatelessWidget implements PreferredSizeWidget {
 
   const MoiAppHeader({
     super.key,
-    required this.title,
+    this.title = '',
     this.subtitle,
+    this.titleWidget,
     this.showBack = false,
     this.onBack,
     this.actions,
@@ -232,11 +234,39 @@ class MoiAppHeader extends StatelessWidget implements PreferredSizeWidget {
               ),
             )
           : const SizedBox(width: 54),
-      title: hasSubtitle
-          ? Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
+      title: titleWidget ??
+          (hasSubtitle
+              ? Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                      style: AppTypography.sectionTitle.copyWith(
+                        color: Colors.white,
+                        fontSize: titleFontSize,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -0.2,
+                        height: 1.15,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle!,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                      style: AppTypography.body.copyWith(
+                        color: Colors.white.withValues(alpha: 0.78),
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                )
+              : Text(
                   title,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -245,37 +275,10 @@ class MoiAppHeader extends StatelessWidget implements PreferredSizeWidget {
                     color: Colors.white,
                     fontSize: titleFontSize,
                     fontWeight: FontWeight.w700,
-                    letterSpacing: -0.2,
-                    height: 1.15,
+                    letterSpacing: titleFontSize >= 18 ? -0.3 : -0.2,
+                    height: titleFontSize >= 18 ? 1.1 : null,
                   ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  subtitle!,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.center,
-                  style: AppTypography.body.copyWith(
-                    color: Colors.white.withValues(alpha: 0.78),
-                    fontSize: 11.5,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            )
-          : Text(
-              title,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
-              style: AppTypography.sectionTitle.copyWith(
-                color: Colors.white,
-                fontSize: titleFontSize,
-                fontWeight: FontWeight.w700,
-                letterSpacing: titleFontSize >= 18 ? -0.3 : -0.2,
-                height: titleFontSize >= 18 ? 1.1 : null,
-              ),
-            ),
+                )),
       actions: actions ?? const [SizedBox(width: 54)],
     );
   }
