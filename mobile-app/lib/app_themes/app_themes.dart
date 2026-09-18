@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'app_colors.dart';
 import 'app_custom_themes.dart';
+import 'app_shadows.dart';
 
 class AppThemes {
   /// Primary UI font — bundled Arimo (offline-safe).
@@ -166,6 +167,9 @@ class AppThemes {
     required bool isDark,
     required String languageCode,
   }) {
+    AppColors.bindTheme(seedColor);
+    AppShadows.bindTheme(seedColor);
+
     final brightness = isDark ? Brightness.dark : Brightness.light;
     final base = isDark ? _buildDarkTheme() : _buildLightTheme();
     final themedText = _textThemeWithLanguage(
@@ -173,15 +177,18 @@ class AppThemes {
       languageCode,
       isDark,
     );
+    final scaffoldBg =
+        isDark ? Colors.grey[900]! : AppColors.background;
 
     return base.copyWith(
-      scaffoldBackgroundColor: isDark ? Colors.grey[900] : Colors.white,
+      scaffoldBackgroundColor: scaffoldBg,
       colorScheme: ColorScheme.fromSeed(
         seedColor: seedColor,
         brightness: brightness,
         primary: seedColor,
         secondary: AppColors.logoGold,
         tertiary: AppColors.logoMint,
+        surface: isDark ? Colors.grey[850]! : AppColors.themeSurface,
       ),
       textTheme: themedText,
       primaryTextTheme: themedText,
@@ -193,6 +200,7 @@ class AppThemes {
           color: Colors.white,
         ),
       ),
+      shadowColor: seedColor.withValues(alpha: 0.28),
     );
   }
 
@@ -217,13 +225,15 @@ class AppThemes {
     ).textTheme.apply(fontFamily: englishFontFamily);
 
     return ThemeData.light(useMaterial3: true).copyWith(
-      scaffoldBackgroundColor: Colors.white,
+      scaffoldBackgroundColor: AppColors.background,
+      shadowColor: AppColors.themeSeed.withValues(alpha: 0.28),
       colorScheme: ColorScheme.fromSeed(
         seedColor: AppColors.primary,
         brightness: Brightness.light,
         primary: AppColors.primary,
         secondary: AppColors.logoGold,
         tertiary: AppColors.logoMint,
+        surface: AppColors.themeSurface,
       ),
       textTheme: textTheme,
       primaryTextTheme: textTheme,

@@ -1,15 +1,20 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/painting.dart';
 import 'package:moi/app_configs/app_variables.dart';
+import 'package:moi/app_services/user_services.dart';
 import 'package:moi/app_storages/secure_storages.dart';
 
 /// UserProvider manages user-related state including user details, JWT token, and device info.
 /// This replaces the global mutable state variables for better state management.
 class UserProvider extends ChangeNotifier {
   final SecureStorageService _secureStorage = SecureStorageService();
+  final UserServices _userServices = UserServices();
 
   List<dynamic> _userDetails = [];
   Map<String, dynamic> _deviceInfo = {};
   String? _jwtToken;
+  /// Paths that 404'd this session — ignore if server still returns them.
+  final Set<String> _rejectedProfileImagePaths = {};
 
   /// Get current user details
   List<dynamic> get userDetails => _userDetails;
@@ -49,6 +54,83 @@ class UserProvider extends ChangeNotifier {
       _userDetails = [userInfo];
       notifyListeners();
     }
+  }
+
+  /// Whether [pathOrUrl] was already marked missing (404) this session.
+  bool isRejectedProfileImage(String? pathOrUrl) {
+    final key = _normalizeProfileImageKey(pathOrUrl);
+    if (key == null) return false;
+    return _rejectedProfileImagePaths.contains(key);
+  }
+
+  /// Clears a stale / deleted profile photo from memory + secure storage.
+  /// When [fromMissingFile] is true, also asks the API to null the DB path
+  /// so a later sync does not reintroduce a 404 URL.
+  Future<void> clearProfileImage({
+    bool fromMissingFile = false,
+    String? missingUrl,
+  }) async {
+    if (_userDetails.isEmpty) return;
+    final user = Map<String, dynamic>.from(_userDetails[0] as Map);
+    final existing =
+        (user['profile_image_url'] ?? user['profile_image'])?.toString();
+    final hadImage = existing?.trim().isNotEmpty ?? false;
+    if (!hadImage && missingUrl == null) return;
+
+    final rejectKey = _normalizeProfileImageKey(missingUrl ?? existing);
+    if (rejectKey != null) {
+      _rejectedProfileImagePaths.add(rejectKey);
+    }
+
+    final urlToEvict = missingUrl?.trim().isNotEmpty == true
+        ? missingUrl!.trim()
+        : _resolveFullImageUrl(existing);
+    if (urlToEvict != null && urlToEvict.isNotEmpty) {
+      try {
+        await NetworkImage(urlToEvict).evict();
+      } catch (_) {}
+    }
+
+    user.remove('profile_image');
+    user.remove('profile_image_url');
+    _userDetails = [user];
+    notifyListeners();
+    try {
+      await _secureStorage.save(AppVariables.userInformation, user);
+    } catch (e) {
+      debugPrint('Error clearing profile image from storage: $e');
+    }
+
+    if (fromMissingFile) {
+      final userId = user['id']?.toString();
+      if (userId != null && userId.isNotEmpty) {
+        try {
+          await _userServices.removeProfileImage({'userId': userId});
+        } catch (e) {
+          debugPrint('Error clearing stale profile image on server: $e');
+        }
+      }
+    }
+  }
+
+  String? _normalizeProfileImageKey(String? pathOrUrl) {
+    if (pathOrUrl == null) return null;
+    var value = pathOrUrl.trim();
+    if (value.isEmpty ||
+        value.toLowerCase() == 'null' ||
+        value.toLowerCase() == 'undefined') {
+      return null;
+    }
+    value = value.replaceFirst(RegExp(r'^https?://[^/]+/'), '');
+    value = value.replaceFirst(RegExp(r'^/+'), '');
+    return value;
+  }
+
+  String? _resolveFullImageUrl(String? pathOrUrl) {
+    final key = pathOrUrl?.trim() ?? '';
+    if (key.isEmpty) return null;
+    if (key.startsWith('http://') || key.startsWith('https://')) return key;
+    return '$appImageUrl/${key.replaceFirst(RegExp(r'^/+'), '')}';
   }
 
   /// Set device info

@@ -17,6 +17,7 @@ import 'package:moi/app_utils/app_forms/custom_dropdown.dart';
 import 'package:moi/app_utils/app_providers/language_provider.dart';
 import 'package:moi/app_utils/app_providers/user_provider.dart';
 import 'package:moi/app_utils/app_widgets/image_picker_bottom_sheet.dart';
+import 'package:moi/app_utils/app_widgets/moi_user_avatar.dart';
 import 'package:moi/app_utils/device_info_service.dart';
 import 'package:provider/provider.dart';
 
@@ -215,8 +216,14 @@ class _ProfilePageState extends State<ProfilePage> {
               _user?["state"] = state;
               _user?["country"] = country;
               _user?["postal_code"] = postal;
-              _user?["profile_image"] = profileImageUrl;
-              _user?["profile_image_url"] = profileImageUrl;
+              if (profileImageUrl != null &&
+                  profileImageUrl.toString().trim().isNotEmpty) {
+                _user?["profile_image"] = profileImageUrl;
+                _user?["profile_image_url"] = profileImageUrl;
+              } else {
+                _user?.remove("profile_image");
+                _user?.remove("profile_image_url");
+              }
             } else {
               printContent(
                 "Warning: profile object is null or not a Map in API response",
@@ -388,19 +395,49 @@ class _ProfilePageState extends State<ProfilePage> {
                   onTap: _showImagePickerOptions,
                   child: Stack(
                     children: [
-                      CircleAvatar(
-                        radius: 36,
-                        backgroundColor: Colors.white.withValues(alpha: 0.2),
-                        child: CircleAvatar(
-                          radius: 32,
-                          backgroundColor: Colors.white,
-                          backgroundImage: _profileImage != null
-                              ? FileImage(_profileImage!)
-                              : (_profileImageUrl != null &&
-                                    _profileImageUrl!.isNotEmpty)
-                              ? NetworkImage(_profileImageUrl!) as ImageProvider
-                              : AssetImage(
-                                  AppImages.profileForGender(_selectedGender),
+                      Container(
+                        width: 72,
+                        height: 72,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white.withValues(alpha: 0.2),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.35),
+                            width: 2,
+                          ),
+                        ),
+                        padding: const EdgeInsets.all(2),
+                        child: ClipOval(
+                          child: _profileImage != null
+                              ? Image.file(
+                                  _profileImage!,
+                                  fit: BoxFit.cover,
+                                  width: 68,
+                                  height: 68,
+                                )
+                              : MoiUserAvatar(
+                                  imageUrl: _profileImageUrl ?? '',
+                                  gender: _selectedGender,
+                                  size: 68,
+                                  onImageMissing: () {
+                                    if (!mounted) return;
+                                    final missingUrl = _profileImageUrl;
+                                    setState(() {
+                                      _profileImageUrl = null;
+                                      _user?.remove('profile_image');
+                                      _user?.remove('profile_image_url');
+                                    });
+                                    _storage.save(
+                                      AppVariables.userInformation,
+                                      _user,
+                                    );
+                                    context
+                                        .read<UserProvider>()
+                                        .clearProfileImage(
+                                          fromMissingFile: true,
+                                          missingUrl: missingUrl,
+                                        );
+                                  },
                                 ),
                         ),
                       ),
@@ -894,13 +931,15 @@ class _ProfilePageState extends State<ProfilePage> {
         setState(() {
           _profileImage = null;
           _profileImageUrl = null;
-          _user?["profile_image"] = null;
-          _user?["profile_image_url"] = null;
+          _user?.remove('profile_image');
+          _user?.remove('profile_image_url');
         });
 
         await _storage.save(AppVariables.userInformation, _user);
         if (mounted) {
-          context.read<UserProvider>().updateUserDetails(_user);
+          await context.read<UserProvider>().clearProfileImage(
+                missingUrl: previousUrl,
+              );
         }
 
         _alertServices.successToast(

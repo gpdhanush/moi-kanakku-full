@@ -15,6 +15,7 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
+  Megaphone,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -42,6 +43,7 @@ const menuItems = [
   { name: "Upcoming Functions", href: "/upcoming-functions", icon: CalendarDays },
   { name: "Feedback", href: "/feedback", icon: MessageSquare },
   { name: "Notifications", href: "/notifications", icon: Bell },
+  { name: "App Alerts", href: "/app-alerts", icon: Megaphone },
   { name: "User OTPs", href: "/user-otps", icon: KeyRound },
   { name: "Audit Logs", href: "/audit-logs", icon: ScrollText },
   { name: "Database Backup", href: "/database-backup", icon: Database },

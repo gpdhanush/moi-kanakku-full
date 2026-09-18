@@ -8,9 +8,12 @@ import 'package:moi/app_pages/home_page/widgets/home_function_totals_section.dar
 import 'package:moi/app_pages/home_page/widgets/home_greeting_header.dart';
 import 'package:moi/app_pages/home_page/widgets/home_moi_overview_card.dart';
 import 'package:moi/app_pages/home_page/widgets/home_section_reveal.dart';
+import 'package:moi/app_pages/home_page/widgets/modern_upgrade_alert.dart';
+import 'package:moi/app_pages/app_alerts/app_alert_dialog.dart';
 import 'package:moi/app_services/moi_services.dart';
 import 'package:moi/app_services/notification_services.dart';
 import 'package:moi/app_services/transaction_services.dart';
+import 'package:moi/app_services/user_services.dart';
 import 'package:moi/app_themes/index.dart';
 import 'package:moi/app_utils/index.dart';
 import 'package:provider/provider.dart';
@@ -45,6 +48,7 @@ class _HomePageState extends State<HomePage> {
   final MoiServices _moiServices = MoiServices();
   final NotificationServices _notificationServices = NotificationServices();
   final TransactionServices _transactionServices = TransactionServices();
+  final UserServices _userServices = UserServices();
 
   int totalAmount = 0;
   int totalMOAmount = 0;
@@ -58,6 +62,7 @@ class _HomePageState extends State<HomePage> {
 
   late final Upgrader _upgrader;
   static bool _upgradeCheckedThisLaunch = false;
+  static bool _appAlertCheckedThisLaunch = false;
   late final bool _shouldRunUpgradeCheck;
 
   static const Duration _cacheDuration = Duration(minutes: 5);
@@ -119,9 +124,11 @@ class _HomePageState extends State<HomePage> {
 
       initialTasks.add(checkNotificationStatus());
       initialTasks.add(_loadFunctionSummaries());
+      initialTasks.add(_syncProfileImageFromServer());
 
       await Future.wait(initialTasks);
       unawaited(_initializeNotificationPipeline());
+      unawaited(_maybeShowAppAlert());
 
       if (mounted) {
         _isInitialized = true;
@@ -136,12 +143,59 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  /// Keep local profile photo in sync so deleted server files don't 404 forever.
+  Future<void> _syncProfileImageFromServer() async {
+    try {
+      final userProvider = Provider.of<UserProvider>(context, listen: false);
+      if (userProvider.userDetails.isEmpty) return;
+      final user = Map<String, dynamic>.from(userProvider.userDetails[0] as Map);
+      final userId = user['id']?.toString();
+      if (userId == null || userId.isEmpty) return;
+
+      final response = await _userServices.getUserImportantDetails(userId);
+      if (response == null || response['responseType'] != 'S') return;
+
+      final profile = response['responseValue']?['profile'];
+      final serverPath = profile is Map
+          ? profile['profile_image_url']?.toString().trim()
+          : null;
+
+      if (serverPath == null ||
+          serverPath.isEmpty ||
+          userProvider.isRejectedProfileImage(serverPath)) {
+        await userProvider.clearProfileImage(
+          fromMissingFile: userProvider.isRejectedProfileImage(serverPath),
+          missingUrl: serverPath,
+        );
+        return;
+      }
+
+      user['profile_image'] = serverPath;
+      user['profile_image_url'] = serverPath;
+      userProvider.updateUserDetails(user);
+      await _secureStorage.save(AppVariables.userInformation, user);
+    } catch (e) {
+      debugPrint('Error syncing profile image: $e');
+    }
+  }
+
   Future<void> _initializeNotificationPipeline() async {
     try {
       await PushNotificationService.instance.syncTokenForCurrentUser();
     } catch (e) {
       debugPrint('Background notification setup error: $e');
     }
+  }
+
+  /// Show admin in-app popup once after splash/home (per app launch).
+  Future<void> _maybeShowAppAlert() async {
+    if (_appAlertCheckedThisLaunch) return;
+    _appAlertCheckedThisLaunch = true;
+    if (!mounted) return;
+    // Let home paint first, then present the alert.
+    await Future<void>.delayed(const Duration(milliseconds: 450));
+    if (!mounted) return;
+    await AppAlertDialog.showIfNeeded(context);
   }
 
   bool _isDataCached() => _lastFetchTime != null;
@@ -208,69 +262,17 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildModernUpgradeAlert() {
-    final colorScheme = Theme.of(context).colorScheme;
-
     if (!_shouldRunUpgradeCheck) {
       return bodyContentWidget();
     }
 
-    return Theme(
-      data: Theme.of(context).copyWith(
-        dialogTheme: DialogThemeData(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
-          backgroundColor: Colors.white,
-          titleTextStyle: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w800,
-            color: colorScheme.primary,
-            fontFamily: 'Inter',
-          ),
-          contentTextStyle: const TextStyle(
-            fontSize: 12,
-            height: 1.35,
-            color: Colors.black87,
-            fontWeight: FontWeight.w500,
-            fontFamily: 'Inter',
-          ),
-        ),
-        textButtonTheme: TextButtonThemeData(
-          style: TextButton.styleFrom(
-            foregroundColor: colorScheme.primary,
-            textStyle: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
-              fontFamily: 'Inter',
-            ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(5),
-            ),
-          ),
-        ),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: colorScheme.primary,
-            foregroundColor: Colors.white,
-            textStyle: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
-            ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(5),
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            elevation: 5,
-          ),
-        ),
-      ),
-      child: UpgradeAlert(
-        upgrader: _upgrader,
-        shouldPopScope: () => false,
-        showIgnore: false,
-        showLater: false,
-        showReleaseNotes: true,
-        dialogStyle: UpgradeDialogStyle.material,
-        child: bodyContentWidget(),
-      ),
+    return ModernUpgradeAlert(
+      upgrader: _upgrader,
+      shouldPopScope: () => false,
+      showIgnore: false,
+      showLater: false,
+      showReleaseNotes: true,
+      child: bodyContentWidget(),
     );
   }
 

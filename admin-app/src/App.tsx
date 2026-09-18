@@ -27,6 +27,7 @@ const Functions = lazy(() => import("./pages/Functions"));
 const UpcomingFunctions = lazy(() => import("./pages/UpcomingFunctions"));
 const Feedback = lazy(() => import("./pages/Feedback"));
 const Notifications = lazy(() => import("./pages/Notifications"));
+const AppAlerts = lazy(() => import("./pages/AppAlerts"));
 const UserOtps = lazy(() => import("./pages/UserOtps"));
 const AuditLogs = lazy(() => import("./pages/AuditLogs"));
 const DatabaseBackup = lazy(() => import("./pages/DatabaseBackup"));
@@ -73,6 +74,7 @@ const AppContent = () => {
           <Route path="/upcoming-functions" element={<LazyRoute><UpcomingFunctions /></LazyRoute>} />
           <Route path="/feedback" element={<LazyRoute><Feedback /></LazyRoute>} />
           <Route path="/notifications" element={<LazyRoute><Notifications /></LazyRoute>} />
+          <Route path="/app-alerts" element={<LazyRoute><AppAlerts /></LazyRoute>} />
           <Route path="/user-otps" element={<LazyRoute><UserOtps /></LazyRoute>} />
           <Route path="/audit-logs" element={<LazyRoute><AuditLogs /></LazyRoute>} />
           <Route path="/database-backup" element={<LazyRoute><DatabaseBackup /></LazyRoute>} />

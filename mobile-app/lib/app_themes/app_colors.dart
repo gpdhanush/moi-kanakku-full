@@ -33,13 +33,34 @@ class AppColors {
   static const Color primarySoft = Color(0xffD1FAE5);
   static const Color primaryMid = Color(0xff10B981);
 
-  /// Soft neutral canvas — stays theme-agnostic when accent color changes.
-  static const Color background = Color(0xffF7F8FA);
+  /// Neutral base used when blending the live scaffold canvas.
+  static const Color backgroundNeutral = Color(0xffF7F8FA);
   static const Color surface = Color(0xffffffff);
   static const Color surfaceBlue = Color(0xffECFDF5);
   static const Color borderSubtle = Color(0xffE4E4E7);
   static const Color textPrimary = Color(0xff0F172A);
   static const Color textSecondary = Color(0xff64748B);
+
+  /// Active theme seed — updated via [bindTheme] when the user changes accent.
+  static Color _themeSeed = primary;
+
+  static Color get themeSeed => _themeSeed;
+
+  /// Soft canvas tinted by the active theme (used for Scaffold backgrounds).
+  static Color get background =>
+      Color.lerp(backgroundNeutral, _themeSeed, 0.055)!;
+
+  /// Soft primary wash for splash / hero fills.
+  static Color get themeSoft => Color.lerp(Colors.white, _themeSeed, 0.14)!;
+
+  /// Very light theme surface tint.
+  static Color get themeSurface => Color.lerp(Colors.white, _themeSeed, 0.08)!;
+
+  /// Keep scaffold + shadow colors in sync with ThemeProvider seed.
+  static void bindTheme(Color seed) {
+    _themeSeed = seed;
+    // Deferred import avoided — callers also bind AppShadows; ThemeProvider does both.
+  }
 
   /// Auth page heading colors (Welcome Back / Create account)
   static const Color authTitle = Color(0xff022C22);

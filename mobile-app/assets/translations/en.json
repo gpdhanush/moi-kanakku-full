@@ -165,13 +165,21 @@
     "yesterday": "yesterday",
     "yourFeedback": "Your Feedback"
   },
+  "appAlert": {
+    "dontShowAgain": "Don't show again",
+    "learnMore": "Learn more",
+    "remindLater": "Remind me later",
+    "watchVideo": "Watch video"
+  },
   "forceUpdate": {
     "currentVersion": "Current Version",
     "description": "A new version of the app is available. Update to continue.",
     "exitApp": "Exit App",
     "requiredVersion": "Required Version",
     "title": "Update Required",
-    "updateApp": "Update App"
+    "updateApp": "Update App",
+    "whatsNewTitle": "What's New",
+    "whatsNew": "This update includes important improvements, bug fixes, and security updates so you can manage moi records more smoothly."
   },
   "functionDetails": {
     "functionDate": "Function Date",

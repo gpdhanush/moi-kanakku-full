@@ -1,34 +1,65 @@
 import 'package:flutter/material.dart';
 import 'package:moi/app_themes/app_colors.dart';
 
-/// Tailwind CSS 4–inspired elevation: soft, low-contrast shadows.
+/// Soft elevation shadows tinted by the active theme seed.
 class AppShadows {
-  static List<BoxShadow> soft = [
-    BoxShadow(
-      color: const Color(0xff09090B).withValues(alpha: 0.04),
-      blurRadius: 2,
-      offset: const Offset(0, 1),
-    ),
-  ];
+  static Color _tint = AppColors.primary;
 
-  static List<BoxShadow> card = [
-    BoxShadow(
-      color: const Color(0xff09090B).withValues(alpha: 0.05),
-      blurRadius: 8,
-      offset: const Offset(0, 2),
-    ),
-    BoxShadow(
-      color: const Color(0xff09090B).withValues(alpha: 0.03),
-      blurRadius: 2,
-      offset: const Offset(0, 1),
-    ),
-  ];
+  /// Call whenever the theme seed changes (also from [AppColors.bindTheme] callers).
+  static void bindTheme(Color seed) {
+    _tint = seed;
+  }
 
-  static List<BoxShadow> hero = [
-    BoxShadow(
-      color: AppColors.primary.withValues(alpha: 0.18),
-      blurRadius: 16,
-      offset: const Offset(0, 8),
-    ),
-  ];
+  static List<BoxShadow> get soft => [
+        BoxShadow(
+          color: _tint.withValues(alpha: 0.10),
+          blurRadius: 8,
+          offset: const Offset(0, 2),
+        ),
+        BoxShadow(
+          color: _tint.withValues(alpha: 0.04),
+          blurRadius: 2,
+          offset: const Offset(0, 1),
+        ),
+      ];
+
+  static List<BoxShadow> get card => [
+        BoxShadow(
+          color: _tint.withValues(alpha: 0.14),
+          blurRadius: 14,
+          offset: const Offset(0, 6),
+        ),
+        BoxShadow(
+          color: _tint.withValues(alpha: 0.06),
+          blurRadius: 3,
+          offset: const Offset(0, 1),
+        ),
+      ];
+
+  static List<BoxShadow> get hero => [
+        BoxShadow(
+          color: _tint.withValues(alpha: 0.22),
+          blurRadius: 20,
+          offset: const Offset(0, 10),
+        ),
+        BoxShadow(
+          color: _tint.withValues(alpha: 0.10),
+          blurRadius: 6,
+          offset: const Offset(0, 2),
+        ),
+      ];
+
+  /// Splash / logo mark glow.
+  static List<BoxShadow> get splash => [
+        BoxShadow(
+          color: _tint.withValues(alpha: 0.28),
+          blurRadius: 28,
+          offset: const Offset(0, 12),
+        ),
+        BoxShadow(
+          color: _tint.withValues(alpha: 0.12),
+          blurRadius: 8,
+          offset: const Offset(0, 3),
+        ),
+      ];
 }

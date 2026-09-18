@@ -51,6 +51,7 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   Widget build(BuildContext context) {
     final primary = Theme.of(context).colorScheme.primary;
+    final deep = AppColors.deepenAccent(primary, amount: 0.28);
     final media = MediaQuery.of(context);
 
     return ChangeNotifierProvider.value(
@@ -61,6 +62,7 @@ class _SplashScreenState extends State<SplashScreen>
           statusBarIconBrightness: Brightness.dark,
         ),
         child: Scaffold(
+          backgroundColor: AppColors.background,
           body: DecoratedBox(
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -68,8 +70,8 @@ class _SplashScreenState extends State<SplashScreen>
                 end: Alignment.bottomCenter,
                 colors: [
                   Colors.white,
-                  AppColors.surfaceBlue.withValues(alpha: 0.7),
-                  Color.lerp(AppColors.primarySoft, Colors.white, 0.25)!,
+                  AppColors.themeSurface,
+                  AppColors.themeSoft,
                 ],
                 stops: const [0.0, 0.55, 1.0],
               ),
@@ -89,11 +91,17 @@ class _SplashScreenState extends State<SplashScreen>
                     child: Column(
                       children: [
                         const Spacer(flex: 2),
-                        Image.asset(
-                          AppImages.appLogoImage,
-                          width: 112,
-                          height: 112,
-                          fit: BoxFit.contain,
+                        Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            boxShadow: AppShadows.splash,
+                          ),
+                          child: Image.asset(
+                            AppImages.appLogoImage,
+                            width: 112,
+                            height: 112,
+                            fit: BoxFit.contain,
+                          ),
                         ),
                         const SizedBox(height: AppSpacing.lg),
                         Text(
@@ -101,7 +109,7 @@ class _SplashScreenState extends State<SplashScreen>
                           textAlign: TextAlign.center,
                           style: AppTypography.authTitle.copyWith(
                             fontSize: 24,
-                            color: AppColors.logoGreenDeep,
+                            color: deep,
                           ),
                         ),
                         const SizedBox(height: 6),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter/services.dart';
 import 'package:moi/app_themes/app_colors.dart';
+import 'package:moi/app_themes/app_shadows.dart';
 import 'package:moi/app_themes/app_themes.dart';
 
 class ThemeProvider with ChangeNotifier {
@@ -75,7 +76,10 @@ class ThemeProvider with ChangeNotifier {
   /// True when [color] is the saved accent, even after a storage round-trip.
   bool isSeedColor(Color color) => _seedColor.toARGB32() == color.toARGB32();
 
-  ThemeProvider();
+  ThemeProvider() {
+    AppColors.bindTheme(_seedColor);
+    AppShadows.bindTheme(_seedColor);
+  }
 
   /// Ensure theme settings are loaded (call once at app start)
   Future<void> ensureLoaded() async {
@@ -138,6 +142,9 @@ class ThemeProvider with ChangeNotifier {
       if (darkModeValue != null) {
         _isDarkMode = darkModeValue == 'true';
       }
+
+      AppColors.bindTheme(_seedColor);
+      AppShadows.bindTheme(_seedColor);
 
       if (migrated) {
         await _persistTheme();
@@ -218,6 +225,8 @@ class ThemeProvider with ChangeNotifier {
     if (isSeedColor(color)) return;
 
     _seedColor = color;
+    AppColors.bindTheme(_seedColor);
+    AppShadows.bindTheme(_seedColor);
     notifyListeners();
     try {
       await _persistTheme();
@@ -230,6 +239,8 @@ class ThemeProvider with ChangeNotifier {
   Future<void> resetTheme() async {
     _isDarkMode = false;
     _seedColor = primary;
+    AppColors.bindTheme(_seedColor);
+    AppShadows.bindTheme(_seedColor);
     notifyListeners();
     try {
       await _storage.delete(

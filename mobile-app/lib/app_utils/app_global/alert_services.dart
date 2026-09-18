@@ -1,9 +1,6 @@
-import 'dart:ui' show ImageFilter;
-
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:moi/app_configs/app_variables.dart';
-import 'package:moi/app_utils/app_global/app_button_widget.dart';
 import 'package:moi/app_utils/app_providers/language_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:hugeicons/hugeicons.dart';
@@ -83,6 +80,7 @@ class AlertServices {
     final context = _ctx;
     if (context == null || !context.mounted) return;
 
+    final colorScheme = Theme.of(context).colorScheme;
     final messenger = ScaffoldMessenger.maybeOf(context) ??
         (navigatorKey.currentState != null
             ? ScaffoldMessenger.maybeOf(navigatorKey.currentState!.context)
@@ -95,91 +93,111 @@ class AlertServices {
         SnackBar(
           content: Text(
             message,
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: colorScheme.onPrimary,
               fontSize: 13,
-              fontWeight: FontWeight.w500,
+              fontWeight: FontWeight.w600,
             ),
           ),
-          backgroundColor: Colors.black,
+          backgroundColor: colorScheme.primary,
           behavior: SnackBarBehavior.floating,
           margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(14),
           ),
+          elevation: 0,
           duration: const Duration(seconds: 2),
         ),
       );
   }
 
   Future<bool?> confirmAlert(BuildContext context, String content) {
-    ThemeData theme = Theme.of(context);
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final languageProvider = context.read<LanguageProvider>();
     return showDialog<bool>(
       context: context,
       barrierDismissible: false,
-      builder: (BuildContext context) {
-        return BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
-          child: AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(5),
-            ),
-            title: Text(
-              languageProvider.tr('common.confirm'),
-              style: theme.textTheme.bodyLarge?.copyWith(
-                // fontSize: 22,
-                fontWeight: FontWeight.bold,
-                decoration: TextDecoration.none,
-                fontFamily: 'Inter',
-              ),
-            ),
-            content: Text(
-              content,
-              style: theme.textTheme.bodySmall?.copyWith(
-                fontFamily: 'Inter',
-                fontWeight: FontWeight.normal,
-                decoration: TextDecoration.none,
-              ),
-            ),
-            actions: [
-              TextButton(
-                child: Text(
-                  languageProvider.tr('common.no'),
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    // fontSize: 16,
-                    color: Colors.redAccent,
-                    fontFamily: 'Inter',
-                    fontWeight: FontWeight.bold,
-                    decoration: TextDecoration.none,
+      builder: (dialogContext) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(24, 28, 24, 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  height: 64,
+                  width: 64,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: colorScheme.primary.withValues(alpha: 0.12),
+                  ),
+                  child: HugeIcon(
+                    icon: HugeIcons.strokeRoundedInformationCircle,
+                    size: 30,
+                    color: colorScheme.primary,
+                    strokeWidth: 1.8,
                   ),
                 ),
-                onPressed: () {
-                  Navigator.of(context).pop(false);
-                },
-              ),
-
-              // TextButton(
-              //   onPressed: () {
-              //     Navigator.of(context).pop(true);
-              //   },
-              //   child: Text(
-              //     "ஆம்",
-              //     style: theme.textTheme.bodySmall?.copyWith(
-              //       // fontSize: 16,
-              //       fontFamily: 'Inter',
-              //       fontWeight: FontWeight.bold,
-              //       decoration: TextDecoration.none,
-              //       color: theme.primaryColor,
-              //     ),
-              //   ),
-              // ),
-              AppButton(
-                width: 100,
-                title: languageProvider.tr('common.yes'),
-                onPressed: () => Navigator.of(context).pop(true),
-              ),
-            ],
+                const SizedBox(height: 18),
+                Text(
+                  languageProvider.tr('common.confirm'),
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: colorScheme.onSurface,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  content,
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: colorScheme.onSurface.withValues(alpha: 0.72),
+                    height: 1.45,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.of(dialogContext).pop(false),
+                        style: OutlinedButton.styleFrom(
+                          minimumSize: const Size.fromHeight(48),
+                          side: BorderSide(
+                            color: colorScheme.outline.withValues(alpha: 0.35),
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: Text(languageProvider.tr('common.no')),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: FilledButton(
+                        onPressed: () => Navigator.of(dialogContext).pop(true),
+                        style: FilledButton.styleFrom(
+                          minimumSize: const Size.fromHeight(48),
+                          backgroundColor: colorScheme.primary,
+                          foregroundColor: colorScheme.onPrimary,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: Text(languageProvider.tr('common.yes')),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         );
       },
@@ -207,7 +225,7 @@ class AlertServices {
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.18),
+                  color: colorScheme.primary.withValues(alpha: 0.14),
                   blurRadius: 24,
                   offset: const Offset(0, -6),
                 ),

@@ -3,7 +3,7 @@ import 'package:moi/app_configs/index.dart';
 import 'package:moi/app_themes/index.dart';
 import 'package:moi/app_utils/app_providers/language_provider.dart';
 import 'package:moi/app_utils/app_providers/user_provider.dart';
-import 'package:moi/app_utils/app_widgets/moi_network_image.dart';
+import 'package:moi/app_utils/app_widgets/moi_user_avatar.dart';
 import 'package:provider/provider.dart';
 
 class HomeGreetingHeader extends StatelessWidget {
@@ -18,7 +18,11 @@ class HomeGreetingHeader extends StatelessWidget {
             ?.toString()
             .trim() ??
         '';
-    if (profileImagePath.isEmpty) return '';
+    if (profileImagePath.isEmpty ||
+        profileImagePath.toLowerCase() == 'null' ||
+        profileImagePath.toLowerCase() == 'undefined') {
+      return '';
+    }
     if (profileImagePath.startsWith('http://') ||
         profileImagePath.startsWith('https://')) {
       return profileImagePath;
@@ -79,22 +83,12 @@ class HomeGreetingHeader extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 5,
-                        ),
-                        decoration: BoxDecoration(
-                          color: primary.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          _greetingPrefix(languageProvider),
-                          style: AppTypography.body.copyWith(
-                            color: primary,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                          ),
+                      Text(
+                        _greetingPrefix(languageProvider),
+                        style: AppTypography.label.copyWith(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textSecondary,
                         ),
                       ),
                       const SizedBox(height: AppSpacing.xs),
@@ -128,6 +122,12 @@ class HomeGreetingHeader extends StatelessWidget {
                   imageUrl: profileImageUrl,
                   gender: gender,
                   primary: primary,
+                  onImageMissing: () {
+                    userProvider.clearProfileImage(
+                      fromMissingFile: true,
+                      missingUrl: profileImageUrl,
+                    );
+                  },
                 ),
               ],
             ),
@@ -142,21 +142,14 @@ class _Avatar extends StatelessWidget {
   final String imageUrl;
   final String? gender;
   final Color primary;
+  final VoidCallback? onImageMissing;
 
   const _Avatar({
     required this.imageUrl,
     required this.gender,
     required this.primary,
+    this.onImageMissing,
   });
-
-  Widget _placeholder() {
-    return Image.asset(
-      AppImages.profileForGender(gender),
-      fit: BoxFit.cover,
-      width: 48,
-      height: 48,
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -176,15 +169,12 @@ class _Avatar extends StatelessWidget {
         ],
       ),
       child: ClipOval(
-        child: imageUrl.isEmpty
-            ? _placeholder()
-            : MoiNetworkImage(
-                url: imageUrl,
-                fit: BoxFit.cover,
-                width: 48,
-                height: 48,
-                errorBuilder: (context, error, stackTrace) => _placeholder(),
-              ),
+        child: MoiUserAvatar(
+          imageUrl: imageUrl,
+          gender: gender,
+          size: 48,
+          onImageMissing: onImageMissing,
+        ),
       ),
     );
   }
