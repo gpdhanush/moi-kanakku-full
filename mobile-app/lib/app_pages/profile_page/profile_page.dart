@@ -18,6 +18,7 @@ import 'package:moi/app_utils/app_providers/language_provider.dart';
 import 'package:moi/app_utils/app_providers/user_provider.dart';
 import 'package:moi/app_utils/app_widgets/image_picker_bottom_sheet.dart';
 import 'package:moi/app_utils/app_widgets/moi_user_avatar.dart';
+import 'package:moi/app_utils/app_widgets/email_verify_card.dart';
 import 'package:moi/app_utils/device_info_service.dart';
 import 'package:provider/provider.dart';
 
@@ -243,10 +244,15 @@ class _ProfilePageState extends State<ProfilePage> {
             _user?["mobile"] = responseValue["mobile"] ?? _user?["mobile"];
             _user?["status"] = responseValue["status"];
             _user?["referral_code"] = responseValue["referral_code"];
+            _user?["is_verified"] = responseValue["is_verified"] ?? 0;
+            _user?["email_verified_at"] = responseValue["email_verified_at"];
           });
 
           // Save flattened user data to storage for future use
           await _storage.save(AppVariables.userInformation, _user);
+          if (mounted) {
+            context.read<UserProvider>().updateUserDetails(_user);
+          }
           printContent("Saved user data to storage after API fetch");
         }
       }
@@ -294,6 +300,10 @@ class _ProfilePageState extends State<ProfilePage> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   _buildProfileHeader(languageProvider),
+                  if (!isUserEmailVerified(_user)) ...[
+                    const SizedBox(height: AppSpacing.md),
+                    EmailVerifyCard(email: _emailCtrl.text),
+                  ],
                   const SizedBox(height: AppSpacing.md),
                   Text(
                     languageProvider.tr('profile.personalInformation'),
@@ -464,38 +474,37 @@ class _ProfilePageState extends State<ProfilePage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        languageProvider.tr('profile.name'),
-                        style: AppTypography.body.copyWith(
-                          color: Colors.white.withValues(alpha: 0.82),
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                        ),
+                      Row(
+                        children: [
+                          if (isUserEmailVerified(_user)) ...[
+                            const EmailVerifiedBadge(size: 18),
+                            const SizedBox(width: 6),
+                          ],
+                          Expanded(
+                            child: Text(
+                              _user?["email"]?.toString() ?? '',
+                              style: AppTypography.body.copyWith(
+                                color: Colors.white.withValues(alpha: 0.95),
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        (_user?["name"]?.toString() ??
-                                languageProvider.tr('profile.user'))
-                            .toUpperCase(),
-                        style: AppTypography.sectionTitle.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 17,
-                          height: 1.2,
+                      if (isUserEmailVerified(_user)) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          languageProvider.tr('emailVerify.verified'),
+                          style: AppTypography.label.copyWith(
+                            color: Colors.white.withValues(alpha: 0.8),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        _user?["email"]?.toString() ?? '',
-                        style: AppTypography.body.copyWith(
-                          color: Colors.white.withValues(alpha: 0.85),
-                          fontSize: 13,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                      ],
                     ],
                   ),
                 ),
@@ -567,13 +576,19 @@ class _ProfilePageState extends State<ProfilePage> {
               },
             ),
             const SizedBox(height: 16),
-            // Email field (read-only)
+            // Email field (read-only) with verified badge before the label/value
             TextFormWidget(
               title: languageProvider.tr('profile.email'),
               controller: _emailCtrl,
               required: false,
               readOnly: true,
               enabled: false,
+              prefixIcon: isUserEmailVerified(_user)
+                  ? HugeIcons.strokeRoundedCheckmarkBadge01
+                  : HugeIcons.strokeRoundedMail01,
+              iconColor: isUserEmailVerified(_user)
+                  ? AppColors.moiReceived
+                  : AppColors.textSecondary,
             ),
           ],
       ),

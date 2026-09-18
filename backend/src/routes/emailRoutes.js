@@ -45,4 +45,10 @@ router.post('/admin/send-verify-email', authenticateAdminToken, controller.sendA
  */
 router.get('/verify-email', controller.verifyEmailByToken);
 
+/**
+ * Mobile (logged-in user): send verification link to own email
+ * POST /api/email/send-verify-email
+ */
+router.post('/send-verify-email', authenticateToken, controller.sendUserVerifyEmail);
+
 module.exports = router;

@@ -235,6 +235,8 @@ exports.userController = {
         last_login: user.last_activity_at,
         profile_image: user.profile_image_url || null,
         fcm_token: user.notification_token || null,
+        is_verified: user.is_verified || 0,
+        email_verified_at: user.email_verified_at || null,
         token: jwtToken,
       };
 

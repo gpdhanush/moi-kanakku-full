@@ -10,6 +10,7 @@ import 'package:moi/app_pages/home_page/widgets/home_moi_overview_card.dart';
 import 'package:moi/app_pages/home_page/widgets/home_section_reveal.dart';
 import 'package:moi/app_pages/home_page/widgets/modern_upgrade_alert.dart';
 import 'package:moi/app_pages/app_alerts/app_alert_dialog.dart';
+import 'package:moi/app_utils/app_widgets/email_verify_card.dart';
 import 'package:moi/app_services/moi_services.dart';
 import 'package:moi/app_services/notification_services.dart';
 import 'package:moi/app_services/transaction_services.dart';
@@ -155,7 +156,23 @@ class _HomePageState extends State<HomePage> {
       final response = await _userServices.getUserImportantDetails(userId);
       if (response == null || response['responseType'] != 'S') return;
 
-      final profile = response['responseValue']?['profile'];
+      final responseValue = response['responseValue'];
+      if (responseValue is Map) {
+        if (responseValue['is_verified'] != null) {
+          user['is_verified'] = responseValue['is_verified'];
+        }
+        if (responseValue.containsKey('email_verified_at')) {
+          user['email_verified_at'] = responseValue['email_verified_at'];
+        }
+        if (responseValue['email'] != null) {
+          user['email'] = responseValue['email'];
+        }
+        if (responseValue['name'] != null) {
+          user['name'] = responseValue['name'];
+        }
+      }
+
+      final profile = responseValue is Map ? responseValue['profile'] : null;
       final serverPath = profile is Map
           ? profile['profile_image_url']?.toString().trim()
           : null;
@@ -167,6 +184,16 @@ class _HomePageState extends State<HomePage> {
           fromMissingFile: userProvider.isRejectedProfileImage(serverPath),
           missingUrl: serverPath,
         );
+        // Still persist verification flags even when photo is cleared.
+        if (responseValue is Map) {
+          final refreshed = userProvider.userDetails.isNotEmpty
+              ? Map<String, dynamic>.from(userProvider.userDetails[0] as Map)
+              : user;
+          refreshed['is_verified'] = user['is_verified'];
+          refreshed['email_verified_at'] = user['email_verified_at'];
+          userProvider.updateUserDetails(refreshed);
+          await _secureStorage.save(AppVariables.userInformation, refreshed);
+        }
         return;
       }
 
@@ -353,11 +380,35 @@ class _HomePageState extends State<HomePage> {
                           index: 0,
                           child: HomeGreetingHeader(
                             formatLastLogin: getLastLoginTime,
+                            onProfileTap: () {
+                              Navigator.pushNamed(context, 'profile');
+                            },
                           ),
                         ),
                         const SizedBox(height: AppSpacing.section),
+                        Consumer<UserProvider>(
+                          builder: (context, userProvider, _) {
+                            final user = userProvider.userDetails.isNotEmpty
+                                ? Map<String, dynamic>.from(
+                                    userProvider.userDetails[0] as Map,
+                                  )
+                                : null;
+                            if (isUserEmailVerified(user)) {
+                              return const SizedBox.shrink();
+                            }
+                            return const Column(
+                              children: [
+                                HomeSectionReveal(
+                                  index: 1,
+                                  child: EmailVerifyCard(),
+                                ),
+                                SizedBox(height: AppSpacing.section),
+                              ],
+                            );
+                          },
+                        ),
                         HomeSectionReveal(
-                          index: 1,
+                          index: 2,
                           child: HomeMoiOverviewCard(
                             netBalance: netBalance,
                             receivedAmount: totalAmount,
@@ -390,7 +441,7 @@ class _HomePageState extends State<HomePage> {
                         ),
                         const SizedBox(height: AppSpacing.section),
                         HomeSectionReveal(
-                          index: 2,
+                          index: 3,
                           child: HomeFunctionTotalsSection(
                             summaries: _functionSummaries,
                             isLoading: _isLoadingFunctionSummaries,

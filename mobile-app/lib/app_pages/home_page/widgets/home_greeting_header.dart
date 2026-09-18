@@ -8,8 +8,13 @@ import 'package:provider/provider.dart';
 
 class HomeGreetingHeader extends StatelessWidget {
   final String Function(String lastLogin) formatLastLogin;
+  final VoidCallback? onProfileTap;
 
-  const HomeGreetingHeader({super.key, required this.formatLastLogin});
+  const HomeGreetingHeader({
+    super.key,
+    required this.formatLastLogin,
+    this.onProfileTap,
+  });
 
   String _resolveProfileImageUrl(Map<String, dynamic>? user) {
     if (user == null) return '';
@@ -118,16 +123,20 @@ class HomeGreetingHeader extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: AppSpacing.sm),
-                _Avatar(
-                  imageUrl: profileImageUrl,
-                  gender: gender,
-                  primary: primary,
-                  onImageMissing: () {
-                    userProvider.clearProfileImage(
-                      fromMissingFile: true,
-                      missingUrl: profileImageUrl,
-                    );
-                  },
+                GestureDetector(
+                  onTap: onProfileTap,
+                  behavior: HitTestBehavior.opaque,
+                  child: _Avatar(
+                    imageUrl: profileImageUrl,
+                    gender: gender,
+                    primary: primary,
+                    onImageMissing: () {
+                      userProvider.clearProfileImage(
+                        fromMissingFile: true,
+                        missingUrl: profileImageUrl,
+                      );
+                    },
+                  ),
                 ),
               ],
             ),

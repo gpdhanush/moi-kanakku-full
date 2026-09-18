@@ -68,6 +68,16 @@ class UserServices {
     return await connection.getData(url, useToken: true, showLoading: false);
   }
 
+  Future<dynamic> sendVerifyEmail({bool showLoading = true}) async {
+    String url = '$appBaseUri/email/send-verify-email';
+    return await connection.postData(
+      url,
+      {},
+      useToken: true,
+      showLoading: showLoading,
+    );
+  }
+
   Future<dynamic> uploadProfileImage(
     Map<String, dynamic> params,
     String imagePath,

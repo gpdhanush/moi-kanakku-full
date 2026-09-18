@@ -171,6 +171,14 @@
     "remindLater": "Remind me later",
     "watchVideo": "Watch video"
   },
+  "emailVerify": {
+    "description": "Confirm your email to keep your account secure and receive important updates.",
+    "sendButton": "Send verification email",
+    "sendFailed": "Unable to send verification email. Please try again.",
+    "sentSuccess": "Verification email sent. Check your inbox and spam folder.",
+    "title": "Verify your email",
+    "verified": "Verified"
+  },
   "forceUpdate": {
     "currentVersion": "Current Version",
     "description": "A new version of the app is available. Update to continue.",

@@ -40,6 +40,67 @@ function getEmailVerifyLink(req, token) {
     return `${base}${separator}token=${encodeURIComponent(token)}`;
 }
 
+/**
+ * Build + send a verification-link email for a user record.
+ * Throws Error with .status / .code for controller mapping.
+ */
+async function dispatchVerifyEmail(req, user) {
+    if (!user) {
+        const err = new Error(userError);
+        err.status = 404;
+        throw err;
+    }
+    if (Number(user.is_verified) === 1) {
+        const err = new Error('This email is already verified.');
+        err.status = 400;
+        throw err;
+    }
+
+    const targetEmail = normalizeEmailAddress(user.email);
+    if (!targetEmail) {
+        const err = new Error('This user does not have an email address.');
+        err.status = 400;
+        throw err;
+    }
+
+    if (!process.env.JWT_SECRET) {
+        logger.error('dispatchVerifyEmail: JWT_SECRET is not set');
+        const err = new Error('Email verification is not configured.');
+        err.status = 500;
+        throw err;
+    }
+
+    const token = jwt.sign(
+        {
+            userId: String(user.id),
+            email: targetEmail,
+            type: EMAIL_VERIFY_TYPE,
+        },
+        process.env.JWT_SECRET,
+        { expiresIn: EMAIL_VERIFY_EXPIRES }
+    );
+    const verifyLink = getEmailVerifyLink(req, token);
+    const html = getEmailVerificationContent({
+        name: user.full_name,
+        verifyLink,
+        expiresInHours: EMAIL_VERIFY_HOURS,
+    });
+
+    const result = await sendEmail({
+        from: formatEmailFrom('Admin - Moi Kanakku Team'),
+        to: targetEmail,
+        subject: 'Moi Kanakku - Verify your email',
+        text: `Verify your Moi Kanakku email by opening this link: ${verifyLink}`,
+        html,
+    });
+
+    return {
+        targetEmail,
+        messageId: result?.messageId || null,
+        response: result?.response || null,
+    };
+}
+
 function renderVerifyEmailPage({ success, title, message }) {
     const headingColor = success ? '#166534' : '#991b1b';
     const badgeBg = success ? '#dcfce7' : '#fee2e2';
@@ -401,6 +462,42 @@ exports.controller = {
     },
 
     /**
+     * Mobile (logged-in): send verification email to the current user.
+     */
+    sendUserVerifyEmail: async (req, res) => {
+        const userId = req.user?.userId || req.user?.id || req.body?.userId;
+        const idCheck = validateUuid(userId, 'userId');
+        if (!idCheck.ok) return sendUuidError(res, idCheck.message);
+
+        try {
+            const user = await User.findById(userId);
+            const sent = await dispatchVerifyEmail(req, user);
+            logger.info(
+                `Verification email sent to ${sent.targetEmail} for user ${userId}: ${sent.response || 'ok'}`,
+            );
+            return res.status(200).json({
+                responseType: 'S',
+                responseValue: {
+                    message: `Verification email sent to ${sent.targetEmail}.`,
+                    sent: true,
+                    sent_to: sent.targetEmail,
+                    messageId: sent.messageId,
+                    expires_in_hours: EMAIL_VERIFY_HOURS,
+                },
+            });
+        } catch (error) {
+            const status = error.status || (String(error.message || '').includes('SMTP') ? 502 : 500);
+            if (status >= 500) {
+                logger.error('sendUserVerifyEmail failed', error);
+            }
+            return res.status(status).json({
+                responseType: 'F',
+                responseValue: { message: error.message || error.toString() },
+            });
+        }
+    },
+
+    /**
      * Admin: send a verification email with a clickable token link.
      * Body: { userId }
      */
@@ -411,96 +508,31 @@ exports.controller = {
 
         try {
             const user = await User.findById(userId);
-            if (!user) {
-                return res.status(404).json({
-                    responseType: 'F',
-                    responseValue: { message: userError },
-                });
-            }
-
-            if (Number(user.is_verified) === 1) {
-                return res.status(400).json({
-                    responseType: 'F',
-                    responseValue: { message: 'This email is already verified.' },
-                });
-            }
-
-            const targetEmail = normalizeEmailAddress(user.email);
-            if (!targetEmail) {
-                return res.status(400).json({
-                    responseType: 'F',
-                    responseValue: { message: 'This user does not have an email address.' },
-                });
-            }
-
-            if (!process.env.JWT_SECRET) {
-                logger.error('sendAdminVerifyEmail: JWT_SECRET is not set');
-                return res.status(500).json({
-                    responseType: 'F',
-                    responseValue: { message: 'Email verification is not configured.' },
-                });
-            }
-
-            const token = jwt.sign(
-                {
-                    userId: String(user.id),
-                    email: targetEmail,
-                    type: EMAIL_VERIFY_TYPE,
-                },
-                process.env.JWT_SECRET,
-                { expiresIn: EMAIL_VERIFY_EXPIRES }
+            const sent = await dispatchVerifyEmail(req, user);
+            logger.info(
+                `Verification email sent to ${sent.targetEmail} for user ${userId}: ${sent.response || 'ok'}`,
             );
-            const verifyLink = getEmailVerifyLink(req, token);
-            const html = getEmailVerificationContent({
-                name: user.full_name,
-                verifyLink,
-                expiresInHours: EMAIL_VERIFY_HOURS,
+
+            return res.status(200).json({
+                responseType: 'S',
+                responseValue: {
+                    message: `Verification email sent to ${sent.targetEmail}.`,
+                    queued: false,
+                    sent: true,
+                    sent_to: sent.targetEmail,
+                    messageId: sent.messageId,
+                    expires_in_hours: EMAIL_VERIFY_HOURS,
+                },
             });
-
-            // Await the actual SMTP send so admin sees real success/failure
-            // (background queue previously returned success even when SMTP failed).
-            try {
-                const result = await sendEmail({
-                    from: formatEmailFrom('Admin - Moi Kanakku Team'),
-                    to: targetEmail,
-                    subject: 'Moi Kanakku - Verify your email',
-                    text: `Verify your Moi Kanakku email by opening this link: ${verifyLink}`,
-                    html,
-                });
-                logger.info(
-                    `Verification email sent to ${targetEmail} for user ${user.id}: ${result?.response || 'ok'}`,
-                );
-
-                return res.status(200).json({
-                    responseType: 'S',
-                    responseValue: {
-                        message: `Verification email sent to ${targetEmail}.`,
-                        queued: false,
-                        sent: true,
-                        sent_to: targetEmail,
-                        messageId: result?.messageId || null,
-                        expires_in_hours: EMAIL_VERIFY_HOURS,
-                    },
-                });
-            } catch (sendError) {
-                logger.error(
-                    `sendAdminVerifyEmail SMTP failed for user ${user.id} (${targetEmail}):`,
-                    sendError,
-                );
-                const reason = String(sendError?.message || sendError || 'SMTP send failed');
-                return res.status(502).json({
-                    responseType: 'F',
-                    responseValue: {
-                        message: `Unable to send verification email: ${reason}`,
-                        sent_to: targetEmail,
-                    },
-                });
-            }
         } catch (error) {
-            logger.error('sendAdminVerifyEmail failed', error);
-            return res.status(500).json({
+            const status = error.status || 500;
+            if (status >= 500) {
+                logger.error('sendAdminVerifyEmail failed', error);
+            }
+            const reason = String(error?.message || error || 'Unable to send verification email');
+            return res.status(status === 400 || status === 404 ? status : 502).json({
                 responseType: 'F',
-                responseValue: { message: error.toString() },
+                responseValue: { message: reason },
             });
         }
     },
