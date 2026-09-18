@@ -233,7 +233,6 @@ class _TransactionDashboardState extends State<TransactionDashboard> {
         personId,
         showLoading: false,
       );
-      alertServices.hideLoading();
 
       if (response == null) {
         alertServices.errorToast(
@@ -264,10 +263,13 @@ class _TransactionDashboardState extends State<TransactionDashboard> {
         alertServices.errorToast(errorMsg);
       }
     } catch (e, stackTrace) {
-      alertServices.hideLoading();
       debugPrint('Error deleting person: $e');
       debugPrint('Stack trace: $stackTrace');
-      alertServices.errorToast(languageProvider.tr('transactions.deleteError'));
+      alertServices.errorToast(
+        languageProvider.tr('transactions.deleteFailed'),
+      );
+    } finally {
+      await alertServices.hideLoading();
     }
   }
 

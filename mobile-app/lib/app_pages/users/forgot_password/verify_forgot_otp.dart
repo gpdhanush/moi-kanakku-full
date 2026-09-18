@@ -392,15 +392,17 @@ class _VerifyForgotOtpState extends State<VerifyForgotOtp> {
 
   Future<void> verifyOTP() async {
     FocusScope.of(context).unfocus();
-    alertServices.showLoading();
+    await alertServices.showLoading();
     final params = {
       'type': 'forgot',
       'email': widget.email.toLowerCase(),
       'otp': otpCtrl.text,
     };
     try {
-      final response = await userServices.verifyOTP(params);
-      alertServices.hideLoading();
+      final response = await userServices.verifyOTP(
+        params,
+        showLoading: false,
+      );
       if (response != null && response['responseType'] == 'S') {
         final msg = response['responseValue']['message'].toString();
         alertServices.successToast(msg);
@@ -416,7 +418,9 @@ class _VerifyForgotOtpState extends State<VerifyForgotOtp> {
         );
       }
     } catch (_) {
-      alertServices.hideLoading();
+      // Loader cleared in finally.
+    } finally {
+      await alertServices.hideLoading();
     }
   }
 
@@ -428,12 +432,11 @@ class _VerifyForgotOtpState extends State<VerifyForgotOtp> {
   }
 
   Future<void> resentOtp() async {
-    alertServices.showLoading();
+    await alertServices.showLoading();
     otpCtrl.clear();
     final params = {'type': 'forgot', 'email': widget.email.toLowerCase()};
     try {
-      final response = await userServices.sentOTP(params);
-      alertServices.hideLoading();
+      final response = await userServices.sentOTP(params, showLoading: false);
       if (response != null && response['responseType'] == 'S') {
         alertServices.successToast(response['responseValue']['message']);
         _start = 120;
@@ -441,7 +444,9 @@ class _VerifyForgotOtpState extends State<VerifyForgotOtp> {
         startTimer();
       }
     } catch (_) {
-      alertServices.hideLoading();
+      // Loader cleared in finally.
+    } finally {
+      await alertServices.hideLoading();
     }
   }
 }

@@ -19,6 +19,7 @@ class UpcomingFunctionServices {
   Future<dynamic> createUpcomingFunction(
     Map<String, dynamic> params, {
     String? imagePath,
+    bool showLoading = true,
   }) async {
     String url = '$appBaseUri/upcoming-functions/create';
     if (imagePath != null && imagePath.isNotEmpty) {
@@ -28,15 +29,22 @@ class UpcomingFunctionServices {
         'invitationImage',
         imagePath,
         useToken: true,
+        showLoading: showLoading,
       );
     }
-    return await connection.postData(url, params, useToken: true);
+    return await connection.postData(
+      url,
+      params,
+      useToken: true,
+      showLoading: showLoading,
+    );
   }
 
   // Update existing upcoming function
   Future<dynamic> updateUpcomingFunction(
     Map<String, dynamic> params, {
     String? imagePath,
+    bool showLoading = true,
   }) async {
     String url = '$appBaseUri/upcoming-functions/update';
     if (imagePath != null && imagePath.isNotEmpty) {
@@ -46,9 +54,15 @@ class UpcomingFunctionServices {
         'invitationImage',
         imagePath,
         useToken: true,
+        showLoading: showLoading,
       );
     }
-    return await connection.postData(url, params, useToken: true);
+    return await connection.postData(
+      url,
+      params,
+      useToken: true,
+      showLoading: showLoading,
+    );
   }
 
   // Update status of upcoming function
@@ -99,8 +113,9 @@ class UpcomingFunctionServices {
   // Upload invitation image
   Future<dynamic> uploadUpcomingFunctionImage(
     Map<String, dynamic> params,
-    String imagePath,
-  ) async {
+    String imagePath, {
+    bool showLoading = true,
+  }) async {
     String url = '$appBaseUri/uploads/saveFiles';
     return await connection.uploadFile(
       url,
@@ -108,6 +123,7 @@ class UpcomingFunctionServices {
       'file',
       imagePath,
       useToken: true,
+      showLoading: showLoading,
     );
   }
 }

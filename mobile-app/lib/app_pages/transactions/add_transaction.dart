@@ -254,7 +254,7 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
                   : null,
               'transactionFunctionId': selectedFunctionId,
               'transactionFunctionName': selectedFunction,
-            })
+            }, showLoading: false)
           : await txServices.createTransactionV2({
               'userId': userId,
               'personId': personId,
@@ -272,7 +272,7 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
                   : null,
               'transactionFunctionId': selectedFunctionId,
               'transactionFunctionName': selectedFunction,
-            });
+            }, showLoading: false);
 
       if (response != null && response['responseType'] == 'S') {
         alertServices.successToast(

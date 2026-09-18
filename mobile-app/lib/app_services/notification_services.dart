@@ -59,7 +59,7 @@ class NotificationServices {
       url,
       {},
       useToken: true,
-      showLoading: true,
+      showLoading: false,
     );
   }
 

@@ -9,6 +9,9 @@ class AlertServices {
   BuildContext? get _ctx =>
       navigatorKey.currentContext ?? navigatorKey.currentState?.overlay?.context;
 
+  /// Shared across all AlertServices instances — EasyLoading is global.
+  static int _loadingCount = 0;
+
   String _tr(String key, String fallback) {
     final context = _ctx;
     if (context == null) return fallback;
@@ -16,6 +19,11 @@ class AlertServices {
   }
 
   Future<void> showLoading([String? title, String? successMessage]) async {
+    _loadingCount++;
+    if (_loadingCount > 1 && EasyLoading.isShow) {
+      return;
+    }
+
     final context = _ctx;
     if (context != null) {
       ThemeData theme = Theme.of(context);
@@ -46,12 +54,28 @@ class AlertServices {
     );
   }
 
-  /// Hides the loading indicator and optionally shows a success message
+  /// Hides the loading indicator when the nested count reaches zero.
   Future<void> hideLoading([String? successMessage]) async {
+    if (_loadingCount <= 0) {
+      // Do not dismiss a loader owned by another in-flight request.
+      return;
+    }
+    _loadingCount--;
+    if (_loadingCount > 0) {
+      return;
+    }
+
     await EasyLoading.dismiss();
+    _loadingCount = 0;
     if (successMessage != null) {
       successToast(successMessage);
     }
+  }
+
+  /// Force-clear the loader (e.g. session expiry / navigation away).
+  Future<void> forceHideLoading() async {
+    _loadingCount = 0;
+    await EasyLoading.dismiss();
   }
 
   void errorToast(String message) {

@@ -178,15 +178,12 @@ class Connection {
     bool showLoading = true,
   }) async {
     _dio.options.headers = await _getHeader(useToken);
+    if (showLoading) unawaited(_alertServices.showLoading());
     try {
-      if (showLoading) {
-        unawaited(_alertServices.showLoading());
-      }
       final response = await _dio.get(
         endpoint,
         options: _requestOptions(useToken),
       );
-      if (showLoading) unawaited(_alertServices.hideLoading());
 
       if (response.data == null) {
         printContent(
@@ -197,7 +194,6 @@ class Connection {
 
       return response.data;
     } on DioException catch (e) {
-      if (showLoading) unawaited(_alertServices.hideLoading());
       if (_isStartupConfigBlocked(e)) {
         printContent('API request blocked: startup configuration invalid');
         return null;
@@ -219,6 +215,11 @@ class Connection {
       );
       _handleError(e);
       return null;
+    } catch (e) {
+      printContent("===> URL: $endpoint \n===> ERROR: $e");
+      return null;
+    } finally {
+      if (showLoading) unawaited(_alertServices.hideLoading());
     }
   }
 
@@ -229,16 +230,13 @@ class Connection {
     bool showLoading = true,
   }) async {
     _dio.options.headers = await _getHeader(useToken);
+    if (showLoading) unawaited(_alertServices.showLoading());
     try {
-      if (showLoading) {
-        unawaited(_alertServices.showLoading());
-      }
       final response = await _dio.post(
         endpoint,
         data: data,
         options: _requestOptions(useToken),
       );
-      if (showLoading) unawaited(_alertServices.hideLoading());
 
       if (response.data == null) {
         printContent(
@@ -249,7 +247,6 @@ class Connection {
 
       return response.data;
     } on DioException catch (e) {
-      if (showLoading) unawaited(_alertServices.hideLoading());
       if (_isStartupConfigBlocked(e)) {
         printContent('API request blocked: startup configuration invalid');
         return null;
@@ -272,6 +269,11 @@ class Connection {
       );
       _handleError(e);
       return null;
+    } catch (e) {
+      printContent("===> URL: $endpoint \n===> ERROR: $e");
+      return null;
+    } finally {
+      if (showLoading) unawaited(_alertServices.hideLoading());
     }
   }
 
@@ -282,16 +284,13 @@ class Connection {
     bool showLoading = true,
   }) async {
     _dio.options.headers = await _getHeader(useToken);
+    if (showLoading) unawaited(_alertServices.showLoading());
     try {
-      if (showLoading) {
-        unawaited(_alertServices.showLoading());
-      }
       final response = await _dio.put(
         endpoint,
         data: data,
         options: _requestOptions(useToken),
       );
-      if (showLoading) unawaited(_alertServices.hideLoading());
 
       if (response.data == null) {
         printContent(
@@ -302,7 +301,6 @@ class Connection {
 
       return response.data;
     } on DioException catch (e) {
-      if (showLoading) unawaited(_alertServices.hideLoading());
       if (_isStartupConfigBlocked(e)) {
         printContent('API request blocked: startup configuration invalid');
         return null;
@@ -325,6 +323,11 @@ class Connection {
       );
       _handleError(e);
       return null;
+    } catch (e) {
+      printContent("===> URL: $endpoint \n===> ERROR: $e");
+      return null;
+    } finally {
+      if (showLoading) unawaited(_alertServices.hideLoading());
     }
   }
 
@@ -334,15 +337,12 @@ class Connection {
     bool showLoading = true,
   }) async {
     _dio.options.headers = await _getHeader(useToken);
+    if (showLoading) unawaited(_alertServices.showLoading());
     try {
-      if (showLoading) {
-        unawaited(_alertServices.showLoading());
-      }
       final response = await _dio.delete(
         endpoint,
         options: _requestOptions(useToken),
       );
-      if (showLoading) unawaited(_alertServices.hideLoading());
 
       if (response.data == null) {
         printContent(
@@ -353,7 +353,6 @@ class Connection {
 
       return response.data;
     } on DioException catch (e) {
-      if (showLoading) unawaited(_alertServices.hideLoading());
       if (_isStartupConfigBlocked(e)) {
         printContent('API request blocked: startup configuration invalid');
         return null;
@@ -375,6 +374,11 @@ class Connection {
       );
       _handleError(e);
       return null;
+    } catch (e) {
+      printContent("===> URL: $endpoint \n===> ERROR: $e");
+      return null;
+    } finally {
+      if (showLoading) unawaited(_alertServices.hideLoading());
     }
   }
 
@@ -384,12 +388,12 @@ class Connection {
     String fileKey,
     String filePath, {
     bool useToken = true,
+    bool showLoading = true,
   }) async {
+    if (showLoading) unawaited(_alertServices.showLoading());
     try {
       final headers = await _getHeader(useToken);
       headers.remove('Content-Type');
-
-      await _alertServices.showLoading();
 
       final file = File(filePath);
       if (!await file.exists()) {
@@ -425,10 +429,8 @@ class Connection {
         ),
       );
 
-      await _alertServices.hideLoading();
       return response.data;
     } on DioException catch (e) {
-      unawaited(_alertServices.hideLoading());
       if (_isStartupConfigBlocked(e)) {
         printContent('API request blocked: startup configuration invalid');
         return null;
@@ -453,33 +455,26 @@ class Connection {
           errorMessage =
               e.message ?? e.response?.statusMessage ?? e.type.toString();
         }
-      } catch (parseError) {
+      } catch (_) {
         errorMessage =
             e.message ?? e.response?.statusMessage ?? e.type.toString();
-        printContent("Error parsing error response: $parseError");
       }
+
       printContent(
-        "===> URL: $endpoint \n===> REQUEST: ${_safeLogPayload(data)} \n===> ERROR: $errorMessage \n===> STATUS CODE: ${e.response?.statusCode}",
+        "===> Upload URL: $endpoint \n===> ERROR: $errorMessage",
       );
       logApiErrorToCrashlytics(
         e,
         endpoint: endpoint,
-        requestData: data,
         statusCode: e.response?.statusCode,
       );
       _handleError(e);
       return null;
     } catch (e) {
-      unawaited(_alertServices.hideLoading());
-      printContent(
-        "===> URL: $endpoint \n===> REQUEST: ${_safeLogPayload(data)} \n===> UNEXPECTED ERROR: ${e.toString()}",
-      );
-      logErrorToCrashlytics(
-        e,
-        StackTrace.current,
-        context: 'UPLOAD_FILE_ERROR: $endpoint',
-      );
+      printContent("===> Upload URL: $endpoint \n===> ERROR: $e");
       return null;
+    } finally {
+      if (showLoading) unawaited(_alertServices.hideLoading());
     }
   }
 
@@ -618,6 +613,8 @@ class Connection {
     if (_isHandlingUnauthorized) return;
     _isHandlingUnauthorized = true;
 
+    await _alertServices.forceHideLoading();
+
     final responseData = e.response?.data;
     String? message;
     if (responseData is Map) {
@@ -644,6 +641,7 @@ class Connection {
   Future<void> gotoLogin() async {
     if (_isHandlingUnauthorized) return;
     _isHandlingUnauthorized = true;
+    await _alertServices.forceHideLoading();
     clearCachedToken();
     final overlay = navigatorKey.currentState?.overlay;
     if (overlay == null) {

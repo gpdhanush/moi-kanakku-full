@@ -1,5 +1,6 @@
 class AppImages {
   static const String appLogoImage = "assets/logo/moi_kanakku.png";
+  static const String splashLabelDark = "assets/images/splash/label-dark.png";
   static const String loginHeroImage = "assets/images/login_hero.png";
   static const String signupHeroImage = "assets/images/signup-image.png";
   static const String forgotPasswordImage = "assets/images/forgot-password.png";

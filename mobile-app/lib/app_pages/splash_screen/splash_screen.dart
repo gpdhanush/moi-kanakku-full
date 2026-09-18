@@ -51,8 +51,8 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   Widget build(BuildContext context) {
     final primary = Theme.of(context).colorScheme.primary;
-    final deep = AppColors.deepenAccent(primary, amount: 0.28);
     final media = MediaQuery.of(context);
+    final labelWidth = (media.size.width * 0.62).clamp(180.0, 280.0);
 
     return ChangeNotifierProvider.value(
       value: _splashController,
@@ -91,33 +91,11 @@ class _SplashScreenState extends State<SplashScreen>
                     child: Column(
                       children: [
                         const Spacer(flex: 2),
-                        Container(
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            boxShadow: AppShadows.splash,
-                          ),
+                        Center(
                           child: Image.asset(
-                            AppImages.appLogoImage,
-                            width: 112,
-                            height: 112,
+                            AppImages.splashLabelDark,
+                            width: labelWidth,
                             fit: BoxFit.contain,
-                          ),
-                        ),
-                        const SizedBox(height: AppSpacing.lg),
-                        Text(
-                          appName,
-                          textAlign: TextAlign.center,
-                          style: AppTypography.authTitle.copyWith(
-                            fontSize: 24,
-                            color: deep,
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          'Track functions & moi with ease',
-                          textAlign: TextAlign.center,
-                          style: AppTypography.authSubtitle.copyWith(
-                            fontSize: 13,
                           ),
                         ),
                         const Spacer(flex: 3),

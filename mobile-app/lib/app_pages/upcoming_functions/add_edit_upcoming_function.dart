@@ -590,39 +590,44 @@ class _AddEditUpcomingFunctionState extends State<AddEditUpcomingFunction> {
   }
 
   Future<void> _saveUpdateUpcomingFunction() async {
-    _alertServices.showLoading();
-
-    String imageUrl = _uploadedImageUrl ?? _existingImageUrl ?? '';
-    if (_invitationImage != null) {
-      final uploadedUrl = await _uploadInvitationImage(_invitationImage!);
-      if (uploadedUrl != null && uploadedUrl.isNotEmpty) {
-        imageUrl = uploadedUrl;
-        _uploadedImageUrl = uploadedUrl;
-      } else {
-        _alertServices.hideLoading();
-        _alertServices.errorToast(
-          context.read<LanguageProvider>().tr('upcomingFunctions.uploadFailed'),
-        );
-        return;
-      }
-    }
-
-    final params = {
-      if (isEditing) 'id': _requestModel.id,
-      'title': _titleController.text.trim(),
-      'functionDate': _convertDate(_dateController.text),
-      'location': _locationController.text.trim(),
-      'description': _descriptionController.text.trim(),
-      'invitationUrl': imageUrl,
-      if (!isEditing) 'status': 'ACTIVE',
-    };
+    await _alertServices.showLoading();
 
     try {
-      final response = !isEditing
-          ? await _upcomingFunctionServices.createUpcomingFunction(params)
-          : await _upcomingFunctionServices.updateUpcomingFunction(params);
+      String imageUrl = _uploadedImageUrl ?? _existingImageUrl ?? '';
+      if (_invitationImage != null) {
+        final uploadedUrl = await _uploadInvitationImage(_invitationImage!);
+        if (uploadedUrl != null && uploadedUrl.isNotEmpty) {
+          imageUrl = uploadedUrl;
+          _uploadedImageUrl = uploadedUrl;
+        } else {
+          _alertServices.errorToast(
+            context.read<LanguageProvider>().tr(
+              'upcomingFunctions.uploadFailed',
+            ),
+          );
+          return;
+        }
+      }
 
-      _alertServices.hideLoading();
+      final params = {
+        if (isEditing) 'id': _requestModel.id,
+        'title': _titleController.text.trim(),
+        'functionDate': _convertDate(_dateController.text),
+        'location': _locationController.text.trim(),
+        'description': _descriptionController.text.trim(),
+        'invitationUrl': imageUrl,
+        if (!isEditing) 'status': 'ACTIVE',
+      };
+
+      final response = !isEditing
+          ? await _upcomingFunctionServices.createUpcomingFunction(
+              params,
+              showLoading: false,
+            )
+          : await _upcomingFunctionServices.updateUpcomingFunction(
+              params,
+              showLoading: false,
+            );
 
       if (response != null &&
           response is Map &&
@@ -656,11 +661,12 @@ class _AddEditUpcomingFunctionState extends State<AddEditUpcomingFunction> {
         );
       }
     } catch (error) {
-      _alertServices.hideLoading();
       _alertServices.errorToast(
         context.read<LanguageProvider>().tr('upcomingFunctions.saveFailed'),
       );
       printContent('Error saving upcoming function: $error');
+    } finally {
+      await _alertServices.hideLoading();
     }
   }
 
@@ -676,7 +682,11 @@ class _AddEditUpcomingFunctionState extends State<AddEditUpcomingFunction> {
 
       final params = {'userId': userId, 'path': 'upcoming-function'};
       final response = await _upcomingFunctionServices
-          .uploadUpcomingFunctionImage(params, imageFile.path);
+          .uploadUpcomingFunctionImage(
+        params,
+        imageFile.path,
+        showLoading: false,
+      );
 
       if (response != null && response['responseType'] == 'S') {
         String uploadedUrl = '';

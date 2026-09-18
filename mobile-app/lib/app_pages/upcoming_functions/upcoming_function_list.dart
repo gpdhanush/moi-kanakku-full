@@ -32,7 +32,8 @@ class _UpcomingFunctionListState extends State<UpcomingFunctionList> {
   @override
   void initState() {
     super.initState();
-    getUpcomingFunctions();
+    // No global loader on first paint — list shows its own empty/loading UI.
+    getUpcomingFunctions(showLoading: false);
     searchController.addListener(searchListener);
   }
 

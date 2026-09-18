@@ -14,9 +14,6 @@ class MoiBottomNavBar extends StatelessWidget {
   /// Content height of the menu row (excluding system bottom inset).
   static const double barHeight = 76;
 
-  /// Width reserved under the Paytm-style center FAB.
-  static const double centerFabSlotWidth = 74;
-
   /// Kept for callers that previously padded above the floating pill.
   static const double bottomGap = 0;
 
@@ -24,21 +21,16 @@ class MoiBottomNavBar extends StatelessWidget {
   final ValueChanged<int> onTap;
   final List<MoiBottomNavItem> items;
 
-  /// Optional Paytm-style center action rendered above the bar.
-  final Widget? centerFab;
-
   const MoiBottomNavBar({
     super.key,
     required this.currentIndex,
     required this.onTap,
     required this.items,
-    this.centerFab,
   });
 
   /// Space pages / FABs should leave clear above the bottom bar.
   static double clearanceOf(BuildContext context) {
-    final fabExtra = centerFabSlotWidth > 0 ? 28.0 : 0.0;
-    return barHeight + MediaQuery.viewPaddingOf(context).bottom + fabExtra;
+    return barHeight + MediaQuery.viewPaddingOf(context).bottom;
   }
 
   @override
@@ -47,9 +39,8 @@ class MoiBottomNavBar extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bottomInset = MediaQuery.viewPaddingOf(context).bottom;
     final barColor = isDark ? AppColors.surface : AppColors.white;
-    final useFabSlot = centerFab != null && items.length == 4;
 
-    final bar = Material(
+    return Material(
       color: barColor,
       elevation: 0,
       child: DecoratedBox(
@@ -74,73 +65,21 @@ class MoiBottomNavBar extends StatelessWidget {
           child: SizedBox(
             height: barHeight,
             width: double.infinity,
-            child: useFabSlot
-                ? _buildWithCenterSlot(primary)
-                : _buildEvenRow(primary),
+            child: Row(
+              children: List.generate(items.length, (index) {
+                return Expanded(
+                  child: _MoiBottomNavTile(
+                    item: items[index],
+                    selected: index == currentIndex,
+                    primary: primary,
+                    onTap: () => onTap(index),
+                  ),
+                );
+              }),
+            ),
           ),
         ),
       ),
-    );
-
-    if (centerFab == null) return bar;
-
-    return SizedBox(
-      height: barHeight + bottomInset + 30,
-      child: Stack(
-        clipBehavior: Clip.none,
-        alignment: Alignment.bottomCenter,
-        children: [
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: bar,
-          ),
-          Positioned(
-            bottom: bottomInset + barHeight - 30,
-            child: centerFab!,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildEvenRow(Color primary) {
-    return Row(
-      children: List.generate(items.length, (index) {
-        return Expanded(
-          child: _MoiBottomNavTile(
-            item: items[index],
-            selected: index == currentIndex,
-            primary: primary,
-            onTap: () => onTap(index),
-          ),
-        );
-      }),
-    );
-  }
-
-  /// Layout: [0][1] · FAB gap · [2][3] — keeps the FAB truly centered.
-  Widget _buildWithCenterSlot(Color primary) {
-    Widget tab(int index) {
-      return Expanded(
-        child: _MoiBottomNavTile(
-          item: items[index],
-          selected: index == currentIndex,
-          primary: primary,
-          onTap: () => onTap(index),
-        ),
-      );
-    }
-
-    return Row(
-      children: [
-        tab(0),
-        tab(1),
-        const SizedBox(width: centerFabSlotWidth),
-        tab(2),
-        tab(3),
-      ],
     );
   }
 }
@@ -173,8 +112,8 @@ class _MoiBottomNavTile extends StatelessWidget {
           AnimatedContainer(
             duration: const Duration(milliseconds: 180),
             curve: Curves.easeOutCubic,
-            width: 52,
-            height: 32,
+            width: 48,
+            height: 30,
             alignment: Alignment.center,
             decoration: BoxDecoration(
               color: selected
@@ -195,7 +134,7 @@ class _MoiBottomNavTile extends StatelessWidget {
             curve: Curves.easeOutCubic,
             style: AppTypography.label.copyWith(
               color: color,
-              fontSize: 11,
+              fontSize: 10.5,
               fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
               letterSpacing: -0.1,
               height: 1.1,

@@ -127,13 +127,14 @@ class MorePage extends StatelessWidget {
     final alertServices = AlertServices();
     final storage = SecureStorageService();
     final txServices = TransactionServices();
+    var loaderShown = false;
 
     try {
-      alertServices.showLoading(languageProvider.tr('more.exporting'));
+      await alertServices.showLoading(languageProvider.tr('more.exporting'));
+      loaderShown = true;
 
       final user = await storage.get(AppVariables.userInformation);
       if (user == null) {
-        await alertServices.hideLoading();
         alertServices.errorToast(
           languageProvider.tr('home.userDetailsNotFound'),
         );
@@ -166,7 +167,6 @@ class MorePage extends StatelessWidget {
       }
 
       if (transactions.isEmpty) {
-        await alertServices.hideLoading();
         alertServices.errorToast(
           languageProvider.tr('home.noTransactionsToExport'),
         );
@@ -179,7 +179,12 @@ class MorePage extends StatelessWidget {
         userDetails: user,
         fileName: 'Moi_Kanakku_All_Functions_$timestamp.pdf',
         saveToDownloads: true,
-        onBeforeShare: () => alertServices.hideLoading(),
+        onBeforeShare: () async {
+          if (loaderShown) {
+            await alertServices.hideLoading();
+            loaderShown = false;
+          }
+        },
       );
 
       alertServices.successToast(
@@ -187,8 +192,11 @@ class MorePage extends StatelessWidget {
       );
     } catch (e) {
       debugPrint('More export error: $e');
-      await alertServices.hideLoading();
       alertServices.errorToast(languageProvider.tr('home.exportError'));
+    } finally {
+      if (loaderShown) {
+        await alertServices.hideLoading();
+      }
     }
   }
 

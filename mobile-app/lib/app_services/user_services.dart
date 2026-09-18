@@ -15,19 +15,37 @@ class UserServices {
     return await connection.postData(url, requestParams, useToken: false);
   }
 
-  Future<dynamic> sentOTP(dynamic requestParams) async {
+  Future<dynamic> sentOTP(dynamic requestParams, {bool showLoading = true}) async {
     String url = '$appBaseUri/email/sendEmail';
-    return await connection.postData(url, requestParams, useToken: false);
+    return await connection.postData(
+      url,
+      requestParams,
+      useToken: false,
+      showLoading: showLoading,
+    );
   }
 
-  Future<dynamic> verifyOTP(dynamic requestParams) async {
+  Future<dynamic> verifyOTP(dynamic requestParams, {bool showLoading = true}) async {
     String url = '$appBaseUri/email/verifyOtp';
-    return await connection.postData(url, requestParams, useToken: false);
+    return await connection.postData(
+      url,
+      requestParams,
+      useToken: false,
+      showLoading: showLoading,
+    );
   }
 
-  Future<dynamic> resetUserPasswords(dynamic requestParams) async {
+  Future<dynamic> resetUserPasswords(
+    dynamic requestParams, {
+    bool showLoading = true,
+  }) async {
     String url = '$appBaseUri/users/reset-password';
-    return await connection.postData(url, requestParams, useToken: false);
+    return await connection.postData(
+      url,
+      requestParams,
+      useToken: false,
+      showLoading: showLoading,
+    );
   }
 
   Future<dynamic> updateUserNotificationToken(
@@ -43,9 +61,17 @@ class UserServices {
     );
   }
 
-  Future<dynamic> updateUserDetails(dynamic requestParams) async {
+  Future<dynamic> updateUserDetails(
+    dynamic requestParams, {
+    bool showLoading = true,
+  }) async {
     String url = '$appBaseUri/users/update';
-    return await connection.postData(url, requestParams, useToken: true);
+    return await connection.postData(
+      url,
+      requestParams,
+      useToken: true,
+      showLoading: showLoading,
+    );
   }
 
   Future<dynamic> changeUserPassword(dynamic requestParams) async {
@@ -53,14 +79,30 @@ class UserServices {
     return await connection.postData(url, requestParams, useToken: true);
   }
 
-  Future<dynamic> updateUserPassword(dynamic requestParams) async {
+  Future<dynamic> updateUserPassword(
+    dynamic requestParams, {
+    bool showLoading = true,
+  }) async {
     String url = '$appBaseUri/users/update-password';
-    return await connection.postData(url, requestParams, useToken: true);
+    return await connection.postData(
+      url,
+      requestParams,
+      useToken: true,
+      showLoading: showLoading,
+    );
   }
 
-  Future<dynamic> deleteUserAccount(dynamic requestParams) async {
+  Future<dynamic> deleteUserAccount(
+    dynamic requestParams, {
+    bool showLoading = true,
+  }) async {
     String url = '$appBaseUri/users/delete';
-    return await connection.postData(url, requestParams, useToken: true);
+    return await connection.postData(
+      url,
+      requestParams,
+      useToken: true,
+      showLoading: showLoading,
+    );
   }
 
   Future<dynamic> getUserImportantDetails(String userId) async {
@@ -107,18 +149,42 @@ class UserServices {
     );
   }
 
-  Future<dynamic> sendRestoreOtp(dynamic requestParams) async {
+  Future<dynamic> sendRestoreOtp(
+    dynamic requestParams, {
+    bool showLoading = true,
+  }) async {
     String url = '$appBaseUri/email/sendEmail';
-    return await connection.postData(url, requestParams, useToken: false);
+    return await connection.postData(
+      url,
+      requestParams,
+      useToken: false,
+      showLoading: showLoading,
+    );
   }
 
-  Future<dynamic> verifyRestoreOtp(dynamic requestParams) async {
+  Future<dynamic> verifyRestoreOtp(
+    dynamic requestParams, {
+    bool showLoading = true,
+  }) async {
     String url = '$appBaseUri/email/verifyOtp';
-    return await connection.postData(url, requestParams, useToken: false);
+    return await connection.postData(
+      url,
+      requestParams,
+      useToken: false,
+      showLoading: showLoading,
+    );
   }
 
-  Future<dynamic> restoreAccount(dynamic requestParams) async {
+  Future<dynamic> restoreAccount(
+    dynamic requestParams, {
+    bool showLoading = true,
+  }) async {
     String url = '$appBaseUri/users/restore';
-    return await connection.postData(url, requestParams, useToken: false);
+    return await connection.postData(
+      url,
+      requestParams,
+      useToken: false,
+      showLoading: showLoading,
+    );
   }
 }

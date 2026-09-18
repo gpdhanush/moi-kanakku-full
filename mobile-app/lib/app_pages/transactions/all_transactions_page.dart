@@ -213,22 +213,24 @@ class _AllTransactionsPageState extends State<AllTransactionsPage> {
   }
 
   Future<void> _exportPdf() async {
+    var dialogOpen = false;
     try {
       showDialog(
         context: context,
         barrierDismissible: false,
         builder: (_) => const Center(child: CircularProgressIndicator()),
       );
+      dialogOpen = true;
 
       final user = await _storage.get(AppVariables.userInformation);
       final transactions = await _fetchAllForExport();
-      if (!mounted) return;
-      Navigator.pop(context);
 
       if (user == null) {
-        _alertServices.errorToast(
-          context.read<LanguageProvider>().tr('home.userDetailsNotFound'),
-        );
+        if (mounted) {
+          _alertServices.errorToast(
+            context.read<LanguageProvider>().tr('home.userDetailsNotFound'),
+          );
+        }
         return;
       }
       await ExportService.exportTransactionsToPdf(
@@ -241,11 +243,16 @@ class _AllTransactionsPageState extends State<AllTransactionsPage> {
         );
       }
     } catch (e) {
-      if (mounted) Navigator.pop(context);
       debugPrint('Error exporting: $e');
-      _alertServices.errorToast(
-        context.read<LanguageProvider>().tr('home.exportError'),
-      );
+      if (mounted) {
+        _alertServices.errorToast(
+          context.read<LanguageProvider>().tr('home.exportError'),
+        );
+      }
+    } finally {
+      if (dialogOpen && mounted) {
+        Navigator.of(context, rootNavigator: true).pop();
+      }
     }
   }
 

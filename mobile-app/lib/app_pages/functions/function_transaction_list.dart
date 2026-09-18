@@ -114,25 +114,26 @@ class _FunctionTransactionListState extends State<FunctionTransactionList> {
   }
 
   Future<void> _exportFunctionTransactionsPdf() async {
+    var dialogOpen = false;
     try {
       showDialog(
         context: context,
         barrierDismissible: false,
         builder: (_) => const Center(child: CircularProgressIndicator()),
       );
+      dialogOpen = true;
 
       final user = await storage.get(AppVariables.userInformation);
       final transactions = await _fetchAllForExport();
 
-      if (!mounted) return;
-      Navigator.pop(context);
-
       if (user == null) {
-        alertServices.errorToast(
-          context.read<LanguageProvider>().tr(
-            'transactionList.userDetailsNotFound',
-          ),
-        );
+        if (mounted) {
+          alertServices.errorToast(
+            context.read<LanguageProvider>().tr(
+              'transactionList.userDetailsNotFound',
+            ),
+          );
+        }
         return;
       }
 
@@ -158,13 +159,16 @@ class _FunctionTransactionListState extends State<FunctionTransactionList> {
         );
       }
     } catch (e) {
-      if (mounted) {
-        Navigator.pop(context);
-      }
       debugPrint('Error exporting transactions: $e');
-      alertServices.errorToast(
-        context.read<LanguageProvider>().tr('transactionList.exportError'),
-      );
+      if (mounted) {
+        alertServices.errorToast(
+          context.read<LanguageProvider>().tr('transactionList.exportError'),
+        );
+      }
+    } finally {
+      if (dialogOpen && mounted) {
+        Navigator.of(context, rootNavigator: true).pop();
+      }
     }
   }
 

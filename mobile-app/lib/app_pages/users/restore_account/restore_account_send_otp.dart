@@ -337,11 +337,15 @@ class _RestoreAccountSendOtpState extends State<RestoreAccountSendOtp> {
     alertServices.showLoading();
     var params = {"type": "restore", "email": widget.email.toLowerCase()};
     try {
-      var response = await userServices.sendRestoreOtp(params);
-      alertServices.hideLoading();
-      setState(() {
-        isLoading = false;
-      });
+      var response = await userServices.sendRestoreOtp(
+        params,
+        showLoading: false,
+      );
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
       if (response != null && response['responseType'] == "S") {
         String msg =
             response['responseValue']['message']?.toString() ??
@@ -354,11 +358,14 @@ class _RestoreAccountSendOtpState extends State<RestoreAccountSendOtp> {
         alertServices.errorToast(msg);
       }
     } catch (error) {
-      alertServices.hideLoading();
-      setState(() {
-        isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
       alertServices.errorToast(languageProvider.tr('common.tryAgain'));
+    } finally {
+      await alertServices.hideLoading();
     }
   }
 }

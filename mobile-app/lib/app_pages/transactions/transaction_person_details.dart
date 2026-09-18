@@ -434,10 +434,9 @@ class _TransactionPersonDetailsState extends State<TransactionPersonDetails> {
     final languageProvider = context.read<LanguageProvider>();
 
     try {
-      alertServices.showLoading();
+      await alertServices.showLoading();
       final transactionId = transaction['id']?.toString();
       if (transactionId == null || transactionId.isEmpty) {
-        alertServices.hideLoading();
         alertServices.errorToast(
           languageProvider.tr('transactions.transactionIdMissing'),
         );
@@ -447,8 +446,6 @@ class _TransactionPersonDetailsState extends State<TransactionPersonDetails> {
       final response = await txServices.deleteTransaction({
         'transactionId': transactionId,
       }, showLoading: false);
-
-      alertServices.hideLoading();
 
       if (response != null && response['responseType'] == 'S') {
         final message =
@@ -463,10 +460,11 @@ class _TransactionPersonDetailsState extends State<TransactionPersonDetails> {
         alertServices.errorToast(errorMessage);
       }
     } catch (_) {
-      alertServices.hideLoading();
       alertServices.errorToast(
         languageProvider.tr('transactions.transactionDeleteFailed'),
       );
+    } finally {
+      await alertServices.hideLoading();
     }
   }
 }

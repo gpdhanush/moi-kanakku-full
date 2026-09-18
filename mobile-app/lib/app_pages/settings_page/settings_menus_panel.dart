@@ -74,7 +74,8 @@ class _SettingsMenusPanelState extends State<SettingsMenusPanel> {
             _MenuRow(
               icon: HugeIcons.strokeRoundedContact,
               title: languageProvider.tr('menu.contactUs'),
-              subtitle: widget.contactSubtitle ??
+              subtitle:
+                  widget.contactSubtitle ??
                   languageProvider.tr('settings.contactUs'),
               onTap: widget.onContactUs,
             ),
@@ -82,16 +83,17 @@ class _SettingsMenusPanelState extends State<SettingsMenusPanel> {
             _MenuRow(
               icon: HugeIcons.strokeRoundedStar,
               title: languageProvider.tr('menu.rateUs'),
-              subtitle: widget.rateUsSubtitle ??
+              subtitle:
+                  widget.rateUsSubtitle ??
                   languageProvider.tr('settings.rateApp'),
               onTap: widget.onRateUs,
             ),
-          _MenuRow(
-            icon: HugeIcons.strokeRoundedSmartPhone01,
-            title: languageProvider.tr('settings.appName'),
-            subtitle: appName.toUpperCase(),
-            showChevron: false,
-          ),
+          // _MenuRow(
+          //   icon: HugeIcons.strokeRoundedSmartPhone01,
+          //   title: languageProvider.tr('settings.appName'),
+          //   subtitle: appName.toUpperCase(),
+          //   showChevron: false,
+          // ),
           _MenuRow(
             icon: HugeIcons.strokeRoundedInformationCircle,
             title: languageProvider.tr('settings.appVersion'),
@@ -104,8 +106,8 @@ class _SettingsMenusPanelState extends State<SettingsMenusPanel> {
             _MenuRow(
               icon: HugeIcons.strokeRoundedLogout01,
               title: languageProvider.tr('menu.logout'),
-              subtitle: widget.logoutSubtitle ??
-                  languageProvider.tr('menu.logout'),
+              subtitle:
+                  widget.logoutSubtitle ?? languageProvider.tr('menu.logout'),
               showChevron: false,
               showDivider: false,
               isDestructive: true,
@@ -116,9 +118,7 @@ class _SettingsMenusPanelState extends State<SettingsMenusPanel> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _SectionLabel(
-              title: languageProvider.tr('settings.security'),
-            ),
+            _SectionLabel(title: languageProvider.tr('settings.security')),
             const SizedBox(height: AppSpacing.sm),
             _MenuCard(
               children: [
@@ -143,9 +143,7 @@ class _SettingsMenusPanelState extends State<SettingsMenusPanel> {
               ],
             ),
             const SizedBox(height: AppSpacing.lg),
-            _SectionLabel(
-              title: languageProvider.tr('settings.preferences'),
-            ),
+            _SectionLabel(title: languageProvider.tr('settings.preferences')),
             const SizedBox(height: AppSpacing.sm),
             _MenuCard(
               children: [
@@ -163,42 +161,38 @@ class _SettingsMenusPanelState extends State<SettingsMenusPanel> {
                   trailingLabel: voiceLabel,
                   onTap: () => _showVoiceLanguagePicker(languageProvider),
                 ),
-                _MenuRow(
-                  icon: HugeIcons.strokeRoundedPaintBrush04,
-                  title: languageProvider.tr('settings.accentColor'),
-                  subtitle: languageProvider.tr('settings.themeHint'),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: 18,
-                        height: 18,
-                        decoration: BoxDecoration(
-                          color: themeProvider.seedColor,
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: colorScheme.outlineVariant,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      HugeIcon(
-                        icon: HugeIcons.strokeRoundedArrowRight01,
-                        strokeWidth: 1.9,
-                        size: 16,
-                        color: colorScheme.onSurfaceVariant,
-                      ),
-                    ],
-                  ),
-                  onTap: () => _showAccentColorSheet(themeProvider),
-                  showDivider: false,
-                ),
+                // _MenuRow(
+                //   icon: HugeIcons.strokeRoundedPaintBrush04,
+                //   title: languageProvider.tr('settings.accentColor'),
+                //   subtitle: languageProvider.tr('settings.themeHint'),
+                //   trailing: Row(
+                //     mainAxisSize: MainAxisSize.min,
+                //     children: [
+                //       Container(
+                //         width: 18,
+                //         height: 18,
+                //         decoration: BoxDecoration(
+                //           color: themeProvider.seedColor,
+                //           shape: BoxShape.circle,
+                //           border: Border.all(color: colorScheme.outlineVariant),
+                //         ),
+                //       ),
+                //       const SizedBox(width: 6),
+                //       HugeIcon(
+                //         icon: HugeIcons.strokeRoundedArrowRight01,
+                //         strokeWidth: 1.9,
+                //         size: 16,
+                //         color: colorScheme.onSurfaceVariant,
+                //       ),
+                //     ],
+                //   ),
+                //   onTap: () => _showAccentColorSheet(themeProvider),
+                //   showDivider: false,
+                // ),
               ],
             ),
             const SizedBox(height: AppSpacing.lg),
-            _SectionLabel(
-              title: languageProvider.tr('settings.aboutApp'),
-            ),
+            _SectionLabel(title: languageProvider.tr('settings.aboutApp')),
             const SizedBox(height: AppSpacing.sm),
             _MenuCard(children: aboutChildren),
           ],
@@ -308,95 +302,95 @@ class _SettingsMenusPanelState extends State<SettingsMenusPanel> {
     }
   }
 
-  Future<void> _showAccentColorSheet(ThemeProvider themeProvider) async {
-    await showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (sheetContext) {
-        final primary = Theme.of(sheetContext).colorScheme.primary;
-        final colors = ThemeProvider.availableColors;
-        return Container(
-          margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-          padding: const EdgeInsets.fromLTRB(16, 10, 16, 18),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: const Color(0xffE4E4E7)),
-          ),
-          child: SafeArea(
-            top: false,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: const Color(0xffE4E4E7),
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  context.read<LanguageProvider>().tr('settings.accentColor'),
-                  style: AppTypography.sectionTitle.copyWith(
-                    color: primary,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                GridView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 6,
-                    crossAxisSpacing: 10,
-                    mainAxisSpacing: 10,
-                  ),
-                  itemCount: colors.length,
-                  itemBuilder: (context, index) {
-                    final color = colors[index];
-                    final selected = themeProvider.isSeedColor(color);
-                    return GestureDetector(
-                      onTap: () {
-                        themeProvider.setSeedColor(color);
-                        Navigator.pop(sheetContext);
-                      },
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 150),
-                        decoration: BoxDecoration(
-                          color: color,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: selected
-                                ? const Color(0xff18181B)
-                                : Colors.transparent,
-                            width: 2,
-                          ),
-                        ),
-                        child: selected
-                            ? const Center(
-                                child: HugeIcon(
-                                  icon: HugeIcons.strokeRoundedTick02,
-                                  size: 18,
-                                  color: Colors.white,
-                                  strokeWidth: 1.8,
-                                ),
-                              )
-                            : null,
-                      ),
-                    );
-                  },
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
+  // Future<void> _showAccentColorSheet(ThemeProvider themeProvider) async {
+  //   await showModalBottomSheet<void>(
+  //     context: context,
+  //     backgroundColor: Colors.transparent,
+  //     isScrollControlled: true,
+  //     builder: (sheetContext) {
+  //       final primary = Theme.of(sheetContext).colorScheme.primary;
+  //       final colors = ThemeProvider.availableColors;
+  //       return Container(
+  //         margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+  //         padding: const EdgeInsets.fromLTRB(16, 10, 16, 18),
+  //         decoration: BoxDecoration(
+  //           color: Colors.white,
+  //           borderRadius: BorderRadius.circular(24),
+  //           border: Border.all(color: const Color(0xffE4E4E7)),
+  //         ),
+  //         child: SafeArea(
+  //           top: false,
+  //           child: Column(
+  //             mainAxisSize: MainAxisSize.min,
+  //             children: [
+  //               Container(
+  //                 width: 40,
+  //                 height: 4,
+  //                 decoration: BoxDecoration(
+  //                   color: const Color(0xffE4E4E7),
+  //                   borderRadius: BorderRadius.circular(999),
+  //                 ),
+  //               ),
+  //               const SizedBox(height: 16),
+  //               Text(
+  //                 context.read<LanguageProvider>().tr('settings.accentColor'),
+  //                 style: AppTypography.sectionTitle.copyWith(
+  //                   color: primary,
+  //                   fontSize: 16,
+  //                   fontWeight: FontWeight.w700,
+  //                 ),
+  //               ),
+  //               const SizedBox(height: 16),
+  //               GridView.builder(
+  //                 shrinkWrap: true,
+  //                 physics: const NeverScrollableScrollPhysics(),
+  //                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+  //                   crossAxisCount: 6,
+  //                   crossAxisSpacing: 10,
+  //                   mainAxisSpacing: 10,
+  //                 ),
+  //                 itemCount: colors.length,
+  //                 itemBuilder: (context, index) {
+  //                   final color = colors[index];
+  //                   final selected = themeProvider.isSeedColor(color);
+  //                   return GestureDetector(
+  //                     onTap: () {
+  //                       themeProvider.setSeedColor(color);
+  //                       Navigator.pop(sheetContext);
+  //                     },
+  //                     child: AnimatedContainer(
+  //                       duration: const Duration(milliseconds: 150),
+  //                       decoration: BoxDecoration(
+  //                         color: color,
+  //                         borderRadius: BorderRadius.circular(12),
+  //                         border: Border.all(
+  //                           color: selected
+  //                               ? const Color(0xff18181B)
+  //                               : Colors.transparent,
+  //                           width: 2,
+  //                         ),
+  //                       ),
+  //                       child: selected
+  //                           ? const Center(
+  //                               child: HugeIcon(
+  //                                 icon: HugeIcons.strokeRoundedTick02,
+  //                                 size: 18,
+  //                                 color: Colors.white,
+  //                                 strokeWidth: 1.8,
+  //                               ),
+  //                             )
+  //                           : null,
+  //                     ),
+  //                   );
+  //                 },
+  //               ),
+  //             ],
+  //           ),
+  //         ),
+  //       );
+  //     },
+  //   );
+  // }
 }
 
 class _SectionLabel extends StatelessWidget {
@@ -466,11 +460,11 @@ class _MenuRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final iconColor =
-        isDestructive ? colorScheme.error : colorScheme.primary;
+    final iconColor = isDestructive ? colorScheme.error : colorScheme.primary;
     final iconBg = iconColor.withValues(alpha: 0.1);
-    final titleColor =
-        isDestructive ? colorScheme.error : AppColors.textPrimary;
+    final titleColor = isDestructive
+        ? colorScheme.error
+        : AppColors.textPrimary;
 
     return Column(
       children: [

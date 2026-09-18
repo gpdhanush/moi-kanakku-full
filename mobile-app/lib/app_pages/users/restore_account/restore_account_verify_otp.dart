@@ -390,7 +390,7 @@ class _RestoreAccountVerifyOtpState extends State<RestoreAccountVerifyOtp> {
   // Verifies the OTP and restores the account
   Future<void> verifyOTPAndRestore() async {
     FocusScope.of(context).unfocus();
-    alertServices.showLoading();
+    await alertServices.showLoading();
 
     // Step 1: Verify OTP
     var verifyParams = {
@@ -400,14 +400,19 @@ class _RestoreAccountVerifyOtpState extends State<RestoreAccountVerifyOtp> {
     };
 
     try {
-      var verifyResponse = await userServices.verifyRestoreOtp(verifyParams);
+      var verifyResponse = await userServices.verifyRestoreOtp(
+        verifyParams,
+        showLoading: false,
+      );
 
       if (verifyResponse != null && verifyResponse['responseType'] == "S") {
         // Step 2: If OTP is verified, restore the account
         var restoreParams = {"email": widget.email.toLowerCase()};
 
-        var restoreResponse = await userServices.restoreAccount(restoreParams);
-        alertServices.hideLoading();
+        var restoreResponse = await userServices.restoreAccount(
+          restoreParams,
+          showLoading: false,
+        );
 
         if (restoreResponse != null && restoreResponse['responseType'] == "S") {
           String msg =
@@ -430,7 +435,6 @@ class _RestoreAccountVerifyOtpState extends State<RestoreAccountVerifyOtp> {
           alertServices.errorToast(msg);
         }
       } else {
-        alertServices.hideLoading();
         String msg =
             verifyResponse?['responseValue']?['message']?.toString() ??
             Provider.of<LanguageProvider>(
@@ -440,13 +444,14 @@ class _RestoreAccountVerifyOtpState extends State<RestoreAccountVerifyOtp> {
         alertServices.errorToast(msg);
       }
     } catch (error) {
-      alertServices.hideLoading();
       alertServices.errorToast(
         Provider.of<LanguageProvider>(
           context,
           listen: false,
         ).tr('common.tryAgain'),
       );
+    } finally {
+      await alertServices.hideLoading();
     }
   }
 
@@ -462,12 +467,14 @@ class _RestoreAccountVerifyOtpState extends State<RestoreAccountVerifyOtp> {
 
   // Resends the OTP
   Future<void> resentOtp() async {
-    alertServices.showLoading();
+    await alertServices.showLoading();
     otpCtrl.clear();
     var params = {"type": "restore", "email": widget.email.toLowerCase()};
     try {
-      var response = await userServices.sendRestoreOtp(params);
-      alertServices.hideLoading();
+      var response = await userServices.sendRestoreOtp(
+        params,
+        showLoading: false,
+      );
       if (response != null && response['responseType'] == "S") {
         alertServices.successToast(
           response['responseValue']['message']?.toString() ??
@@ -489,13 +496,14 @@ class _RestoreAccountVerifyOtpState extends State<RestoreAccountVerifyOtp> {
         alertServices.errorToast(msg);
       }
     } catch (error) {
-      alertServices.hideLoading();
       alertServices.errorToast(
         Provider.of<LanguageProvider>(
           context,
           listen: false,
         ).tr('common.tryAgain'),
       );
+    } finally {
+      await alertServices.hideLoading();
     }
   }
 }

@@ -83,6 +83,7 @@ class _ProfilePageState extends State<ProfilePage> {
   // Load user data from secure storage and API
   void _loadUserData() async {
     final userData = await _storage.get(AppVariables.userInformation);
+    if (!mounted) return;
     setState(() {
       _user = userData;
       if (_user != null) {
@@ -148,6 +149,7 @@ class _ProfilePageState extends State<ProfilePage> {
           // Extract from nested profile object
           final profileData = responseValue["profile"];
 
+          if (!mounted) return;
           setState(() {
             // Update basic info
             _nameCtrl.text =
@@ -870,24 +872,25 @@ class _ProfilePageState extends State<ProfilePage> {
       listen: false,
     );
     FocusScope.of(context).unfocus();
-    _alertServices.showLoading();
-    final userData = await _storage.get(AppVariables.userInformation);
-    var params = {'email': userData['email'].toString()};
-    _userServices
-        .deleteUserAccount(params)
-        .then((response) {
-          _alertServices.hideLoading();
-          if (response != null && response['responseType'] == "S") {
-            _alertServices.successToast(response['responseValue']['message']);
-            _storage.clearSessionData();
-            if (!mounted) return;
-            Navigator.pushNamedAndRemoveUntil(context, 'login', (r) => false);
-          }
-        })
-        .catchError((error) {
-          _alertServices.hideLoading();
-          _alertServices.errorToast(languageProvider.tr('common.tryAgain'));
-        });
+    try {
+      await _alertServices.showLoading();
+      final userData = await _storage.get(AppVariables.userInformation);
+      var params = {'email': userData['email'].toString()};
+      final response = await _userServices.deleteUserAccount(
+        params,
+        showLoading: false,
+      );
+      if (response != null && response['responseType'] == "S") {
+        _alertServices.successToast(response['responseValue']['message']);
+        await _storage.clearSessionData();
+        if (!mounted) return;
+        Navigator.pushNamedAndRemoveUntil(context, 'login', (r) => false);
+      }
+    } catch (error) {
+      _alertServices.errorToast(languageProvider.tr('common.tryAgain'));
+    } finally {
+      await _alertServices.hideLoading();
+    }
   }
 
   // Show image picker options
@@ -1281,7 +1284,7 @@ class _ProfilePageState extends State<ProfilePage> {
     FocusScope.of(context).unfocus();
     if (_formKey.currentState?.validate() != true) return;
 
-    _alertServices.showLoading();
+    await _alertServices.showLoading();
 
     final params = {
       "id": _user?["id"]?.toString(),
@@ -1321,8 +1324,11 @@ class _ProfilePageState extends State<ProfilePage> {
     }
 
     try {
-      final response = await _userServices.updateUserDetails(params);
-      _alertServices.hideLoading();
+      // Page owns the loader — avoid Connection double-count.
+      final response = await _userServices.updateUserDetails(
+        params,
+        showLoading: false,
+      );
 
       if (response != null && response['responseType'] == "S") {
         _alertServices.successToast(
@@ -1359,9 +1365,10 @@ class _ProfilePageState extends State<ProfilePage> {
         _alertServices.errorToast(errorMessage);
       }
     } catch (error) {
-      _alertServices.hideLoading();
       printContent("Error updating profile: $error");
       _alertServices.errorToast(languageProvider.tr('common.tryAgain'));
+    } finally {
+      await _alertServices.hideLoading();
     }
   }
 

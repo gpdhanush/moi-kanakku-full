@@ -265,7 +265,8 @@ class _HomePageState extends State<HomePage> {
   Future<void> _refreshAfterNavigation() async {
     if (!mounted) return;
     _needsRefresh = true;
-    await _refreshHomeData(showLoading: true);
+    // Avoid EasyLoading overlay on return — Home already paints inline.
+    await _refreshHomeData(showLoading: false);
   }
 
   Future<void> getPermission() async {
