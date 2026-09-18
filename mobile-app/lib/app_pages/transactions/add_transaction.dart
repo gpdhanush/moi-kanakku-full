@@ -313,9 +313,6 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
     return Consumer<LanguageProvider>(
       builder: (context, languageProvider, _) {
         final accent = _isReceived ? AppColors.moiReceived : AppColors.moiGiven;
-        final flowLabel = _isReceived
-            ? languageProvider.tr('moi.moiIn')
-            : languageProvider.tr('moi.moiOut');
         final title = widget.isEdit
             ? languageProvider.tr('transactions.updateTitle')
             : _isReceived
@@ -326,8 +323,6 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
           backgroundColor: AppColors.background,
           appBar: MoiFlowAppHeader(
             title: title.toUpperCase(),
-            subtitle: widget.isEdit ? null : flowLabel,
-            accent: accent,
             onBack: () => Navigator.pop(context),
           ),
           body: Column(

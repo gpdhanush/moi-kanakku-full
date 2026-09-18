@@ -270,9 +270,6 @@ class _AddEditPageState extends State<AddEditPage> {
         final title = isReceived
             ? languageProvider.tr('transactions.newInvest')
             : languageProvider.tr('transactions.newReturn');
-        final flowLabel = isReceived
-            ? languageProvider.tr('moi.moiIn')
-            : languageProvider.tr('moi.moiOut');
         final saveLabel = transactionId != null && transactionId!.isNotEmpty
             ? languageProvider.tr('common.update')
             : languageProvider.tr('common.save');
@@ -281,8 +278,6 @@ class _AddEditPageState extends State<AddEditPage> {
           backgroundColor: AppColors.background,
           appBar: MoiFlowAppHeader(
             title: title.toUpperCase(),
-            subtitle: flowLabel,
-            accent: accent,
             onBack: () => Navigator.pop(context),
           ),
           body: Column(

@@ -53,4 +53,12 @@ router.post('/person/:personId', authenticateToken, controller.getByPerson);
 // Body: { search?, userId?, personId?, transactionFunctionId?, type?, startDate?, endDate?, limit, offset }
 router.post('/admin/list', authenticateAdminToken, controller.adminList);
 
+// Admin: Soft-delete a single transaction
+// Body: { transactionId }
+router.post('/admin/delete', authenticateAdminToken, controller.adminDelete);
+
+// Admin: Soft-delete multiple transactions
+// Body: { transactionIds: string[] }
+router.post('/admin/delete-bulk', authenticateAdminToken, controller.adminDeleteBulk);
+
 module.exports = router;

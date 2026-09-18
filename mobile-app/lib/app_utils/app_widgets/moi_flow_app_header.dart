@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:moi/app_utils/app_widgets/moi_app_header.dart';
 
 /// Shared modern app bar for Moi Received / Given flow screens.
-/// Thin wrapper around [MoiAppHeader] with accent strip + back button.
+/// Thin wrapper around [MoiAppHeader] with optional accent strip + back button.
 class MoiFlowAppHeader extends StatelessWidget implements PreferredSizeWidget {
   final String title;
-  final Color accent;
+  final Color? accent;
   final VoidCallback onBack;
   final String? subtitle;
   final List<Widget>? actions;
@@ -13,8 +13,8 @@ class MoiFlowAppHeader extends StatelessWidget implements PreferredSizeWidget {
   const MoiFlowAppHeader({
     super.key,
     required this.title,
-    required this.accent,
     required this.onBack,
+    this.accent,
     this.subtitle,
     this.actions,
   });

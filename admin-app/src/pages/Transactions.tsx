@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeftRight,
   RefreshCw,
@@ -12,12 +12,14 @@ import {
   ChevronRight,
   TrendingUp,
   Undo2,
+  Trash2,
 } from "lucide-react";
 import { PageTitle } from "@/components/ui/page-title";
 import { StatCard, StatCardSkeleton } from "@/components/ui/stat-card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -41,7 +43,18 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { usePageMeta } from "@/hooks/usePageMeta";
+import { toast } from "@/hooks/use-toast";
 import {
   transactionsApi,
   type TransactionItem,
@@ -175,7 +188,10 @@ export default function Transactions() {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [viewItem, setViewItem] = useState<TransactionItem | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
 
+  const queryClient = useQueryClient();
   const metaElement = usePageMeta({
     title: "Transactions",
     description: "View invest and return transactions",
@@ -186,6 +202,30 @@ export default function Transactions() {
     queryFn: () => transactionsApi.list(),
     staleTime: 60_000,
     refetchOnWindowFocus: false,
+  });
+
+  const deleteBulkMutation = useMutation({
+    mutationFn: (transactionIds: string[]) =>
+      transactionsApi.deleteBulk(transactionIds),
+    onSuccess: (result) => {
+      toast({
+        title: "Transactions deleted",
+        description:
+          result?.message ||
+          `Deleted ${result?.deletedCount ?? selectedIds.size} transaction(s).`,
+      });
+      setBulkDeleteOpen(false);
+      setSelectedIds(new Set());
+      setViewItem(null);
+      queryClient.invalidateQueries({ queryKey: ["admin", "transactions"] });
+    },
+    onError: (err: Error) => {
+      toast({
+        title: "Delete failed",
+        description: err.message || "Unable to delete selected transactions.",
+        variant: "destructive",
+      });
+    },
   });
 
   const rows = data?.data ?? [];
@@ -293,6 +333,34 @@ export default function Transactions() {
   );
   const fromItem = totalItems === 0 ? 0 : (currentPage - 1) * limit + 1;
   const toItem = Math.min(currentPage * limit, totalItems);
+
+  const selectedCount = selectedIds.size;
+  const pageIds = pageRows.map((item) => String(item.id));
+  const allPageSelected =
+    pageIds.length > 0 && pageIds.every((id) => selectedIds.has(id));
+  const somePageSelected =
+    pageIds.some((id) => selectedIds.has(id)) && !allPageSelected;
+  const isDeleting = deleteBulkMutation.isPending;
+
+  const toggleRow = (id: string, checked: boolean) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (checked) next.add(id);
+      else next.delete(id);
+      return next;
+    });
+  };
+
+  const togglePage = (checked: boolean) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      pageIds.forEach((id) => {
+        if (checked) next.add(id);
+        else next.delete(id);
+      });
+      return next;
+    });
+  };
 
   const handleSort = (key: SortKey) => {
     if (sortKey === key) {
@@ -406,6 +474,26 @@ export default function Transactions() {
               />
             </div>
             <div className="flex flex-wrap items-center justify-end gap-2">
+              {selectedCount > 0 && (
+                <>
+                  <p className="text-sm text-muted-foreground">
+                    Selected:{" "}
+                    <span className="font-semibold text-foreground">
+                      {selectedCount}
+                    </span>
+                  </p>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    className="gap-2"
+                    onClick={() => setBulkDeleteOpen(true)}
+                    disabled={isDeleting}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Delete Selected
+                  </Button>
+                </>
+              )}
               <Button
                 variant="outline"
                 size="sm"
@@ -433,6 +521,22 @@ export default function Transactions() {
             <Table>
               <TableHeader>
                 <TableRow className="border-b border-slate-700/80 bg-slate-800 hover:bg-slate-800 dark:bg-slate-900 dark:hover:bg-slate-900">
+                  <TableHead className="w-12 text-center text-slate-100">
+                    <div className="flex justify-center">
+                      <Checkbox
+                        checked={
+                          allPageSelected
+                            ? true
+                            : somePageSelected
+                              ? "indeterminate"
+                              : false
+                        }
+                        onCheckedChange={(value) => togglePage(value === true)}
+                        aria-label="Select all transactions on this page"
+                        className="border-slate-300 data-[state=checked]:bg-primary data-[state=indeterminate]:bg-primary"
+                      />
+                    </div>
+                  </TableHead>
                   <TableHead className="w-16 text-center text-slate-100">S.No</TableHead>
                   <SortableHead label="Category" column="type" align="center" />
                   <SortableHead label="Name" column="userName" align="left" />
@@ -444,7 +548,7 @@ export default function Transactions() {
               <TableBody className="[&_td]:py-2">
                 {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="h-20 text-center text-muted-foreground">
+                    <TableCell colSpan={7} className="h-20 text-center text-muted-foreground">
                       <div className="inline-flex items-center gap-2">
                         <Loader2 className="h-4 w-4 animate-spin" />
                         Loading transactions...
@@ -453,7 +557,7 @@ export default function Transactions() {
                   </TableRow>
                 ) : pageRows.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="h-20 text-center text-muted-foreground">
+                    <TableCell colSpan={7} className="h-20 text-center text-muted-foreground">
                       {search.trim()
                         ? "No transactions match your search."
                         : "No transactions found."}
@@ -463,11 +567,27 @@ export default function Transactions() {
                   pageRows.map((item, index) => {
                     const serialNo = (currentPage - 1) * limit + index + 1;
                     const isReturn = (item.type || "").toUpperCase() === "RETURN";
+                    const id = String(item.id);
+                    const checked = selectedIds.has(id);
                     return (
                       <TableRow
                         key={item.id}
-                        className={cn(index % 2 === 1 && "bg-muted/20")}
+                        className={cn(
+                          index % 2 === 1 && "bg-muted/20",
+                          checked && "bg-primary/5"
+                        )}
                       >
+                        <TableCell className="text-center">
+                          <div className="flex justify-center">
+                            <Checkbox
+                              checked={checked}
+                              onCheckedChange={(value) =>
+                                toggleRow(id, value === true)
+                              }
+                              aria-label={`Select transaction ${id}`}
+                            />
+                          </div>
+                        </TableCell>
                         <TableCell className="text-center font-medium tabular-nums">
                           {serialNo}
                         </TableCell>
@@ -676,6 +796,44 @@ export default function Transactions() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={bulkDeleteOpen} onOpenChange={setBulkDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete selected transactions?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will delete{" "}
+              <span className="font-medium text-foreground">
+                {selectedCount}
+              </span>{" "}
+              selected transaction{selectedCount === 1 ? "" : "s"} from the
+              system. They will no longer appear in lists or totals.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteBulkMutation.isPending}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={deleteBulkMutation.isPending || selectedCount === 0}
+              onClick={(e) => {
+                e.preventDefault();
+                deleteBulkMutation.mutate(Array.from(selectedIds));
+              }}
+            >
+              {deleteBulkMutation.isPending ? (
+                <span className="inline-flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Deleting...
+                </span>
+              ) : (
+                "Confirm delete"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

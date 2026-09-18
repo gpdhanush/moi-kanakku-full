@@ -57,6 +57,12 @@ function extractErrorMessage(data: MoiApiResponse<unknown>): string {
   return data.responseMessage || 'Request failed';
 }
 
+export interface TransactionDeleteResult {
+  message?: string;
+  transactionId?: string;
+  deletedCount?: number;
+}
+
 export const transactionsApi = {
   list: async (userId?: string): Promise<TransactionListResult> => {
     const response = await apiClient.post<MoiApiResponse<TransactionItem[]>>(
@@ -71,5 +77,38 @@ export const transactionsApi = {
       count: data.count ?? data.responseValue?.length ?? 0,
       data: data.responseValue ?? [],
     };
+  },
+
+  delete: async (transactionId: string): Promise<TransactionDeleteResult> => {
+    const response = await apiClient.post<MoiApiResponse<TransactionDeleteResult>>(
+      '/transactions/admin/delete',
+      { transactionId: String(transactionId) },
+      { skipErrorHandler: true }
+    );
+    const data = response.data;
+    if (data.responseType !== 'S') {
+      throw new Error(extractErrorMessage(data));
+    }
+    return data.responseValue ?? { message: 'Transaction deleted successfully.' };
+  },
+
+  deleteBulk: async (
+    transactionIds: string[]
+  ): Promise<TransactionDeleteResult> => {
+    const response = await apiClient.post<MoiApiResponse<TransactionDeleteResult>>(
+      '/transactions/admin/delete-bulk',
+      { transactionIds },
+      { skipErrorHandler: true }
+    );
+    const data = response.data;
+    if (data.responseType !== 'S') {
+      throw new Error(extractErrorMessage(data));
+    }
+    return (
+      data.responseValue ?? {
+        message: 'Selected transactions deleted successfully',
+        deletedCount: transactionIds.length,
+      }
+    );
   },
 };

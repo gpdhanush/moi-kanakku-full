@@ -153,18 +153,6 @@ class _FunctionsListState extends State<FunctionsList> {
                             title: languageProvider.tr('functions.noFunctions'),
                             subtitle:
                                 languageProvider.tr('functions.noFunctionsHint'),
-                            actionLabel:
-                                languageProvider.tr('functions.addFunction'),
-                            onAdd: () async {
-                              await Navigator.pushNamed(
-                                context,
-                                "add-edit-functions",
-                                arguments: [],
-                              );
-                              if (mounted) {
-                                await getUserFunctions(showLoading: false);
-                              }
-                            },
                           ),
                         ),
                       ],
@@ -360,15 +348,11 @@ class _NoFunctionsState extends StatefulWidget {
   final Color primary;
   final String title;
   final String subtitle;
-  final String actionLabel;
-  final VoidCallback onAdd;
 
   const _NoFunctionsState({
     required this.primary,
     required this.title,
     required this.subtitle,
-    required this.actionLabel,
-    required this.onAdd,
   });
 
   @override
@@ -483,44 +467,6 @@ class _NoFunctionsStateState extends State<_NoFunctionsState>
                 color: const Color(0xff71717A),
                 fontSize: 14,
                 height: 1.45,
-              ),
-            ),
-            const SizedBox(height: 22),
-            ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 280),
-              child: SizedBox(
-                width: double.infinity,
-                child: Material(
-                  color: widget.primary,
-                  borderRadius: BorderRadius.circular(12),
-                  child: InkWell(
-                    onTap: widget.onAdd,
-                    borderRadius: BorderRadius.circular(12),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 13),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const HugeIcon(
-                            icon: HugeIcons.strokeRoundedAdd01,
-                            color: Colors.white,
-                            size: 18,
-                            strokeWidth: 2,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            widget.actionLabel,
-                            style: AppTypography.label.copyWith(
-                              color: Colors.white,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
               ),
             ),
           ],

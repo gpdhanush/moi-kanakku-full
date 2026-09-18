@@ -151,12 +151,6 @@ class _FeedbacksState extends State<Feedbacks> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _FeedbackHero(
-                    primary: primary,
-                    title: languageProvider.tr('feedback.newFeedback'),
-                    subtitle: languageProvider.tr('feedback.shareFeedback'),
-                  ),
-                  const SizedBox(height: AppSpacing.md),
                   _buildComposerCard(languageProvider, primary),
                   const SizedBox(height: AppSpacing.lg),
                   Text(
@@ -348,119 +342,6 @@ class _FeedbacksState extends State<Feedbacks> {
         );
       }
     }
-  }
-}
-
-class _FeedbackHero extends StatelessWidget {
-  final Color primary;
-  final String title;
-  final String subtitle;
-
-  const _FeedbackHero({
-    required this.primary,
-    required this.title,
-    required this.subtitle,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final deep = AppColors.deepenAccent(primary, amount: 0.28);
-    final soft = Color.lerp(primary, Colors.white, 0.22)!;
-
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(18),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [primary, soft, deep],
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: primary.withValues(alpha: 0.28),
-            blurRadius: 18,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Stack(
-        children: [
-          Positioned(
-            right: -20,
-            top: -16,
-            child: Container(
-              width: 90,
-              height: 90,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white.withValues(alpha: 0.10),
-              ),
-            ),
-          ),
-          Positioned(
-            left: -24,
-            bottom: -28,
-            child: Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white.withValues(alpha: 0.08),
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(18, 18, 18, 18),
-            child: Row(
-              children: [
-                Container(
-                  width: 52,
-                  height: 52,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.16),
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  alignment: Alignment.center,
-                  child: const HugeIcon(
-                    icon: HugeIcons.strokeRoundedComment01,
-                    color: Colors.white,
-                    size: 24,
-                    strokeWidth: 1.8,
-                  ),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: AppTypography.sectionTitle.copyWith(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        subtitle,
-                        style: AppTypography.body.copyWith(
-                          color: Colors.white.withValues(alpha: 0.88),
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                          height: 1.3,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
   }
 }
 

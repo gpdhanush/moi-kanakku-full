@@ -33,11 +33,11 @@ class AppColors {
   static const Color primarySoft = Color(0xffD1FAE5);
   static const Color primaryMid = Color(0xff10B981);
 
-  /// Soft colorful canvas (logo-green tinted)
-  static const Color background = Color(0xffF3FBF7);
+  /// Soft neutral canvas — stays theme-agnostic when accent color changes.
+  static const Color background = Color(0xffF7F8FA);
   static const Color surface = Color(0xffffffff);
   static const Color surfaceBlue = Color(0xffECFDF5);
-  static const Color borderSubtle = Color(0xffCDEBD9);
+  static const Color borderSubtle = Color(0xffE4E4E7);
   static const Color textPrimary = Color(0xff0F172A);
   static const Color textSecondary = Color(0xff64748B);
 

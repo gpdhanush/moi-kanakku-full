@@ -394,7 +394,9 @@ class _ProfilePageState extends State<ProfilePage> {
                               : (_profileImageUrl != null &&
                                     _profileImageUrl!.isNotEmpty)
                               ? NetworkImage(_profileImageUrl!) as ImageProvider
-                              : const AssetImage(AppImages.profileImage),
+                              : AssetImage(
+                                  AppImages.profileForGender(_selectedGender),
+                                ),
                         ),
                       ),
                       Positioned(

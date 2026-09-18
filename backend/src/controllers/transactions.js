@@ -1038,4 +1038,131 @@ exports.controller = {
             });
         }
     },
+
+    /**
+     * Admin: soft-delete a single transaction
+     * Body: { transactionId }
+     */
+    adminDelete: async (req, res) => {
+        try {
+            const { transactionId } = req.body;
+
+            if (!transactionId) {
+                return res.status(400).json({
+                    responseType: "F",
+                    responseValue: { message: "Transaction ID is required!" }
+                });
+            }
+
+            const idCheck = validateUuid(transactionId, 'transactionId');
+            if (!idCheck.ok) return sendUuidError(res, idCheck.message);
+
+            const transaction = await Model.readById(transactionId);
+            if (!transaction) {
+                return res.status(404).json({
+                    responseType: "F",
+                    responseValue: { message: "Transaction not found!" }
+                });
+            }
+
+            const success = await Model.delete(transactionId);
+            if (!success) {
+                return res.status(500).json({
+                    responseType: "F",
+                    responseValue: { message: "Failed to delete transaction!" }
+                });
+            }
+
+            clearTransactionCaches(transaction.userId || transaction.user_id);
+            recordAuditLog({
+                userId: transaction.userId || transaction.user_id || req.user?.userId,
+                action: 'TRANSACTION_DELETE',
+                entityType: 'transaction',
+                entityId: transactionId,
+                summary: 'Transaction deleted by admin',
+                req,
+            });
+
+            return res.status(200).json({
+                responseType: "S",
+                responseValue: {
+                    message: "Transaction deleted successfully.",
+                    transactionId: String(transactionId),
+                    deletedCount: 1,
+                }
+            });
+        } catch (error) {
+            logger.error('Error admin deleting transaction:', error);
+            return res.status(500).json({
+                responseType: "F",
+                responseValue: { message: error.toString() }
+            });
+        }
+    },
+
+    /**
+     * Admin: soft-delete multiple transactions
+     * Body: { transactionIds: string[] }
+     */
+    adminDeleteBulk: async (req, res) => {
+        try {
+            const ids = Array.isArray(req.body?.transactionIds)
+                ? req.body.transactionIds
+                : Array.isArray(req.body?.ids)
+                    ? req.body.ids
+                    : [];
+            const uniqueIds = [
+                ...new Set(ids.map((id) => String(id).trim()).filter(Boolean)),
+            ];
+
+            if (uniqueIds.length === 0) {
+                return res.status(400).json({
+                    responseType: "F",
+                    responseValue: { message: "Select at least one transaction to delete." }
+                });
+            }
+
+            for (const id of uniqueIds) {
+                const idCheck = validateUuid(id, 'transactionId');
+                if (!idCheck.ok) return sendUuidError(res, idCheck.message);
+            }
+
+            const { deletedCount, userIds } = await Model.deleteMultiple(uniqueIds);
+            if (!deletedCount) {
+                return res.status(404).json({
+                    responseType: "F",
+                    responseValue: { message: "No matching transactions were deleted." }
+                });
+            }
+
+            (userIds || []).forEach((userId) => clearTransactionCaches(userId));
+            if (!userIds || userIds.length === 0) {
+                cache.del('dashboard:stats');
+                cache.del('dashboard:detailed');
+            }
+
+            recordAuditLog({
+                userId: req.user?.userId,
+                action: 'TRANSACTION_DELETE_BULK',
+                entityType: 'transaction',
+                entityId: uniqueIds.join(','),
+                summary: `Admin deleted ${deletedCount} transaction(s)`,
+                req,
+            });
+
+            return res.status(200).json({
+                responseType: "S",
+                responseValue: {
+                    message: `Deleted ${deletedCount} transaction(s).`,
+                    deletedCount,
+                }
+            });
+        } catch (error) {
+            logger.error('Error bulk deleting transactions:', error);
+            return res.status(500).json({
+                responseType: "F",
+                responseValue: { message: error.toString() }
+            });
+        }
+    },
 };

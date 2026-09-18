@@ -97,9 +97,41 @@ class HomeFunctionTotalsSection extends StatelessWidget {
             child: Center(child: CircularProgressIndicator(strokeWidth: 2.5)),
           )
         else if (preview.isEmpty)
-          Text(
-            languageProvider.tr('home.noFunctionTotals'),
-            style: AppTypography.body,
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 64,
+                    height: 64,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: primary.withValues(alpha: 0.08),
+                    ),
+                    alignment: Alignment.center,
+                    child: HugeIcon(
+                      icon: HugeIcons.strokeRoundedCalendar03,
+                      color: primary.withValues(alpha: 0.85),
+                      size: 28,
+                      strokeWidth: 1.7,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  Text(
+                    languageProvider.tr('home.noFunctionTotals'),
+                    textAlign: TextAlign.center,
+                    style: AppTypography.body.copyWith(
+                      color: AppColors.textSecondary,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      height: 1.4,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           )
         else
           Column(

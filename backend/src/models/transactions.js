@@ -402,10 +402,51 @@ const Model = {
     async delete(transactionId) {
         const [result] = await db.query(
             `UPDATE transactions SET is_deleted = 1, deleted_at = CURRENT_TIMESTAMP
-             WHERE id = ?`,
+             WHERE id = ? AND (is_deleted = 0 OR is_deleted IS NULL)`,
             [toBinaryUUID(transactionId)]
         );
-        return result.changedRows > 0;
+        return result.changedRows > 0 || result.affectedRows > 0;
+    },
+
+    /**
+     * Soft-delete multiple transactions (admin)
+     * @returns {{ deletedCount: number, userIds: string[] }}
+     */
+    async deleteMultiple(transactionIds = []) {
+        const list = (transactionIds || [])
+            .map((id) => String(id).trim())
+            .filter(Boolean);
+        if (list.length === 0) {
+            return { deletedCount: 0, userIds: [] };
+        }
+
+        const binaryIds = list.map((id) => toBinaryUUID(id));
+        const placeholders = binaryIds.map(() => '?').join(',');
+
+        const [rows] = await db.query(
+            `SELECT user_id FROM transactions
+             WHERE id IN (${placeholders}) AND (is_deleted = 0 OR is_deleted IS NULL)`,
+            binaryIds
+        );
+
+        const [result] = await db.query(
+            `UPDATE transactions SET is_deleted = 1, deleted_at = CURRENT_TIMESTAMP
+             WHERE id IN (${placeholders}) AND (is_deleted = 0 OR is_deleted IS NULL)`,
+            binaryIds
+        );
+
+        const userIds = [
+            ...new Set(
+                (rows || [])
+                    .map((row) => fromBinaryUUID(row.user_id))
+                    .filter(Boolean)
+            ),
+        ];
+
+        return {
+            deletedCount: result.affectedRows || 0,
+            userIds,
+        };
     },
 
     /**

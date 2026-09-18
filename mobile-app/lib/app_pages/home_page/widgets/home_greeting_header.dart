@@ -4,7 +4,6 @@ import 'package:moi/app_themes/index.dart';
 import 'package:moi/app_utils/app_providers/language_provider.dart';
 import 'package:moi/app_utils/app_providers/user_provider.dart';
 import 'package:moi/app_utils/app_widgets/moi_network_image.dart';
-import 'package:hugeicons/hugeicons.dart';
 import 'package:provider/provider.dart';
 
 class HomeGreetingHeader extends StatelessWidget {
@@ -50,6 +49,7 @@ class HomeGreetingHeader extends StatelessWidget {
             : userName;
         final lastLogin = user?['last_login']?.toString() ?? '';
         final profileImageUrl = _resolveProfileImageUrl(user);
+        final gender = user?['gender']?.toString();
 
         return Semantics(
           header: true,
@@ -124,7 +124,11 @@ class HomeGreetingHeader extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: AppSpacing.sm),
-                _Avatar(imageUrl: profileImageUrl, primary: primary),
+                _Avatar(
+                  imageUrl: profileImageUrl,
+                  gender: gender,
+                  primary: primary,
+                ),
               ],
             ),
           ),
@@ -136,26 +140,21 @@ class HomeGreetingHeader extends StatelessWidget {
 
 class _Avatar extends StatelessWidget {
   final String imageUrl;
+  final String? gender;
   final Color primary;
 
-  const _Avatar({required this.imageUrl, required this.primary});
+  const _Avatar({
+    required this.imageUrl,
+    required this.gender,
+    required this.primary,
+  });
 
   Widget _placeholder() {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [primary, Color.lerp(primary, Colors.white, 0.25)!],
-        ),
-      ),
-      alignment: Alignment.center,
-      child: const HugeIcon(
-        icon: HugeIcons.strokeRoundedUser,
-        color: Colors.white,
-        size: 22,
-        strokeWidth: 1.8,
-      ),
+    return Image.asset(
+      AppImages.profileForGender(gender),
+      fit: BoxFit.cover,
+      width: 48,
+      height: 48,
     );
   }
 

@@ -3,9 +3,12 @@ const User = require('../models/user');
 const db = require('../config/database');
 const { generateUUID, toBinaryUUID } = require('../helpers/uuid');
 const { validateUuid, sendUuidError } = require('../helpers/idParams');
-const { sendPushNotification } = require('./notificationController');
+const { queuePushNotification } = require('./notificationController');
 const { Notification, NotificationType } = require('../models/notificationModels');
-const { sendFeedbackConfirmationEmail, sendFeedbackReplyEmail } = require('../services/emailService');
+const {
+    queueFeedbackConfirmationEmail,
+    queueFeedbackReplyEmail,
+} = require('../services/emailService');
 const logger = require('../config/logger');
 const { recordAuditLog } = require('../helpers/auditLog');
 
@@ -54,21 +57,16 @@ exports.controller = {
 
             if (query) {
                 if (user.um_notification_token) {
-                    try {
-                        await sendPushNotification({
-                            userId,
-                            title: 'New Feedback Submitted',
-                            body: 'Your feedback has been successfully submitted. We will review it shortly.',
-                            token: user.um_notification_token,
-                            type: NotificationType.GENERAL
-                        });
-                    } catch (notificationError) {
-                        logger.error('Error sending push notification for feedback', notificationError);
-                    }
+                    queuePushNotification({
+                        userId,
+                        title: 'New Feedback Submitted',
+                        body: 'Your feedback has been successfully submitted. We will review it shortly.',
+                        token: user.um_notification_token,
+                        type: NotificationType.GENERAL
+                    });
                 }
-                // TODO: Send email confirmation to user
                 if (user.um_email) {
-                    sendFeedbackConfirmationEmail(user.um_email, user.um_full_name).catch(() => {});
+                    queueFeedbackConfirmationEmail(user.um_email, user.um_full_name);
                 }
 
                 recordAuditLog({
@@ -257,16 +255,11 @@ exports.controller = {
                 // Get updated feedback
                 const updatedFeedback = await Model.readById(feedbackId);
 
-                // Send email notification to user
+                // Queue email + FCM (non-blocking isolate queue)
                 if (feedback.userEmail) {
-                    try {
-                        await sendFeedbackReplyEmail(feedback.userEmail, feedback.userName, adminResponseText);
-                    } catch (emailError) {
-                        logger.error('Error sending feedback reply email: ', emailError);
-                    }
+                    queueFeedbackReplyEmail(feedback.userEmail, feedback.userName, adminResponseText);
                 }
 
-                // Send push notification if token exists
                 const notificationTitle = 'Feedback Response';
                 const notificationBody = adminResponseText.length > 120
                     ? `${adminResponseText.slice(0, 117)}...`
@@ -278,14 +271,11 @@ exports.controller = {
                     fcmSent: false,
                     dbSaved: false,
                     notificationId: null,
-                    dbSaveError: null,
+                    queued: false,
+                    jobIds: [],
                     message: null,
                     reason: null,
                     tokensFound: 0,
-                    tokensTried: 0,
-                    tokensSent: 0,
-                    fcmError: null,
-                    attempts: req.body?.debug ? [] : undefined
                 };
                 try {
                     const [deviceRows] = await db.query(
@@ -302,111 +292,44 @@ exports.controller = {
                     pushNotification.tokensFound = tokens.length;
                     logger.info('adminReplyFeedback device tokens', { traceId, userId: feedback.userId, tokensFound: tokens.length });
 
-                    if (tokens.length === 0) {
-                        pushNotification.reason = 'NO_ACTIVE_FCM_TOKEN';
-                        logger.info(`User ${feedback.userId} has no active FCM token; skipping FCM send (will still save notification).`);
+                    try {
+                        const n = await Notification.create({
+                            userId: feedback.userId,
+                            title: notificationTitle,
+                            body: notificationBody,
+                            type: NotificationType.GENERAL
+                        });
+                        pushNotification.dbSaved = true;
+                        pushNotification.notificationId = n?.insertId || null;
+                    } catch (dbError) {
+                        pushNotification.reason = 'NOTIFICATION_DB_SAVE_FAILED';
+                        pushNotification.message = dbError?.message || String(dbError);
+                        logger.error('Error saving notification to DB: ', dbError);
+                    }
 
-                        // Still save to DB so user can see it in in-app notifications list
-                        try {
-                            const n = await Notification.create({
+                    if (tokens.length > 0) {
+                        pushNotification.attempted = true;
+                        pushNotification.queued = true;
+                        tokens.forEach((token) => {
+                            const jobId = queuePushNotification({
                                 userId: feedback.userId,
                                 title: notificationTitle,
                                 body: notificationBody,
-                                type: NotificationType.GENERAL
+                                token,
+                                type: NotificationType.GENERAL,
+                                skipDbSave: true,
+                                traceId
                             });
-                            pushNotification.dbSaved = true;
-                            pushNotification.notificationId = n?.insertId || null;
-                            pushNotification.message = 'Notification saved to DB (no active device token)';
-                        } catch (dbError) {
-                            pushNotification.reason = 'NOTIFICATION_DB_SAVE_FAILED';
-                            pushNotification.message = dbError?.message || String(dbError);
-                            logger.error('Error saving notification to DB (no token): ', dbError);
-                        }
+                            pushNotification.jobIds.push(jobId);
+                        });
+                        pushNotification.message = 'Push notification queued for background delivery';
                     } else {
-                        pushNotification.attempted = true;
-
-                        for (let i = 0; i < tokens.length; i++) {
-                            pushNotification.tokensTried++;
-                            const tokenPrefix = String(tokens[i]).substring(0, 12);
-                            const tokenLength = String(tokens[i]).length;
-                            try {
-                                const result = await sendPushNotification({
-                                    userId: feedback.userId,
-                                    title: notificationTitle,
-                                    body: notificationBody,
-                                    token: tokens[i],
-                                    type: NotificationType.GENERAL,
-                                    skipDbSave: i > 0,
-                                    traceId
-                                });
-
-                                if (result?.fcmSent) pushNotification.tokensSent++;
-                                if (pushNotification.attempts) {
-                                    pushNotification.attempts.push({
-                                        tokenPrefix,
-                                        tokenLength,
-                                        fcmSent: !!result?.fcmSent,
-                                        dbSaved: !!result?.dbSaved,
-                                        messageId: result?.messageId || null,
-                                        fcmError: result?.fcmError || null
-                                    });
-                                }
-
-                                // Keep first token result as the primary status details
-                                if (i === 0) {
-                                    pushNotification.fcmSent = !!result?.fcmSent;
-                                    pushNotification.dbSaved = !!result?.dbSaved;
-                                    pushNotification.notificationId = result?.notificationId || null;
-                                    pushNotification.dbSaveError = result?.dbSaveError || null;
-                                    pushNotification.message = result?.message || null;
-                                    pushNotification.fcmError = result?.fcmError || null;
-                                } else if (result?.fcmSent) {
-                                    pushNotification.fcmSent = true;
-                                }
-                            } catch (tokenError) {
-                                if (pushNotification.attempts) {
-                                    pushNotification.attempts.push({
-                                        tokenPrefix,
-                                        tokenLength,
-                                        fcmSent: false,
-                                        dbSaved: false,
-                                        messageId: null,
-                                        fcmError: {
-                                            code: tokenError?.code || null,
-                                            message: tokenError?.message || String(tokenError)
-                                        }
-                                    });
-                                }
-                                logger.error(
-                                    `Error sending push notification (token ${i + 1}/${tokens.length}) for user ${feedback.userId}: `,
-                                    tokenError
-                                );
-                            }
-                        }
-
-                        if (!pushNotification.fcmSent && pushNotification.tokensSent === 0) {
-                            pushNotification.reason = 'FCM_SEND_FAILED';
-                        }
-
-                        // If DB save failed inside sendPushNotification, attempt DB save here (avoid losing in-app notification)
-                        if (!pushNotification.dbSaved) {
-                            try {
-                                const n = await Notification.create({
-                                    userId: feedback.userId,
-                                    title: notificationTitle,
-                                    body: notificationBody,
-                                    type: NotificationType.GENERAL
-                                });
-                                pushNotification.dbSaved = true;
-                                pushNotification.notificationId = n?.insertId || pushNotification.notificationId;
-                            } catch (dbError) {
-                                logger.error('Fallback notification DB save failed: ', dbError);
-                            }
-                        }
+                        pushNotification.reason = 'NO_ACTIVE_FCM_TOKEN';
+                        pushNotification.message = 'Notification saved to DB (no active device token)';
                     }
                 } catch (notifyError) {
                     pushNotification.reason = notifyError?.message || 'PUSH_NOTIFICATION_ERROR';
-                    logger.error('Error sending push notification: ', notifyError);
+                    logger.error('Error queueing push notification: ', notifyError);
                 }
 
                 return res.status(200).json({ 

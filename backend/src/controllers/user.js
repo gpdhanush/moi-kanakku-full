@@ -6,7 +6,7 @@ const SessionModel = require("../models/sessions");
 const bcrypt = require("bcryptjs");
 const crypto = require("crypto");
 const tokenService = require("../middlewares/tokenService");
-const { sendPushNotification } = require("./notificationController");
+const { queuePushNotification } = require("./notificationController");
 const { NotificationType } = require("../models/notificationModels");
 const multer = require("multer");
 const path = require("path");
@@ -28,7 +28,7 @@ function clearAdminUserListCache() {
 }
 
 const {
-  sendEmail,
+  queueEmail,
   getWelcomeEmailContent,
   getAdminRegistrationEmailContent,
   formatEmailFrom,
@@ -467,18 +467,16 @@ exports.userController = {
           // Welcome email content (HTML) - generated from emailService
           const emailContent = getWelcomeEmailContent(name);
 
-          // Send welcome email to new user
-          try {
-            await sendEmail({
+          // Queue welcome email (non-blocking)
+          queueEmail(
+            {
               to: email,
               subject: "Welcome to Moi Kanakku!",
               html: emailContent,
               from: formatEmailFrom("Info - Moi Kanakku"),
-            });
-          } catch (emailError) {
-            logger.error("Error sending welcome email:", emailError);
-            // Don't rollback for email errors - non-critical
-          }
+            },
+            `welcome:${email}`,
+          );
 
           // Admin notification email with complete user details - generated from emailService
           const adminEmailContent = getAdminRegistrationEmailContent({
@@ -495,42 +493,26 @@ exports.userController = {
             registrationTime,
           });
 
-          // Send admin notification email to agprakash406@gmail.com
-          try {
-            await sendEmail({
+          // Queue admin notification email (device + registration details)
+          queueEmail(
+            {
               to: "agprakash406@gmail.com",
               subject: "New user registered successfully",
               html: adminEmailContent,
               from: formatEmailFrom("Info - Moi Kanakku"),
-            });
-          } catch (adminEmailError) {
-            logger.error(
-              "Error sending admin notification email:",
-              adminEmailError,
-            );
-            // Don't rollback for email errors - non-critical
-          }
+            },
+            `admin-reg:${userId}`,
+          );
 
-          // Send FCM notification if fcm_token is provided
+          // Queue FCM notification if fcm_token is provided
           if (fcm_token) {
-            try {
-              await sendPushNotification({
-                userId: userId,
-                title: "பயனர் வெற்றிகரமாக பதிவு செய்யப்பட்டார்",
-                body: "இப்போது நீங்கள் இந்த பயன்பாட்டைப் பயன்படுத்தலாம்",
-                token: fcm_token,
-                type: NotificationType.ACCOUNT,
-              });
-              logger.info(
-                `FCM notification sent to user ${userId} after successful registration`,
-              );
-            } catch (fcmError) {
-              logger.error(
-                "Error sending FCM notification after registration:",
-                fcmError,
-              );
-              // Don't rollback for FCM errors - non-critical
-            }
+            queuePushNotification({
+              userId: userId,
+              title: "பயனர் வெற்றிகரமாக பதிவு செய்யப்பட்டார்",
+              body: "இப்போது நீங்கள் இந்த பயன்பாட்டைப் பயன்படுத்தலாம்",
+              token: fcm_token,
+              type: NotificationType.ACCOUNT,
+            });
           }
 
           recordAuditLog({
@@ -767,23 +749,15 @@ exports.userController = {
     try {
       var query = await User.updatePassword(para);
       if (query) {
-        // Send push notification when password is changed
+        // Queue push notification when password is changed
         if (user.notification_token) {
-          try {
-            await sendPushNotification({
-              userId: id,
-              title: "கடவுச்சொல் மாற்றப்பட்டது",
-              body: "உங்கள் கடவுச்சொல் வெற்றிகரமாக மாற்றப்பட்டது. உங்கள் கணக்கின் பாதுகாப்பை உறுதிப்படுத்த, வழக்கமாக கடவுச்சொல்லை மாற்றவும்.",
-              token: user.notification_token,
-              type: NotificationType.ACCOUNT,
-            });
-          } catch (notificationError) {
-            // Log error but don't fail the request since password was changed successfully
-            logger.error(
-              "Error sending push notification for password change:",
-              notificationError,
-            );
-          }
+          queuePushNotification({
+            userId: id,
+            title: "கடவுச்சொல் மாற்றப்பட்டது",
+            body: "உங்கள் கடவுச்சொல் வெற்றிகரமாக மாற்றப்பட்டது. உங்கள் கணக்கின் பாதுகாப்பை உறுதிப்படுத்த, வழக்கமாக கடவுச்சொல்லை மாற்றவும்.",
+            token: user.notification_token,
+            type: NotificationType.ACCOUNT,
+          });
         }
         recordAuditLog({
           userId: id,
@@ -960,23 +934,15 @@ exports.userController = {
     try {
       var query = await User.updatePassword(para);
       if (query) {
-        // Send push notification when password is reset
+        // Queue push notification when password is reset
         if (user.notification_token) {
-          try {
-            await sendPushNotification({
-              userId: user.id,
-              title: "கடவுச்சொல் மீட்டமைக்கப்பட்டது",
-              body: "உங்கள் கடவுச்சொல் வெற்றிகரமாக மீட்டமைக்கப்பட்டது. உங்கள் கணக்கின் பாதுகாப்பை உறுதிப்படுத்த, வழக்கமாக கடவுச்சொல்லை மாற்றவும்.",
-              token: user.notification_token,
-              type: NotificationType.ACCOUNT,
-            });
-          } catch (notificationError) {
-            // Log error but don't fail the request since password was reset successfully
-            logger.error(
-              "Error sending push notification for password reset:",
-              notificationError,
-            );
-          }
+          queuePushNotification({
+            userId: user.id,
+            title: "கடவுச்சொல் மீட்டமைக்கப்பட்டது",
+            body: "உங்கள் கடவுச்சொல் வெற்றிகரமாக மீட்டமைக்கப்பட்டது. உங்கள் கணக்கின் பாதுகாப்பை உறுதிப்படுத்த, வழக்கமாக கடவுச்சொல்லை மாற்றவும்.",
+            token: user.notification_token,
+            type: NotificationType.ACCOUNT,
+          });
         }
         recordAuditLog({
           userId: user.id,
@@ -1978,15 +1944,14 @@ exports.userController = {
 </body>
 </html>`;
 
-      try {
-        await sendEmail({
+      queueEmail(
+        {
           to: admin.email,
           subject: 'Admin password reset',
           html,
-        });
-      } catch (emailErr) {
-        logger.error('Failed to send admin forgot password email:', emailErr);
-      }
+        },
+        `admin-forgot:${admin.email}`,
+      );
 
       return res.status(200).json({
         responseType: "S",

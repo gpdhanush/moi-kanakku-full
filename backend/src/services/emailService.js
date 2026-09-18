@@ -81,10 +81,25 @@ function createEmailTransporter(overrides = {}) {
     const connectionTimeout = Number(process.env.EMAIL_CONN_TIMEOUT) || 15000;
     const greetingTimeout = Number(process.env.EMAIL_GREETING_TIMEOUT) || 15000;
     const socketTimeout = Number(process.env.EMAIL_SOCKET_TIMEOUT) || 20000;
+    const secureEnv = String(process.env.EMAIL_SECURE || '').toLowerCase();
+    const secure =
+        secureEnv === 'true' || secureEnv === '1'
+            ? true
+            : secureEnv === 'false' || secureEnv === '0'
+              ? false
+              : port === 465;
+    const rejectUnauthorized = ['true', '1'].includes(
+        String(process.env.EMAIL_TLS_REJECT || '').toLowerCase()
+    );
+    const debug =
+        process.env.EMAIL_DEBUG === 'true' || process.env.EMAIL_DEBUG === '1';
+    const enableLogger =
+        process.env.EMAIL_LOGGER === 'true' || process.env.EMAIL_LOGGER === '1';
+
     return nodemailer.createTransport({
         host: process.env.EMAIL_HOST,
         port,
-        secure: port === 465,
+        secure,
         auth: {
             user: process.env.EMAIL_USER,
             pass: process.env.EMAIL_PASS,
@@ -93,13 +108,24 @@ function createEmailTransporter(overrides = {}) {
         greetingTimeout,
         socketTimeout,
         tls: {
-            rejectUnauthorized: false,
+            // Most cPanel SMTP hosts use shared/self-signed certs.
+            rejectUnauthorized,
+            servername: process.env.EMAIL_HOST,
         },
+        logger: enableLogger,
+        debug,
         ...overrides,
     });
 }
 
-const transporter = createEmailTransporter();
+let sharedTransporter = null;
+
+function getSharedTransporter() {
+    if (!sharedTransporter) {
+        sharedTransporter = createEmailTransporter();
+    }
+    return sharedTransporter;
+}
 
 /**
  * Verify SMTP credentials at startup (logs only; does not block server).
@@ -109,13 +135,20 @@ async function verifyEmailTransport() {
         logger.warn('Email transport not configured: EMAIL_HOST, EMAIL_USER, or EMAIL_PASS is missing');
         return false;
     }
+    const transporter = createEmailTransporter({ logger: false, debug: false });
     try {
         await transporter.verify();
-        logger.info('Email transport verified successfully');
+        logger.info(
+            `Email transport verified successfully (${process.env.EMAIL_HOST}:${process.env.EMAIL_PORT || 465}, secure=${String(
+                process.env.EMAIL_SECURE || (Number(process.env.EMAIL_PORT) || 465) === 465
+            )})`
+        );
         return true;
     } catch (err) {
         logger.error('Email transport verification failed:', err.message || err);
         return false;
+    } finally {
+        transporter.close();
     }
 }
 
@@ -128,12 +161,12 @@ async function sendFeedbackConfirmationEmail(toEmail, userName) {
     if (!toEmail) return;
     try {
         const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Feedback Submitted</title></head><body style="margin:0;padding:0;background:#f3f4f6;font-family:Arial,Helvetica,sans-serif;"><table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 10px;"><tr><td align="center"><table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:#ffffff;border-radius:8px;border:1px solid #e5e7eb;box-shadow:0 4px 10px rgba(0,0,0,0.05);"><tr><td style="border-bottom:1px solid #e5e7eb;padding:20px 24px;"><h1 style="margin:0;font-size:20px;font-weight:600;color:#1e3a8a;"> Moi Kanakku </h1></td></tr><tr><td style="padding:24px;color:#374151;line-height:1.6;font-size:15px;"><p style="margin:0 0 15px;"> Hi <strong style="color:#111827;">${userName || "User"}</strong>, </p><p style="margin:0 0 15px;"> Your feedback has been successfully submitted. We will review it shortly. </p><p style="margin:0 0 15px;"> 🙏 <strong>Thanks for using the Moi Kanakku app!</strong><br> Your feedback helps us improve the app for everyone. </p><div style="background:#eff6ff;border:1px solid #dbeafe;border-radius:6px;padding:16px;margin-top:20px;"><p style="margin:0 0 8px;font-weight:600;color:#1e3a8a;"> 🎉 Help us grow! </p><p style="margin:0 0 8px;font-size:14px;color:#374151;"> If you like Moi Kanakku, please share it with your friends and family. Your support helps more people manage their accounts easily. </p><p style="margin:0;font-size:14px;color:#374151;"> Stay tuned for upcoming features and promotions in the app! </p></div><p style="margin-top:25px;font-size:14px;color:#4b5563;"> Regards,<br><strong style="color:#1e3a8a;">Moi Kanakku Team</strong></p></td></tr><tr><td style="border-top:1px solid #e5e7eb;text-align:center;padding:15px;font-size:12px;color:#6b7280;"> © 2026 Moi Kanakku. All rights reserved. </td></tr></table></td></tr></table></body></html>`;
-        await transporter.sendMail(buildMailOptions({
+        await sendEmail({
             from: formatEmailFrom('Admin - Moi Kanakku Team'),
             to: toEmail,
             subject: 'Feedback Submission - Moi Kanakku',
             html,
-        }));
+        });
     } catch (err) {
         logger.error('Error sending feedback confirmation email', err);
     }
@@ -146,12 +179,12 @@ async function sendFeedbackReplyEmail(toEmail, userName, replyText) {
     if (!toEmail) return;
     try {
         const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head><body style="margin:0;padding:0;background:#f5f7fb;font-family:Helvetica,Arial,sans-serif;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="padding:30px 10px;"><tr><td align="center"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:620px;background:#ffffff;border:1px solid #e5e7eb;border-radius:8px;"><tr><td style="padding:20px;border-bottom:1px solid #eee;"><a href="#" style="font-size:20px;color:#00466a;text-decoration:none;font-weight:600;"> Moi Kanakku </a></td></tr><tr><td style="padding:25px;color:#333;line-height:1.7;"><p style="font-size:16px;margin:0 0 15px 0;"> Hi <strong style="color:#2c2c54;">${userName || "User"}</strong>, </p><p style="margin:0 0 15px 0;"> A response has been provided for your feedback. </p><div style="background:#f5f5f5;padding:15px;border-radius:6px;margin:15px 0;font-size:14px;"> ${escapeHtml(replyText).replace(/\n/g, "<br/>")} </div><p style="margin-top:15px;"> 🙏 <strong>Thanks for using Moi Kanakku!</strong> Your feedback helps us improve the app experience. </p><div style="background:#eef4ff;border:1px solid #dbe7ff;padding:15px;border-radius:6px;margin-top:20px;font-size:14px;"><strong>🚀 Share Moi Kanakku</strong><br> If you like our app, please share it with your friends and family. More features and promotions are coming soon! </div><p style="margin-top:25px;font-size:14px;color:#666;"> Regards,<br><strong>Moi Kanakku Team</strong></p></td></tr><tr><td style="border-top:1px solid #eee;padding:15px;text-align:center;font-size:12px;color:#999;"> © 2026 Moi Kanakku. All rights reserved. </td></tr></table></td></tr></table></body></html>`;
-        await transporter.sendMail(buildMailOptions({
+        await sendEmail({
             from: formatEmailFrom('Admin - Moi Kanakku Team'),
             to: toEmail,
             subject: 'Response to your feedback - Moi Kanakku',
             html,
-        }));
+        });
     } catch (err) {
         logger.error('Error sending feedback reply email', err);
     }
@@ -159,31 +192,95 @@ async function sendFeedbackReplyEmail(toEmail, userName, replyText) {
 
 /**
  * Generic sendEmail function for sending emails with custom subject, content
- * @param {Object} options - { to, subject, html, from? }
+ * @param {Object} options - { to, subject, html, from?, text? }
  */
 async function sendEmail(options) {
-    const { to, subject, html, from } = options;
+    const { to, subject, html, from, text } = options;
     
     if (!to || !subject || !html) {
         logger.error('sendEmail: Missing required parameters (to, subject, html)');
         throw new Error('to, subject, html are required');
     }
-    
+
+    const mailOptions = buildMailOptions({
+        from: from || formatEmailFrom('Moi Kanakku'),
+        to,
+        subject,
+        html,
+        text,
+    });
+
+    const attemptSend = async (transporter) => transporter.sendMail(mailOptions);
+
     try {
-        const mailOptions = buildMailOptions({
-            from: from || formatEmailFrom('Moi Kanakku'),
-            to,
-            subject,
-            html,
-        });
-        
-        const result = await transporter.sendMail(mailOptions);
+        const result = await attemptSend(getSharedTransporter());
         logger.info(`Email sent successfully to ${to} from ${mailOptions.from}: ${result.response}`);
         return result;
     } catch (err) {
-        logger.error(`Error sending email to ${to}:`, err);
-        throw err;
+        const message = String(err?.message || err || '');
+        const shouldRetry =
+            /timeout|timed out|econnreset|econnrefused|socket|connection|greeting/i.test(message);
+        if (!shouldRetry) {
+            logger.error(`Error sending email to ${to}:`, err);
+            throw err;
+        }
+
+        logger.warn(`Email send to ${to} failed (${message}); retrying with a fresh SMTP connection`);
+        try {
+            if (sharedTransporter) {
+                try {
+                    sharedTransporter.close();
+                } catch (_) {
+                    /* ignore */
+                }
+                sharedTransporter = null;
+            }
+            const fresh = createEmailTransporter({ logger: false, debug: false });
+            sharedTransporter = fresh;
+            const result = await attemptSend(fresh);
+            logger.info(`Email sent successfully to ${to} from ${mailOptions.from}: ${result.response}`);
+            return result;
+        } catch (retryErr) {
+            logger.error(`Error sending email to ${to} after retry:`, retryErr);
+            throw retryErr;
+        }
     }
+}
+
+/**
+ * Queue email in background isolate queue — does not block the HTTP request.
+ * @param {Object} options - same as sendEmail
+ * @param {string} [label]
+ * @returns {string} jobId
+ */
+function queueEmail(options, label) {
+    const { enqueueEmail } = require('./backgroundJobQueue');
+    const to = options?.to || 'unknown';
+    return enqueueEmail(label || `email:${to}`, async () => {
+        await sendEmail(options);
+    });
+}
+
+/**
+ * Queue feedback confirmation email (non-blocking).
+ */
+function queueFeedbackConfirmationEmail(toEmail, userName) {
+    if (!toEmail) return null;
+    const { enqueueEmail } = require('./backgroundJobQueue');
+    return enqueueEmail(`feedback-confirm:${toEmail}`, async () => {
+        await sendFeedbackConfirmationEmail(toEmail, userName);
+    });
+}
+
+/**
+ * Queue feedback reply email (non-blocking).
+ */
+function queueFeedbackReplyEmail(toEmail, userName, replyText) {
+    if (!toEmail) return null;
+    const { enqueueEmail } = require('./backgroundJobQueue');
+    return enqueueEmail(`feedback-reply:${toEmail}`, async () => {
+        await sendFeedbackReplyEmail(toEmail, userName, replyText);
+    });
 }
 
 /**
@@ -287,7 +384,10 @@ function getAdminRegistrationEmailContent(userData) {
 module.exports = {
     sendFeedbackConfirmationEmail,
     sendFeedbackReplyEmail,
+    queueFeedbackConfirmationEmail,
+    queueFeedbackReplyEmail,
     sendEmail,
+    queueEmail,
     getWelcomeEmailContent,
     getEmailVerificationContent,
     getAdminRegistrationEmailContent,

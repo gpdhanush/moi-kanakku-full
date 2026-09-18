@@ -373,10 +373,10 @@ export default function UserDetail() {
     mutationFn: () => emailApi.sendVerifyEmail(userId),
     onSuccess: (result) => {
       toast({
-        title: "Verification email sent",
+        title: "Verification email queued",
         description:
           result.message ||
-          `A verification link was sent to ${result.sent_to || user?.email || "the user"}.`,
+          `A verification link will be sent to ${result.sent_to || user?.email || "the user"}.`,
       });
       setVerifyEmailOpen(false);
       queryClient.invalidateQueries({ queryKey: ["admin", "users", userId] });

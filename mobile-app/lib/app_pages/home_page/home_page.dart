@@ -26,7 +26,14 @@ class HomePage extends StatefulWidget {
   /// When true, system back is handled by [MainShellPage].
   final bool isShellTab;
 
-  const HomePage({super.key, this.isShellTab = false});
+  /// Bumped by [MainShellPage] when the Home tab becomes active again.
+  final ValueNotifier<int>? refreshSignal;
+
+  const HomePage({
+    super.key,
+    this.isShellTab = false,
+    this.refreshSignal,
+  });
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -71,9 +78,25 @@ class _HomePageState extends State<HomePage> {
       ),
     );
 
+    widget.refreshSignal?.addListener(_onShellRefreshSignal);
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       initHomePage();
     });
+  }
+
+  void _onShellRefreshSignal() {
+    if (!mounted || !_isInitialized) return;
+    unawaited(_refreshHomeData(showLoading: false));
+  }
+
+  Future<void> _refreshHomeData({bool showLoading = false}) async {
+    if (!mounted) return;
+    await Future.wait([
+      getTotalAmount(showLoading: showLoading),
+      _loadFunctionSummaries(),
+      checkNotificationStatus(),
+    ]);
   }
 
   Future<void> initHomePage() async {
@@ -129,13 +152,9 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _refreshAfterNavigation() async {
-    if (mounted) {
-      _needsRefresh = true;
-      await Future.wait([
-        getTotalAmount(),
-        _loadFunctionSummaries(),
-      ]);
-    }
+    if (!mounted) return;
+    _needsRefresh = true;
+    await _refreshHomeData(showLoading: true);
   }
 
   Future<void> getPermission() async {
@@ -157,14 +176,17 @@ class _HomePageState extends State<HomePage> {
     super.didChangeDependencies();
     if (_isInitialized && _needsRefresh) {
       _needsRefresh = false;
-      getTotalAmount().catchError((e) {
-        debugPrint('Error refreshing data in didChangeDependencies: $e');
-      });
+      unawaited(
+        _refreshHomeData(showLoading: false).catchError((e) {
+          debugPrint('Error refreshing data in didChangeDependencies: $e');
+        }),
+      );
     }
   }
 
   @override
   void dispose() {
+    widget.refreshSignal?.removeListener(_onShellRefreshSignal);
     _upgrader.dispose();
     super.dispose();
   }
@@ -275,12 +297,7 @@ class _HomePageState extends State<HomePage> {
               : AppSpacing.page;
 
           return MoiRefreshIndicator(
-            onRefresh: () async {
-              await Future.wait([
-                getTotalAmount(showLoading: false),
-                _loadFunctionSummaries(),
-              ]);
-            },
+            onRefresh: () => _refreshHomeData(showLoading: false),
             child: Consumer<LanguageProvider>(
               builder: (context, languageProvider, _) {
                 return Stack(
@@ -382,14 +399,19 @@ class _HomePageState extends State<HomePage> {
                                 context,
                                 'functions-list',
                               );
-                              if (mounted) await _loadFunctionSummaries();
+                              if (mounted) {
+                                await _refreshHomeData(showLoading: false);
+                              }
                             },
-                            onItemTap: (summary) {
-                              Navigator.pushNamed(
+                            onItemTap: (summary) async {
+                              await Navigator.pushNamed(
                                 context,
                                 'view-functions-list',
                                 arguments: [summary['function']],
                               );
+                              if (mounted) {
+                                await _refreshHomeData(showLoading: false);
+                              }
                             },
                           ),
                         ),
@@ -433,7 +455,12 @@ class _HomePageState extends State<HomePage> {
           functionsResponse is Map && functionsResponse['responseType'] == 'S'
           ? functionsResponse['responseValue']
           : null;
-      if (rawFunctions is! List) return;
+
+      // Always replace local state so deletes/creates never leave stale rows.
+      if (rawFunctions is! List) {
+        if (mounted) setState(() => _functionSummaries = []);
+        return;
+      }
 
       final investByFunctionId = <String, double>{};
       final rawTransactions =

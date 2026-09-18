@@ -1,6 +1,6 @@
 const db = require('../config/database');
 const { fromBinaryUUID } = require('../helpers/uuid');
-const { sendPushNotification } = require('../controllers/notificationController');
+const { queuePushNotification } = require('../controllers/notificationController');
 const { Notification, NotificationType } = require('../models/notificationModels');
 const logger = require('../config/logger');
 
@@ -76,7 +76,7 @@ async function sendUpcomingFunctionReminders() {
         let savedNotification = false;
         for (const token of tokens) {
             try {
-                await sendPushNotification({
+                queuePushNotification({
                     userId,
                     title,
                     body,
@@ -87,7 +87,7 @@ async function sendUpcomingFunctionReminders() {
                 savedNotification = true;
                 sentCount += 1;
             } catch (error) {
-                logger.error('Error sending upcoming function reminder', {
+                logger.error('Error queueing upcoming function reminder', {
                     userId,
                     error: error.message
                 });

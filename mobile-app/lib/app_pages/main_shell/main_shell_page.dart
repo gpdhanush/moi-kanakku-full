@@ -21,21 +21,38 @@ class MainShellPage extends StatefulWidget {
 
 class _MainShellPageState extends State<MainShellPage> {
   final AlertServices _alertServices = AlertServices();
+  final ValueNotifier<int> _homeRefreshSignal = ValueNotifier<int>(0);
   int _currentIndex = 0;
 
   static const _tabCount = 5;
 
-  late final List<Widget> _pages = const [
-    HomePage(isShellTab: true),
-    FunctionsList(embeddedInShell: true),
-    TransactionDashboard(embeddedInShell: true),
-    Feedbacks(embeddedInShell: true),
-    MorePage(),
+  late final List<Widget> _pages = [
+    HomePage(isShellTab: true, refreshSignal: _homeRefreshSignal),
+    const FunctionsList(embeddedInShell: true),
+    const TransactionDashboard(embeddedInShell: true),
+    const Feedbacks(embeddedInShell: true),
+    const MorePage(),
   ];
+
+  void _goToTab(int index) {
+    if (index == _currentIndex) return;
+    final previous = _currentIndex;
+    setState(() => _currentIndex = index);
+    // IndexedStack keeps Home alive — refresh when returning to Home.
+    if (index == 0 && previous != 0) {
+      _homeRefreshSignal.value++;
+    }
+  }
+
+  @override
+  void dispose() {
+    _homeRefreshSignal.dispose();
+    super.dispose();
+  }
 
   Future<void> _onBack() async {
     if (_currentIndex != 0) {
-      setState(() => _currentIndex = 0);
+      _goToTab(0);
       return;
     }
 
@@ -93,10 +110,7 @@ class _MainShellPageState extends State<MainShellPage> {
             bottomNavigationBar: MoiBottomNavBar(
               currentIndex: _currentIndex,
               items: items,
-              onTap: (index) {
-                if (index == _currentIndex) return;
-                setState(() => _currentIndex = index);
-              },
+              onTap: _goToTab,
             ),
           ),
         );

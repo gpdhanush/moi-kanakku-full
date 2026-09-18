@@ -1,5 +1,5 @@
 const User = require('../models/user');
-const { sendPushNotification } = require('../controllers/notificationController');
+const { queuePushNotification } = require('../controllers/notificationController');
 const { NotificationType, Notification } = require('../models/notificationModels');
 const logger = require('../config/logger');
 
@@ -40,17 +40,17 @@ async function checkAndNotifyPasswordExpiration() {
                         continue;
                     }
 
-                    // Send FCM notification (this will save to DB if successful)
-                    await sendPushNotification({
+                    // Queue FCM in background isolate (does not block cron)
+                    queuePushNotification({
                         userId: user.um_id,
                         title: notificationTitle,
                         body: notificationBody,
                         token: user.um_notification_token,
                         type: NotificationType.ACCOUNT
                     });
-                    logger.info(`Password expiration notification sent to user ${user.um_id} (${user.um_email})`);
+                    logger.info(`Password expiration notification queued for user ${user.um_id} (${user.um_email})`);
                 } catch (notificationError) {
-                    logger.error(`Error sending password expiration notification to user ${user.um_id}:`, notificationError);
+                    logger.error(`Error queueing password expiration notification to user ${user.um_id}:`, notificationError);
                     // Continue with other users even if one fails
                 }
             } else {

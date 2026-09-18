@@ -163,6 +163,21 @@ exports.sendPushNotification = sendPushNotification;
 exports.isInvalidFcmTokenError = isInvalidFcmTokenError;
 exports.deactivateUnregisteredFcmToken = deactivateUnregisteredFcmToken;
 
+/**
+ * Queue FCM send in background isolate queue — returns jobId immediately.
+ * @param {Object} params - same as sendPushNotification
+ * @returns {string} jobId
+ */
+function queuePushNotification(params) {
+    const { enqueueFcm } = require('../services/backgroundJobQueue');
+    const label = `fcm:${params?.userId || 'unknown'}`;
+    return enqueueFcm(label, async () => {
+        await sendPushNotification(params);
+    });
+}
+
+exports.queuePushNotification = queuePushNotification;
+
 function isAdminRequest(req) {
     return req.user?.accountType === 'admin' || Boolean(req.admin);
 }
@@ -229,14 +244,18 @@ exports.controller = {
         if (!idCheck.ok) return sendUuidError(res, idCheck.message);
 
         try {
-            const result = await sendPushNotification({ userId, title, body, token, type });
+            const jobId = queuePushNotification({ userId, title, body, token, type });
             return res.status(200).json({
                 responseType: "S",
-                responseValue: { message: result.message }
+                responseValue: {
+                    message: 'Notification queued for delivery.',
+                    queued: true,
+                    jobId,
+                }
             });
         } catch (error) {
             // FCM send failed, don't save to database
-            logger.error('FCM send error:', error);
+            logger.error('FCM queue error:', error);
 
             // Handle FCM-specific errors
             let errorMessage = 'Could not send notification.';
@@ -723,117 +742,48 @@ exports.controller = {
                 });
             }
 
-            // Step 2 & 3: Process each user - send FCM and save to DB
-            const results = {
-                totalRequested: userIds.length,
-                usersFound: users.length,
-                successful: 0,
-                failed: 0,
-                noDeviceToken: 0,
-                failedUsers: [],
-                successfulUsers: []
-            };
+            // Save notifications to DB first (fast), then queue FCM in background isolate.
+            const notificationsToSave = users.map((user) => ({
+                userId: fromBinaryUUID(user.id),
+                title: title,
+                body: body,
+                type: type || NotificationType.GENERAL
+            }));
 
-            const notificationsToSave = [];
-
-            await mapWithConcurrency(users, 8, async (user) => {
-                const userId = fromBinaryUUID(user.id);
-                notificationsToSave.push({
-                    userId: userId,
-                    title: title,
-                    body: body,
-                    type: type || NotificationType.GENERAL
-                });
-
-                if (!user.fcm_token) {
-                    results.noDeviceToken++;
-                    results.failedUsers.push({
-                        userId: userId,
-                        reason: 'FCM device token not found'
-                    });
-                    return;
-                }
-
-                try {
-                    const message = {
-                        notification: {
-                            title: title,
-                            body: body,
-                        },
-                        data: {
-                            title: title,
-                            body: body,
-                            type: type || NotificationType.GENERAL,
-                            timestamp: new Date().toISOString(),
-                            notificationType: type || 'general'
-                        },
-                        token: user.fcm_token,
-                        android: {
-                            priority: 'high',
-                            ttl: 3600 * 1000,
-                            notification: {
-                                title: title,
-                                body: body,
-                                clickAction: 'FLUTTER_NOTIFICATION_CLICK'
-                            }
-                        },
-                        apns: {
-                            headers: {
-                                'apns-priority': '10'
-                            },
-                            payload: {
-                                aps: {
-                                    alert: {
-                                        title: title,
-                                        body: body
-                                    },
-                                    sound: 'default',
-                                    badge: 1,
-                                    'content-available': 1
-                                }
-                            }
-                        }
-                    };
-
-                    await admin.messaging().send(message);
-
-                    results.successful++;
-                    results.successfulUsers.push({
-                        userId: userId,
-                        email: user.email || 'N/A'
-                    });
-                } catch (fcmError) {
-                    logger.error(`FCM send error for user ${userId}:`, fcmError);
-
-                    if (isInvalidFcmTokenError(fcmError)) {
-                        await deactivateUnregisteredFcmToken(user.fcm_token, { userId });
-                    }
-
-                    results.failed++;
-                    results.failedUsers.push({
-                        userId: userId,
-                        email: user.email || 'N/A',
-                        reason: fcmError.message || 'Unknown FCM error'
-                    });
-                }
-            });
-
-            // Save all notifications to database in a single bulk query
             if (notificationsToSave.length > 0) {
                 try {
                     await Notification.createBulk(notificationsToSave);
-                    logger.info(`Successfully saved ${notificationsToSave.length} notifications in bulk.`);
+                    logger.info(`Queued bulk: saved ${notificationsToSave.length} notifications in DB.`);
                 } catch (dbError) {
                     logger.error('Error saving bulk notifications to DB:', dbError);
                 }
             }
 
-            // Return results
+            const fcmUsers = users.map((user) => ({
+                userId: fromBinaryUUID(user.id),
+                email: user.email || null,
+                fcm_token: user.fcm_token || null,
+                full_name: user.full_name || null,
+            }));
+
+            const { enqueueBulkIsolate } = require('../services/backgroundJobQueue');
+            const { jobId, mode } = enqueueBulkIsolate('bulk_fcm', {
+                users: fcmUsers,
+                title,
+                body,
+                type: type || NotificationType.GENERAL,
+            });
+
             return res.status(200).json({
-                responseType: results.successful > 0 ? "S" : "F",
+                responseType: "S",
                 responseValue: {
-                    message: `Notifications sent successfully to ${results.successful} users.`,
-                    ...results
+                    message: `Notifications queued for ${users.length} users. Delivery continues in background.`,
+                    queued: true,
+                    jobId,
+                    mode,
+                    totalRequested: userIds.length,
+                    usersFound: users.length,
+                    dbSaved: notificationsToSave.length,
                 }
             });
 
@@ -927,7 +877,7 @@ exports.controller = {
                 });
             }
 
-            const result = await sendPushNotification({
+            const result = queuePushNotification({
                 userId,
                 title,
                 body,
@@ -938,10 +888,11 @@ exports.controller = {
             return res.status(200).json({
                 responseType: "S",
                 responseValue: {
-                    message: result.message,
-                    fcmSent: result.fcmSent,
-                    dbSaved: result.dbSaved,
-                    notificationId: result.notificationId
+                    message: 'Notification queued for delivery.',
+                    queued: true,
+                    jobId: result,
+                    fcmSent: false,
+                    dbSaved: false,
                 }
             });
         } catch (error) {
