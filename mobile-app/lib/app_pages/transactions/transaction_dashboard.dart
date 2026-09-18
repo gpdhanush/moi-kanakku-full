@@ -43,6 +43,7 @@ class _TransactionDashboardState extends State<TransactionDashboard> {
   @override
   void initState() {
     super.initState();
+    StartupTiming.log('TransactionDashboard.initState');
     _scrollController.addListener(_onScroll);
     searchController.addListener(_onSearchChanged);
     fetchPersonLists(reset: true);
@@ -82,54 +83,58 @@ class _TransactionDashboardState extends State<TransactionDashboard> {
     required bool reset,
     bool showLoading = true,
   }) async {
-    if (reset) {
-      if (mounted) {
-        setState(() {
-          if (showLoading) _isLoading = true;
-          _page = 1;
-          _hasMore = true;
-        });
-      }
-    } else {
-      if (!_hasMore || _isLoadingMore || _isLoading) return;
-      if (mounted) setState(() => _isLoadingMore = true);
-    }
-
-    try {
-      _userId ??= await _resolveUserId();
-      if (_userId == null || _userId!.isEmpty) {
-        if (mounted) _clearDashboardState();
-        return;
-      }
-
-      final pageToLoad = reset ? 1 : _page + 1;
-      final searchQuery = searchController.text.trim();
-
-      final response = await txServices.getPersons(
-        {
-          'userId': _userId,
-          'page': pageToLoad,
-          'limit': _pageSize,
-          if (searchQuery.isNotEmpty) 'search': searchQuery,
-        },
-        showLoading: false,
-      );
-      printDirect('Dashboard Response page=$pageToLoad: $response');
-
-      if (response == null || response is! Map) {
+    final label = reset
+        ? 'TransactionDashboard.fetchPersons.reset'
+        : 'TransactionDashboard.fetchPersons.more';
+    await StartupTiming.timeAsync(label, () async {
+      if (reset) {
         if (mounted) {
           setState(() {
-            _isLoading = false;
-            _isLoadingMore = false;
-            if (reset) {
-              persons = [];
-              _totalCount = 0;
-              _hasMore = false;
-            }
+            if (showLoading) _isLoading = true;
+            _page = 1;
+            _hasMore = true;
           });
         }
-        return;
+      } else {
+        if (!_hasMore || _isLoadingMore || _isLoading) return;
+        if (mounted) setState(() => _isLoadingMore = true);
       }
+
+      try {
+        _userId ??= await _resolveUserId();
+        if (_userId == null || _userId!.isEmpty) {
+          if (mounted) _clearDashboardState();
+          return;
+        }
+
+        final pageToLoad = reset ? 1 : _page + 1;
+        final searchQuery = searchController.text.trim();
+
+        final response = await txServices.getPersons(
+          {
+            'userId': _userId,
+            'page': pageToLoad,
+            'limit': _pageSize,
+            if (searchQuery.isNotEmpty) 'search': searchQuery,
+          },
+          showLoading: false,
+        );
+        printDirect('Dashboard Response page=$pageToLoad: $response');
+
+        if (response == null || response is! Map) {
+          if (mounted) {
+            setState(() {
+              _isLoading = false;
+              _isLoadingMore = false;
+              if (reset) {
+                persons = [];
+                _totalCount = 0;
+                _hasMore = false;
+              }
+            });
+          }
+          return;
+        }
 
       if (response['responseType'] == 'S') {
         final responseValue = response['responseValue'];
@@ -191,6 +196,7 @@ class _TransactionDashboardState extends State<TransactionDashboard> {
         );
       }
     }
+    });
   }
 
   Future<String?> _resolveUserId() async {

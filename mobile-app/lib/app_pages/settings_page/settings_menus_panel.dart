@@ -55,7 +55,8 @@ class _SettingsMenusPanelState extends State<SettingsMenusPanel> {
 
   @override
   Widget build(BuildContext context) {
-    final primary = Theme.of(context).colorScheme.primary;
+    final colorScheme = Theme.of(context).colorScheme;
+    final primary = colorScheme.primary;
 
     return Consumer2<ThemeProvider, LanguageProvider>(
       builder: (context, themeProvider, languageProvider, _) {
@@ -72,8 +73,6 @@ class _SettingsMenusPanelState extends State<SettingsMenusPanel> {
           if (widget.onContactUs != null)
             _MenuRow(
               icon: HugeIcons.strokeRoundedContact,
-              iconBg: const Color(0xffF0F9FF),
-              iconColor: const Color(0xff0284C7),
               title: languageProvider.tr('menu.contactUs'),
               subtitle: widget.contactSubtitle ??
                   languageProvider.tr('settings.contactUs'),
@@ -82,8 +81,6 @@ class _SettingsMenusPanelState extends State<SettingsMenusPanel> {
           if (widget.onRateUs != null)
             _MenuRow(
               icon: HugeIcons.strokeRoundedStar,
-              iconBg: const Color(0xffFFF7ED),
-              iconColor: const Color(0xffEA580C),
               title: languageProvider.tr('menu.rateUs'),
               subtitle: widget.rateUsSubtitle ??
                   languageProvider.tr('settings.rateApp'),
@@ -91,16 +88,12 @@ class _SettingsMenusPanelState extends State<SettingsMenusPanel> {
             ),
           _MenuRow(
             icon: HugeIcons.strokeRoundedSmartPhone01,
-            iconBg: const Color(0xffEFF6FF),
-            iconColor: primary,
             title: languageProvider.tr('settings.appName'),
             subtitle: appName.toUpperCase(),
             showChevron: false,
           ),
           _MenuRow(
             icon: HugeIcons.strokeRoundedInformationCircle,
-            iconBg: const Color(0xffF0F9FF),
-            iconColor: const Color(0xff0284C7),
             title: languageProvider.tr('settings.appVersion'),
             subtitle: languageProvider.tr('settings.aboutHint'),
             trailingLabel: appVersion,
@@ -110,14 +103,12 @@ class _SettingsMenusPanelState extends State<SettingsMenusPanel> {
           if (widget.onLogout != null)
             _MenuRow(
               icon: HugeIcons.strokeRoundedLogout01,
-              iconBg: AppColors.moiGivenSoft,
-              iconColor: AppColors.moiGiven,
               title: languageProvider.tr('menu.logout'),
               subtitle: widget.logoutSubtitle ??
                   languageProvider.tr('menu.logout'),
               showChevron: false,
               showDivider: false,
-              titleColor: AppColors.moiGiven,
+              isDestructive: true,
               onTap: widget.onLogout,
             ),
         ];
@@ -133,8 +124,6 @@ class _SettingsMenusPanelState extends State<SettingsMenusPanel> {
               children: [
                 _MenuRow(
                   icon: HugeIcons.strokeRoundedFingerPrint,
-                  iconBg: const Color(0xffECFDF3),
-                  iconColor: AppColors.moiReceived,
                   title: languageProvider.tr('settings.appLock'),
                   subtitle: languageProvider.tr('settings.appLockHint'),
                   trailing: Switch.adaptive(
@@ -162,8 +151,6 @@ class _SettingsMenusPanelState extends State<SettingsMenusPanel> {
               children: [
                 _MenuRow(
                   icon: HugeIcons.strokeRoundedLanguageCircle,
-                  iconBg: const Color(0xffECFDF5),
-                  iconColor: const Color(0xff059669),
                   title: languageProvider.tr('settings.language'),
                   subtitle: languageProvider.tr('settings.languageHint'),
                   trailingLabel: languageLabel,
@@ -171,8 +158,6 @@ class _SettingsMenusPanelState extends State<SettingsMenusPanel> {
                 ),
                 _MenuRow(
                   icon: HugeIcons.strokeRoundedMic01,
-                  iconBg: const Color(0xffEEF2FF),
-                  iconColor: const Color(0xff4F46E5),
                   title: languageProvider.tr('settings.voiceLanguage'),
                   subtitle: languageProvider.tr('settings.voiceLanguageHint'),
                   trailingLabel: voiceLabel,
@@ -180,8 +165,6 @@ class _SettingsMenusPanelState extends State<SettingsMenusPanel> {
                 ),
                 _MenuRow(
                   icon: HugeIcons.strokeRoundedPaintBrush04,
-                  iconBg: const Color(0xffF3E8FF),
-                  iconColor: const Color(0xff7C3AED),
                   title: languageProvider.tr('settings.accentColor'),
                   subtitle: languageProvider.tr('settings.themeHint'),
                   trailing: Row(
@@ -193,15 +176,17 @@ class _SettingsMenusPanelState extends State<SettingsMenusPanel> {
                         decoration: BoxDecoration(
                           color: themeProvider.seedColor,
                           shape: BoxShape.circle,
-                          border: Border.all(color: const Color(0xffE4E4E7)),
+                          border: Border.all(
+                            color: colorScheme.outlineVariant,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 6),
-                      const HugeIcon(
+                      HugeIcon(
                         icon: HugeIcons.strokeRoundedArrowRight01,
                         strokeWidth: 1.9,
                         size: 16,
-                        color: Color(0xffA1A1AA),
+                        color: colorScheme.onSurfaceVariant,
                       ),
                     ],
                   ),
@@ -457,8 +442,6 @@ class _MenuCard extends StatelessWidget {
 
 class _MenuRow extends StatelessWidget {
   final List<List<dynamic>> icon;
-  final Color iconBg;
-  final Color iconColor;
   final String title;
   final String subtitle;
   final Widget? trailing;
@@ -466,12 +449,10 @@ class _MenuRow extends StatelessWidget {
   final VoidCallback? onTap;
   final bool showChevron;
   final bool showDivider;
-  final Color? titleColor;
+  final bool isDestructive;
 
   const _MenuRow({
     required this.icon,
-    required this.iconBg,
-    required this.iconColor,
     required this.title,
     required this.subtitle,
     this.trailing,
@@ -479,11 +460,18 @@ class _MenuRow extends StatelessWidget {
     this.onTap,
     this.showChevron = true,
     this.showDivider = true,
-    this.titleColor,
+    this.isDestructive = false,
   });
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final iconColor =
+        isDestructive ? colorScheme.error : colorScheme.primary;
+    final iconBg = iconColor.withValues(alpha: 0.1);
+    final titleColor =
+        isDestructive ? colorScheme.error : AppColors.textPrimary;
+
     return Column(
       children: [
         Material(
@@ -518,7 +506,7 @@ class _MenuRow extends StatelessWidget {
                         Text(
                           title,
                           style: AppTypography.label.copyWith(
-                            color: titleColor ?? AppColors.textPrimary,
+                            color: titleColor,
                             fontSize: 14,
                             fontWeight: FontWeight.w700,
                           ),
@@ -551,11 +539,11 @@ class _MenuRow extends StatelessWidget {
                       ),
                     if (showChevron) ...[
                       const SizedBox(width: 4),
-                      const HugeIcon(
+                      HugeIcon(
                         icon: HugeIcons.strokeRoundedArrowRight01,
                         strokeWidth: 1.9,
                         size: 16,
-                        color: Color(0xffA1A1AA),
+                        color: colorScheme.onSurfaceVariant,
                       ),
                     ],
                   ],
@@ -565,12 +553,12 @@ class _MenuRow extends StatelessWidget {
           ),
         ),
         if (showDivider)
-          const Divider(
+          Divider(
             height: 1,
             thickness: 1,
             indent: 66,
             endIndent: 14,
-            color: Color(0xffF4F4F5),
+            color: colorScheme.outlineVariant.withValues(alpha: 0.5),
           ),
       ],
     );

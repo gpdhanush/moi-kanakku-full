@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:intl/intl.dart';
 import 'package:moi/app_configs/app_variables.dart';
+import 'package:moi/app_configs/startup_timing.dart';
 import 'package:moi/app_services/feedback_services.dart';
 import 'package:moi/app_storages/secure_storages.dart';
 import 'package:moi/app_themes/index.dart';
@@ -32,6 +33,7 @@ class _FeedbacksState extends State<Feedbacks> {
   @override
   void initState() {
     super.initState();
+    StartupTiming.log('Feedbacks.initState');
     _loadPreviousFeedbacks();
   }
 
@@ -43,26 +45,27 @@ class _FeedbacksState extends State<Feedbacks> {
   }
 
   Future<void> _loadPreviousFeedbacks({bool showLoading = true}) async {
-    if (showLoading && mounted) {
-      setState(() => _isLoading = true);
-    }
-
-    try {
-      final userData = await _storage.get(AppVariables.userInformation);
-      if (userData == null || userData['id'] == null) {
-        if (mounted) {
-          setState(() {
-            _previousFeedbacks = [];
-            _isLoading = false;
-          });
-        }
-        return;
+    await StartupTiming.timeAsync('Feedbacks.loadPrevious', () async {
+      if (showLoading && mounted) {
+        setState(() => _isLoading = true);
       }
 
-      final userId = userData['id'].toString();
-      final response = await _feedbackServices.getFeedbacksList({
-        'userId': userId,
-      }, showLoading: false);
+      try {
+        final userData = await _storage.get(AppVariables.userInformation);
+        if (userData == null || userData['id'] == null) {
+          if (mounted) {
+            setState(() {
+              _previousFeedbacks = [];
+              _isLoading = false;
+            });
+          }
+          return;
+        }
+
+        final userId = userData['id'].toString();
+        final response = await _feedbackServices.getFeedbacksList({
+          'userId': userId,
+        }, showLoading: false);
 
       if (response != null) {
         List<dynamic> feedbacksList = [];
@@ -120,6 +123,7 @@ class _FeedbacksState extends State<Feedbacks> {
         });
       }
     }
+    });
   }
 
   @override

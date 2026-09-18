@@ -39,7 +39,12 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       SystemChrome.setSystemUIOverlayStyle(_overlayStyle);
-      unawaited(PushNotificationService.instance.initialize());
+      unawaited(
+        StartupTiming.timeAsync(
+          'PushNotificationService.initialize',
+          () => PushNotificationService.instance.initialize(),
+        ),
+      );
     });
   }
 

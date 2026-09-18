@@ -93,6 +93,11 @@ class _HomePageState extends State<HomePage> {
 
   void _onShellRefreshSignal() {
     if (!mounted || !_isInitialized) return;
+    // Respect in-memory cache — avoid full Home refetch on every tab return.
+    if (!_isCacheExpired()) {
+      StartupTiming.log('Home.refreshSignal skipped (cache warm)');
+      return;
+    }
     unawaited(_refreshHomeData(showLoading: false));
   }
 
@@ -106,42 +111,67 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> initHomePage() async {
-    try {
-      final userInfo = await _secureStorage.get(AppVariables.userInformation);
-      if (userInfo != null && mounted) {
-        final userProvider = Provider.of<UserProvider>(context, listen: false);
-        userProvider.updateUserDetails(userInfo);
-      }
-    } catch (e) {
-      debugPrint('Error loading user information: $e');
-    }
-
-    try {
-      final List<Future<void>> initialTasks = [];
-
-      if (!_isDataCached() || _isCacheExpired()) {
-        initialTasks.add(getTotalAmount(showLoading: false));
+    await StartupTiming.timeAsync('Home.initHomePage', () async {
+      try {
+        final userInfo = await _secureStorage.get(AppVariables.userInformation);
+        if (userInfo != null && mounted) {
+          final userProvider =
+              Provider.of<UserProvider>(context, listen: false);
+          userProvider.updateUserDetails(userInfo);
+        }
+      } catch (e) {
+        debugPrint('Error loading user information: $e');
       }
 
-      initialTasks.add(checkNotificationStatus());
-      initialTasks.add(_loadFunctionSummaries());
-      initialTasks.add(_syncProfileImageFromServer());
-
-      await Future.wait(initialTasks);
-      unawaited(_initializeNotificationPipeline());
-      unawaited(_maybeShowAppAlert());
-
-      if (mounted) {
-        _isInitialized = true;
-      }
-    } catch (e) {
-      debugPrint('Error during initialization: $e');
-      if (mounted) {
-        _alertServices.errorToast(
-          context.read<LanguageProvider>().tr('home.startupError'),
+      try {
+        // Critical for first Home paint only.
+        final List<Future<void>> criticalTasks = [];
+        if (!_isDataCached() || _isCacheExpired()) {
+          criticalTasks.add(
+            StartupTiming.timeAsync(
+              'Home.getTotalAmount',
+              () => getTotalAmount(showLoading: false),
+            ),
+          );
+        }
+        criticalTasks.add(
+          StartupTiming.timeAsync(
+            'Home.loadFunctionSummaries',
+            () => _loadFunctionSummaries(),
+          ),
         );
+
+        await Future.wait(criticalTasks);
+        StartupTiming.log('Home first paint data ready');
+
+        if (mounted) {
+          _isInitialized = true;
+        }
+
+        // Deferred / background — do not block first interactive Home.
+        unawaited(
+          StartupTiming.timeAsync(
+            'Home.checkNotificationStatus',
+            () => checkNotificationStatus(),
+          ),
+        );
+        unawaited(
+          StartupTiming.timeAsync(
+            'Home.syncProfileImage',
+            () => _syncProfileImageFromServer(),
+          ),
+        );
+        unawaited(_initializeNotificationPipeline());
+        unawaited(_maybeShowAppAlert());
+      } catch (e) {
+        debugPrint('Error during initialization: $e');
+        if (mounted) {
+          _alertServices.errorToast(
+            context.read<LanguageProvider>().tr('home.startupError'),
+          );
+        }
       }
-    }
+    });
   }
 
   /// Keep local profile photo in sync so deleted server files don't 404 forever.

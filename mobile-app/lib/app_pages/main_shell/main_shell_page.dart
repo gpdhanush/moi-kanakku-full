@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_exit_app/flutter_exit_app.dart';
 import 'package:hugeicons/hugeicons.dart';
+import 'package:moi/app_configs/startup_timing.dart';
 import 'package:moi/app_pages/feedbacks/feedbacks.dart';
 import 'package:moi/app_pages/functions/functions_list.dart';
 import 'package:moi/app_pages/home_page/home_page.dart';
@@ -26,19 +27,53 @@ class _MainShellPageState extends State<MainShellPage> {
 
   static const _tabCount = 5;
 
-  late final List<Widget> _pages = [
-    HomePage(isShellTab: true, refreshSignal: _homeRefreshSignal),
-    const FunctionsList(embeddedInShell: true),
-    const TransactionDashboard(embeddedInShell: true),
-    const Feedbacks(embeddedInShell: true),
-    const MorePage(),
-  ];
+  /// Home is visited immediately; other tabs mount on first tap (lazy init).
+  final Set<int> _visitedTabs = {0};
+
+  /// Keep-alive page instances so revisiting a tab preserves state.
+  final Map<int, Widget> _pageCache = {};
+
+  @override
+  void initState() {
+    super.initState();
+    StartupTiming.log('MainShellPage mounted');
+    _pageCache[0] = HomePage(
+      isShellTab: true,
+      refreshSignal: _homeRefreshSignal,
+    );
+  }
+
+  Widget _pageFor(int index) {
+    return _pageCache.putIfAbsent(index, () {
+      StartupTiming.log('MainShell tab $index first create');
+      switch (index) {
+        case 0:
+          return HomePage(
+            isShellTab: true,
+            refreshSignal: _homeRefreshSignal,
+          );
+        case 1:
+          return const FunctionsList(embeddedInShell: true);
+        case 2:
+          return const TransactionDashboard(embeddedInShell: true);
+        case 3:
+          return const Feedbacks(embeddedInShell: true);
+        case 4:
+          return const MorePage();
+        default:
+          return const SizedBox.shrink();
+      }
+    });
+  }
 
   void _goToTab(int index) {
     if (index == _currentIndex) return;
     final previous = _currentIndex;
-    setState(() => _currentIndex = index);
-    // IndexedStack keeps Home alive — refresh when returning to Home.
+    setState(() {
+      _visitedTabs.add(index);
+      _currentIndex = index;
+    });
+    // IndexedStack keeps Home alive — soft-refresh when returning to Home.
     if (index == 0 && previous != 0) {
       _homeRefreshSignal.value++;
     }
@@ -105,7 +140,12 @@ class _MainShellPageState extends State<MainShellPage> {
             backgroundColor: AppColors.background,
             body: IndexedStack(
               index: _currentIndex.clamp(0, _tabCount - 1),
-              children: _pages,
+              children: List.generate(_tabCount, (index) {
+                if (!_visitedTabs.contains(index)) {
+                  return const SizedBox.shrink();
+                }
+                return _pageFor(index);
+              }),
             ),
             bottomNavigationBar: MoiBottomNavBar(
               currentIndex: _currentIndex,

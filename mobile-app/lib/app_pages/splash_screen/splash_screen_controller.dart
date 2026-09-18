@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_exit_app/flutter_exit_app.dart';
 import 'package:moi/app_configs/api_startup_config.dart';
 import 'package:moi/app_configs/app_variables.dart';
+import 'package:moi/app_configs/startup_timing.dart';
 import 'package:moi/app_firebase/firebase_remote.dart';
 import 'package:moi/app_pages/force_update/force_update_dialog.dart';
 import 'package:moi/app_services/connection.dart';
@@ -46,54 +47,59 @@ class SplashScreenController extends ChangeNotifier {
   Future<void> init() async {
     if (!_isActive) return;
 
-    await _setProgress(0.08, 'Preparing app…');
-    if (!_isActive) return;
+    await StartupTiming.timeAsync('Splash.init', () async {
+      await _setProgress(0.08, 'Preparing app…');
+      if (!_isActive) return;
 
-    await _fetchAppVersion();
-    if (!_isActive || _context == null) return;
+      await _fetchAppVersion();
+      if (!_isActive || _context == null) return;
 
-    await _setProgress(0.28, 'Checking configuration…');
-    if (!_isActive) return;
+      await _setProgress(0.28, 'Checking configuration…');
+      if (!_isActive) return;
 
-    final remoteConfig = await getFirebaseRemoteConfig(forceRefresh: true);
-    if (!_isActive || _context == null) return;
-
-    await _setProgress(0.48, 'Validating services…');
-    if (!_isActive) return;
-
-    final startupConfig = ApiStartupConfig.applyStartupValidation(
-      baseUrl: appBaseUri,
-      apiKey: apiSecretKey,
-    );
-    if (!startupConfig.isValid) {
-      await navigation('configuration_error');
-      return;
-    }
-
-    await _setProgress(0.62, 'Checking updates…');
-    if (!_isActive) return;
-
-    if (remoteConfig?.maintenanceMode == true) {
-      await navigation('maintenance');
-      return;
-    }
-
-    final minAppVersion = remoteConfig?.minAppVersion ?? '';
-    if (isVersionBelowMinimum(_version, minAppVersion)) {
-      await _setProgress(1.0, 'Update required');
-      if (!_isActive || _context == null || !_context!.mounted) return;
-      await ForceUpdateDialog.show(
-        _context!,
-        currentVersion: _version,
-        minVersion: minAppVersion,
+      final remoteConfig = await StartupTiming.timeAsync(
+        'Splash.remoteConfig',
+        () => getFirebaseRemoteConfig(forceRefresh: true),
       );
-      return;
-    }
+      if (!_isActive || _context == null) return;
 
-    await _setProgress(0.82, 'Finishing up…');
-    if (!_isActive) return;
+      await _setProgress(0.48, 'Validating services…');
+      if (!_isActive) return;
 
-    await getRoute();
+      final startupConfig = ApiStartupConfig.applyStartupValidation(
+        baseUrl: appBaseUri,
+        apiKey: apiSecretKey,
+      );
+      if (!startupConfig.isValid) {
+        await navigation('configuration_error');
+        return;
+      }
+
+      await _setProgress(0.62, 'Checking updates…');
+      if (!_isActive) return;
+
+      if (remoteConfig?.maintenanceMode == true) {
+        await navigation('maintenance');
+        return;
+      }
+
+      final minAppVersion = remoteConfig?.minAppVersion ?? '';
+      if (isVersionBelowMinimum(_version, minAppVersion)) {
+        await _setProgress(1.0, 'Update required');
+        if (!_isActive || _context == null || !_context!.mounted) return;
+        await ForceUpdateDialog.show(
+          _context!,
+          currentVersion: _version,
+          minVersion: minAppVersion,
+        );
+        return;
+      }
+
+      await _setProgress(0.82, 'Finishing up…');
+      if (!_isActive) return;
+
+      await getRoute();
+    });
   }
 
   Future<void> _fetchAppVersion() async {

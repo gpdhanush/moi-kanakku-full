@@ -19,8 +19,6 @@ class MorePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final primary = Theme.of(context).colorScheme.primary;
-
     return Consumer<LanguageProvider>(
       builder: (context, languageProvider, _) {
         return Scaffold(
@@ -47,8 +45,6 @@ class MorePage extends StatelessWidget {
                   children: [
                     _MoreRow(
                       icon: HugeIcons.strokeRoundedCalendar01,
-                      iconBg: const Color(0xffEFF6FF),
-                      iconColor: primary,
                       title: languageProvider.tr('menu.upcomingFunctions'),
                       subtitle: languageProvider.tr('more.upcomingHint'),
                       onTap: () => Navigator.pushNamed(
@@ -58,16 +54,12 @@ class MorePage extends StatelessWidget {
                     ),
                     _MoreRow(
                       icon: HugeIcons.strokeRoundedUserCircle02,
-                      iconBg: const Color(0xffECFDF5),
-                      iconColor: const Color(0xff059669),
                       title: languageProvider.tr('menu.profile'),
                       subtitle: languageProvider.tr('more.profileHint'),
                       onTap: () => Navigator.pushNamed(context, 'profile'),
                     ),
                     _MoreRow(
                       icon: HugeIcons.strokeRoundedPdf02,
-                      iconBg: const Color(0xffEEF2FF),
-                      iconColor: const Color(0xff4F46E5),
                       title: languageProvider.tr('more.export'),
                       subtitle: languageProvider.tr('more.exportHint'),
                       onTap: () => _onExportTap(context),
@@ -291,8 +283,6 @@ class _MoreCard extends StatelessWidget {
 
 class _MoreRow extends StatelessWidget {
   final List<List<dynamic>> icon;
-  final Color iconBg;
-  final Color iconColor;
   final String title;
   final String subtitle;
   final VoidCallback? onTap;
@@ -300,8 +290,6 @@ class _MoreRow extends StatelessWidget {
 
   const _MoreRow({
     required this.icon,
-    required this.iconBg,
-    required this.iconColor,
     required this.title,
     required this.subtitle,
     this.onTap,
@@ -310,6 +298,10 @@ class _MoreRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final iconColor = colorScheme.primary;
+    final iconBg = colorScheme.primary.withValues(alpha: 0.1);
+
     return Column(
       children: [
         Material(
@@ -363,11 +355,11 @@ class _MoreRow extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  const HugeIcon(
+                  HugeIcon(
                     icon: HugeIcons.strokeRoundedArrowRight01,
                     strokeWidth: 1.9,
                     size: 16,
-                    color: Color(0xffA1A1AA),
+                    color: colorScheme.onSurfaceVariant,
                   ),
                 ],
               ),
@@ -375,12 +367,12 @@ class _MoreRow extends StatelessWidget {
           ),
         ),
         if (showDivider)
-          const Divider(
+          Divider(
             height: 1,
             thickness: 1,
             indent: 66,
             endIndent: 14,
-            color: Color(0xffF4F4F5),
+            color: colorScheme.outlineVariant.withValues(alpha: 0.5),
           ),
       ],
     );
