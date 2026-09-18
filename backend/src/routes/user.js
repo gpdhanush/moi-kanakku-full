@@ -100,4 +100,10 @@ router.post(
   userController.updateProfilePicture,
 );
 
+router.post(
+  "/remove-profile-picture",
+  authenticateToken,
+  userController.removeProfilePicture,
+);
+
 module.exports = router;

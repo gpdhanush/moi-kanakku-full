@@ -1315,6 +1315,77 @@ exports.userController = {
   },
 
   /**
+   * Remove user profile picture (clear DB path and delete file).
+   * Body: { userId }
+   */
+  removeProfilePicture: async (req, res) => {
+    const uploadDir = process.env.UPLOAD_DIR || "./uploads";
+
+    try {
+      const userId = req.body?.userId || req.user?.userId;
+      if (!userId) {
+        return res.status(400).json({
+          responseType: "F",
+          responseValue: { message: "User ID is required!" },
+        });
+      }
+
+      const idCheck = validateUuid(userId, "userId");
+      if (!idCheck.ok) return sendUuidError(res, idCheck.message);
+
+      const user = await User.findById(userId);
+      if (!user) {
+        return res.status(404).json({
+          responseType: "F",
+          responseValue: { message: userError },
+        });
+      }
+
+      const oldImagePath = user.profile_image_url || null;
+      if (oldImagePath) {
+        try {
+          const absolutePath = path.join(
+            uploadDir,
+            String(oldImagePath).replace(/^uploads\//, ""),
+          );
+          if (fs.existsSync(absolutePath)) {
+            fs.unlinkSync(absolutePath);
+            logger.info(`Deleted profile image for user ${userId}: ${absolutePath}`);
+          }
+        } catch (deleteError) {
+          logger.error("Error deleting profile image file:", deleteError);
+        }
+      }
+
+      await User.updateProfileImage(userId, null);
+
+      recordAuditLog({
+        userId,
+        action: "PROFILE_PHOTO_UPDATE",
+        entityType: "user",
+        entityId: userId,
+        summary: "Profile photo removed",
+        req,
+      });
+
+      return res.status(200).json({
+        responseType: "S",
+        responseValue: {
+          message: "Profile photo removed successfully.",
+          profile_image_url: null,
+          profile_image: null,
+        },
+      });
+    } catch (error) {
+      logger.error("Error in removeProfilePicture:", error);
+      return res.status(500).json({
+        responseType: "F",
+        responseValue: { message: error.toString() },
+      });
+    }
+  },
+
+  /**
    * Get important user details from users table.
    * Params: { id }
    */

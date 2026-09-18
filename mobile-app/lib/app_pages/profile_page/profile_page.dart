@@ -15,6 +15,7 @@ import 'package:moi/app_themes/index.dart';
 import 'package:moi/app_utils/index.dart';
 import 'package:moi/app_utils/app_forms/custom_dropdown.dart';
 import 'package:moi/app_utils/app_providers/language_provider.dart';
+import 'package:moi/app_utils/app_providers/user_provider.dart';
 import 'package:moi/app_utils/app_widgets/image_picker_bottom_sheet.dart';
 import 'package:moi/app_utils/device_info_service.dart';
 import 'package:provider/provider.dart';
@@ -195,11 +196,14 @@ class _ProfilePageState extends State<ProfilePage> {
                 "Loaded address data - Line1: ${_addressLine1Ctrl.text}, City: ${_cityCtrl.text}",
               );
 
-              // Profile image URL
+              // Profile image URL — clear when removed/missing
               final profileImageUrl = profileData["profile_image_url"];
               if (profileImageUrl != null &&
                   profileImageUrl.toString().isNotEmpty) {
                 _profileImageUrl = _getFullImageUrl(profileImageUrl.toString());
+              } else {
+                _profileImageUrl = null;
+                _profileImage = null;
               }
 
               // Update _user object with flattened data
@@ -212,6 +216,7 @@ class _ProfilePageState extends State<ProfilePage> {
               _user?["country"] = country;
               _user?["postal_code"] = postal;
               _user?["profile_image"] = profileImageUrl;
+              _user?["profile_image_url"] = profileImageUrl;
             } else {
               printContent(
                 "Warning: profile object is null or not a Map in API response",
@@ -838,15 +843,87 @@ class _ProfilePageState extends State<ProfilePage> {
 
     if (!mounted || action == null) return;
     if (action == ImagePickerAction.delete) {
-      setState(() {
-        _profileImage = null;
-        _profileImageUrl = null;
-      });
+      await _removeProfilePhoto();
     } else {
       await _pickImage(
         action == ImagePickerAction.gallery
             ? ImageSource.gallery
             : ImageSource.camera,
+      );
+    }
+  }
+
+  Future<void> _removeProfilePhoto() async {
+    final languageProvider = Provider.of<LanguageProvider>(
+      context,
+      listen: false,
+    );
+    final hadServerImage =
+        _profileImageUrl != null && _profileImageUrl!.isNotEmpty;
+
+    // Local preview only (not uploaded yet) — clear UI state.
+    if (!hadServerImage) {
+      setState(() {
+        _profileImage = null;
+        _profileImageUrl = null;
+      });
+      return;
+    }
+
+    if (_user == null || _user?["id"] == null) {
+      _alertServices.errorToast(
+        languageProvider.tr('profile.userInfoMissing'),
+      );
+      return;
+    }
+
+    final previousUrl = _profileImageUrl;
+    try {
+      final userId = _user?["id"];
+      final response = await _userServices.removeProfileImage({
+        "userId": userId is int ? userId.toString() : userId,
+      });
+
+      if (response != null &&
+          response is Map &&
+          response['responseType'] == 'S') {
+        if (previousUrl != null && previousUrl.isNotEmpty) {
+          await NetworkImage(previousUrl).evict();
+        }
+
+        setState(() {
+          _profileImage = null;
+          _profileImageUrl = null;
+          _user?["profile_image"] = null;
+          _user?["profile_image_url"] = null;
+        });
+
+        await _storage.save(AppVariables.userInformation, _user);
+        if (mounted) {
+          context.read<UserProvider>().updateUserDetails(_user);
+        }
+
+        _alertServices.successToast(
+          response['responseValue'] is Map
+              ? (response['responseValue']['message']?.toString() ??
+                  languageProvider.tr('profile.photoRemoved'))
+              : languageProvider.tr('profile.photoRemoved'),
+        );
+      } else {
+        final errorMessage = response is Map
+            ? (response['responseValue'] is Map
+                ? response['responseValue']['message']
+                : response['message'] ?? response['responseValue'])
+            : null;
+        _alertServices.errorToast(
+          errorMessage?.toString() ??
+              languageProvider.tr('profile.failedToUpdateProfile'),
+        );
+      }
+    } catch (e) {
+      printContent("Error removing profile image: $e");
+      _alertServices.errorToast(
+        languageProvider.tr('profile.failedToUpdateProfile'),
       );
     }
   }

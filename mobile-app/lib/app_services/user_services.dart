@@ -82,6 +82,11 @@ class UserServices {
     );
   }
 
+  Future<dynamic> removeProfileImage(dynamic requestParams) async {
+    String url = '$appBaseUri/users/remove-profile-picture';
+    return await connection.postData(url, requestParams, useToken: true);
+  }
+
   Future<dynamic> logout(dynamic requestParams) async {
     String url = '$appBaseUri/users/logout';
     return await connection.postData(
