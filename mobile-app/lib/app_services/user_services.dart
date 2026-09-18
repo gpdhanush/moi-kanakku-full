@@ -83,7 +83,7 @@ class UserServices {
   }
 
   Future<dynamic> logout(dynamic requestParams) async {
-    String url = '$appBaseUri/sessions/logout';
+    String url = '$appBaseUri/users/logout';
     return await connection.postData(
       url,
       requestParams,

@@ -106,4 +106,17 @@ export const auditLogsApi = {
     );
     return assertSuccess(response.data);
   },
+
+  deleteBulk: async (
+    ids: Array<number | string>
+  ): Promise<{ message?: string; deletedCount?: number }> => {
+    const response = await apiClient.post<
+      MoiApiResponse<{ message?: string; deletedCount?: number }>
+    >(
+      '/admin/audit-logs/delete-bulk',
+      { ids },
+      { skipErrorHandler: true }
+    );
+    return assertSuccess(response.data);
+  },
 };

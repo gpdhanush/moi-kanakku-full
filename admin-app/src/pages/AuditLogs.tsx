@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useSearchParams } from "react-router-dom";
 import {
   ScrollText,
@@ -8,12 +8,14 @@ import {
   Search,
   ChevronLeft,
   ChevronRight,
+  Trash2,
 } from "lucide-react";
 import { PageTitle } from "@/components/ui/page-title";
 import { StatCard, StatCardSkeleton } from "@/components/ui/stat-card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -29,7 +31,18 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { usePageMeta } from "@/hooks/usePageMeta";
+import { toast } from "@/hooks/use-toast";
 import {
   auditLogsApi,
   AUDIT_ACTIONS,
@@ -48,7 +61,10 @@ export default function AuditLogs() {
   const [search, setSearch] = useState("");
   const [actionFilter, setActionFilter] = useState<AuditActionFilter>("ALL");
   const [submittedSearch, setSubmittedSearch] = useState("");
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
 
+  const queryClient = useQueryClient();
   const metaElement = usePageMeta({
     title: "Audit Logs",
     description: "Browse mobile user activity",
@@ -77,12 +93,62 @@ export default function AuditLogs() {
     placeholderData: (prev) => prev,
   });
 
+  const deleteBulkMutation = useMutation({
+    mutationFn: (ids: string[]) => auditLogsApi.deleteBulk(ids),
+    onSuccess: (result) => {
+      toast({
+        title: "Audit logs deleted",
+        description:
+          result?.message ||
+          `Deleted ${result?.deletedCount ?? selectedIds.size} audit log(s).`,
+      });
+      setBulkDeleteOpen(false);
+      setSelectedIds(new Set());
+      queryClient.invalidateQueries({ queryKey: ["admin", "audit-logs"] });
+    },
+    onError: (err: Error) => {
+      toast({
+        title: "Delete failed",
+        description: err.message || "Unable to delete selected audit logs.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const rows = data?.data ?? [];
   const pagination = data?.pagination;
   const totalPages = Math.max(1, pagination?.pages ?? 1);
   const totalItems = pagination?.total ?? 0;
   const fromItem = totalItems === 0 ? 0 : (page - 1) * limit + 1;
   const toItem = Math.min(page * limit, totalItems);
+
+  const pageIds = rows.map((row) => String(row.id));
+  const selectedCount = selectedIds.size;
+  const allPageSelected =
+    pageIds.length > 0 && pageIds.every((id) => selectedIds.has(id));
+  const somePageSelected =
+    pageIds.some((id) => selectedIds.has(id)) && !allPageSelected;
+  const isDeleting = deleteBulkMutation.isPending;
+
+  const toggleRow = (id: string, checked: boolean) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (checked) next.add(id);
+      else next.delete(id);
+      return next;
+    });
+  };
+
+  const togglePage = (checked: boolean) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      pageIds.forEach((id) => {
+        if (checked) next.add(id);
+        else next.delete(id);
+      });
+      return next;
+    });
+  };
 
   const summary = useMemo(() => {
     const uniqueUsers = new Set(rows.map((row) => String(row.user_id))).size;
@@ -155,6 +221,7 @@ export default function AuditLogs() {
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     setPage(1);
+                    setSelectedIds(new Set());
                     setSubmittedSearch(search.trim());
                   }
                 }}
@@ -163,11 +230,32 @@ export default function AuditLogs() {
               />
             </div>
             <div className="flex flex-wrap items-center justify-end gap-2">
+              {selectedCount > 0 && (
+                <>
+                  <p className="text-sm text-muted-foreground">
+                    Selected:{" "}
+                    <span className="font-semibold text-foreground">
+                      {selectedCount}
+                    </span>
+                  </p>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    className="gap-2"
+                    onClick={() => setBulkDeleteOpen(true)}
+                    disabled={isDeleting}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Delete Selected
+                  </Button>
+                </>
+              )}
               <Select
                 value={actionFilter}
                 onValueChange={(value) => {
                   setActionFilter(value as AuditActionFilter);
                   setPage(1);
+                  setSelectedIds(new Set());
                 }}
               >
                 <SelectTrigger className="h-9 w-full sm:w-52">
@@ -208,6 +296,22 @@ export default function AuditLogs() {
             <Table>
               <TableHeader>
                 <TableRow className="border-b border-slate-700/80 bg-slate-800 hover:bg-slate-800">
+                  <TableHead className="w-12 text-center text-slate-100">
+                    <div className="flex justify-center">
+                      <Checkbox
+                        checked={
+                          allPageSelected
+                            ? true
+                            : somePageSelected
+                              ? "indeterminate"
+                              : false
+                        }
+                        onCheckedChange={(value) => togglePage(value === true)}
+                        aria-label="Select all audit logs on this page"
+                        className="border-slate-300 data-[state=checked]:bg-primary data-[state=indeterminate]:bg-primary"
+                      />
+                    </div>
+                  </TableHead>
                   <TableHead className="w-16 text-center text-slate-100">
                     S.No
                   </TableHead>
@@ -222,7 +326,7 @@ export default function AuditLogs() {
                 {isLoading ? (
                   <TableRow>
                     <TableCell
-                      colSpan={6}
+                      colSpan={7}
                       className="h-28 text-center text-muted-foreground"
                     >
                       <div className="inline-flex items-center gap-2">
@@ -234,7 +338,7 @@ export default function AuditLogs() {
                 ) : rows.length === 0 ? (
                   <TableRow>
                     <TableCell
-                      colSpan={6}
+                      colSpan={7}
                       className="h-28 text-center text-muted-foreground"
                     >
                       No audit logs found.
@@ -243,11 +347,27 @@ export default function AuditLogs() {
                 ) : (
                   rows.map((row, index) => {
                     const serialNo = (page - 1) * limit + index + 1;
+                    const id = String(row.id);
+                    const checked = selectedIds.has(id);
                     return (
                       <TableRow
-                        key={String(row.id)}
-                        className={cn(index % 2 === 1 && "bg-muted/20")}
+                        key={id}
+                        className={cn(
+                          index % 2 === 1 && "bg-muted/20",
+                          checked && "bg-primary/5"
+                        )}
                       >
+                        <TableCell className="text-center">
+                          <div className="flex justify-center">
+                            <Checkbox
+                              checked={checked}
+                              onCheckedChange={(value) =>
+                                toggleRow(id, value === true)
+                              }
+                              aria-label={`Select audit log ${id}`}
+                            />
+                          </div>
+                        </TableCell>
                         <TableCell className="text-center font-medium tabular-nums">
                           {serialNo}
                         </TableCell>
@@ -302,6 +422,7 @@ export default function AuditLogs() {
                   onValueChange={(value) => {
                     setLimit(Number(value));
                     setPage(1);
+                    setSelectedIds(new Set());
                   }}
                 >
                   <SelectTrigger className="h-8 w-[80px]">
@@ -323,7 +444,10 @@ export default function AuditLogs() {
                   size="sm"
                   className="h-8 gap-1"
                   disabled={page <= 1}
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  onClick={() => {
+                    setPage((p) => Math.max(1, p - 1));
+                    setSelectedIds(new Set());
+                  }}
                 >
                   <ChevronLeft className="h-4 w-4" />
                   Prev
@@ -336,7 +460,10 @@ export default function AuditLogs() {
                   size="sm"
                   className="h-8 gap-1"
                   disabled={page >= totalPages}
-                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  onClick={() => {
+                    setPage((p) => Math.min(totalPages, p + 1));
+                    setSelectedIds(new Set());
+                  }}
                 >
                   Next
                   <ChevronRight className="h-4 w-4" />
@@ -346,6 +473,44 @@ export default function AuditLogs() {
           </div>
         </div>
       </div>
+
+      <AlertDialog open={bulkDeleteOpen} onOpenChange={setBulkDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete selected audit logs?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete{" "}
+              <span className="font-medium text-foreground">
+                {selectedCount}
+              </span>{" "}
+              selected audit log{selectedCount === 1 ? "" : "s"}. This action
+              cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteBulkMutation.isPending}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={deleteBulkMutation.isPending || selectedCount === 0}
+              onClick={(e) => {
+                e.preventDefault();
+                deleteBulkMutation.mutate(Array.from(selectedIds));
+              }}
+            >
+              {deleteBulkMutation.isPending ? (
+                <span className="inline-flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Deleting...
+                </span>
+              ) : (
+                "Confirm delete"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

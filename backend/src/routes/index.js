@@ -19,8 +19,10 @@ const transactionRoutes = require('./transactions');
 const transactionFunctionRoutes = require('./transactionFunctions');
 const adminRoutes = require('./adminRoutes');
 const mfaRoutes = require('./mfaRoutes');
+const sessionsRoutes = require('./sessions');
 
 router.use('/users', user);
+router.use('/sessions', sessionsRoutes);
 router.use("/default", defaults);
 router.use("/feedbacks", feedbacks);
 router.use("/email", email);

@@ -149,6 +149,27 @@ const AuditLogs = {
       },
     };
   },
+
+  /**
+   * Hard-delete selected audit log rows by id.
+   * @param {Array<number|string>} ids
+   * @returns {Promise<number>} deletedCount
+   */
+  async deleteMultiple(ids = []) {
+    const list = [...new Set(
+      (ids || [])
+        .map((id) => Number(id))
+        .filter((id) => Number.isInteger(id) && id > 0)
+    )];
+    if (list.length === 0) return 0;
+
+    const placeholders = list.map(() => '?').join(',');
+    const [result] = await db.query(
+      `DELETE FROM user_audit_logs WHERE id IN (${placeholders})`,
+      list
+    );
+    return result.affectedRows || 0;
+  },
 };
 
 module.exports = AuditLogs;

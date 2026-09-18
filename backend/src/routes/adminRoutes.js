@@ -21,6 +21,16 @@ router.get('/otps', authenticateAdminToken, adminControllers.listOTPs);
 router.get('/audit-logs', authenticateAdminToken, adminControllers.listAuditLogs);
 
 /**
+ * POST /apis/admin/audit-logs/delete-bulk
+ * Body: { ids: number[] }
+ */
+router.post(
+  '/audit-logs/delete-bulk',
+  authenticateAdminToken,
+  adminControllers.deleteAuditLogsBulk
+);
+
+/**
  * DELETE /apis/admin/otps/cleanup
  * Delete expired OTPs (admin maintenance)
  */

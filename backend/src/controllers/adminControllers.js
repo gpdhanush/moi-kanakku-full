@@ -226,4 +226,55 @@ exports.adminControllers = {
       });
     }
   },
+
+  /**
+   * Bulk delete audit logs
+   * Body: { ids: number[] }
+   */
+  deleteAuditLogsBulk: async (req, res) => {
+    try {
+      const ids = Array.isArray(req.body?.ids)
+        ? req.body.ids
+        : Array.isArray(req.body?.auditLogIds)
+          ? req.body.auditLogIds
+          : [];
+
+      const uniqueIds = [
+        ...new Set(
+          ids
+            .map((id) => Number(id))
+            .filter((id) => Number.isInteger(id) && id > 0)
+        ),
+      ];
+
+      if (uniqueIds.length === 0) {
+        return res.status(400).json({
+          responseType: 'F',
+          responseValue: { message: 'Select at least one audit log to delete.' },
+        });
+      }
+
+      const deletedCount = await AuditLogs.deleteMultiple(uniqueIds);
+      if (!deletedCount) {
+        return res.status(404).json({
+          responseType: 'F',
+          responseValue: { message: 'No matching audit logs were deleted.' },
+        });
+      }
+
+      return res.status(200).json({
+        responseType: 'S',
+        responseValue: {
+          message: `Deleted ${deletedCount} audit log(s).`,
+          deletedCount,
+        },
+      });
+    } catch (error) {
+      logger.error('Error bulk deleting audit logs:', error);
+      return res.status(500).json({
+        responseType: 'F',
+        responseValue: { message: error.toString() },
+      });
+    }
+  },
 };
