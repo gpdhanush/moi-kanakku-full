@@ -523,6 +523,8 @@
     "cameraPermissionNeeded": "ക്യാമറ അനുമതി ആവശ്യമാണ്",
     "compressFailed": "ചിത്രം ചുരുക്കാൻ കഴിഞ്ഞില്ല",
     "contactUs": "ഞങ്ങളെ ബന്ധപ്പെടുക",
+    "darkMode": "ഡാർക്ക് മോഡ്",
+    "darkModeHint": "ഡാർക്ക് രൂപം ഉപയോഗിക്കുക",
     "deleteAccount": "എന്റെ അക്കൗണ്ട് നിർജ്ജീവമാക്കുക",
     "deviceNotSupported": "ഉപകരണം പിന്തുണയ്ക്കുന്നില്ല",
     "enableBiometricAuth": "ബയോമെട്രിക് പ്രാമാണീകരണം പ്രവർത്തനക്ഷമമാക്കുക",

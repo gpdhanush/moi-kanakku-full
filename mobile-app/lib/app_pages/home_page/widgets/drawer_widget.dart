@@ -19,16 +19,14 @@ class DrawerWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     final primary = Theme.of(context).colorScheme.primary;
     final accent = isLogout ? AppColors.moiGiven : primary;
-    final surface = isLogout
-        ? AppColors.moiGivenSoft
-        : const Color(0xffFFFFFF);
+    final surface = isLogout ? AppColors.moiGivenSoft : colors.surface;
     final border = isLogout
         ? AppColors.moiGiven.withValues(alpha: 0.22)
-        : const Color(0xffE4E4E7); // zinc-200
-    final titleColor =
-        isLogout ? AppColors.moiGiven : const Color(0xff18181B); // zinc-900
+        : colors.border;
+    final titleColor = isLogout ? AppColors.moiGiven : colors.textPrimary;
 
     return Material(
       color: Colors.transparent,

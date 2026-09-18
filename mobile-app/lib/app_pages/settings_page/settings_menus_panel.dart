@@ -13,7 +13,7 @@ import 'package:provider/provider.dart';
 ///
 /// Grouping:
 /// 1. App lock
-/// 2. Language, voice, color
+/// 2. Language, voice, dark mode
 /// 3. About app → optional contact / rate / app name / version / logout
 class SettingsMenusPanel extends StatefulWidget {
   final VoidCallback? onContactUs;
@@ -111,13 +111,13 @@ class _SettingsMenusPanelState extends State<SettingsMenusPanel> {
             _MenuRow(
               icon: HugeIcons.strokeRoundedLogout01,
               iconBg: AppColors.moiGivenSoft,
-              iconColor: AppColors.moiGiven,
+              iconColor: AppColors.lightError,
               title: languageProvider.tr('menu.logout'),
               subtitle: widget.logoutSubtitle ??
                   languageProvider.tr('menu.logout'),
               showChevron: false,
               showDivider: false,
-              titleColor: AppColors.moiGiven,
+              titleColor: AppColors.lightError,
               onTap: widget.onLogout,
             ),
         ];
@@ -179,33 +179,19 @@ class _SettingsMenusPanelState extends State<SettingsMenusPanel> {
                   onTap: () => _showVoiceLanguagePicker(languageProvider),
                 ),
                 _MenuRow(
-                  icon: HugeIcons.strokeRoundedPaintBrush04,
-                  iconBg: const Color(0xffF3E8FF),
-                  iconColor: const Color(0xff7C3AED),
-                  title: languageProvider.tr('settings.accentColor'),
-                  subtitle: languageProvider.tr('settings.themeHint'),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: 18,
-                        height: 18,
-                        decoration: BoxDecoration(
-                          color: themeProvider.seedColor,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: const Color(0xffE4E4E7)),
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      const HugeIcon(
-                        icon: HugeIcons.strokeRoundedArrowRight01,
-                        strokeWidth: 1.9,
-                        size: 16,
-                        color: Color(0xffA1A1AA),
-                      ),
-                    ],
+                  icon: HugeIcons.strokeRoundedMoon02,
+                  iconBg: const Color(0xffF1EEE6),
+                  iconColor: AppColors.charcoal,
+                  title: languageProvider.tr('settings.darkMode'),
+                  subtitle: languageProvider.tr('settings.darkModeHint'),
+                  trailing: Switch.adaptive(
+                    value: themeProvider.isDarkMode,
+                    activeTrackColor: primary.withValues(alpha: 0.45),
+                    activeThumbColor: primary,
+                    onChanged: (value) {
+                      themeProvider.setDarkMode(value);
+                    },
                   ),
-                  onTap: () => _showAccentColorSheet(themeProvider),
                   showDivider: false,
                 ),
               ],
@@ -323,95 +309,6 @@ class _SettingsMenusPanelState extends State<SettingsMenusPanel> {
     }
   }
 
-  Future<void> _showAccentColorSheet(ThemeProvider themeProvider) async {
-    await showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (sheetContext) {
-        final primary = Theme.of(sheetContext).colorScheme.primary;
-        final colors = ThemeProvider.availableColors;
-        return Container(
-          margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-          padding: const EdgeInsets.fromLTRB(16, 10, 16, 18),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: const Color(0xffE4E4E7)),
-          ),
-          child: SafeArea(
-            top: false,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: const Color(0xffE4E4E7),
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  context.read<LanguageProvider>().tr('settings.accentColor'),
-                  style: AppTypography.sectionTitle.copyWith(
-                    color: primary,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                GridView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 6,
-                    crossAxisSpacing: 10,
-                    mainAxisSpacing: 10,
-                  ),
-                  itemCount: colors.length,
-                  itemBuilder: (context, index) {
-                    final color = colors[index];
-                    final selected = themeProvider.isSeedColor(color);
-                    return GestureDetector(
-                      onTap: () {
-                        themeProvider.setSeedColor(color);
-                        Navigator.pop(sheetContext);
-                      },
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 150),
-                        decoration: BoxDecoration(
-                          color: color,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: selected
-                                ? const Color(0xff18181B)
-                                : Colors.transparent,
-                            width: 2,
-                          ),
-                        ),
-                        child: selected
-                            ? const Center(
-                                child: HugeIcon(
-                                  icon: HugeIcons.strokeRoundedTick02,
-                                  size: 18,
-                                  color: Colors.white,
-                                  strokeWidth: 1.8,
-                                ),
-                              )
-                            : null,
-                      ),
-                    );
-                  },
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
 }
 
 class _SectionLabel extends StatelessWidget {
@@ -421,12 +318,13 @@ class _SectionLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     return Padding(
       padding: const EdgeInsets.only(left: 4, bottom: 2),
       child: Text(
         title.toUpperCase(),
         style: AppTypography.label.copyWith(
-          color: AppColors.textPrimary,
+          color: colors.textPrimary,
           fontSize: 13,
           fontWeight: FontWeight.w800,
           letterSpacing: 0.5,
@@ -443,11 +341,13 @@ class _MenuCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colors.surface,
         borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: colors.border.withValues(alpha: 0.7)),
         boxShadow: AppShadows.soft,
       ),
       child: Column(children: children),
@@ -484,6 +384,7 @@ class _MenuRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     return Column(
       children: [
         Material(
@@ -518,7 +419,7 @@ class _MenuRow extends StatelessWidget {
                         Text(
                           title,
                           style: AppTypography.label.copyWith(
-                            color: titleColor ?? AppColors.textPrimary,
+                            color: titleColor ?? colors.textPrimary,
                             fontSize: 14,
                             fontWeight: FontWeight.w700,
                           ),
@@ -529,7 +430,7 @@ class _MenuRow extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: AppTypography.body.copyWith(
-                            color: AppColors.textSecondary,
+                            color: colors.textSecondary,
                             fontSize: 12,
                           ),
                         ),
@@ -544,18 +445,18 @@ class _MenuRow extends StatelessWidget {
                       Text(
                         trailingLabel!,
                         style: AppTypography.body.copyWith(
-                          color: AppColors.textSecondary,
+                          color: colors.textSecondary,
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
                     if (showChevron) ...[
                       const SizedBox(width: 4),
-                      const HugeIcon(
+                      HugeIcon(
                         icon: HugeIcons.strokeRoundedArrowRight01,
                         strokeWidth: 1.9,
                         size: 16,
-                        color: Color(0xffA1A1AA),
+                        color: colors.textMuted,
                       ),
                     ],
                   ],
@@ -565,12 +466,12 @@ class _MenuRow extends StatelessWidget {
           ),
         ),
         if (showDivider)
-          const Divider(
+          Divider(
             height: 1,
             thickness: 1,
             indent: 66,
             endIndent: 14,
-            color: Color(0xffF4F4F5),
+            color: colors.border.withValues(alpha: 0.7),
           ),
       ],
     );
@@ -593,14 +494,15 @@ class _PickerSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final primary = Theme.of(context).colorScheme.primary;
+    final colors = AppColors.of(context);
 
     return Container(
       margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
       padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colors.surfaceElevated,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xffE4E4E7)),
+        border: Border.all(color: colors.border),
       ),
       child: SafeArea(
         top: false,
@@ -611,7 +513,7 @@ class _PickerSheet extends StatelessWidget {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: const Color(0xffE4E4E7),
+                color: colors.border,
                 borderRadius: BorderRadius.circular(999),
               ),
             ),
@@ -619,7 +521,7 @@ class _PickerSheet extends StatelessWidget {
             Text(
               title,
               style: AppTypography.sectionTitle.copyWith(
-                color: primary,
+                color: colors.textPrimary,
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
               ),
@@ -631,8 +533,8 @@ class _PickerSheet extends StatelessWidget {
                 padding: const EdgeInsets.only(bottom: 8),
                 child: Material(
                   color: selected
-                      ? primary.withValues(alpha: 0.08)
-                      : const Color(0xffFAFAFA),
+                      ? primary.withValues(alpha: 0.14)
+                      : colors.surfaceVariant,
                   borderRadius: BorderRadius.circular(14),
                   child: InkWell(
                     onTap: () => Navigator.pop(context, option.value),
@@ -650,7 +552,7 @@ class _PickerSheet extends StatelessWidget {
                               style: AppTypography.label.copyWith(
                                 color: selected
                                     ? primary
-                                    : AppColors.textPrimary,
+                                    : colors.textPrimary,
                                 fontSize: 14,
                                 fontWeight: FontWeight.w700,
                               ),

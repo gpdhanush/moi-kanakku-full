@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:moi/app_themes/index.dart';
 
 class AppBarWidget extends StatelessWidget implements PreferredSizeWidget {
   final String title;
@@ -13,24 +14,24 @@ class AppBarWidget extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final Color primary = theme.colorScheme.primary;
+    final colors = AppColors.of(context);
     final bool isDark = theme.brightness == Brightness.dark;
 
     return AppBar(
       title: Text(
         title,
         style: theme.textTheme.bodyMedium?.copyWith(
-          color: Colors.white,
-          fontWeight: FontWeight.w500,
+          color: colors.textPrimary,
+          fontWeight: FontWeight.w600,
         ),
       ),
-      backgroundColor: primary,
+      backgroundColor: colors.background,
       automaticallyImplyLeading: true,
       centerTitle: true,
       elevation: 0,
       scrolledUnderElevation: 0,
       surfaceTintColor: Colors.transparent,
-      shadowColor: Colors.black.withValues(alpha: 0.1),
+      shadowColor: AppColors.charcoal.withValues(alpha: 0.08),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.only(
           bottomLeft: Radius.circular(20),
@@ -45,38 +46,29 @@ class AppBarWidget extends StatelessWidget implements PreferredSizeWidget {
                 child: Row(mainAxisSize: MainAxisSize.min, children: action),
               ),
             ],
-      iconTheme: const IconThemeData(color: Colors.white, size: 24),
+      iconTheme: IconThemeData(color: colors.textPrimary, size: 24),
       leadingWidth: 56,
       toolbarHeight: kToolbarHeight,
       flexibleSpace: Container(
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [primary, primary.withValues(alpha: 0.95)],
-          ),
+          color: colors.background,
           borderRadius: const BorderRadius.only(
             bottomLeft: Radius.circular(20),
             bottomRight: Radius.circular(20),
           ),
-          boxShadow: [
-            BoxShadow(
-              color: primary.withValues(alpha: 0.3),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
-            ),
-          ],
+          border: Border(
+            bottom: BorderSide(color: colors.border.withValues(alpha: 0.8)),
+          ),
         ),
       ),
-      systemOverlayStyle: SystemUiOverlayStyle.light.copyWith(
+      systemOverlayStyle: SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
-        statusBarBrightness: Brightness.dark,
+        statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+        statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
         systemStatusBarContrastEnforced: false,
-        systemNavigationBarColor: isDark ? Colors.black : Colors.white,
-        systemNavigationBarIconBrightness: isDark
-            ? Brightness.light
-            : Brightness.dark,
+        systemNavigationBarColor: colors.surface,
+        systemNavigationBarIconBrightness:
+            isDark ? Brightness.light : Brightness.dark,
       ),
     );
   }

@@ -9,40 +9,11 @@ class ThemeProvider with ChangeNotifier {
   static const String _colorKey = 'theme_color';
   static const String _darkModeKey = 'dark_mode';
 
-  // Theme color options — default is logo green from moi_kanakku.png
-  static const Color primary = AppColors.logoGreen;
-  static const Color primaryOption2 = Color(0xFF1565C0); // Dark Blue
-  static const Color primaryOption3 = Color(0xFF2E7D32); // Dark Green
-  static const Color primaryOption4 = Color(0xFF6A1B9A); // Dark Purple
-  static const Color primaryOption5 = Color(0xFFE65100); // Dark Orange
-  static const Color primaryOption6 = Color(0xFFC2185B); // Dark Pink
-  static const Color primaryOption7 = Color(0xFFC62828); // Dark Red
-  static const Color primaryOption8 = Color(0xFF00695C); // Dark Teal
-  static const Color primaryOption9 = Color(0xFF283593); // Dark Indigo
-  static const Color primaryOption10 = Color(0xFF004D40); // Very Dark Teal
-  static const Color primaryOption11 = Color(0xFFF57F17); // Dark Amber
-  static const Color primaryOption12 = Color(0xFF827717); // Dark Lime
-  static const Color primaryOption13 = Color(0xFF00695C); // Dark Teal Green
-  static const Color primaryOption14 = Color(0xff2c3e50); // Dark Purple Variant
-  static const Color primaryOption15 = Color(0xFFC62828); // Dark Red Variant
-  static const Color primaryOption16 = Color(0xFF1565C0); // Dark Light Blue
+  /// Locked brand primary — accent picker removed from Settings.
+  static const Color primary = AppColors.brandSeed;
 
-  // List of all available theme colors (logo green first = default)
-  static const List<Color> availableColors = [
-    primary,
-    AppColors.brandBlue,
-    primaryOption2,
-    primaryOption3,
-    primaryOption4,
-    primaryOption5,
-    primaryOption6,
-    primaryOption7,
-    primaryOption8,
-    primaryOption10,
-    primaryOption11,
-    primaryOption12,
-    primaryOption14,
-  ];
+  /// Kept for compatibility; UI no longer offers a color picker.
+  static const List<Color> availableColors = [primary];
 
   final _storage = const FlutterSecureStorage();
 
@@ -78,6 +49,7 @@ class ThemeProvider with ChangeNotifier {
 
   ThemeProvider() {
     AppColors.bindTheme(_seedColor);
+    AppColors.bindBrightness(_isDarkMode);
     AppShadows.bindTheme(_seedColor);
   }
 
@@ -94,11 +66,14 @@ class ThemeProvider with ChangeNotifier {
   }
 
   ThemeData getThemeForLanguage(String languageCode) {
-    final Color statusBarColor = Colors.black;
+    final colors = AppColors.forBrightness(
+      _isDarkMode ? Brightness.dark : Brightness.light,
+    );
     final SystemUiOverlayStyle overlay = SystemUiOverlayStyle(
-      statusBarColor: statusBarColor,
-      statusBarIconBrightness: Brightness.light,
-      statusBarBrightness: Brightness.dark,
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness:
+          _isDarkMode ? Brightness.light : Brightness.dark,
+      statusBarBrightness: _isDarkMode ? Brightness.dark : Brightness.light,
     );
 
     final baseTheme = AppThemes.buildTheme(
@@ -109,7 +84,7 @@ class ThemeProvider with ChangeNotifier {
 
     return baseTheme.copyWith(
       appBarTheme: baseTheme.appBarTheme.copyWith(
-        foregroundColor: Colors.white,
+        foregroundColor: colors.textPrimary,
         systemOverlayStyle: overlay,
         elevation: 0,
       ),
@@ -135,15 +110,22 @@ class ThemeProvider with ChangeNotifier {
         }
       }
 
+      // Lock brand to lime — migrate any previously saved custom accent.
       final parsedColor = _colorFromStorage(colorValue);
-      if (parsedColor != null) {
-        _seedColor = parsedColor;
+      if (parsedColor == null ||
+          parsedColor.toARGB32() != primary.toARGB32()) {
+        _seedColor = primary;
+        migrated = true;
+      } else {
+        _seedColor = primary;
       }
+
       if (darkModeValue != null) {
         _isDarkMode = darkModeValue == 'true';
       }
 
       AppColors.bindTheme(_seedColor);
+      AppColors.bindBrightness(_isDarkMode);
       AppShadows.bindTheme(_seedColor);
 
       if (migrated) {
@@ -211,6 +193,7 @@ class ThemeProvider with ChangeNotifier {
   /// Toggles between light and dark mode
   Future<void> toggleThemeMode() async {
     _isDarkMode = !_isDarkMode;
+    AppColors.bindBrightness(_isDarkMode);
     notifyListeners();
     try {
       await _persistTheme();
@@ -219,12 +202,24 @@ class ThemeProvider with ChangeNotifier {
     }
   }
 
-  /// Sets a new seed color for the theme
-  /// [color] - The new color to use as the seed color
-  Future<void> setSeedColor(Color color) async {
-    if (isSeedColor(color)) return;
+  /// Sets dark mode explicitly (used by Settings switch).
+  Future<void> setDarkMode(bool enabled) async {
+    if (_isDarkMode == enabled) return;
+    _isDarkMode = enabled;
+    AppColors.bindBrightness(_isDarkMode);
+    notifyListeners();
+    try {
+      await _persistTheme();
+    } catch (e) {
+      // ignore
+    }
+  }
 
-    _seedColor = color;
+  /// Sets a new seed color for the theme (kept for API compatibility).
+  /// Brand is locked to lime — custom accents are ignored.
+  Future<void> setSeedColor(Color color) async {
+    if (isSeedColor(primary)) return;
+    _seedColor = primary;
     AppColors.bindTheme(_seedColor);
     AppShadows.bindTheme(_seedColor);
     notifyListeners();
@@ -240,6 +235,7 @@ class ThemeProvider with ChangeNotifier {
     _isDarkMode = false;
     _seedColor = primary;
     AppColors.bindTheme(_seedColor);
+    AppColors.bindBrightness(_isDarkMode);
     AppShadows.bindTheme(_seedColor);
     notifyListeners();
     try {

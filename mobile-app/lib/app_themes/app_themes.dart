@@ -113,7 +113,9 @@ class AppThemes {
     String languageCode,
     bool isDark,
   ) {
-    final textColor = isDark ? Colors.white : AppColors.text;
+    final colors = AppColors.forBrightness(
+      isDark ? Brightness.dark : Brightness.light,
+    );
     final family = fontFamilyForLanguage(languageCode);
     final isTamil = languageCode.toLowerCase() == 'ta';
 
@@ -127,12 +129,11 @@ class AppThemes {
       return style.copyWith(
         fontFamily: family,
         fontSize: fontSize,
-        // Tamil script needs a bit less line height to avoid a bulky look.
         height: isTamil
             ? ((style.height ?? 1.35) * 0.95).clamp(1.15, 1.4)
             : style.height,
         fontWeight: style.fontWeight,
-        color: style.color ?? textColor,
+        color: style.color ?? colors.textPrimary,
       );
     }
 
@@ -162,45 +163,77 @@ class AppThemes {
     return base.apply(fontFamily: englishFontFamily);
   }
 
+  static ColorScheme _colorScheme(bool isDark) {
+    final c = AppColors.forBrightness(
+      isDark ? Brightness.dark : Brightness.light,
+    );
+    return ColorScheme(
+      brightness: isDark ? Brightness.dark : Brightness.light,
+      primary: c.primary,
+      onPrimary: c.onPrimary,
+      primaryContainer: c.surfaceVariant,
+      onPrimaryContainer: c.textPrimary,
+      secondary: c.surfaceVariant,
+      onSecondary: c.textPrimary,
+      secondaryContainer: c.surfaceVariant,
+      onSecondaryContainer: c.textPrimary,
+      tertiary: c.info,
+      onTertiary: c.onPrimary,
+      error: c.error,
+      onError: AppColors.white,
+      surface: c.surface,
+      onSurface: c.textPrimary,
+      surfaceContainerHighest: c.surfaceVariant,
+      surfaceContainerHigh: c.surfaceElevated,
+      surfaceContainer: c.surface,
+      surfaceContainerLow: c.surface,
+      surfaceContainerLowest: c.background,
+      onSurfaceVariant: c.textSecondary,
+      outline: c.border,
+      outlineVariant: c.border,
+      shadow: c.textPrimary.withValues(alpha: 0.18),
+      scrim: Colors.black54,
+      inverseSurface: isDark ? c.surfaceElevated : AppColors.charcoal,
+      onInverseSurface: isDark ? c.textPrimary : AppColors.white,
+      inversePrimary: c.primaryDark,
+    );
+  }
+
   static ThemeData buildTheme({
     required Color seedColor,
     required bool isDark,
     required String languageCode,
   }) {
-    AppColors.bindTheme(seedColor);
-    AppShadows.bindTheme(seedColor);
+    AppColors.bindTheme(AppColors.brandSeed);
+    AppColors.bindBrightness(isDark);
+    AppShadows.bindTheme(AppColors.brandSeed);
 
-    final brightness = isDark ? Brightness.dark : Brightness.light;
+    final colors = AppColors.forBrightness(
+      isDark ? Brightness.dark : Brightness.light,
+    );
     final base = isDark ? _buildDarkTheme() : _buildLightTheme();
     final themedText = _textThemeWithLanguage(
       _baseTextTheme(isDark),
       languageCode,
       isDark,
     );
-    final scaffoldBg =
-        isDark ? Colors.grey[900]! : AppColors.background;
 
     return base.copyWith(
-      scaffoldBackgroundColor: scaffoldBg,
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: seedColor,
-        brightness: brightness,
-        primary: seedColor,
-        secondary: AppColors.logoGold,
-        tertiary: AppColors.logoMint,
-        surface: isDark ? Colors.grey[850]! : AppColors.themeSurface,
-      ),
+      scaffoldBackgroundColor: colors.background,
+      colorScheme: _colorScheme(isDark),
       textTheme: themedText,
       primaryTextTheme: themedText,
       appBarTheme: base.appBarTheme.copyWith(
-        backgroundColor: isDark ? Colors.grey[900] : seedColor,
+        backgroundColor: colors.background,
+        foregroundColor: colors.textPrimary,
         titleTextStyle: _arimo(
           fontSize: 18,
           fontWeight: FontWeight.w600,
-          color: Colors.white,
+          color: colors.textPrimary,
         ),
+        iconTheme: IconThemeData(color: colors.textPrimary),
       ),
-      shadowColor: seedColor.withValues(alpha: 0.28),
+      shadowColor: AppColors.charcoal.withValues(alpha: 0.12),
     );
   }
 
@@ -210,7 +243,7 @@ class AppThemes {
     String languageCode = 'en',
   }) {
     return buildTheme(
-      seedColor: color,
+      seedColor: AppColors.brandSeed,
       isDark: isDark,
       languageCode: languageCode,
     );
@@ -219,89 +252,197 @@ class AppThemes {
   static ThemeData get lightTheme => _buildLightTheme();
   static ThemeData get darkTheme => _buildDarkTheme();
 
+  static ButtonStyle _primaryButtonStyle(MoiKanakkuColors c) {
+    return ElevatedButton.styleFrom(
+      textStyle: AppTextStyles.buttonStyle,
+      elevation: 0,
+      foregroundColor: c.onPrimary,
+      backgroundColor: c.primary,
+      disabledForegroundColor: c.textMuted,
+      disabledBackgroundColor: c.primary.withValues(alpha: 0.45),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
+    );
+  }
+
   static ThemeData _buildLightTheme() {
+    const c = MoiKanakkuColors.light;
     final textTheme = ThemeData.light(
       useMaterial3: true,
-    ).textTheme.apply(fontFamily: englishFontFamily);
+    ).textTheme.apply(
+      fontFamily: englishFontFamily,
+      bodyColor: c.textPrimary,
+      displayColor: c.textPrimary,
+    );
 
     return ThemeData.light(useMaterial3: true).copyWith(
-      scaffoldBackgroundColor: AppColors.background,
-      shadowColor: AppColors.themeSeed.withValues(alpha: 0.28),
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: AppColors.primary,
-        brightness: Brightness.light,
-        primary: AppColors.primary,
-        secondary: AppColors.logoGold,
-        tertiary: AppColors.logoMint,
-        surface: AppColors.themeSurface,
-      ),
+      scaffoldBackgroundColor: c.background,
+      shadowColor: AppColors.charcoal.withValues(alpha: 0.12),
+      colorScheme: _colorScheme(false),
       textTheme: textTheme,
       primaryTextTheme: textTheme,
       appBarTheme: AppBarTheme(
-        backgroundColor: AppColors.primary,
+        backgroundColor: c.background,
         elevation: 0,
+        foregroundColor: c.textPrimary,
         titleTextStyle: _arimo(
           fontSize: 18,
           fontWeight: FontWeight.w600,
-          color: Colors.white,
+          color: c.textPrimary,
+        ),
+        iconTheme: IconThemeData(color: c.textPrimary),
+      ),
+      cardTheme: CardThemeData(
+        color: c.surface,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: c.border.withValues(alpha: 0.6)),
         ),
       ),
+      dialogTheme: DialogThemeData(
+        backgroundColor: c.surfaceElevated,
+        surfaceTintColor: Colors.transparent,
+      ),
+      bottomSheetTheme: BottomSheetThemeData(
+        backgroundColor: c.surfaceElevated,
+        surfaceTintColor: Colors.transparent,
+        modalBackgroundColor: c.surfaceElevated,
+      ),
+      dividerColor: c.border,
       textSelectionTheme: TextSelectionThemeData(
-        cursorColor: AppColors.primary,
-        selectionColor: AppColors.primary.withAlpha(200),
-        selectionHandleColor: AppColors.primary,
+        cursorColor: c.primary,
+        selectionColor: c.primary.withAlpha(200),
+        selectionHandleColor: c.primaryDark,
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
-        style: ElevatedButton.styleFrom(
-          textStyle: AppTextStyles.buttonStyle,
-          elevation: 0,
-          foregroundColor: Colors.white,
-          backgroundColor: AppColors.primary,
-          disabledForegroundColor: AppColors.gray,
-          disabledBackgroundColor: AppColors.primary.withAlpha(130),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
+        style: _primaryButtonStyle(c),
+      ),
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          foregroundColor: c.onPrimary,
+          backgroundColor: c.primary,
         ),
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           elevation: 0,
-          foregroundColor: AppColors.primary,
+          foregroundColor: c.textPrimary,
           textStyle: AppTextStyles.textButtonStyle,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
         ),
       ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: c.textPrimary,
+          backgroundColor: c.surfaceVariant,
+          side: BorderSide(color: c.border),
+        ),
+      ),
+      floatingActionButtonTheme: FloatingActionButtonThemeData(
+        backgroundColor: c.primary,
+        foregroundColor: c.onPrimary,
+        elevation: 2,
+      ),
+      switchTheme: SwitchThemeData(
+        thumbColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) return c.primary;
+          return c.surface;
+        }),
+        trackColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return c.primary.withValues(alpha: 0.45);
+          }
+          return c.border;
+        }),
+      ),
+      chipTheme: ChipThemeData(
+        backgroundColor: c.surfaceVariant,
+        selectedColor: c.primary.withValues(alpha: 0.25),
+        labelStyle: _arimo(color: c.textPrimary, fontSize: 13),
+        side: BorderSide(color: c.border),
+      ),
+      progressIndicatorTheme: ProgressIndicatorThemeData(
+        color: c.primary,
+        linearTrackColor: c.surfaceVariant,
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: c.surface,
+        hintStyle: _arimo(color: c.textMuted, fontSize: 14),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide(color: c.border),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide(color: c.border),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+        ),
+      ),
+      navigationBarTheme: NavigationBarThemeData(
+        backgroundColor: c.surface,
+        indicatorColor: c.primary.withValues(alpha: 0.22),
+        labelTextStyle: WidgetStateProperty.resolveWith((states) {
+          final selected = states.contains(WidgetState.selected);
+          return _arimo(
+            fontSize: 12,
+            fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+            color: selected ? c.primary : c.textMuted,
+          );
+        }),
+        iconTheme: WidgetStateProperty.resolveWith((states) {
+          final selected = states.contains(WidgetState.selected);
+          return IconThemeData(
+            color: selected ? c.primary : c.iconDefault,
+          );
+        }),
+      ),
+      bottomNavigationBarTheme: BottomNavigationBarThemeData(
+        backgroundColor: c.surface,
+        selectedItemColor: c.primary,
+        unselectedItemColor: c.textMuted,
+        type: BottomNavigationBarType.fixed,
+        elevation: 0,
+      ),
       datePickerTheme: DatePickerThemeData(
-        headerBackgroundColor: AppColors.primary,
-        headerForegroundColor: Colors.white,
-        surfaceTintColor: Colors.white,
+        headerBackgroundColor: c.primary,
+        headerForegroundColor: c.onPrimary,
+        backgroundColor: c.surfaceElevated,
+        surfaceTintColor: Colors.transparent,
         elevation: 5,
         dayStyle: _arimo(fontWeight: FontWeight.bold),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
         todayBorder: const BorderSide(color: AppColors.primary),
         confirmButtonStyle: ButtonStyle(
           backgroundColor: const WidgetStatePropertyAll(AppColors.primary),
-          foregroundColor: const WidgetStatePropertyAll(Colors.white),
+          foregroundColor: const WidgetStatePropertyAll(AppColors.charcoal),
           textStyle: WidgetStatePropertyAll(
             _arimo(decoration: TextDecoration.none),
           ),
         ),
         cancelButtonStyle: ButtonStyle(
-          backgroundColor: const WidgetStatePropertyAll(Colors.redAccent),
-          foregroundColor: const WidgetStatePropertyAll(Colors.white),
+          backgroundColor: WidgetStatePropertyAll(c.surfaceVariant),
+          foregroundColor: WidgetStatePropertyAll(c.textPrimary),
           textStyle: WidgetStatePropertyAll(
             _arimo(decoration: TextDecoration.none),
           ),
         ),
-        dayOverlayColor: const WidgetStatePropertyAll(AppColors.primary),
+        dayOverlayColor: WidgetStatePropertyAll(
+          c.primary.withValues(alpha: 0.12),
+        ),
         dayForegroundColor: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
-            return Colors.white;
+            return c.onPrimary;
           }
-          return Colors.black;
+          return c.textPrimary;
         }),
         dayBackgroundColor: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
-            return AppColors.primary;
+            return c.primary;
           }
           return Colors.transparent;
         }),
@@ -309,39 +450,212 @@ class AppThemes {
           if (!states.contains(WidgetState.selected)) {
             return Colors.transparent;
           }
-          return AppColors.primary;
+          return c.primary;
         }),
         todayForegroundColor: WidgetStateProperty.resolveWith((states) {
           if (!states.contains(WidgetState.selected)) {
-            return Colors.black;
+            return c.textPrimary;
           }
-          return Colors.white;
+          return c.onPrimary;
         }),
       ),
     );
   }
 
   static ThemeData _buildDarkTheme() {
+    const c = MoiKanakkuColors.dark;
     final textTheme = ThemeData.dark(
       useMaterial3: true,
-    ).textTheme.apply(fontFamily: englishFontFamily);
+    ).textTheme.apply(
+      fontFamily: englishFontFamily,
+      bodyColor: c.textPrimary,
+      displayColor: c.textPrimary,
+    );
 
     return ThemeData.dark(useMaterial3: true).copyWith(
-      scaffoldBackgroundColor: Colors.grey[900],
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: AppColors.primary,
-        brightness: Brightness.dark,
-        primary: AppColors.primary,
-        secondary: AppColors.logoGold,
-        tertiary: AppColors.logoMint,
+      scaffoldBackgroundColor: c.background,
+      shadowColor: Colors.black.withValues(alpha: 0.35),
+      colorScheme: _colorScheme(true),
+      textTheme: textTheme,
+      primaryTextTheme: textTheme,
+      appBarTheme: AppBarTheme(
+        backgroundColor: c.background,
+        elevation: 0,
+        foregroundColor: c.textPrimary,
+        titleTextStyle: _arimo(
+          fontSize: 18,
+          fontWeight: FontWeight.w600,
+          color: c.textPrimary,
+        ),
+        iconTheme: IconThemeData(color: c.textPrimary),
       ),
-      textTheme: textTheme.apply(
-        bodyColor: Colors.white,
-        displayColor: Colors.white,
+      cardTheme: CardThemeData(
+        color: c.surface,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: c.border),
+        ),
       ),
-      primaryTextTheme: textTheme.apply(
-        bodyColor: Colors.white,
-        displayColor: Colors.white,
+      dialogTheme: DialogThemeData(
+        backgroundColor: c.surfaceElevated,
+        surfaceTintColor: Colors.transparent,
+      ),
+      bottomSheetTheme: BottomSheetThemeData(
+        backgroundColor: c.surfaceElevated,
+        surfaceTintColor: Colors.transparent,
+        modalBackgroundColor: c.surfaceElevated,
+      ),
+      dividerColor: c.border,
+      textSelectionTheme: TextSelectionThemeData(
+        cursorColor: c.primary,
+        selectionColor: c.primary.withAlpha(160),
+        selectionHandleColor: c.primaryLight,
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: _primaryButtonStyle(c),
+      ),
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          foregroundColor: c.onPrimary,
+          backgroundColor: c.primary,
+        ),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          elevation: 0,
+          foregroundColor: c.textSecondary,
+          textStyle: AppTextStyles.textButtonStyle,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
+        ),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: c.textPrimary,
+          backgroundColor: c.surfaceVariant,
+          side: BorderSide(color: c.border),
+        ),
+      ),
+      floatingActionButtonTheme: FloatingActionButtonThemeData(
+        backgroundColor: c.primary,
+        foregroundColor: c.onPrimary,
+        elevation: 2,
+      ),
+      switchTheme: SwitchThemeData(
+        thumbColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) return c.primary;
+          return c.surfaceElevated;
+        }),
+        trackColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return c.primary.withValues(alpha: 0.45);
+          }
+          return c.border;
+        }),
+      ),
+      chipTheme: ChipThemeData(
+        backgroundColor: c.surfaceVariant,
+        selectedColor: c.primary.withValues(alpha: 0.25),
+        labelStyle: _arimo(color: c.textPrimary, fontSize: 13),
+        side: BorderSide(color: c.border),
+      ),
+      progressIndicatorTheme: ProgressIndicatorThemeData(
+        color: c.primary,
+        linearTrackColor: c.surfaceVariant,
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: c.surfaceVariant,
+        hintStyle: _arimo(color: c.textMuted, fontSize: 14),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide(color: c.border),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide(color: c.border),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+        ),
+      ),
+      navigationBarTheme: NavigationBarThemeData(
+        backgroundColor: c.surface,
+        indicatorColor: c.primary.withValues(alpha: 0.22),
+        labelTextStyle: WidgetStateProperty.resolveWith((states) {
+          final selected = states.contains(WidgetState.selected);
+          return _arimo(
+            fontSize: 12,
+            fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+            color: selected ? c.primary : c.iconDefault,
+          );
+        }),
+        iconTheme: WidgetStateProperty.resolveWith((states) {
+          final selected = states.contains(WidgetState.selected);
+          return IconThemeData(
+            color: selected ? c.primary : c.iconDefault,
+          );
+        }),
+      ),
+      bottomNavigationBarTheme: BottomNavigationBarThemeData(
+        backgroundColor: c.surface,
+        selectedItemColor: c.primary,
+        unselectedItemColor: c.iconDefault,
+        type: BottomNavigationBarType.fixed,
+        elevation: 0,
+      ),
+      datePickerTheme: DatePickerThemeData(
+        headerBackgroundColor: c.primary,
+        headerForegroundColor: c.onPrimary,
+        backgroundColor: c.surfaceElevated,
+        surfaceTintColor: Colors.transparent,
+        elevation: 5,
+        dayStyle: _arimo(fontWeight: FontWeight.bold),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
+        todayBorder: const BorderSide(color: AppColors.primary),
+        confirmButtonStyle: ButtonStyle(
+          backgroundColor: const WidgetStatePropertyAll(AppColors.primary),
+          foregroundColor: const WidgetStatePropertyAll(AppColors.charcoal),
+          textStyle: WidgetStatePropertyAll(
+            _arimo(decoration: TextDecoration.none),
+          ),
+        ),
+        cancelButtonStyle: ButtonStyle(
+          backgroundColor: WidgetStatePropertyAll(c.surfaceVariant),
+          foregroundColor: WidgetStatePropertyAll(c.textPrimary),
+          textStyle: WidgetStatePropertyAll(
+            _arimo(decoration: TextDecoration.none),
+          ),
+        ),
+        dayOverlayColor: WidgetStatePropertyAll(
+          c.primary.withValues(alpha: 0.12),
+        ),
+        dayForegroundColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return c.onPrimary;
+          }
+          return c.textPrimary;
+        }),
+        dayBackgroundColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return c.primary;
+          }
+          return Colors.transparent;
+        }),
+        todayBackgroundColor: WidgetStateProperty.resolveWith((states) {
+          if (!states.contains(WidgetState.selected)) {
+            return Colors.transparent;
+          }
+          return c.primary;
+        }),
+        todayForegroundColor: WidgetStateProperty.resolveWith((states) {
+          if (!states.contains(WidgetState.selected)) {
+            return c.textPrimary;
+          }
+          return c.onPrimary;
+        }),
       ),
     );
   }

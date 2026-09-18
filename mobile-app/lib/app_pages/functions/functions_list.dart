@@ -419,9 +419,9 @@ class _NoFunctionsStateState extends State<_NoFunctionsState>
                     width: 88,
                     height: 88,
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: AppColors.of(context).surface,
                       borderRadius: BorderRadius.circular(24),
-                      border: Border.all(color: const Color(0xffE4E4E7)),
+                      border: Border.all(color: AppColors.of(context).border),
                       boxShadow: [
                         BoxShadow(
                           color: widget.primary.withValues(alpha: 0.12),
@@ -429,9 +429,7 @@ class _NoFunctionsStateState extends State<_NoFunctionsState>
                           offset: const Offset(0, 8),
                         ),
                         BoxShadow(
-                          color: const Color(
-                            0xff09090B,
-                          ).withValues(alpha: 0.04),
+                          color: AppColors.charcoal.withValues(alpha: 0.04),
                           blurRadius: 4,
                           offset: const Offset(0, 1),
                         ),
@@ -453,7 +451,7 @@ class _NoFunctionsStateState extends State<_NoFunctionsState>
               widget.title,
               textAlign: TextAlign.center,
               style: AppTypography.sectionTitle.copyWith(
-                color: const Color(0xff18181B),
+                color: AppColors.of(context).textPrimary,
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
                 letterSpacing: -0.3,
@@ -464,7 +462,7 @@ class _NoFunctionsStateState extends State<_NoFunctionsState>
               widget.subtitle,
               textAlign: TextAlign.center,
               style: AppTypography.body.copyWith(
-                color: const Color(0xff71717A),
+                color: AppColors.of(context).textSecondary,
                 fontSize: 14,
                 height: 1.45,
               ),
@@ -540,9 +538,9 @@ class _EmptySearchStateState extends State<_EmptySearchState>
               width: 88,
               height: 88,
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: AppColors.of(context).surface,
                 borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: const Color(0xffE4E4E7)),
+                border: Border.all(color: AppColors.of(context).border),
                 boxShadow: [
                   BoxShadow(
                     color: widget.primary.withValues(alpha: 0.1),
@@ -564,7 +562,7 @@ class _EmptySearchStateState extends State<_EmptySearchState>
               widget.title,
               textAlign: TextAlign.center,
               style: AppTypography.sectionTitle.copyWith(
-                color: const Color(0xff18181B),
+                color: AppColors.of(context).textPrimary,
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
               ),
@@ -574,7 +572,7 @@ class _EmptySearchStateState extends State<_EmptySearchState>
               widget.subtitle,
               textAlign: TextAlign.center,
               style: AppTypography.body.copyWith(
-                color: const Color(0xff71717A),
+                color: AppColors.of(context).textSecondary,
                 fontSize: 13,
               ),
             ),
@@ -609,8 +607,9 @@ class _FunctionRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     return Material(
-      color: Colors.white,
+      color: colors.surface,
       borderRadius: BorderRadius.circular(16),
       child: InkWell(
         onTap: onTap,
@@ -620,21 +619,10 @@ class _FunctionRow extends StatelessWidget {
         child: Ink(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: colors.surface,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xffE4E4E7)),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xff09090B).withValues(alpha: 0.05),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-              BoxShadow(
-                color: const Color(0xff09090B).withValues(alpha: 0.03),
-                blurRadius: 2,
-                offset: const Offset(0, 1),
-              ),
-            ],
+            border: Border.all(color: colors.border),
+            boxShadow: AppShadows.soft,
           ),
           child: Row(
             children: [
@@ -649,7 +637,7 @@ class _FunctionRow extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: AppTypography.label.copyWith(
-                        color: const Color(0xff18181B),
+                        color: colors.textPrimary,
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
                         letterSpacing: -0.1,
@@ -663,7 +651,7 @@ class _FunctionRow extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         style: AppTypography.body.copyWith(
                           fontSize: 12,
-                          color: const Color(0xff71717A),
+                          color: colors.textSecondary,
                         ),
                       ),
                     ],
@@ -673,7 +661,7 @@ class _FunctionRow extends StatelessWidget {
               const SizedBox(width: 10),
               HugeIcon(
                 icon: HugeIcons.strokeRoundedArrowRight01,
-                color: const Color(0xffA1A1AA),
+                color: colors.textMuted,
                 size: 18,
                 strokeWidth: 1.9,
               ),

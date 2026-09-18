@@ -160,7 +160,7 @@ class _NoInternetPageState extends State<NoInternetPage>
                               borderRadius: BorderRadius.circular(16),
                             ),
                             alignment: Alignment.center,
-                            child: const HugeIcon(
+                            child: HugeIcon(
                               icon: HugeIcons.strokeRoundedWifiDisconnected01,
                               size: 22,
                               color: AppColors.moiGiven,

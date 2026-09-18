@@ -28,9 +28,11 @@ class HomeMoiOverviewCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final languageProvider = context.watch<LanguageProvider>();
-    final primary = Theme.of(context).colorScheme.primary;
-    final primaryDeep = AppColors.deepenAccent(primary, amount: 0.28);
-    final primarySoft = Color.lerp(primary, Colors.white, 0.22)!;
+    final colors = AppColors.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final heroBg = isDark ? colors.surfaceElevated : AppColors.charcoal;
+    final heroFg = isDark ? colors.textPrimary : AppColors.white;
+    final heroMuted = heroFg.withValues(alpha: 0.78);
 
     return Semantics(
       label:
@@ -48,23 +50,15 @@ class HomeMoiOverviewCard extends StatelessWidget {
               child: Ink(
                 decoration: BoxDecoration(
                   borderRadius: AppRadius.xlAll,
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      primary,
-                      primarySoft,
-                      primaryDeep,
-                    ],
-                  ),
+                  color: heroBg,
                   boxShadow: [
                     BoxShadow(
-                      color: primary.withValues(alpha: 0.32),
+                      color: AppColors.charcoal.withValues(alpha: 0.18),
                       blurRadius: 20,
                       offset: const Offset(0, 10),
                     ),
                     BoxShadow(
-                      color: primary.withValues(alpha: 0.12),
+                      color: AppColors.charcoal.withValues(alpha: 0.08),
                       blurRadius: 6,
                       offset: const Offset(0, 2),
                     ),
@@ -80,7 +74,7 @@ class HomeMoiOverviewCard extends StatelessWidget {
                         height: 120,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: Colors.white.withValues(alpha: 0.10),
+                          color: colors.primary.withValues(alpha: 0.18),
                         ),
                       ),
                     ),
@@ -92,7 +86,7 @@ class HomeMoiOverviewCard extends StatelessWidget {
                         height: 90,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: Colors.white.withValues(alpha: 0.08),
+                          color: colors.primary.withValues(alpha: 0.12),
                         ),
                       ),
                     ),
@@ -104,7 +98,7 @@ class HomeMoiOverviewCard extends StatelessWidget {
                           Text(
                             languageProvider.tr('home.netBalance'),
                             style: AppTypography.body.copyWith(
-                              color: Colors.white.withValues(alpha: 0.78),
+                              color: heroMuted,
                               fontSize: 13,
                             ),
                           ),
@@ -112,7 +106,7 @@ class HomeMoiOverviewCard extends StatelessWidget {
                           Text(
                             '₹ ${formatAmount(netBalance.abs())}',
                             style: AppTypography.amountLarge.copyWith(
-                              color: Colors.white,
+                              color: heroFg,
                               fontSize: 34,
                               letterSpacing: -0.8,
                             ),
@@ -122,7 +116,7 @@ class HomeMoiOverviewCard extends StatelessWidget {
                           const SizedBox(height: AppSpacing.md),
                           Container(
                             height: 1,
-                            color: Colors.white.withValues(alpha: 0.18),
+                            color: heroFg.withValues(alpha: 0.18),
                           ),
                           const SizedBox(height: AppSpacing.md),
                           Row(
@@ -131,7 +125,7 @@ class HomeMoiOverviewCard extends StatelessWidget {
                                 child: Text(
                                   languageProvider.tr('home.viewTransactions'),
                                   style: AppTypography.label.copyWith(
-                                    color: Colors.white,
+                                    color: heroFg,
                                     fontSize: 13,
                                     fontWeight: FontWeight.w700,
                                   ),
@@ -141,13 +135,13 @@ class HomeMoiOverviewCard extends StatelessWidget {
                                 width: 32,
                                 height: 32,
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.18),
+                                  color: colors.primary,
                                   borderRadius: BorderRadius.circular(10),
                                 ),
                                 alignment: Alignment.center,
-                                child: const HugeIcon(
+                                child: HugeIcon(
                                   icon: HugeIcons.strokeRoundedArrowRight01,
-                                  color: Colors.white,
+                                  color: colors.onPrimary,
                                   size: 16,
                                   strokeWidth: 1.8,
                                 ),
@@ -169,9 +163,9 @@ class HomeMoiOverviewCard extends StatelessWidget {
                 child: _FlowMetricTile(
                   title: languageProvider.tr('moi.moiIn'),
                   amount: '₹ ${formatAmount(receivedAmount)}',
-                  accent: AppColors.moiReceived,
-                  softTop: AppColors.moiReceivedSoft,
-                  softBottom: const Color(0xffD1FAE5),
+                  accent: colors.moiReceived,
+                  softTop: colors.moiReceivedSoft,
+                  softBottom: colors.surface,
                   onTap: onReceivedTap,
                 ),
               ),
@@ -180,9 +174,9 @@ class HomeMoiOverviewCard extends StatelessWidget {
                 child: _FlowMetricTile(
                   title: languageProvider.tr('moi.moiOut'),
                   amount: '₹ ${formatAmount(givenAmount)}',
-                  accent: AppColors.moiGiven,
-                  softTop: AppColors.moiGivenSoft,
-                  softBottom: const Color(0xffFFE4E6),
+                  accent: colors.moiGiven,
+                  softTop: colors.moiGivenSoft,
+                  softBottom: colors.surface,
                   onTap: onGivenTap,
                 ),
               ),

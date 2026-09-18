@@ -187,12 +187,12 @@ class _NotificationListPageState extends State<NotificationListPage> {
             constraints: BoxConstraints(maxHeight: maxHeight),
             margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppColors.of(sheetContext).surfaceElevated,
               borderRadius: AppRadius.xlAll,
-              border: Border.all(color: const Color(0xffE4E4E7)),
+              border: Border.all(color: AppColors.of(sheetContext).border),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xff09090B).withValues(alpha: 0.12),
+                  color: AppColors.charcoal.withValues(alpha: 0.12),
                   blurRadius: 28,
                   offset: const Offset(0, 10),
                 ),
@@ -211,7 +211,7 @@ class _NotificationListPageState extends State<NotificationListPage> {
                         width: 40,
                         height: 4,
                         decoration: BoxDecoration(
-                          color: const Color(0xffE4E4E7),
+                          color: AppColors.of(sheetContext).border,
                           borderRadius: BorderRadius.circular(999),
                         ),
                       ),
@@ -873,6 +873,7 @@ class _NotificationCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isUnread = !notification.isRead;
+    final colors = AppColors.of(context);
 
     return Material(
       color: Colors.transparent,
@@ -886,13 +887,13 @@ class _NotificationCard extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(14, 14, 8, 14),
           decoration: BoxDecoration(
             color: isUnread
-                ? accent.withValues(alpha: 0.04)
-                : Colors.white,
+                ? accent.withValues(alpha: 0.10)
+                : colors.surface,
             borderRadius: AppRadius.mdAll,
             border: Border.all(
               color: isUnread
-                  ? accent.withValues(alpha: 0.22)
-                  : AppColors.borderSubtle.withValues(alpha: 0.7),
+                  ? accent.withValues(alpha: 0.28)
+                  : colors.border,
             ),
             boxShadow: AppShadows.soft,
           ),
@@ -925,7 +926,7 @@ class _NotificationCard extends StatelessWidget {
                           child: Text(
                             notification.title,
                             style: AppTypography.label.copyWith(
-                              color: AppColors.textPrimary,
+                              color: colors.textPrimary,
                               fontSize: 14,
                               fontWeight: isUnread
                                   ? FontWeight.w700
@@ -954,7 +955,7 @@ class _NotificationCard extends StatelessWidget {
                       Text(
                         notification.body,
                         style: AppTypography.body.copyWith(
-                          color: AppColors.textSecondary,
+                          color: colors.textSecondary,
                           fontSize: 12,
                           height: 1.35,
                           fontWeight: FontWeight.w500,
@@ -998,7 +999,7 @@ class _NotificationCard extends StatelessWidget {
                 child: InkWell(
                   onTap: onDelete,
                   customBorder: const CircleBorder(),
-                  child: const SizedBox(
+                  child: SizedBox(
                     width: 36,
                     height: 36,
                     child: Center(

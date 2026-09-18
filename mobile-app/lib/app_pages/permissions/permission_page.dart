@@ -228,11 +228,11 @@ class _PermissionList extends StatelessWidget {
     required this.languageProvider,
   });
 
-  static const List<(Color bg, Color fg)> _accents = [
+  static final List<(Color bg, Color fg)> _accents = [
     (AppColors.primarySoft, AppColors.primary),
     (AppColors.accentVioletSoft, AppColors.accentViolet),
-    (AppColors.moiGivenSoft, AppColors.moiGiven),
-    (AppColors.moiReceivedSoft, AppColors.moiReceived),
+    (AppColors.lightMoiGivenSoft, AppColors.lightMoiGiven),
+    (AppColors.lightMoiReceivedSoft, AppColors.moiReceived),
   ];
 
   @override
@@ -529,7 +529,7 @@ class _PermissionBottomBar extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: AppColors.white,
-        border: const Border(
+        border: Border(
           top: BorderSide(color: AppColors.borderSubtle),
         ),
         boxShadow: [

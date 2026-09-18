@@ -24,7 +24,7 @@ class MorePage extends StatelessWidget {
     return Consumer<LanguageProvider>(
       builder: (context, languageProvider, _) {
         return Scaffold(
-          backgroundColor: AppColors.background,
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           appBar: MoiAppHeader(
             title: languageProvider.tr('nav.more'),
           ),
@@ -261,11 +261,13 @@ class _MoreCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colors.surface,
         borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: colors.border.withValues(alpha: 0.7)),
         boxShadow: AppShadows.soft,
       ),
       child: Column(children: children),
@@ -294,6 +296,7 @@ class _MoreRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     return Column(
       children: [
         Material(
@@ -328,7 +331,7 @@ class _MoreRow extends StatelessWidget {
                         Text(
                           title,
                           style: AppTypography.label.copyWith(
-                            color: AppColors.textPrimary,
+                            color: colors.textPrimary,
                             fontSize: 14,
                             fontWeight: FontWeight.w700,
                           ),
@@ -339,7 +342,7 @@ class _MoreRow extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: AppTypography.body.copyWith(
-                            color: AppColors.textSecondary,
+                            color: colors.textSecondary,
                             fontSize: 12,
                           ),
                         ),
@@ -347,11 +350,11 @@ class _MoreRow extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  const HugeIcon(
+                  HugeIcon(
                     icon: HugeIcons.strokeRoundedArrowRight01,
                     strokeWidth: 1.9,
                     size: 16,
-                    color: Color(0xffA1A1AA),
+                    color: colors.textMuted,
                   ),
                 ],
               ),
@@ -359,12 +362,12 @@ class _MoreRow extends StatelessWidget {
           ),
         ),
         if (showDivider)
-          const Divider(
+          Divider(
             height: 1,
             thickness: 1,
             indent: 66,
             endIndent: 14,
-            color: Color(0xffF4F4F5),
+            color: colors.border.withValues(alpha: 0.7),
           ),
       ],
     );

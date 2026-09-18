@@ -584,8 +584,9 @@ class _PersonCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     return Material(
-      color: Colors.white,
+      color: colors.surface,
       borderRadius: BorderRadius.circular(16),
       child: InkWell(
         onTap: onTap,
@@ -595,9 +596,9 @@ class _PersonCard extends StatelessWidget {
         child: Ink(
           padding: const EdgeInsets.fromLTRB(14, 12, 10, 12),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: colors.surface,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xffE4E4E7)),
+            border: Border.all(color: colors.border),
             boxShadow: AppShadows.soft,
           ),
           child: Row(
@@ -627,7 +628,7 @@ class _PersonCard extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: AppTypography.label.copyWith(
-                        color: AppColors.textPrimary,
+                        color: colors.textPrimary,
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
                       ),

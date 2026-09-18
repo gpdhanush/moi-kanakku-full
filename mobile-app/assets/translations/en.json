@@ -523,6 +523,8 @@
     "cameraPermissionNeeded": "Camera permission is required",
     "compressFailed": "Unable to compress image",
     "contactUs": "Contact Us",
+    "darkMode": "Dark mode",
+    "darkModeHint": "Use dark appearance",
     "deleteAccount": "Deactivate My Account",
     "deviceNotSupported": "Device not supported",
     "enableBiometricAuth": "Enable Biometric Authentication",

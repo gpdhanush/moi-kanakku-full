@@ -173,12 +173,14 @@ class _FeedbacksState extends State<Feedbacks> {
   }
 
   Widget _buildComposerCard(LanguageProvider languageProvider, Color primary) {
+    final colors = AppColors.of(context);
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(14, 16, 14, 16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colors.surface,
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: colors.border),
         boxShadow: AppShadows.soft,
       ),
       child: Form(
@@ -225,8 +227,9 @@ class _FeedbacksState extends State<Feedbacks> {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 28),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.of(context).surface,
           borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.of(context).border),
           boxShadow: AppShadows.soft,
         ),
         child: MoiEmptyState(
@@ -402,13 +405,13 @@ class _FeedbackCard extends StatelessWidget {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.of(context).surface,
         borderRadius: BorderRadius.circular(16),
         boxShadow: AppShadows.soft,
         border: Border.all(
           color: hasReply
               ? const Color(0xFF2E7D32).withValues(alpha: 0.18)
-              : const Color(0xffE4E4E7),
+              : AppColors.of(context).border,
         ),
       ),
       child: Column(

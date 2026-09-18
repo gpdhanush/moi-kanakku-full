@@ -523,6 +523,8 @@
     "cameraPermissionNeeded": "கேமரா அனுமதி தேவை",
     "compressFailed": "படத்தை சுருக்க முடியவில்லை",
     "contactUs": "எங்களைத் தொடர்பு கொள்ளவும்",
+    "darkMode": "இருண்ட தோற்றம்",
+    "darkModeHint": "இருண்ட தோற்றத்தைப் பயன்படுத்து",
     "deleteAccount": "என் கணக்கை முடக்கு",
     "deviceNotSupported": "சாதனம் ஆதரிக்கப்படவில்லை",
     "enableBiometricAuth": "உயிரியல் அங்கீகாரத்தை இயக்கவும்",

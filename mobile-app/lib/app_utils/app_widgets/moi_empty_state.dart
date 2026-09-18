@@ -51,6 +51,7 @@ class _MoiEmptyStateState extends State<MoiEmptyState>
   @override
   Widget build(BuildContext context) {
     final primary = widget.accentColor ?? Theme.of(context).colorScheme.primary;
+    final colors = AppColors.of(context);
     final reduceMotion = MediaQuery.disableAnimationsOf(context);
 
     Widget buildContent() {
@@ -72,7 +73,7 @@ class _MoiEmptyStateState extends State<MoiEmptyState>
                 widget.title,
                 textAlign: TextAlign.center,
                 style: AppTypography.sectionTitle.copyWith(
-                  color: const Color(0xff18181B),
+                  color: colors.textPrimary,
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
                 ),
@@ -83,7 +84,7 @@ class _MoiEmptyStateState extends State<MoiEmptyState>
                   widget.subtitle!,
                   textAlign: TextAlign.center,
                   style: AppTypography.body.copyWith(
-                    color: const Color(0xff71717A),
+                    color: colors.textSecondary,
                     fontSize: 13,
                   ),
                 ),

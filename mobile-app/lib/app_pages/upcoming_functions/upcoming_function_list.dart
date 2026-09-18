@@ -380,12 +380,12 @@ class _UpcomingFunctionListState extends State<UpcomingFunctionList> {
           child: Container(
             margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppColors.of(sheetContext).surfaceElevated,
               borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: const Color(0xffE4E4E7)),
+              border: Border.all(color: AppColors.of(sheetContext).border),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xff09090B).withValues(alpha: 0.12),
+                  color: AppColors.charcoal.withValues(alpha: 0.12),
                   blurRadius: 28,
                   offset: const Offset(0, 10),
                 ),
@@ -402,7 +402,7 @@ class _UpcomingFunctionListState extends State<UpcomingFunctionList> {
                       width: 40,
                       height: 4,
                       decoration: BoxDecoration(
-                        color: const Color(0xffE4E4E7),
+                        color: AppColors.of(sheetContext).border,
                         borderRadius: BorderRadius.circular(999),
                       ),
                     ),
@@ -423,7 +423,7 @@ class _UpcomingFunctionListState extends State<UpcomingFunctionList> {
                       languageProvider.tr('upcomingFunctions.changeStatus'),
                       textAlign: TextAlign.center,
                       style: AppTypography.sectionTitle.copyWith(
-                        color: AppColors.textPrimary,
+                        color: AppColors.of(sheetContext).textPrimary,
                         fontSize: 17,
                         fontWeight: FontWeight.w700,
                         letterSpacing: -0.2,
@@ -436,7 +436,7 @@ class _UpcomingFunctionListState extends State<UpcomingFunctionList> {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: AppTypography.body.copyWith(
-                        color: const Color(0xff71717A),
+                        color: AppColors.of(sheetContext).textSecondary,
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
                       ),
@@ -457,7 +457,7 @@ class _UpcomingFunctionListState extends State<UpcomingFunctionList> {
                       width: double.infinity,
                       height: 48,
                       child: Material(
-                        color: const Color(0xffF4F4F5),
+                        color: AppColors.of(sheetContext).surfaceVariant,
                         borderRadius: BorderRadius.circular(14),
                         child: InkWell(
                           onTap: () => Navigator.pop(sheetContext),
@@ -466,7 +466,7 @@ class _UpcomingFunctionListState extends State<UpcomingFunctionList> {
                             child: Text(
                               languageProvider.tr('common.cancel'),
                               style: AppTypography.label.copyWith(
-                                color: AppColors.textPrimary,
+                                color: AppColors.of(sheetContext).textPrimary,
                                 fontSize: 14,
                                 fontWeight: FontWeight.w700,
                               ),
@@ -613,8 +613,9 @@ class _StatusOptionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     return Material(
-      color: selected ? color.withValues(alpha: 0.08) : const Color(0xffFAFAFA),
+      color: selected ? color.withValues(alpha: 0.08) : colors.surfaceVariant,
       borderRadius: BorderRadius.circular(14),
       child: InkWell(
         onTap: onTap,
@@ -624,7 +625,7 @@ class _StatusOptionTile extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
-              color: selected ? color.withValues(alpha: 0.45) : const Color(0xffE4E4E7),
+              color: selected ? color.withValues(alpha: 0.45) : colors.border,
               width: selected ? 1.5 : 1,
             ),
           ),
@@ -658,7 +659,7 @@ class _StatusOptionTile extends StatelessWidget {
               ),
               HugeIcon(icon: selected
                     ? HugeIcons.strokeRoundedCheckmarkCircle02
-                    : HugeIcons.strokeRoundedCircle, size: 20, color: selected ? color : const Color(0xffA1A1AA), strokeWidth: 1.8),
+                    : HugeIcons.strokeRoundedCircle, size: 20, color: selected ? color : colors.textMuted, strokeWidth: 1.8),
             ],
           ),
         ),
@@ -828,7 +829,7 @@ class _UpcomingFunctionCard extends StatelessWidget {
           height: 180,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xffE4E4E7)),
+            border: Border.all(color: AppColors.of(context).border),
             boxShadow: AppShadows.soft,
           ),
           child: ClipRRect(

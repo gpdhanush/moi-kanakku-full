@@ -35,26 +35,26 @@ class MoiBottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final primary = Theme.of(context).colorScheme.primary;
+    final colors = AppColors.of(context);
     // Scaffold consumes MediaQuery.padding for bottomNavigationBar, so use
     // viewPadding to keep clear of the system gesture / home indicator.
     final bottomInset = MediaQuery.viewPaddingOf(context).bottom;
 
     return Material(
-      color: AppColors.white,
+      color: colors.surface,
       elevation: 0,
       child: DecoratedBox(
         decoration: BoxDecoration(
-          color: AppColors.white,
+          color: colors.surface,
           border: Border(
             top: BorderSide(
-              color: primary,
-              width: 2,
+              color: colors.border,
+              width: 1,
             ),
           ),
           boxShadow: [
             BoxShadow(
-              color: primary.withValues(alpha: 0.08),
+              color: AppColors.charcoal.withValues(alpha: 0.06),
               blurRadius: 10,
               offset: const Offset(0, -2),
             ),
@@ -71,7 +71,8 @@ class MoiBottomNavBar extends StatelessWidget {
                   child: _MoiBottomNavTile(
                     item: items[index],
                     selected: index == currentIndex,
-                    primary: primary,
+                    active: colors.iconActive,
+                    inactive: colors.iconDefault,
                     onTap: () => onTap(index),
                   ),
                 );
@@ -87,25 +88,26 @@ class MoiBottomNavBar extends StatelessWidget {
 class _MoiBottomNavTile extends StatelessWidget {
   final MoiBottomNavItem item;
   final bool selected;
-  final Color primary;
+  final Color active;
+  final Color inactive;
   final VoidCallback onTap;
 
   const _MoiBottomNavTile({
     required this.item,
     required this.selected,
-    required this.primary,
+    required this.active,
+    required this.inactive,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    final inactive = AppColors.textSecondary;
-    final color = selected ? primary : inactive;
+    final color = selected ? active : inactive;
 
     return InkWell(
       onTap: onTap,
-      splashColor: primary.withValues(alpha: 0.08),
-      highlightColor: primary.withValues(alpha: 0.04),
+      splashColor: active.withValues(alpha: 0.08),
+      highlightColor: active.withValues(alpha: 0.04),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -117,7 +119,7 @@ class _MoiBottomNavTile extends StatelessWidget {
             alignment: Alignment.center,
             decoration: BoxDecoration(
               color: selected
-                  ? primary.withValues(alpha: 0.10)
+                  ? active.withValues(alpha: 0.14)
                   : Colors.transparent,
               borderRadius: BorderRadius.circular(16),
             ),

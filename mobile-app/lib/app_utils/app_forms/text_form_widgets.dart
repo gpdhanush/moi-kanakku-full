@@ -10,7 +10,6 @@ import 'field_label.dart';
 
 /// Shared text form field used across the app.
 class TextFormWidget extends StatelessWidget {
-  static const Color _fillColor = Color(0xffF7FAFF);
   static const double _radius = 12;
   static const double _fieldIconSize = 20;
 
@@ -156,17 +155,19 @@ class TextFormWidget extends StatelessWidget {
   /// Shared theme used by text fields and dropdown menus.
   static InputDecorationTheme commonInputDecorationTheme(BuildContext context) {
     final primary = Theme.of(context).colorScheme.primary;
+    final colors = AppColors.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final borderRadius = BorderRadius.circular(_radius);
-    final borderSide = const BorderSide(color: AppColors.borderSubtle);
+    final borderSide = BorderSide(color: colors.border);
 
     return InputDecorationTheme(
       filled: true,
-      fillColor: _fillColor,
+      fillColor: isDark ? colors.surfaceVariant : colors.surface,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       isDense: true,
       constraints: const BoxConstraints(minHeight: 52),
       hintStyle: AppTextStyles.customHintStyle.copyWith(
-        color: AppColors.textSecondary.withValues(alpha: 0.9),
+        color: colors.textSecondary.withValues(alpha: 0.9),
         fontWeight: FontWeight.w500,
       ),
       border: OutlineInputBorder(
@@ -183,15 +184,15 @@ class TextFormWidget extends StatelessWidget {
       ),
       focusedErrorBorder: OutlineInputBorder(
         borderRadius: borderRadius,
-        borderSide: const BorderSide(color: Colors.redAccent, width: 1.5),
+        borderSide: BorderSide(color: colors.error, width: 1.5),
       ),
       disabledBorder: OutlineInputBorder(
         borderRadius: borderRadius,
-        borderSide: BorderSide(color: Colors.grey.shade300),
+        borderSide: BorderSide(color: colors.border.withValues(alpha: 0.5)),
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: borderRadius,
-        borderSide: const BorderSide(color: Colors.redAccent),
+        borderSide: BorderSide(color: colors.error),
       ),
     );
   }

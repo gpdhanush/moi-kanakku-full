@@ -113,16 +113,17 @@ class _SearchWidgetState extends State<SearchWidget> {
   @override
   Widget build(BuildContext context) {
     final primary = Theme.of(context).colorScheme.primary;
+    final colors = AppColors.of(context);
     final hasText = widget.controller?.text.isNotEmpty ?? false;
     final extraTrailing = widget.trailing?.toList() ?? const <Widget>[];
 
     return Container(
       height: 48,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colors.surface,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: const Color(0xffE4E4E7),
+          color: colors.border,
           width: 1,
         ),
         boxShadow: AppShadows.soft,
@@ -131,7 +132,7 @@ class _SearchWidgetState extends State<SearchWidget> {
       child: TextField(
         controller: widget.controller,
         style: AppTypography.body.copyWith(
-          color: AppColors.textPrimary,
+          color: colors.textPrimary,
           fontSize: 14,
           fontWeight: FontWeight.w500,
         ),
@@ -140,7 +141,7 @@ class _SearchWidgetState extends State<SearchWidget> {
         decoration: InputDecoration(
           hintText: widget.hintText ?? 'Search...',
           hintStyle: AppTypography.body.copyWith(
-            color: const Color(0xffA1A1AA),
+            color: colors.textMuted,
             fontSize: 14,
             fontWeight: FontWeight.w500,
           ),
@@ -154,7 +155,7 @@ class _SearchWidgetState extends State<SearchWidget> {
             padding: const EdgeInsets.only(left: 12, right: 8),
             child: HugeIcon(
               icon: HugeIcons.strokeRoundedSearch01,
-              color: const Color(0xff71717A),
+              color: colors.textSecondary,
               size: 18,
               strokeWidth: 1.9,
             ),
@@ -173,7 +174,7 @@ class _SearchWidgetState extends State<SearchWidget> {
                   tooltip: 'Clear',
                   icon: HugeIcon(
                     icon: HugeIcons.strokeRoundedCancel01,
-                    color: const Color(0xffA1A1AA),
+                    color: colors.textMuted,
                     size: 16,
                     strokeWidth: 1.9,
                   ),

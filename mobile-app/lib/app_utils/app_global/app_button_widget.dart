@@ -17,26 +17,19 @@ class AppButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final colors = AppColors.of(context);
 
     return Container(
       width: width ?? double.infinity,
       height: 50,
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            colorScheme.primary,
-            colorScheme.primary.withValues(alpha: 0.9),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: colors.primary,
         borderRadius: BorderRadius.circular(5),
         boxShadow: [
           BoxShadow(
-            color: colorScheme.primary.withValues(alpha: 0.4),
-            blurRadius: 12,
-            offset: const Offset(0, 6),
+            color: AppColors.charcoal.withValues(alpha: 0.12),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
             spreadRadius: 0,
           ),
         ],
@@ -51,9 +44,9 @@ class AppButton extends StatelessWidget {
             child: Text(
               title,
               style: AppTextStyles.textButtonStyle.copyWith(
-                color: Colors.white,
+                color: colors.onPrimary,
                 decoration: TextDecoration.none,
-                fontWeight: fontWeight ?? FontWeight.w500,
+                fontWeight: fontWeight ?? FontWeight.w600,
               ),
             ),
           ),

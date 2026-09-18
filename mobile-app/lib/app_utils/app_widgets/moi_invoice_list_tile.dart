@@ -50,15 +50,14 @@ class MoiInvoiceListTile extends StatelessWidget {
     );
   }
 
-  static const Color _amountNavy = Color(0xff1A237E);
-
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     return Material(
-      color: Colors.white,
+      color: colors.surface,
       borderRadius: BorderRadius.circular(16),
       elevation: 0,
-      shadowColor: const Color(0xff09090B).withValues(alpha: 0.08),
+      shadowColor: AppColors.charcoal.withValues(alpha: 0.08),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(16),
@@ -67,20 +66,10 @@ class MoiInvoiceListTile extends StatelessWidget {
         child: Ink(
           padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: colors.surface,
             borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xff09090B).withValues(alpha: 0.05),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
-              ),
-              BoxShadow(
-                color: const Color(0xff09090B).withValues(alpha: 0.03),
-                blurRadius: 2,
-                offset: const Offset(0, 1),
-              ),
-            ],
+            border: Border.all(color: colors.border.withValues(alpha: 0.7)),
+            boxShadow: AppShadows.soft,
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -110,7 +99,7 @@ class MoiInvoiceListTile extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: AppTypography.label.copyWith(
-                        color: AppColors.textPrimary,
+                        color: colors.textPrimary,
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
                         letterSpacing: -0.2,
@@ -124,7 +113,7 @@ class MoiInvoiceListTile extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: AppTypography.body.copyWith(
-                          color: AppColors.textSecondary,
+                          color: colors.textSecondary,
                           fontSize: 12.5,
                           fontWeight: FontWeight.w500,
                           height: 1.3,
@@ -140,7 +129,7 @@ class MoiInvoiceListTile extends StatelessWidget {
                 child: Text(
                   amount,
                   style: AppTypography.amountMedium.copyWith(
-                    color: amountColor ?? _amountNavy,
+                    color: amountColor ?? colors.textPrimary,
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
                     letterSpacing: -0.2,

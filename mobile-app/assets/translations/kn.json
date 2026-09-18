@@ -523,6 +523,8 @@
     "cameraPermissionNeeded": "ಕ್ಯಾಮೆರಾ ಅನುಮತಿ ಅಗತ್ಯ",
     "compressFailed": "ಚಿತ್ರವನ್ನು ಸಂಕುಚಿಸಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ",
     "contactUs": "ನಮ್ಮನ್ನು ಸಂಪರ್ಕಿಸಿ",
+    "darkMode": "ಡಾರ್ಕ್ ಮೋಡ್",
+    "darkModeHint": "ಡಾರ್ಕ್ ನೋಟವನ್ನು ಬಳಸಿ",
     "deleteAccount": "ನನ್ನ ಖಾತೆಯನ್ನು ನಿಷ್ಕ್ರಿಯಗೊಳಿಸಿ",
     "deviceNotSupported": "ಸಾಧನ ಬೆಂಬಲಿತವಲ್ಲ",
     "enableBiometricAuth": "ಬಯೋಮೆಟ್ರಿಕ್ ದೃಢೀಕರಣವನ್ನು ಸಕ್ರಿಯಗೊಳಿಸಿ",
