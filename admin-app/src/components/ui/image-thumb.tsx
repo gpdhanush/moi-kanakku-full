@@ -21,9 +21,14 @@ export function ImageThumb({
   emptyLabel = "—",
 }: ImageThumbProps) {
   const [open, setOpen] = useState(false);
+  const [failed, setFailed] = useState(false);
 
-  if (!src) {
-    return <span className="text-muted-foreground">{emptyLabel}</span>;
+  if (!src || failed) {
+    return (
+      <span className="text-muted-foreground" title={failed ? src || undefined : undefined}>
+        {failed ? "!" : emptyLabel}
+      </span>
+    );
   }
 
   return (
@@ -38,7 +43,14 @@ export function ImageThumb({
         title="View image"
         aria-label={`View ${alt}`}
       >
-        <img src={src} alt={alt} className="h-full w-full object-cover" />
+        <img
+          src={src}
+          alt={alt}
+          className="h-full w-full object-cover"
+          loading="lazy"
+          referrerPolicy="no-referrer"
+          onError={() => setFailed(true)}
+        />
       </button>
 
       <Dialog open={open} onOpenChange={setOpen}>
@@ -51,6 +63,8 @@ export function ImageThumb({
               src={src}
               alt={alt}
               className="mx-auto max-h-[75vh] w-full object-contain"
+              referrerPolicy="no-referrer"
+              onError={() => setFailed(true)}
             />
           </div>
         </DialogContent>

@@ -59,6 +59,12 @@ class MorePage extends StatelessWidget {
                       onTap: () => Navigator.pushNamed(context, 'profile'),
                     ),
                     _MoreRow(
+                      icon: HugeIcons.strokeRoundedComment01,
+                      title: languageProvider.tr('nav.feedbacks'),
+                      subtitle: languageProvider.tr('more.feedbacksHint'),
+                      onTap: () => Navigator.pushNamed(context, 'feedbacks'),
+                    ),
+                    _MoreRow(
                       icon: HugeIcons.strokeRoundedPdf02,
                       title: languageProvider.tr('more.export'),
                       subtitle: languageProvider.tr('more.exportHint'),

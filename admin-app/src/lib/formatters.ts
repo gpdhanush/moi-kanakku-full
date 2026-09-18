@@ -74,7 +74,39 @@ export function formatLabel(value?: string | null): string {
 
 export function resolveImageUrl(path?: string | null): string | undefined {
   if (!path) return undefined;
-  if (path.startsWith("http://") || path.startsWith("https://")) return path;
-  const base = (import.meta.env.VITE_STATIC_URL || "").replace(/\/$/, "");
-  return `${base}/${path.replace(/^\//, "")}`;
+  const trimmed = path.trim();
+  if (!trimmed) return undefined;
+
+  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+    // Fix legacy /api/uploads and /apis/uploads mistakes
+    if (trimmed.includes("/api/uploads/") || trimmed.includes("/apis/uploads/")) {
+      try {
+        const url = new URL(trimmed);
+        url.pathname = url.pathname
+          .replace("/apis/uploads/", "/uploads/")
+          .replace("/api/uploads/", "/uploads/");
+        return url.toString();
+      } catch {
+        return trimmed;
+      }
+    }
+    return trimmed;
+  }
+
+  if (trimmed.startsWith("data:")) return trimmed;
+
+  const base = (
+    import.meta.env.VITE_STATIC_URL ||
+    // Fall back to API host without /apis suffix
+    (import.meta.env.VITE_API_URL || "")
+      .replace(/\/apis\/?$/, "")
+      .replace(/\/api\/?$/, "")
+  ).replace(/\/$/, "");
+
+  if (!base) return undefined;
+
+  let cleanPath = trimmed.replace(/^\/apis\/uploads\//, "/uploads/");
+  cleanPath = cleanPath.replace(/^\/api\/uploads\//, "/uploads/");
+  const normalized = cleanPath.startsWith("/") ? cleanPath : `/${cleanPath}`;
+  return `${base}${normalized}`;
 }

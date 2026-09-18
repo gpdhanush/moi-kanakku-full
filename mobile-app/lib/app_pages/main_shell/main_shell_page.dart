@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_exit_app/flutter_exit_app.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:moi/app_configs/startup_timing.dart';
-import 'package:moi/app_pages/feedbacks/feedbacks.dart';
 import 'package:moi/app_pages/functions/functions_list.dart';
 import 'package:moi/app_pages/home_page/home_page.dart';
 import 'package:moi/app_pages/more/more_page.dart';
@@ -10,6 +9,7 @@ import 'package:moi/app_pages/transactions/transaction_dashboard.dart';
 import 'package:moi/app_themes/index.dart';
 import 'package:moi/app_utils/app_global/alert_services.dart';
 import 'package:moi/app_utils/app_providers/language_provider.dart';
+import 'package:moi/app_utils/app_widgets/custom_action_sheet.dart';
 import 'package:moi/app_utils/app_widgets/moi_bottom_nav_bar.dart';
 import 'package:provider/provider.dart';
 
@@ -25,12 +25,13 @@ class _MainShellPageState extends State<MainShellPage> {
   final ValueNotifier<int> _homeRefreshSignal = ValueNotifier<int>(0);
   int _currentIndex = 0;
 
-  static const _tabCount = 5;
+  /// Home | Function | FAB | Overview | Feedbacks | More  →  2 left + 2 right
+  /// (Overview + Feedbacks share the right side with More would be 3)
+  /// Final: Home | Function | FAB | Overview | More — Feedbacks stays in More.
+  static const _tabCount = 4;
+  static const double _fabSize = 58;
 
-  /// Home is visited immediately; other tabs mount on first tap (lazy init).
   final Set<int> _visitedTabs = {0};
-
-  /// Keep-alive page instances so revisiting a tab preserves state.
   final Map<int, Widget> _pageCache = {};
 
   @override
@@ -57,8 +58,6 @@ class _MainShellPageState extends State<MainShellPage> {
         case 2:
           return const TransactionDashboard(embeddedInShell: true);
         case 3:
-          return const Feedbacks(embeddedInShell: true);
-        case 4:
           return const MorePage();
         default:
           return const SizedBox.shrink();
@@ -73,8 +72,57 @@ class _MainShellPageState extends State<MainShellPage> {
       _visitedTabs.add(index);
       _currentIndex = index;
     });
-    // IndexedStack keeps Home alive — soft-refresh when returning to Home.
     if (index == 0 && previous != 0) {
+      _homeRefreshSignal.value++;
+    }
+  }
+
+  Future<void> _openAddMoiSheet() async {
+    final languageProvider = context.read<LanguageProvider>();
+    final primary = Theme.of(context).colorScheme.primary;
+
+    await showMoiActionSheet(
+      context: context,
+      title: languageProvider.tr('moi.addMoi'),
+      titleColor: primary,
+      actions: [
+        ActionSheetItem(
+          hugeIcon: HugeIcons.strokeRoundedArrowDownLeft01,
+          title: languageProvider.tr('transactions.newInvest'),
+          color: AppColors.moiReceived,
+          onPressed: (sheetContext) async {
+            Navigator.pop(sheetContext);
+            await _openAddMoiForm('INVEST');
+          },
+        ),
+        ActionSheetItem(
+          hugeIcon: HugeIcons.strokeRoundedArrowUpRight01,
+          title: languageProvider.tr('transactions.newReturn'),
+          color: AppColors.moiGiven,
+          onPressed: (sheetContext) async {
+            Navigator.pop(sheetContext);
+            await _openAddMoiForm('RETURN');
+          },
+        ),
+        ActionSheetItem(
+          hugeIcon: HugeIcons.strokeRoundedCancel01,
+          title: languageProvider.tr('common.cancel'),
+          isCancel: true,
+          onPressed: (sheetContext) async {
+            Navigator.pop(sheetContext);
+          },
+        ),
+      ],
+    );
+  }
+
+  Future<void> _openAddMoiForm(String type) async {
+    final result = await Navigator.pushNamed(
+      context,
+      'add-edit-transaction',
+      arguments: {'type': type},
+    );
+    if (result == true && mounted) {
       _homeRefreshSignal.value++;
     }
   }
@@ -108,6 +156,7 @@ class _MainShellPageState extends State<MainShellPage> {
   Widget build(BuildContext context) {
     return Consumer<LanguageProvider>(
       builder: (context, languageProvider, _) {
+        final primary = Theme.of(context).colorScheme.primary;
         final items = [
           MoiBottomNavItem(
             icon: HugeIcons.strokeRoundedHome01,
@@ -120,10 +169,6 @@ class _MainShellPageState extends State<MainShellPage> {
           MoiBottomNavItem(
             icon: HugeIcons.strokeRoundedAnalytics01,
             label: languageProvider.tr('nav.overview'),
-          ),
-          MoiBottomNavItem(
-            icon: HugeIcons.strokeRoundedComment01,
-            label: languageProvider.tr('nav.feedbacks'),
           ),
           MoiBottomNavItem(
             icon: HugeIcons.strokeRoundedMoreHorizontal,
@@ -151,10 +196,80 @@ class _MainShellPageState extends State<MainShellPage> {
               currentIndex: _currentIndex,
               items: items,
               onTap: _goToTab,
+              centerFab: _MoiCenterFab(
+                size: _fabSize,
+                color: primary,
+                tooltip: languageProvider.tr('moi.addMoi'),
+                onPressed: _openAddMoiSheet,
+              ),
             ),
           ),
         );
       },
+    );
+  }
+}
+
+class _MoiCenterFab extends StatelessWidget {
+  final double size;
+  final Color color;
+  final String tooltip;
+  final VoidCallback onPressed;
+
+  const _MoiCenterFab({
+    required this.size,
+    required this.color,
+    required this.tooltip,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: tooltip,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onPressed,
+          customBorder: const CircleBorder(),
+          child: Ink(
+            width: size,
+            height: size,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  color,
+                  AppColors.deepenAccent(color, amount: 0.28),
+                ],
+              ),
+              border: Border.all(color: Colors.white, width: 3.5),
+              boxShadow: [
+                BoxShadow(
+                  color: color.withValues(alpha: 0.35),
+                  blurRadius: 16,
+                  offset: const Offset(0, 6),
+                ),
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.08),
+                  blurRadius: 4,
+                  offset: const Offset(0, 1),
+                ),
+              ],
+            ),
+            child: const Center(
+              child: HugeIcon(
+                icon: HugeIcons.strokeRoundedAdd01,
+                color: Colors.white,
+                size: 28,
+                strokeWidth: 2.2,
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
