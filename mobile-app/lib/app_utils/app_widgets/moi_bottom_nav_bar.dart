@@ -39,6 +39,7 @@ class MoiBottomNavBar extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bottomInset = MediaQuery.viewPaddingOf(context).bottom;
     final barColor = isDark ? AppColors.surface : AppColors.white;
+    final colors = AppColors.of(context);
 
     return Material(
       color: barColor,

@@ -23,9 +23,7 @@ class MorePage extends StatelessWidget {
       builder: (context, languageProvider, _) {
         return Scaffold(
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-          appBar: MoiAppHeader(
-            title: languageProvider.tr('nav.more'),
-          ),
+          appBar: MoiAppHeader(title: languageProvider.tr('nav.more')),
           body: SingleChildScrollView(
             physics: const ClampingScrollPhysics(),
             padding: EdgeInsets.fromLTRB(
@@ -75,8 +73,7 @@ class MorePage extends StatelessWidget {
                 ),
                 const SizedBox(height: AppSpacing.lg),
                 SettingsMenusPanel(
-                  onContactUs: () =>
-                      Navigator.pushNamed(context, 'contact_us'),
+                  onContactUs: () => Navigator.pushNamed(context, 'contact_us'),
                   onRateUs: () => _rateApp(),
                   onLogout: () => _onLogoutTap(context),
                   contactSubtitle: languageProvider.tr('more.contactHint'),
@@ -230,9 +227,7 @@ class MorePage extends StatelessWidget {
     try {
       final userData = await secureStorage.get(AppVariables.userInformation);
       if (userData != null && userData['id'] != null) {
-        await userServices.logout({
-          'userId': userData['id'].toString(),
-        });
+        await userServices.logout({'userId': userData['id'].toString()});
       }
     } catch (_) {}
 
@@ -242,10 +237,7 @@ class MorePage extends StatelessWidget {
 
     if (context.mounted) {
       try {
-        await Provider.of<UserProvider>(
-          context,
-          listen: false,
-        ).clearUserData();
+        await Provider.of<UserProvider>(context, listen: false).clearUserData();
       } catch (_) {}
     }
 
@@ -315,6 +307,7 @@ class _MoreRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final colors = AppColors.of(context);
     final iconColor = colorScheme.primary;
     final iconBg = colorScheme.primary.withValues(alpha: 0.1);
 

@@ -112,8 +112,10 @@ class _HomePageState extends State<HomePage> {
       try {
         final userInfo = await _secureStorage.get(AppVariables.userInformation);
         if (userInfo != null && mounted) {
-          final userProvider =
-              Provider.of<UserProvider>(context, listen: false);
+          final userProvider = Provider.of<UserProvider>(
+            context,
+            listen: false,
+          );
           userProvider.updateUserDetails(userInfo);
         }
       } catch (e) {
@@ -159,7 +161,7 @@ class _HomePageState extends State<HomePage> {
           ),
         );
         unawaited(_initializeNotificationPipeline());
-        unawaited(_maybeShowAppAlert());
+        unawaited(_maybeShowAppAlertToast());
       } catch (e) {
         debugPrint('Error during initialization: $e');
         if (mounted) {
@@ -544,9 +546,8 @@ class _HomePageState extends State<HomePage> {
     setState(() => _isLoadingFunctionSummaries = true);
     try {
       // Functions list includes server-side invest totals — no full txn fetch.
-      final functionsResponse = await _transactionServices.listTransactionFunctions({
-        'userId': userId,
-      }, showLoading: false);
+      final functionsResponse = await _transactionServices
+          .listTransactionFunctions({'userId': userId}, showLoading: false);
 
       final rawFunctions =
           functionsResponse is Map && functionsResponse['responseType'] == 'S'
@@ -560,7 +561,8 @@ class _HomePageState extends State<HomePage> {
       }
 
       final summaries = rawFunctions.whereType<Map>().map((function) {
-        final invest = double.tryParse(
+        final invest =
+            double.tryParse(
               function['totalInvest']?.toString() ??
                   function['total_invest']?.toString() ??
                   '0',
