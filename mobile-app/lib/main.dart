@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:moi/app_configs/app_logs.dart';
+import 'package:moi/app_configs/startup_timing.dart';
 import 'package:moi/app_themes/theme_provider.dart';
 import 'package:moi/app_utils/app_providers/language_provider.dart';
 import 'package:moi/my_app.dart';
@@ -19,21 +20,26 @@ void main() {
     () async {
       pageTitleLogs("MAIN FILE");
       WidgetsFlutterBinding.ensureInitialized();
+      StartupTiming.markAppStart();
       SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
       // Initialize Firebase
       try {
-        await Firebase.initializeApp(
-          options: DefaultFirebaseOptions.currentPlatform,
-        );
+        await StartupTiming.timeAsync('Firebase.initializeApp', () async {
+          await Firebase.initializeApp(
+            options: DefaultFirebaseOptions.currentPlatform,
+          );
+        });
       } catch (e, stack) {
         printContent("FIREBASE INIT ERROR: ${e.toString()}");
         await FirebaseCrashlytics.instance.recordError(e, stack);
       }
 
       // Set up system UI
-      await SystemChrome.setPreferredOrientations([
-        DeviceOrientation.portraitUp,
-      ]);
+      await StartupTiming.timeAsync('setPreferredOrientations', () async {
+        await SystemChrome.setPreferredOrientations([
+          DeviceOrientation.portraitUp,
+        ]);
+      });
 
       // Configure Firebase services
       FlutterError.onError = (FlutterErrorDetails details) {
@@ -53,8 +59,11 @@ void main() {
       // Build providers
       final themeProvider = ThemeProvider();
       final languageProvider = LanguageProvider();
-      await themeProvider.ensureLoaded();
+      await StartupTiming.timeAsync('ThemeProvider.ensureLoaded', () async {
+        await themeProvider.ensureLoaded();
+      });
 
+      StartupTiming.log('runApp');
       runApp(
         MultiProvider(
           providers: [

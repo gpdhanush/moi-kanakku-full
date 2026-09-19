@@ -69,9 +69,10 @@ class _EditPersonPageState extends State<EditPersonPage> {
         "business": _businessCtrl.text.trim(),
       };
 
-      final response = await _txServices.updatePerson(params);
-
-      _alertServices.hideLoading();
+      final response = await _txServices.updatePerson(
+        params,
+        showLoading: false,
+      );
 
       if (response != null && response['responseType'] == "S") {
         if (!mounted) return;
@@ -90,12 +91,13 @@ class _EditPersonPageState extends State<EditPersonPage> {
         );
       }
     } catch (e) {
-      _alertServices.hideLoading();
       if (!mounted) return;
       _alertServices.errorToast(
         context.read<LanguageProvider>().tr('common.tryAgain'),
       );
       debugPrint('Error updating person: $e');
+    } finally {
+      await _alertServices.hideLoading();
     }
   }
 

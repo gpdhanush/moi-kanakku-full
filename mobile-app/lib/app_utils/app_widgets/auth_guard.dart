@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:moi/app_configs/app_variables.dart';
+import 'package:moi/app_configs/startup_timing.dart';
 import 'package:moi/app_storages/secure_storages.dart';
 import 'package:moi/app_utils/app_providers/user_provider.dart';
 import 'package:provider/provider.dart';
@@ -25,27 +26,30 @@ class _AuthGuardState extends State<AuthGuard> {
   }
 
   Future<void> _verify() async {
-    final storage = SecureStorageService();
-    final userProvider = context.read<UserProvider>();
-    var token = userProvider.jwtToken;
-    if (token == null || token.isEmpty) {
-      token = await storage.getToken();
-      if (token.isNotEmpty) {
-        await userProvider.updateJwtToken(token);
+    await StartupTiming.timeAsync('AuthGuard.verify', () async {
+      final storage = SecureStorageService();
+      final userProvider = context.read<UserProvider>();
+      var token = userProvider.jwtToken;
+      if (token == null || token.isEmpty) {
+        token = await storage.getToken();
+        if (token.isNotEmpty) {
+          await userProvider.updateJwtToken(token);
+        }
       }
-    }
 
-    final isLogin = await storage.get(AppVariables.isLogin) ?? false;
-    final ok = token.isNotEmpty && isLogin == true;
+      final isLogin = await storage.get(AppVariables.isLogin) ?? false;
+      final ok = token.isNotEmpty && isLogin == true;
 
-    if (!mounted) return;
-    if (!ok) {
-      Navigator.pushNamedAndRemoveUntil(context, 'login', (r) => false);
-      return;
-    }
-    setState(() {
-      _allowed = true;
-      _checking = false;
+      if (!mounted) return;
+      if (!ok) {
+        Navigator.pushNamedAndRemoveUntil(context, 'login', (r) => false);
+        return;
+      }
+      setState(() {
+        _allowed = true;
+        _checking = false;
+      });
+      StartupTiming.log('AuthGuard allowed → shell');
     });
   }
 

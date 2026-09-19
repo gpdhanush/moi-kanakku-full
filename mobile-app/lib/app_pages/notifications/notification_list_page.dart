@@ -3,7 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:intl/intl.dart';
 import 'package:moi/app_configs/app_logs.dart';
+import 'package:moi/app_configs/app_variables.dart';
 import 'package:moi/app_services/notification_services.dart';
+import 'package:moi/app_storages/secure_storages.dart';
 import 'package:moi/app_themes/index.dart';
 import 'package:moi/app_utils/app_providers/language_provider.dart';
 import 'package:moi/app_utils/index.dart';
@@ -17,17 +19,42 @@ class NotificationListPage extends StatefulWidget {
 }
 
 class _NotificationListPageState extends State<NotificationListPage> {
+  static const int _pageSize = 30;
+
   final NotificationServices _notificationServices = NotificationServices();
   final AlertServices _alertServices = AlertServices();
-  List<NotificationItem> _notifications = [];
-  bool _isLoading = true;
+  final SecureStorageService _storage = SecureStorageService();
+  final ScrollController _scrollController = ScrollController();
+  final PaginatedListState<NotificationItem> _paging =
+      PaginatedListState(pageSize: _pageSize);
+
+  List<NotificationItem> get _notifications => _paging.items;
+  bool get _isLoading => _paging.isLoading && _paging.items.isEmpty;
   int _unreadCount = 0;
+  String? _userId;
 
   @override
   void initState() {
     super.initState();
-    _fetchNotifications();
+    _scrollController.addListener(_onScroll);
+    _fetchNotifications(reset: true);
     _fetchUnreadCount();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (!_scrollController.hasClients) return;
+    if (!_paging.hasMore || _paging.isLoadingMore || _paging.isLoading) return;
+    final position = _scrollController.position;
+    if (position.pixels >= position.maxScrollExtent - 400) {
+      _fetchNotifications(reset: false);
+    }
   }
 
   @override
@@ -68,24 +95,49 @@ class _NotificationListPageState extends State<NotificationListPage> {
                 ),
               ],
             )
-          : ListView.separated(
-              physics: const BouncingScrollPhysics(),
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.page,
-                AppSpacing.sm,
-                AppSpacing.page,
-                AppSpacing.xxl,
+          : RefreshIndicator(
+              color: primary,
+              onRefresh: () => _fetchNotifications(reset: true, showLoading: false),
+              child: ListView.separated(
+                controller: _scrollController,
+                physics: const AlwaysScrollableScrollPhysics(
+                  parent: BouncingScrollPhysics(),
+                ),
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.page,
+                  AppSpacing.sm,
+                  AppSpacing.page,
+                  AppSpacing.xxl,
+                ),
+                itemCount: _notifications.length +
+                    (_paging.isLoadingMore || _paging.hasMore ? 1 : 0),
+                separatorBuilder: (_, _) =>
+                    const SizedBox(height: AppSpacing.sm),
+                itemBuilder: (context, index) {
+                  if (index >= _notifications.length) {
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      child: Center(
+                        child: _paging.isLoadingMore
+                            ? SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2.5,
+                                  color: primary,
+                                ),
+                              )
+                            : const SizedBox.shrink(),
+                      ),
+                    );
+                  }
+                  return _buildDismissibleNotificationCard(
+                    _notifications[index],
+                    primary,
+                    index,
+                  );
+                },
               ),
-              itemCount: _notifications.length,
-              separatorBuilder: (_, _) =>
-                  const SizedBox(height: AppSpacing.sm),
-              itemBuilder: (context, index) {
-                return _buildDismissibleNotificationCard(
-                  _notifications[index],
-                  primary,
-                  index,
-                );
-              },
             ),
     );
   }
@@ -446,43 +498,90 @@ class _NotificationListPageState extends State<NotificationListPage> {
     }
   }
 
-  Future<void> _fetchNotifications() async {
-    setState(() => _isLoading = true);
+  Future<String?> _resolveUserId() async {
+    final user = await _storage.get(AppVariables.userInformation);
+    if (user == null || user is! Map) return null;
+    return user['id']?.toString();
+  }
+
+  Future<void> _fetchNotifications({
+    required bool reset,
+    bool showLoading = true,
+  }) async {
+    if (reset) {
+      if (mounted) {
+        setState(() => _paging.prepareReset(showLoading: showLoading));
+      }
+    } else {
+      if (!_paging.prepareLoadMore()) return;
+      if (mounted) setState(() {});
+    }
 
     try {
+      _userId ??= await _resolveUserId();
+      if (_userId == null || _userId!.isEmpty) {
+        if (mounted) setState(() => _paging.applyFailure(reset: reset));
+        return;
+      }
+
+      final pageToLoad = _paging.nextPageToLoad(reset: reset);
+      final offset = (pageToLoad - 1) * _pageSize;
+
       final response = await _notificationServices.getNotificationList(
-        '1',
+        _userId!,
+        limit: _pageSize,
+        offset: offset,
         showLoading: false,
       );
 
+      if (!mounted) return;
+
       if (response != null &&
+          response is Map &&
           response['responseType'] == 'S' &&
           response['responseValue'] != null) {
-        final List<dynamic> notificationsData = response['responseValue'];
-        final List<NotificationItem> notifications = notificationsData
+        final List<dynamic> notificationsData =
+            response['responseValue'] is List
+                ? response['responseValue'] as List
+                : const [];
+        final chunk = notificationsData
             .map((item) => _mapToNotificationItem(item))
             .toList();
+        final total = PaginatedResponseParser.parseTotal(
+          response['totalCount'] ?? response['count'],
+          fallback: reset ? chunk.length : _paging.totalCount,
+        );
+        final hasMore = PaginatedResponseParser.parseHasMore(
+          hasMore: response['hasMore'],
+          chunkLength: chunk.length,
+          pageSize: _pageSize,
+          total: total,
+          offsetAfter: offset + chunk.length,
+        );
 
-        if (mounted) {
-          setState(() {
-            _notifications = notifications;
-            _unreadCount = notifications.where((n) => !n.isRead).length;
-            _isLoading = false;
-          });
-        }
-      } else if (mounted) {
         setState(() {
-          _notifications = [];
-          _unreadCount = 0;
-          _isLoading = false;
+          _paging.applySuccess(
+            reset: reset,
+            chunk: chunk,
+            total: total,
+            responseHasMore: hasMore,
+            pageLoaded: pageToLoad,
+          );
+          if (reset) {
+            _unreadCount = chunk.where((n) => !n.isRead).length;
+          }
+          final unreadFromApi = response['unreadCount'];
+          if (unreadFromApi != null) {
+            final parsed = int.tryParse(unreadFromApi.toString());
+            if (parsed != null) _unreadCount = parsed;
+          }
         });
+      } else {
+        setState(() => _paging.applyFailure(reset: reset));
       }
     } catch (_) {
       if (mounted) {
-        setState(() {
-          _notifications = [];
-          _isLoading = false;
-        });
+        setState(() => _paging.applyFailure(reset: reset));
       }
     }
   }
@@ -517,7 +616,7 @@ class _NotificationListPageState extends State<NotificationListPage> {
       final response = await _notificationServices.markAllAsRead();
       if (response != null && response['responseType'] == 'S') {
         setState(() {
-          _notifications = _notifications.map((notif) {
+          _paging.items = _paging.items.map((notif) {
             return NotificationItem(
               id: notif.id,
               title: notif.title,

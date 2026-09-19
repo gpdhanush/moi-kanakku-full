@@ -313,7 +313,7 @@ class _ChangePasswordState extends State<ChangePassword> {
       context,
       listen: false,
     );
-    alertServices.showLoading();
+    await alertServices.showLoading();
 
     var params = {
       "id": userId,
@@ -322,8 +322,10 @@ class _ChangePasswordState extends State<ChangePassword> {
     };
 
     try {
-      var response = await userServices.updateUserPassword(params);
-      alertServices.hideLoading();
+      var response = await userServices.updateUserPassword(
+        params,
+        showLoading: false,
+      );
 
       if (response != null && response['responseType'] == "S") {
         alertServices.successToast(
@@ -354,7 +356,6 @@ class _ChangePasswordState extends State<ChangePassword> {
         );
       }
     } catch (error) {
-      alertServices.hideLoading();
       alertServices.errorToast(
         Provider.of<LanguageProvider>(
           context,
@@ -362,6 +363,8 @@ class _ChangePasswordState extends State<ChangePassword> {
         ).tr('common.tryAgain'),
       );
       debugPrint("Error changing password: $error");
+    } finally {
+      await alertServices.hideLoading();
     }
   }
 }

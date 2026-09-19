@@ -259,11 +259,10 @@ class _ForgotPasswordState extends State<ForgotPassword> {
 
   Future<void> forgotPassword() async {
     FocusScope.of(context).unfocus();
-    alertServices.showLoading();
+    await alertServices.showLoading();
     final params = {'type': 'forgot', 'email': emailCtrl.text.toLowerCase()};
     try {
-      final response = await userServices.sentOTP(params);
-      alertServices.hideLoading();
+      final response = await userServices.sentOTP(params, showLoading: false);
       if (response != null && response['responseType'] == 'S') {
         alertServices.successToast(response['responseValue']['message']);
         if (!mounted) return;
@@ -289,7 +288,9 @@ class _ForgotPasswordState extends State<ForgotPassword> {
         );
       }
     } catch (_) {
-      alertServices.hideLoading();
+      // Loader cleared in finally.
+    } finally {
+      await alertServices.hideLoading();
     }
   }
 }

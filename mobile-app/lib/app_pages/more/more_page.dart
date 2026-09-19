@@ -19,8 +19,6 @@ class MorePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final primary = Theme.of(context).colorScheme.primary;
-
     return Consumer<LanguageProvider>(
       builder: (context, languageProvider, _) {
         return Scaffold(
@@ -47,8 +45,6 @@ class MorePage extends StatelessWidget {
                   children: [
                     _MoreRow(
                       icon: HugeIcons.strokeRoundedCalendar01,
-                      iconBg: const Color(0xffEFF6FF),
-                      iconColor: primary,
                       title: languageProvider.tr('menu.upcomingFunctions'),
                       subtitle: languageProvider.tr('more.upcomingHint'),
                       onTap: () => Navigator.pushNamed(
@@ -58,16 +54,18 @@ class MorePage extends StatelessWidget {
                     ),
                     _MoreRow(
                       icon: HugeIcons.strokeRoundedUserCircle02,
-                      iconBg: const Color(0xffECFDF5),
-                      iconColor: const Color(0xff059669),
                       title: languageProvider.tr('menu.profile'),
                       subtitle: languageProvider.tr('more.profileHint'),
                       onTap: () => Navigator.pushNamed(context, 'profile'),
                     ),
                     _MoreRow(
+                      icon: HugeIcons.strokeRoundedComment01,
+                      title: languageProvider.tr('nav.feedbacks'),
+                      subtitle: languageProvider.tr('more.feedbacksHint'),
+                      onTap: () => Navigator.pushNamed(context, 'feedbacks'),
+                    ),
+                    _MoreRow(
                       icon: HugeIcons.strokeRoundedPdf02,
-                      iconBg: const Color(0xffEEF2FF),
-                      iconColor: const Color(0xff4F46E5),
                       title: languageProvider.tr('more.export'),
                       subtitle: languageProvider.tr('more.exportHint'),
                       onTap: () => _onExportTap(context),
@@ -129,30 +127,46 @@ class MorePage extends StatelessWidget {
     final alertServices = AlertServices();
     final storage = SecureStorageService();
     final txServices = TransactionServices();
+    var loaderShown = false;
 
     try {
-      alertServices.showLoading(languageProvider.tr('more.exporting'));
+      await alertServices.showLoading(languageProvider.tr('more.exporting'));
+      loaderShown = true;
 
       final user = await storage.get(AppVariables.userInformation);
       if (user == null) {
-        await alertServices.hideLoading();
         alertServices.errorToast(
           languageProvider.tr('home.userDetailsNotFound'),
         );
         return;
       }
 
-      final response = await txServices.listTransactions({
-        'userId': user['id'].toString(),
-      }, showLoading: false);
+      final transactions = <Map<String, dynamic>>[];
+      var page = 1;
+      var hasMore = true;
+      while (hasMore) {
+        final response = await txServices.listTransactions({
+          'userId': user['id'].toString(),
+          'page': page,
+          'limit': 100,
+        }, showLoading: false);
 
-      final List transactions = (response != null &&
-              response['responseType'] == 'S')
-          ? (response['responseValue'] as List? ?? [])
-          : [];
+        if (response == null ||
+            response is! Map ||
+            response['responseType'] != 'S') {
+          break;
+        }
+
+        final chunk = PaginatedResponseParser.mapChunk(
+          response['responseValue'],
+        );
+        transactions.addAll(chunk);
+        hasMore = response['hasMore'] == true && chunk.isNotEmpty;
+        page += 1;
+        if (page > 500) break;
+      }
 
       if (transactions.isEmpty) {
-        await alertServices.hideLoading();
         alertServices.errorToast(
           languageProvider.tr('home.noTransactionsToExport'),
         );
@@ -165,7 +179,12 @@ class MorePage extends StatelessWidget {
         userDetails: user,
         fileName: 'Moi_Kanakku_All_Functions_$timestamp.pdf',
         saveToDownloads: true,
-        onBeforeShare: () => alertServices.hideLoading(),
+        onBeforeShare: () async {
+          if (loaderShown) {
+            await alertServices.hideLoading();
+            loaderShown = false;
+          }
+        },
       );
 
       alertServices.successToast(
@@ -173,8 +192,11 @@ class MorePage extends StatelessWidget {
       );
     } catch (e) {
       debugPrint('More export error: $e');
-      await alertServices.hideLoading();
       alertServices.errorToast(languageProvider.tr('home.exportError'));
+    } finally {
+      if (loaderShown) {
+        await alertServices.hideLoading();
+      }
     }
   }
 
@@ -277,8 +299,6 @@ class _MoreCard extends StatelessWidget {
 
 class _MoreRow extends StatelessWidget {
   final List<List<dynamic>> icon;
-  final Color iconBg;
-  final Color iconColor;
   final String title;
   final String subtitle;
   final VoidCallback? onTap;
@@ -286,8 +306,6 @@ class _MoreRow extends StatelessWidget {
 
   const _MoreRow({
     required this.icon,
-    required this.iconBg,
-    required this.iconColor,
     required this.title,
     required this.subtitle,
     this.onTap,
@@ -296,7 +314,10 @@ class _MoreRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = AppColors.of(context);
+    final colorScheme = Theme.of(context).colorScheme;
+    final iconColor = colorScheme.primary;
+    final iconBg = colorScheme.primary.withValues(alpha: 0.1);
+
     return Column(
       children: [
         Material(
@@ -354,7 +375,7 @@ class _MoreRow extends StatelessWidget {
                     icon: HugeIcons.strokeRoundedArrowRight01,
                     strokeWidth: 1.9,
                     size: 16,
-                    color: colors.textMuted,
+                    color: colorScheme.onSurfaceVariant,
                   ),
                 ],
               ),
@@ -367,7 +388,7 @@ class _MoreRow extends StatelessWidget {
             thickness: 1,
             indent: 66,
             endIndent: 14,
-            color: colors.border.withValues(alpha: 0.7),
+            color: colorScheme.outlineVariant.withValues(alpha: 0.5),
           ),
       ],
     );

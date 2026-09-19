@@ -5,6 +5,9 @@ export interface MoiApiResponse<T> {
   responseValue: T;
   responseMessage?: string;
   count?: number;
+  page?: number;
+  limit?: number;
+  hasMore?: boolean;
 }
 
 export interface TransactionFunctionItem {
@@ -25,6 +28,9 @@ export interface TransactionFunctionItem {
 export interface TransactionFunctionListResult {
   count: number;
   data: TransactionFunctionItem[];
+  page?: number;
+  limit?: number;
+  hasMore?: boolean;
 }
 
 function extractErrorMessage(data: MoiApiResponse<unknown>): string {
@@ -36,19 +42,58 @@ function extractErrorMessage(data: MoiApiResponse<unknown>): string {
   return data.responseMessage || 'Request failed';
 }
 
-export const transactionFunctionsApi = {
-  list: async (userId?: string): Promise<TransactionFunctionListResult> => {
-    const response = await apiClient.post<MoiApiResponse<TransactionFunctionItem[]>>(
-      '/transaction-functions/admin/list',
-      userId ? { userId } : {}
-    );
-    const data = response.data;
-    if (data.responseType !== 'S') {
-      throw new Error(extractErrorMessage(data));
+async function fetchPage(
+  page: number,
+  limit: number,
+  userId?: string
+): Promise<MoiApiResponse<TransactionFunctionItem[]>> {
+  const response = await apiClient.post<MoiApiResponse<TransactionFunctionItem[]>>(
+    '/transaction-functions/admin/list',
+    {
+      ...(userId ? { userId } : {}),
+      page,
+      limit,
     }
-    return {
-      count: data.count ?? data.responseValue?.length ?? 0,
-      data: data.responseValue ?? [],
-    };
+  );
+  return response.data;
+}
+
+export const transactionFunctionsApi = {
+  list: async (
+    userId?: string,
+    opts?: { page?: number; limit?: number }
+  ): Promise<TransactionFunctionListResult> => {
+    if (opts?.page != null) {
+      const limit = opts.limit ?? 30;
+      const data = await fetchPage(opts.page, limit, userId);
+      if (data.responseType !== 'S') {
+        throw new Error(extractErrorMessage(data));
+      }
+      return {
+        count: data.count ?? data.responseValue?.length ?? 0,
+        data: data.responseValue ?? [],
+        page: data.page,
+        limit: data.limit,
+        hasMore: data.hasMore,
+      };
+    }
+
+    const all: TransactionFunctionItem[] = [];
+    let page = 1;
+    let total = 0;
+    let hasMore = true;
+    while (hasMore) {
+      const data = await fetchPage(page, 100, userId);
+      if (data.responseType !== 'S') {
+        throw new Error(extractErrorMessage(data));
+      }
+      const chunk = data.responseValue ?? [];
+      all.push(...chunk);
+      total = data.count ?? all.length;
+      hasMore = data.hasMore === true && chunk.length > 0;
+      page += 1;
+      if (page > 500) break;
+    }
+    return { count: total, data: all };
   },
 };

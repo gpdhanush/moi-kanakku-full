@@ -278,7 +278,7 @@ class _AddEditFunctionsState extends State<AddEditFunctions> {
   void _saveUpdateFunctions() async {
     final user = await _storage.get(AppVariables.userInformation);
 
-    _alertServices.showLoading();
+    await _alertServices.showLoading();
 
     String id = '';
     if (isEditing) {
@@ -308,18 +308,25 @@ class _AddEditFunctionsState extends State<AddEditFunctions> {
     try {
       Map<String, dynamic>? response;
       if (!isEditing) {
-        response = await _functionServices.saveFunctions(params);
+        response = await _functionServices.saveFunctions(
+          params,
+          showLoading: false,
+        );
       } else {
-        response = await _functionServices.updateFunctions(params);
+        response = await _functionServices.updateFunctions(
+          params,
+          showLoading: false,
+        );
       }
-      _alertServices.hideLoading();
       if (response != null && response['responseType'] == "S") {
         _alertServices.successToast(response['responseValue']['message']);
         if (!mounted) return;
         Navigator.pushNamed(context, "functions-list");
       }
     } catch (error) {
-      _alertServices.hideLoading();
+      // Loader cleared in finally.
+    } finally {
+      await _alertServices.hideLoading();
     }
   }
 
@@ -633,6 +640,7 @@ class _AddEditFunctionsState extends State<AddEditFunctions> {
       context,
       listen: false,
     );
+    var loaderShown = false;
     try {
       final user = await _storage.get(AppVariables.userInformation);
       if (user == null || user['id'] == null) {
@@ -642,28 +650,31 @@ class _AddEditFunctionsState extends State<AddEditFunctions> {
         return;
       }
 
-      _alertServices.showLoading();
+      await _alertServices.showLoading();
+      loaderShown = true;
       final response = await _functionServices.uploadFile(
         user['id'].toString(),
         imageFile.path,
         "function-image",
+        showLoading: false,
       );
-      _alertServices.hideLoading();
 
       if (response != null &&
           response is Map &&
           response['responseType'] == "S") {
         final imagePath = response['responseValue']?.toString();
         if (imagePath != null && imagePath.isNotEmpty) {
-          setState(() {
-            _uploadedImageUrl = imagePath;
-            _functionImage = null;
-            _existingImageUrl =
-                imagePath.startsWith('http://') ||
-                    imagePath.startsWith('https://')
-                ? imagePath
-                : "$appImageUrl/$imagePath";
-          });
+          if (mounted) {
+            setState(() {
+              _uploadedImageUrl = imagePath;
+              _functionImage = null;
+              _existingImageUrl =
+                  imagePath.startsWith('http://') ||
+                      imagePath.startsWith('https://')
+                  ? imagePath
+                  : "$appImageUrl/$imagePath";
+            });
+          }
           _alertServices.successToast(
             languageProvider.tr('functions.imageUploadSuccess') ??
                 "Image uploaded successfully",
@@ -692,12 +703,15 @@ class _AddEditFunctionsState extends State<AddEditFunctions> {
         );
       }
     } catch (e) {
-      _alertServices.hideLoading();
       _alertServices.errorToast(
         languageProvider.tr('functions.uploadFailed') ??
             "Failed to upload image",
       );
       printContent("Error uploading image: $e");
+    } finally {
+      if (loaderShown) {
+        await _alertServices.hideLoading();
+      }
     }
   }
 

@@ -90,6 +90,11 @@ class _HomePageState extends State<HomePage> {
 
   void _onShellRefreshSignal() {
     if (!mounted || !_isInitialized) return;
+    // Respect in-memory cache — avoid full Home refetch on every tab return.
+    if (!_isCacheExpired()) {
+      StartupTiming.log('Home.refreshSignal skipped (cache warm)');
+      return;
+    }
     unawaited(_refreshHomeData(showLoading: false));
   }
 
@@ -103,42 +108,67 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> initHomePage() async {
-    try {
-      final userInfo = await _secureStorage.get(AppVariables.userInformation);
-      if (userInfo != null && mounted) {
-        final userProvider = Provider.of<UserProvider>(context, listen: false);
-        userProvider.updateUserDetails(userInfo);
-      }
-    } catch (e) {
-      debugPrint('Error loading user information: $e');
-    }
-
-    try {
-      final List<Future<void>> initialTasks = [];
-
-      if (!_isDataCached() || _isCacheExpired()) {
-        initialTasks.add(getTotalAmount(showLoading: false));
+    await StartupTiming.timeAsync('Home.initHomePage', () async {
+      try {
+        final userInfo = await _secureStorage.get(AppVariables.userInformation);
+        if (userInfo != null && mounted) {
+          final userProvider =
+              Provider.of<UserProvider>(context, listen: false);
+          userProvider.updateUserDetails(userInfo);
+        }
+      } catch (e) {
+        debugPrint('Error loading user information: $e');
       }
 
-      initialTasks.add(checkNotificationStatus());
-      initialTasks.add(_loadFunctionSummaries());
-      initialTasks.add(_syncProfileImageFromServer());
-
-      await Future.wait(initialTasks);
-      unawaited(_initializeNotificationPipeline());
-      unawaited(_maybeShowAppAlertToast());
-
-      if (mounted) {
-        _isInitialized = true;
-      }
-    } catch (e) {
-      debugPrint('Error during initialization: $e');
-      if (mounted) {
-        _alertServices.errorToast(
-          context.read<LanguageProvider>().tr('home.startupError'),
+      try {
+        // Critical for first Home paint only.
+        final List<Future<void>> criticalTasks = [];
+        if (!_isDataCached() || _isCacheExpired()) {
+          criticalTasks.add(
+            StartupTiming.timeAsync(
+              'Home.getTotalAmount',
+              () => getTotalAmount(showLoading: false),
+            ),
+          );
+        }
+        criticalTasks.add(
+          StartupTiming.timeAsync(
+            'Home.loadFunctionSummaries',
+            () => _loadFunctionSummaries(),
+          ),
         );
+
+        await Future.wait(criticalTasks);
+        StartupTiming.log('Home first paint data ready');
+
+        if (mounted) {
+          _isInitialized = true;
+        }
+
+        // Deferred / background — do not block first interactive Home.
+        unawaited(
+          StartupTiming.timeAsync(
+            'Home.checkNotificationStatus',
+            () => checkNotificationStatus(),
+          ),
+        );
+        unawaited(
+          StartupTiming.timeAsync(
+            'Home.syncProfileImage',
+            () => _syncProfileImageFromServer(),
+          ),
+        );
+        unawaited(_initializeNotificationPipeline());
+        unawaited(_maybeShowAppAlert());
+      } catch (e) {
+        debugPrint('Error during initialization: $e');
+        if (mounted) {
+          _alertServices.errorToast(
+            context.read<LanguageProvider>().tr('home.startupError'),
+          );
+        }
       }
-    }
+    });
   }
 
   /// Keep local profile photo in sync so deleted server files don't 404 forever.
@@ -255,7 +285,8 @@ class _HomePageState extends State<HomePage> {
   Future<void> _refreshAfterNavigation() async {
     if (!mounted) return;
     _needsRefresh = true;
-    await _refreshHomeData(showLoading: true);
+    // Avoid EasyLoading overlay on return — Home already paints inline.
+    await _refreshHomeData(showLoading: false);
   }
 
   Future<void> getPermission() async {
@@ -512,18 +543,10 @@ class _HomePageState extends State<HomePage> {
 
     setState(() => _isLoadingFunctionSummaries = true);
     try {
-      // Two calls total (functions + all transactions) instead of N+1 per function.
-      final results = await Future.wait([
-        _transactionServices.listTransactionFunctions({
-          'userId': userId,
-        }, showLoading: false),
-        _transactionServices.listTransactions({
-          'userId': userId,
-        }, showLoading: false),
-      ]);
-
-      final functionsResponse = results[0];
-      final transactionsResponse = results[1];
+      // Functions list includes server-side invest totals — no full txn fetch.
+      final functionsResponse = await _transactionServices.listTransactionFunctions({
+        'userId': userId,
+      }, showLoading: false);
 
       final rawFunctions =
           functionsResponse is Map && functionsResponse['responseType'] == 'S'
@@ -536,36 +559,18 @@ class _HomePageState extends State<HomePage> {
         return;
       }
 
-      final investByFunctionId = <String, double>{};
-      final rawTransactions =
-          transactionsResponse is Map &&
-              transactionsResponse['responseType'] == 'S'
-          ? transactionsResponse['responseValue']
-          : null;
-      if (rawTransactions is List) {
-        for (final transaction in rawTransactions.whereType<Map>()) {
-          if (transaction['type']?.toString().toUpperCase() != 'INVEST') {
-            continue;
-          }
-          final functionId =
-              transaction['transactionFunctionId']?.toString() ??
-              transaction['transaction_function_id']?.toString() ??
-              '';
-          if (functionId.isEmpty) continue;
-          final amount =
-              double.tryParse(transaction['amount']?.toString() ?? '0') ?? 0;
-          investByFunctionId[functionId] =
-              (investByFunctionId[functionId] ?? 0) + amount;
-        }
-      }
-
       final summaries = rawFunctions.whereType<Map>().map((function) {
-        final functionId = function['id']?.toString() ?? '';
+        final invest = double.tryParse(
+              function['totalInvest']?.toString() ??
+                  function['total_invest']?.toString() ??
+                  '0',
+            ) ??
+            0;
         return {
           'function': Map<String, dynamic>.from(function),
           'name': function['functionName']?.toString() ?? '-',
           'date': formatFunctionDate(function['functionDate']?.toString()),
-          'invest': investByFunctionId[functionId] ?? 0,
+          'invest': invest,
         };
       }).toList();
 

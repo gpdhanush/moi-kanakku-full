@@ -5,6 +5,9 @@ export interface MoiApiResponse<T> {
   responseValue: T;
   responseMessage?: string;
   count?: number;
+  page?: number;
+  limit?: number;
+  hasMore?: boolean;
 }
 
 export type AppInstallStatus =
@@ -102,11 +105,34 @@ function assertSuccess<T>(data: MoiApiResponse<T>): T {
 }
 
 export const usersApi = {
-  list: async (): Promise<UserListItem[]> => {
-    const response = await apiClient.get<MoiApiResponse<UserListItem[]>>(
-      '/users/admin/all-user-lists'
-    );
-    return assertSuccess(response.data) ?? [];
+  list: async (opts?: { page?: number; limit?: number }): Promise<UserListItem[]> => {
+    if (opts?.page != null) {
+      const response = await apiClient.get<MoiApiResponse<UserListItem[]>>(
+        '/users/admin/all-user-lists',
+        { params: { page: opts.page, limit: opts.limit ?? 30 } }
+      );
+      return assertSuccess(response.data) ?? [];
+    }
+
+    const all: UserListItem[] = [];
+    let page = 1;
+    let hasMore = true;
+    while (hasMore) {
+      const response = await apiClient.get<MoiApiResponse<UserListItem[]>>(
+        '/users/admin/all-user-lists',
+        { params: { page, limit: 100 } }
+      );
+      const data = response.data;
+      if (data.responseType !== 'S') {
+        throw new Error(extractErrorMessage(data));
+      }
+      const chunk = data.responseValue ?? [];
+      all.push(...chunk);
+      hasMore = data.hasMore === true && chunk.length > 0;
+      page += 1;
+      if (page > 500) break;
+    }
+    return all;
   },
 
   getById: async (userId: string): Promise<UserDetail> => {

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_exit_app/flutter_exit_app.dart';
 import 'package:hugeicons/hugeicons.dart';
+import 'package:moi/app_configs/startup_timing.dart';
 import 'package:moi/app_pages/feedbacks/feedbacks.dart';
 import 'package:moi/app_pages/functions/functions_list.dart';
 import 'package:moi/app_pages/home_page/home_page.dart';
@@ -9,6 +10,7 @@ import 'package:moi/app_pages/transactions/transaction_dashboard.dart';
 import 'package:moi/app_themes/index.dart';
 import 'package:moi/app_utils/app_global/alert_services.dart';
 import 'package:moi/app_utils/app_providers/language_provider.dart';
+import 'package:moi/app_utils/app_widgets/custom_action_sheet.dart';
 import 'package:moi/app_utils/app_widgets/moi_bottom_nav_bar.dart';
 import 'package:provider/provider.dart';
 
@@ -24,22 +26,103 @@ class _MainShellPageState extends State<MainShellPage> {
   final ValueNotifier<int> _homeRefreshSignal = ValueNotifier<int>(0);
   int _currentIndex = 0;
 
+  /// Home | Function | Overview | Feedbacks | More  (Overview centered)
   static const _tabCount = 5;
 
-  late final List<Widget> _pages = [
-    HomePage(isShellTab: true, refreshSignal: _homeRefreshSignal),
-    const FunctionsList(embeddedInShell: true),
-    const TransactionDashboard(embeddedInShell: true),
-    const Feedbacks(embeddedInShell: true),
-    const MorePage(),
-  ];
+  final Set<int> _visitedTabs = {0};
+  final Map<int, Widget> _pageCache = {};
+
+  @override
+  void initState() {
+    super.initState();
+    StartupTiming.log('MainShellPage mounted');
+    _pageCache[0] = HomePage(
+      isShellTab: true,
+      refreshSignal: _homeRefreshSignal,
+    );
+  }
+
+  Widget _pageFor(int index) {
+    return _pageCache.putIfAbsent(index, () {
+      StartupTiming.log('MainShell tab $index first create');
+      switch (index) {
+        case 0:
+          return HomePage(
+            isShellTab: true,
+            refreshSignal: _homeRefreshSignal,
+          );
+        case 1:
+          return const FunctionsList(embeddedInShell: true);
+        case 2:
+          return const TransactionDashboard(embeddedInShell: true);
+        case 3:
+          return const Feedbacks(embeddedInShell: true);
+        case 4:
+          return const MorePage();
+        default:
+          return const SizedBox.shrink();
+      }
+    });
+  }
 
   void _goToTab(int index) {
     if (index == _currentIndex) return;
     final previous = _currentIndex;
-    setState(() => _currentIndex = index);
-    // IndexedStack keeps Home alive — refresh when returning to Home.
+    setState(() {
+      _visitedTabs.add(index);
+      _currentIndex = index;
+    });
     if (index == 0 && previous != 0) {
+      _homeRefreshSignal.value++;
+    }
+  }
+
+  Future<void> _openAddMoiSheet() async {
+    final languageProvider = context.read<LanguageProvider>();
+    final primary = Theme.of(context).colorScheme.primary;
+
+    await showMoiActionSheet(
+      context: context,
+      title: languageProvider.tr('moi.addMoi'),
+      titleColor: primary,
+      actions: [
+        ActionSheetItem(
+          hugeIcon: HugeIcons.strokeRoundedArrowDownLeft01,
+          title: languageProvider.tr('transactions.newInvest'),
+          color: AppColors.moiReceived,
+          onPressed: (sheetContext) async {
+            Navigator.pop(sheetContext);
+            await _openAddMoiForm('INVEST');
+          },
+        ),
+        ActionSheetItem(
+          hugeIcon: HugeIcons.strokeRoundedArrowUpRight01,
+          title: languageProvider.tr('transactions.newReturn'),
+          color: AppColors.moiGiven,
+          onPressed: (sheetContext) async {
+            Navigator.pop(sheetContext);
+            await _openAddMoiForm('RETURN');
+          },
+        ),
+        ActionSheetItem(
+          hugeIcon: HugeIcons.strokeRoundedCancel01,
+          title: languageProvider.tr('common.cancel'),
+          isCancel: true,
+          onPressed: (sheetContext) async {
+            Navigator.pop(sheetContext);
+          },
+        ),
+      ],
+    );
+  }
+
+  Future<void> _openAddMoiForm(String type) async {
+    final result = await Navigator.pushNamed(
+      context,
+      'add-edit-transaction',
+      arguments: {'type': type},
+    );
+    if (result == true && mounted) {
       _homeRefreshSignal.value++;
     }
   }
@@ -105,8 +188,21 @@ class _MainShellPageState extends State<MainShellPage> {
             backgroundColor: AppColors.background,
             body: IndexedStack(
               index: _currentIndex.clamp(0, _tabCount - 1),
-              children: _pages,
+              children: List.generate(_tabCount, (index) {
+                if (!_visitedTabs.contains(index)) {
+                  return const SizedBox.shrink();
+                }
+                return _pageFor(index);
+              }),
             ),
+            floatingActionButtonLocation:
+                FloatingActionButtonLocation.centerFloat,
+            floatingActionButton: _currentIndex == 0
+                ? _MoiAddPillButton(
+                    label: languageProvider.tr('moi.addMoi'),
+                    onPressed: _openAddMoiSheet,
+                  )
+                : null,
             bottomNavigationBar: MoiBottomNavBar(
               currentIndex: _currentIndex,
               items: items,
@@ -115,6 +211,50 @@ class _MainShellPageState extends State<MainShellPage> {
           ),
         );
       },
+    );
+  }
+}
+
+/// Capsule floating “Add Moi” action (label only, theme primary fill).
+class _MoiAddPillButton extends StatelessWidget {
+  final String label;
+  final VoidCallback onPressed;
+
+  const _MoiAddPillButton({
+    required this.label,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme.primary;
+
+    return Material(
+      color: Colors.transparent,
+      elevation: 0,
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(999),
+        child: Ink(
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(999),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 11),
+            child: Text(
+              label,
+              style: AppTypography.label.copyWith(
+                color: Colors.white,
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                letterSpacing: -0.15,
+                height: 1.1,
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

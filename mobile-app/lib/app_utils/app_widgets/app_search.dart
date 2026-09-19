@@ -60,7 +60,12 @@ class _SearchWidgetState extends State<SearchWidget> {
     }
     if (!_isInitialized || widget.controller == null) return;
 
-    final voiceCode = context.read<LanguageProvider>().voiceLanguageCode;
+    final languageProvider = context.read<LanguageProvider>();
+    await languageProvider.ensureReady();
+    if (!mounted) return;
+
+    final voiceCode = languageProvider.voiceLanguageCode;
+    debugPrint('SearchWidget voice language=$voiceCode');
 
     await _speech.startListening(
       sessionId: _sessionId,

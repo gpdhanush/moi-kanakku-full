@@ -35,35 +35,39 @@ class _FunctionsListState extends State<FunctionsList> {
   @override
   void initState() {
     super.initState();
-    getUserFunctions();
+    StartupTiming.log('FunctionsList.initState');
+    // Local spinner only — never global EasyLoading while user may be on Home.
+    getUserFunctions(showLoading: false);
     searchController.addListener(searchListener);
   }
 
   Future<void> getUserFunctions({bool showLoading = true}) async {
-    if (showLoading && mounted) {
-      setState(() => _isLoading = true);
-    }
-    user = [await storage.get(AppVariables.userInformation)];
-    String userId = user[0]['id'].toString();
-    final response = await services.getUserFunctions(
-      {"userId": userId},
-      showLoading: showLoading,
-    );
-    if (mounted) {
-      setState(() {
-        _isLoading = false;
-        if (response != null && response['responseType'] == "S") {
-          functionList = response['responseValue'];
-          searchHistory = response['responseValue'];
-        } else {
-          searchHistory = [];
-          functionList = [];
-        }
-      });
-      if (searchController.text.isNotEmpty) {
-        search(searchController.text);
+    await StartupTiming.timeAsync('FunctionsList.getUserFunctions', () async {
+      if (showLoading && mounted) {
+        setState(() => _isLoading = true);
       }
-    }
+      user = [await storage.get(AppVariables.userInformation)];
+      String userId = user[0]['id'].toString();
+      final response = await services.getUserFunctions(
+        {"userId": userId},
+        showLoading: false,
+      );
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          if (response != null && response['responseType'] == "S") {
+            functionList = response['responseValue'];
+            searchHistory = response['responseValue'];
+          } else {
+            searchHistory = [];
+            functionList = [];
+          }
+        });
+        if (searchController.text.isNotEmpty) {
+          search(searchController.text);
+        }
+      }
+    });
   }
 
   @override

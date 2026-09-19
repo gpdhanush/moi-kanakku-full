@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:moi/app_themes/index.dart';
 
-/// Invoice-style list row matching the modern card design:
-/// soft icon tile + title/subtitle + navy amount.
+/// List row matching Overview person cards:
+/// soft icon tile + title/subtitle + trailing amount (middle-aligned).
 class MoiInvoiceListTile extends StatelessWidget {
   final String title;
   final String subtitle;
@@ -26,7 +26,7 @@ class MoiInvoiceListTile extends StatelessWidget {
     this.amountColor,
   });
 
-  /// Convenience for Moi Received / Given rows.
+  /// Moi Received / Given / function transaction rows — Overview list style.
   factory MoiInvoiceListTile.moiFlow({
     Key? key,
     required String title,
@@ -35,18 +35,18 @@ class MoiInvoiceListTile extends StatelessWidget {
     required bool isReceived,
     VoidCallback? onTap,
   }) {
+    final accent = isReceived ? AppColors.moiReceived : AppColors.moiGiven;
     return MoiInvoiceListTile(
       key: key,
       title: title,
       subtitle: subtitle,
       amount: amount,
       onTap: onTap,
-      icon: isReceived
-          ? HugeIcons.strokeRoundedMoneyReceive01
-          : HugeIcons.strokeRoundedMoneySend01,
-      iconColor: isReceived ? AppColors.moiReceived : AppColors.moiGiven,
-      iconBackground:
-          isReceived ? AppColors.moiReceivedSoft : AppColors.moiGivenSoft,
+      // Same leading icon as Overview; only the accent color differs.
+      icon: HugeIcons.strokeRoundedUser,
+      iconColor: accent,
+      iconBackground: accent.withValues(alpha: 0.1),
+      amountColor: accent,
     );
   }
 
@@ -56,23 +56,21 @@ class MoiInvoiceListTile extends StatelessWidget {
     return Material(
       color: colors.surface,
       borderRadius: BorderRadius.circular(16),
-      elevation: 0,
-      shadowColor: AppColors.charcoal.withValues(alpha: 0.08),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(16),
         splashColor: iconColor.withValues(alpha: 0.06),
         highlightColor: iconColor.withValues(alpha: 0.03),
         child: Ink(
-          padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+          padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
           decoration: BoxDecoration(
             color: colors.surface,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: colors.border.withValues(alpha: 0.7)),
+            border: Border.all(color: AppColors.borderSubtle),
             boxShadow: AppShadows.soft,
           ),
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Container(
                 width: 44,
@@ -85,7 +83,7 @@ class MoiInvoiceListTile extends StatelessWidget {
                 child: HugeIcon(
                   icon: icon,
                   color: iconColor,
-                  size: 22,
+                  size: 20,
                   strokeWidth: 1.8,
                 ),
               ),
@@ -93,30 +91,28 @@ class MoiInvoiceListTile extends StatelessWidget {
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
                       title,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: AppTypography.label.copyWith(
-                        color: colors.textPrimary,
-                        fontSize: 15,
+                        color: AppColors.textPrimary,
+                        fontSize: 14,
                         fontWeight: FontWeight.w700,
-                        letterSpacing: -0.2,
-                        height: 1.25,
                       ),
                     ),
                     if (subtitle.isNotEmpty) ...[
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 3),
                       Text(
                         subtitle,
-                        maxLines: 1,
+                        maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: AppTypography.body.copyWith(
-                          color: colors.textSecondary,
-                          fontSize: 12.5,
+                          color: AppColors.textSecondary,
+                          fontSize: 12,
                           fontWeight: FontWeight.w500,
-                          height: 1.3,
                         ),
                       ),
                     ],
@@ -124,17 +120,15 @@ class MoiInvoiceListTile extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 10),
-              Padding(
-                padding: const EdgeInsets.only(top: 1),
-                child: Text(
-                  amount,
-                  style: AppTypography.amountMedium.copyWith(
-                    color: amountColor ?? colors.textPrimary,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: -0.2,
-                    height: 1.25,
-                  ),
+              Text(
+                amount,
+                textAlign: TextAlign.right,
+                style: AppTypography.amountMedium.copyWith(
+                  color: amountColor ?? AppColors.textPrimary,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: -0.2,
+                  height: 1.2,
                 ),
               ),
             ],

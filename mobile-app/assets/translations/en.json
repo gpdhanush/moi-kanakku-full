@@ -351,6 +351,7 @@
     "exportConfirmMessage": "You can export all function-based transactions in a single PDF. Tap OK to save it to Downloads and share.",
     "exportHint": "Download all function transactions as PDF",
     "exporting": "Preparing PDF...",
+    "feedbacksHint": "Share feedback about the app",
     "logoutHint": "Sign out of your account",
     "profileHint": "View and edit your profile",
     "rateUsHint": "Share your experience",

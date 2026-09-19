@@ -43,24 +43,30 @@ const Model = {
         const { startDate = null, endDate = null, limit = 100, offset = 0 } = filters;
 
         let query = `
-            SELECT id, user_id, function_name, function_date, location, notes, image_url, created_at, updated_at
-            FROM transaction_functions
-            WHERE user_id = ? AND (is_deleted = 0 OR is_deleted IS NULL)
+            SELECT tf.id, tf.user_id, tf.function_name, tf.function_date, tf.location, tf.notes,
+                   tf.image_url, tf.created_at, tf.updated_at,
+                   COALESCE(SUM(CASE WHEN t.type = 'INVEST' THEN t.amount ELSE 0 END), 0) AS total_invest,
+                   COALESCE(SUM(CASE WHEN t.type = 'RETURN' THEN t.amount ELSE 0 END), 0) AS total_return
+            FROM transaction_functions tf
+            LEFT JOIN transactions t
+              ON t.transaction_function_id = tf.id
+             AND (t.is_deleted = 0 OR t.is_deleted IS NULL)
+            WHERE tf.user_id = ? AND (tf.is_deleted = 0 OR tf.is_deleted IS NULL)
         `;
 
         const params = [toBinaryUUID(userId)];
 
         if (startDate) {
-            query += ` AND function_date >= ?`;
+            query += ` AND tf.function_date >= ?`;
             params.push(startDate);
         }
 
         if (endDate) {
-            query += ` AND function_date <= ?`;
+            query += ` AND tf.function_date <= ?`;
             params.push(endDate);
         }
 
-        query += ` ORDER BY function_date DESC LIMIT ? OFFSET ?`;
+        query += ` GROUP BY tf.id ORDER BY tf.function_date DESC LIMIT ? OFFSET ?`;
         params.push(limit, offset);
 
         const [rows] = await db.query(query, params);
@@ -73,6 +79,8 @@ const Model = {
             location: r.location,
             notes: r.notes,
             imageUrl: r.image_url,
+            totalInvest: parseFloat(r.total_invest || 0),
+            totalReturn: parseFloat(r.total_return || 0),
             createdAt: r.created_at,
             updatedAt: r.updated_at
         }));
@@ -82,26 +90,18 @@ const Model = {
      * Get all transaction functions across users for admin listing
      */
     async readAllForAdmin(filters = {}) {
-        const { search = null, userId = null } = filters;
+        const { search = null, userId = null, limit = null, offset = 0 } = filters;
 
-        let query = `
-            SELECT tf.id, tf.user_id, tf.function_name, tf.function_date, tf.location, tf.notes, tf.image_url,
-                   tf.created_at, tf.updated_at,
-                   u.full_name AS user_full_name, u.email AS user_email, u.mobile AS user_mobile
-            FROM transaction_functions tf
-            LEFT JOIN users u ON tf.user_id = u.id
-            WHERE (tf.is_deleted = 0 OR tf.is_deleted IS NULL)
-        `;
-
+        let where = `WHERE (tf.is_deleted = 0 OR tf.is_deleted IS NULL)`;
         const params = [];
 
         if (userId) {
-            query += ` AND tf.user_id = ?`;
+            where += ` AND tf.user_id = ?`;
             params.push(toBinaryUUID(userId));
         }
 
         if (search) {
-            query += ` AND (
+            where += ` AND (
                 tf.function_name LIKE ? OR
                 tf.location LIKE ? OR
                 tf.notes LIKE ? OR
@@ -120,11 +120,37 @@ const Model = {
             );
         }
 
-        query += ` ORDER BY tf.created_at DESC, tf.function_date DESC`;
+        const joinSql = `
+            FROM transaction_functions tf
+            LEFT JOIN users u ON tf.user_id = u.id
+            ${where}
+        `;
 
-        const [rows] = await db.query(query, params);
+        let total = null;
+        if (limit != null) {
+            const [countRows] = await db.query(
+                `SELECT COUNT(*) AS total ${joinSql}`,
+                params,
+            );
+            total = Number(countRows[0]?.total || 0);
+        }
 
-        return rows.map((r) => ({
+        let query = `
+            SELECT tf.id, tf.user_id, tf.function_name, tf.function_date, tf.location, tf.notes, tf.image_url,
+                   tf.created_at, tf.updated_at,
+                   u.full_name AS user_full_name, u.email AS user_email, u.mobile AS user_mobile
+            ${joinSql}
+            ORDER BY tf.created_at DESC, tf.function_date DESC
+        `;
+        const dataParams = [...params];
+        if (limit != null) {
+            query += ` LIMIT ? OFFSET ?`;
+            dataParams.push(Number(limit), Number(offset) || 0);
+        }
+
+        const [rows] = await db.query(query, dataParams);
+
+        const mapped = rows.map((r) => ({
             id: fromBinaryUUID(r.id),
             userId: fromBinaryUUID(r.user_id),
             functionName: r.function_name,
@@ -138,6 +164,11 @@ const Model = {
             createdAt: r.created_at,
             updatedAt: r.updated_at,
         }));
+
+        if (limit != null) {
+            return { rows: mapped, total };
+        }
+        return mapped;
     },
 
     /**

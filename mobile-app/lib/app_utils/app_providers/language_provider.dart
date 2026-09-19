@@ -27,6 +27,7 @@ class LanguageProvider extends ChangeNotifier {
   String _currentLanguage = _englishCode;
   String _voiceLanguageCode = defaultVoiceLanguageCode;
   Map<String, dynamic> _translations = {};
+  bool _isReady = false;
 
   final SecureStorageService _storage = SecureStorageService();
 
@@ -36,6 +37,8 @@ class LanguageProvider extends ChangeNotifier {
   bool get isTamil => _currentLanguage == _tamilCode;
   bool get isEnglish => _currentLanguage == _englishCode;
   List<String> get languageCodes => supportedLanguages.keys.toList();
+  /// True after storage + translations have finished loading.
+  bool get isReady => _isReady;
 
   LanguageProvider() {
     _initialize();
@@ -44,13 +47,7 @@ class LanguageProvider extends ChangeNotifier {
   /// Initialize language from storage or use default
   Future<void> _initialize() async {
     try {
-      final savedLanguage = await _storage.get(_languageKey);
-      if (savedLanguage != null &&
-          supportedLanguages.containsKey(savedLanguage)) {
-        _currentLanguage = savedLanguage;
-      } else {
-        _currentLanguage = _englishCode;
-      }
+      // Voice language first — mic can be used before UI translations load.
       final savedVoiceLanguage = await _storage.get(_voiceLanguageKey);
       if (savedVoiceLanguage != null &&
           supportedVoiceLanguages.containsKey(savedVoiceLanguage)) {
@@ -58,11 +55,32 @@ class LanguageProvider extends ChangeNotifier {
       } else {
         _voiceLanguageCode = defaultVoiceLanguageCode;
       }
+
+      final savedLanguage = await _storage.get(_languageKey);
+      if (savedLanguage != null &&
+          supportedLanguages.containsKey(savedLanguage)) {
+        _currentLanguage = savedLanguage;
+      } else {
+        _currentLanguage = _englishCode;
+      }
       await _loadTranslations();
     } catch (e) {
       _currentLanguage = _englishCode;
       _voiceLanguageCode = defaultVoiceLanguageCode;
       await _loadTranslations();
+    } finally {
+      _isReady = true;
+      notifyListeners();
+    }
+  }
+
+  /// Waits until preferences are loaded (mic must not use the en_US default).
+  Future<void> ensureReady() async {
+    if (_isReady) return;
+    var attempts = 0;
+    while (!_isReady && attempts < 40) {
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      attempts++;
     }
   }
 

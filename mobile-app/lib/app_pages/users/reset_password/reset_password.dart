@@ -317,26 +317,28 @@ class _ResetPasswordState extends State<ResetPassword> {
       );
       return;
     }
-    alertServices.showLoading();
+    await alertServices.showLoading();
     final params = {
       'email': widget.email.toString().toLowerCase(),
       'password': confirmPass.toString(),
       'otp': widget.otp.trim(),
       'type': 'forgot',
     };
-    userServices
-        .resetUserPasswords(params)
-        .then((response) {
-          alertServices.hideLoading();
-          if (response != null && response['responseType'] == 'S') {
-            alertServices.successToast(response['responseValue']['message']);
-            if (!mounted) return;
-            Navigator.pushNamedAndRemoveUntil(context, 'login', (r) => false);
-          }
-        })
-        .catchError((error) {
-          alertServices.hideLoading();
-        });
+    try {
+      final response = await userServices.resetUserPasswords(
+        params,
+        showLoading: false,
+      );
+      if (response != null && response['responseType'] == 'S') {
+        alertServices.successToast(response['responseValue']['message']);
+        if (!mounted) return;
+        Navigator.pushNamedAndRemoveUntil(context, 'login', (r) => false);
+      }
+    } catch (_) {
+      // Loader cleared in finally.
+    } finally {
+      await alertServices.hideLoading();
+    }
   }
 }
 

@@ -35,18 +35,23 @@ class MoiBottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = AppColors.of(context);
-    // Scaffold consumes MediaQuery.padding for bottomNavigationBar, so use
-    // viewPadding to keep clear of the system gesture / home indicator.
+    final primary = Theme.of(context).colorScheme.primary;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final bottomInset = MediaQuery.viewPaddingOf(context).bottom;
+    final barColor = isDark ? AppColors.surface : AppColors.white;
 
     return Material(
-      color: colors.surface,
+      color: barColor,
       elevation: 0,
       child: DecoratedBox(
         decoration: BoxDecoration(
-          color: colors.surface,
-          border: Border(top: BorderSide(color: colors.border, width: 1)),
+          color: barColor,
+          border: Border(
+            top: BorderSide(
+              color: primary,
+              width: 2,
+            ),
+          ),
           boxShadow: [
             BoxShadow(
               color: AppColors.charcoal.withValues(alpha: 0.06),
@@ -112,8 +117,8 @@ class _MoiBottomNavTile extends StatelessWidget {
           AnimatedContainer(
             duration: const Duration(milliseconds: 180),
             curve: Curves.easeOutCubic,
-            width: 52,
-            height: 32,
+            width: 48,
+            height: 30,
             alignment: Alignment.center,
             decoration: BoxDecoration(
               color: selected ? indicator : Colors.transparent,
@@ -122,17 +127,17 @@ class _MoiBottomNavTile extends StatelessWidget {
             child: HugeIcon(
               icon: item.icon,
               color: color,
-              size: 24,
+              size: 22,
               strokeWidth: selected ? 2.0 : 1.7,
             ),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 4),
           AnimatedDefaultTextStyle(
             duration: const Duration(milliseconds: 180),
             curve: Curves.easeOutCubic,
             style: AppTypography.label.copyWith(
               color: color,
-              fontSize: 12,
+              fontSize: 10.5,
               fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
               letterSpacing: -0.1,
               height: 1.1,

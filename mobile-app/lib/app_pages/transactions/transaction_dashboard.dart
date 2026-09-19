@@ -22,7 +22,7 @@ class TransactionDashboard extends StatefulWidget {
 }
 
 class _TransactionDashboardState extends State<TransactionDashboard> {
-  static const int _pageSize = 40;
+  static const int _pageSize = 30;
 
   final SecureStorageService storage = SecureStorageService();
   final AlertServices alertServices = AlertServices();
@@ -43,6 +43,7 @@ class _TransactionDashboardState extends State<TransactionDashboard> {
   @override
   void initState() {
     super.initState();
+    StartupTiming.log('TransactionDashboard.initState');
     _scrollController.addListener(_onScroll);
     searchController.addListener(_onSearchChanged);
     fetchPersonLists(reset: true);
@@ -82,54 +83,58 @@ class _TransactionDashboardState extends State<TransactionDashboard> {
     required bool reset,
     bool showLoading = true,
   }) async {
-    if (reset) {
-      if (mounted) {
-        setState(() {
-          if (showLoading) _isLoading = true;
-          _page = 1;
-          _hasMore = true;
-        });
-      }
-    } else {
-      if (!_hasMore || _isLoadingMore || _isLoading) return;
-      if (mounted) setState(() => _isLoadingMore = true);
-    }
-
-    try {
-      _userId ??= await _resolveUserId();
-      if (_userId == null || _userId!.isEmpty) {
-        if (mounted) _clearDashboardState();
-        return;
-      }
-
-      final pageToLoad = reset ? 1 : _page + 1;
-      final searchQuery = searchController.text.trim();
-
-      final response = await txServices.getPersons(
-        {
-          'userId': _userId,
-          'page': pageToLoad,
-          'limit': _pageSize,
-          if (searchQuery.isNotEmpty) 'search': searchQuery,
-        },
-        showLoading: false,
-      );
-      printDirect('Dashboard Response page=$pageToLoad: $response');
-
-      if (response == null || response is! Map) {
+    final label = reset
+        ? 'TransactionDashboard.fetchPersons.reset'
+        : 'TransactionDashboard.fetchPersons.more';
+    await StartupTiming.timeAsync(label, () async {
+      if (reset) {
         if (mounted) {
           setState(() {
-            _isLoading = false;
-            _isLoadingMore = false;
-            if (reset) {
-              persons = [];
-              _totalCount = 0;
-              _hasMore = false;
-            }
+            if (showLoading) _isLoading = true;
+            _page = 1;
+            _hasMore = true;
           });
         }
-        return;
+      } else {
+        if (!_hasMore || _isLoadingMore || _isLoading) return;
+        if (mounted) setState(() => _isLoadingMore = true);
       }
+
+      try {
+        _userId ??= await _resolveUserId();
+        if (_userId == null || _userId!.isEmpty) {
+          if (mounted) _clearDashboardState();
+          return;
+        }
+
+        final pageToLoad = reset ? 1 : _page + 1;
+        final searchQuery = searchController.text.trim();
+
+        final response = await txServices.getPersons(
+          {
+            'userId': _userId,
+            'page': pageToLoad,
+            'limit': _pageSize,
+            if (searchQuery.isNotEmpty) 'search': searchQuery,
+          },
+          showLoading: false,
+        );
+        printDirect('Dashboard Response page=$pageToLoad: $response');
+
+        if (response == null || response is! Map) {
+          if (mounted) {
+            setState(() {
+              _isLoading = false;
+              _isLoadingMore = false;
+              if (reset) {
+                persons = [];
+                _totalCount = 0;
+                _hasMore = false;
+              }
+            });
+          }
+          return;
+        }
 
       if (response['responseType'] == 'S') {
         final responseValue = response['responseValue'];
@@ -191,6 +196,7 @@ class _TransactionDashboardState extends State<TransactionDashboard> {
         );
       }
     }
+    });
   }
 
   Future<String?> _resolveUserId() async {
@@ -227,7 +233,6 @@ class _TransactionDashboardState extends State<TransactionDashboard> {
         personId,
         showLoading: false,
       );
-      alertServices.hideLoading();
 
       if (response == null) {
         alertServices.errorToast(
@@ -258,10 +263,13 @@ class _TransactionDashboardState extends State<TransactionDashboard> {
         alertServices.errorToast(errorMsg);
       }
     } catch (e, stackTrace) {
-      alertServices.hideLoading();
       debugPrint('Error deleting person: $e');
       debugPrint('Stack trace: $stackTrace');
-      alertServices.errorToast(languageProvider.tr('transactions.deleteError'));
+      alertServices.errorToast(
+        languageProvider.tr('transactions.deleteFailed'),
+      );
+    } finally {
+      await alertServices.hideLoading();
     }
   }
 

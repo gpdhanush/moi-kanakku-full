@@ -87,8 +87,13 @@ app.use(
 // Handle preflight OPTIONS requests for all routes
 app.options("*", cors());
 
-// Secure headers
-app.use(helmet());
+// Secure headers — allow uploaded images/files to be embedded by the admin
+// app and other allowed frontends (default CORP "same-origin" blocks <img>).
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+  }),
+);
 
 // Request logging (Console + File logging via Winston stream)
 app.use(morgan(":method :url :status :res[content-length] - :response-time ms", { stream: logger.stream }));
@@ -107,6 +112,11 @@ const uploadPath = process.env.UPLOAD_DIR
   ? path.resolve(process.env.UPLOAD_DIR)
   : path.join(__dirname, "uploads");
 
+// Explicit CORP on static uploads (defense in depth if helmet config changes).
+app.use("/uploads", (req, res, next) => {
+  res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
+  next();
+});
 app.use("/uploads", express.static(uploadPath));
 
 /* =========================

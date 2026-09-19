@@ -18,14 +18,30 @@ class FunctionServices {
     );
   }
 
-  Future<dynamic> saveFunctions(Map<String, dynamic> params) async {
+  Future<dynamic> saveFunctions(
+    Map<String, dynamic> params, {
+    bool showLoading = true,
+  }) async {
     String url = '$appBaseUri/transaction-functions/create';
-    return await connection.postData(url, params, useToken: true);
+    return await connection.postData(
+      url,
+      params,
+      useToken: true,
+      showLoading: showLoading,
+    );
   }
 
-  Future<dynamic> updateFunctions(Map<String, dynamic> params) async {
+  Future<dynamic> updateFunctions(
+    Map<String, dynamic> params, {
+    bool showLoading = true,
+  }) async {
     String url = '$appBaseUri/transaction-functions/update';
-    return await connection.postData(url, params, useToken: true);
+    return await connection.postData(
+      url,
+      params,
+      useToken: true,
+      showLoading: showLoading,
+    );
   }
 
   Future<dynamic> deleteUserBaseFunctions(String id) async {
@@ -38,8 +54,9 @@ class FunctionServices {
   Future<dynamic> uploadFile(
     String userId,
     String filePath,
-    String path,
-  ) async {
+    String path, {
+    bool showLoading = true,
+  }) async {
     String url = '$appBaseUri/uploads/saveFiles';
     final params = {"userId": userId, "path": path};
     return await connection.uploadFile(
@@ -48,6 +65,7 @@ class FunctionServices {
       'file',
       filePath,
       useToken: true,
+      showLoading: showLoading,
     );
   }
 }
