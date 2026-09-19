@@ -10,6 +10,7 @@ import 'package:moi/app_pages/home_page/widgets/home_moi_overview_card.dart';
 import 'package:moi/app_pages/home_page/widgets/home_section_reveal.dart';
 import 'package:moi/app_pages/home_page/widgets/modern_upgrade_alert.dart';
 import 'package:moi/app_pages/app_alerts/app_alert_dialog.dart';
+import 'package:moi/app_services/app_alert_services.dart';
 import 'package:moi/app_utils/app_widgets/email_verify_card.dart';
 import 'package:moi/app_services/moi_services.dart';
 import 'package:moi/app_services/notification_services.dart';
@@ -33,11 +34,7 @@ class HomePage extends StatefulWidget {
   /// Bumped by [MainShellPage] when the Home tab becomes active again.
   final ValueNotifier<int>? refreshSignal;
 
-  const HomePage({
-    super.key,
-    this.isShellTab = false,
-    this.refreshSignal,
-  });
+  const HomePage({super.key, this.isShellTab = false, this.refreshSignal});
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -129,7 +126,7 @@ class _HomePageState extends State<HomePage> {
 
       await Future.wait(initialTasks);
       unawaited(_initializeNotificationPipeline());
-      unawaited(_maybeShowAppAlert());
+      unawaited(_maybeShowAppAlertToast());
 
       if (mounted) {
         _isInitialized = true;
@@ -149,7 +146,9 @@ class _HomePageState extends State<HomePage> {
     try {
       final userProvider = Provider.of<UserProvider>(context, listen: false);
       if (userProvider.userDetails.isEmpty) return;
-      final user = Map<String, dynamic>.from(userProvider.userDetails[0] as Map);
+      final user = Map<String, dynamic>.from(
+        userProvider.userDetails[0] as Map,
+      );
       final userId = user['id']?.toString();
       if (userId == null || userId.isEmpty) return;
 
@@ -214,15 +213,36 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  /// Show admin in-app popup once after splash/home (per app launch).
-  Future<void> _maybeShowAppAlert() async {
+  /// Show the active admin alert as a lightweight toast instead of a blocking modal.
+  Future<void> _maybeShowAppAlertToast() async {
     if (_appAlertCheckedThisLaunch) return;
     _appAlertCheckedThisLaunch = true;
     if (!mounted) return;
-    // Let home paint first, then present the alert.
-    await Future<void>.delayed(const Duration(milliseconds: 450));
-    if (!mounted) return;
-    await AppAlertDialog.showIfNeeded(context);
+
+    try {
+      await Future<void>.delayed(const Duration(milliseconds: 450));
+      if (!mounted) return;
+
+      final response = await AppAlertServices().getActiveAlert();
+      if (response == null || response['responseType'] != 'S') return;
+
+      final value = response['responseValue'];
+      if (value is! Map) return;
+
+      final alert = AppAlertData.fromJson(Map<String, dynamic>.from(value));
+      if (alert.id.isEmpty || alert.title.isEmpty) return;
+
+      final message = [
+        alert.title.trim(),
+        alert.content.trim(),
+      ].where((segment) => segment.isNotEmpty).join(' - ');
+
+      if (message.isNotEmpty) {
+        _alertServices.toast(message);
+      }
+    } catch (e) {
+      debugPrint('App alert toast check failed: $e');
+    }
   }
 
   bool _isDataCached() => _lastFetchTime != null;
@@ -310,8 +330,9 @@ class _HomePageState extends State<HomePage> {
       backgroundColor: AppColors.background,
       appBar: HomeAppHeader(
         unreadNotificationCount: _unreadNotificationCount,
-        notificationsTooltip:
-            context.read<LanguageProvider>().tr('home.notifications'),
+        notificationsTooltip: context.read<LanguageProvider>().tr(
+          'home.notifications',
+        ),
         onNotificationsTap: () async {
           await Navigator.pushNamed(context, "notifications");
           if (mounted) {

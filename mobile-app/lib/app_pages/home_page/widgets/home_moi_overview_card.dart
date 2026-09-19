@@ -74,7 +74,7 @@ class HomeMoiOverviewCard extends StatelessWidget {
                         height: 120,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: colors.primary.withValues(alpha: 0.18),
+                          color: colors.primaryLight.withValues(alpha: 0.18),
                         ),
                       ),
                     ),
@@ -86,7 +86,7 @@ class HomeMoiOverviewCard extends StatelessWidget {
                         height: 90,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: colors.primary.withValues(alpha: 0.12),
+                          color: colors.primaryLight.withValues(alpha: 0.12),
                         ),
                       ),
                     ),
@@ -135,7 +135,7 @@ class HomeMoiOverviewCard extends StatelessWidget {
                                 width: 32,
                                 height: 32,
                                 decoration: BoxDecoration(
-                                  color: colors.primary,
+                                  color: colors.primaryLight,
                                   borderRadius: BorderRadius.circular(10),
                                 ),
                                 alignment: Alignment.center,

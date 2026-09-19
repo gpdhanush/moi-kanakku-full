@@ -24,7 +24,7 @@ class AppButton extends StatelessWidget {
       height: 50,
       decoration: BoxDecoration(
         color: colors.primary,
-        borderRadius: BorderRadius.circular(5),
+        borderRadius: AppRadius.mdAll,
         boxShadow: [
           BoxShadow(
             color: AppColors.charcoal.withValues(alpha: 0.12),
@@ -38,7 +38,7 @@ class AppButton extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: onPressed,
-          borderRadius: BorderRadius.circular(5),
+          borderRadius: AppRadius.mdAll,
           child: Container(
             alignment: Alignment.center,
             child: Text(

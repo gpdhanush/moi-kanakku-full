@@ -260,15 +260,13 @@ class AppThemes {
       backgroundColor: c.primary,
       disabledForegroundColor: c.textMuted,
       disabledBackgroundColor: c.primary.withValues(alpha: 0.45),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
     );
   }
 
   static ThemeData _buildLightTheme() {
     const c = MoiKanakkuColors.light;
-    final textTheme = ThemeData.light(
-      useMaterial3: true,
-    ).textTheme.apply(
+    final textTheme = ThemeData.light(useMaterial3: true).textTheme.apply(
       fontFamily: englishFontFamily,
       bodyColor: c.textPrimary,
       displayColor: c.textPrimary,
@@ -303,11 +301,18 @@ class AppThemes {
       dialogTheme: DialogThemeData(
         backgroundColor: c.surfaceElevated,
         surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: BorderSide(color: c.border),
+        ),
       ),
       bottomSheetTheme: BottomSheetThemeData(
         backgroundColor: c.surfaceElevated,
         surfaceTintColor: Colors.transparent,
         modalBackgroundColor: c.surfaceElevated,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
       ),
       dividerColor: c.border,
       textSelectionTheme: TextSelectionThemeData(
@@ -329,7 +334,9 @@ class AppThemes {
           elevation: 0,
           foregroundColor: c.textPrimary,
           textStyle: AppTextStyles.textButtonStyle,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
@@ -340,8 +347,8 @@ class AppThemes {
         ),
       ),
       floatingActionButtonTheme: FloatingActionButtonThemeData(
-        backgroundColor: c.primary,
-        foregroundColor: c.onPrimary,
+        backgroundColor: AppColors.primary,
+        foregroundColor: AppColors.charcoal,
         elevation: 2,
       ),
       switchTheme: SwitchThemeData(
@@ -371,21 +378,21 @@ class AppThemes {
         fillColor: c.surface,
         hintStyle: _arimo(color: c.textMuted, fontSize: 14),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(14),
           borderSide: BorderSide(color: c.border),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(14),
           borderSide: BorderSide(color: c.border),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(14),
           borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
         ),
       ),
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: c.surface,
-        indicatorColor: c.primary.withValues(alpha: 0.22),
+        indicatorColor: AppColors.lightMoiReceivedSoft,
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           final selected = states.contains(WidgetState.selected);
           return _arimo(
@@ -396,9 +403,7 @@ class AppThemes {
         }),
         iconTheme: WidgetStateProperty.resolveWith((states) {
           final selected = states.contains(WidgetState.selected);
-          return IconThemeData(
-            color: selected ? c.primary : c.iconDefault,
-          );
+          return IconThemeData(color: selected ? c.primary : c.iconDefault);
         }),
       ),
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
@@ -464,9 +469,7 @@ class AppThemes {
 
   static ThemeData _buildDarkTheme() {
     const c = MoiKanakkuColors.dark;
-    final textTheme = ThemeData.dark(
-      useMaterial3: true,
-    ).textTheme.apply(
+    final textTheme = ThemeData.dark(useMaterial3: true).textTheme.apply(
       fontFamily: englishFontFamily,
       bodyColor: c.textPrimary,
       displayColor: c.textPrimary,
@@ -501,11 +504,18 @@ class AppThemes {
       dialogTheme: DialogThemeData(
         backgroundColor: c.surfaceElevated,
         surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: BorderSide(color: c.border),
+        ),
       ),
       bottomSheetTheme: BottomSheetThemeData(
         backgroundColor: c.surfaceElevated,
         surfaceTintColor: Colors.transparent,
         modalBackgroundColor: c.surfaceElevated,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
       ),
       dividerColor: c.border,
       textSelectionTheme: TextSelectionThemeData(
@@ -538,8 +548,8 @@ class AppThemes {
         ),
       ),
       floatingActionButtonTheme: FloatingActionButtonThemeData(
-        backgroundColor: c.primary,
-        foregroundColor: c.onPrimary,
+        backgroundColor: AppColors.primary,
+        foregroundColor: AppColors.charcoal,
         elevation: 2,
       ),
       switchTheme: SwitchThemeData(
@@ -566,24 +576,24 @@ class AppThemes {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: c.surfaceVariant,
+        fillColor: c.surface,
         hintStyle: _arimo(color: c.textMuted, fontSize: 14),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(14),
           borderSide: BorderSide(color: c.border),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(14),
           borderSide: BorderSide(color: c.border),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(14),
           borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
         ),
       ),
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: c.surface,
-        indicatorColor: c.primary.withValues(alpha: 0.22),
+        indicatorColor: AppColors.darkMoiReceivedSoft,
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           final selected = states.contains(WidgetState.selected);
           return _arimo(
@@ -594,9 +604,7 @@ class AppThemes {
         }),
         iconTheme: WidgetStateProperty.resolveWith((states) {
           final selected = states.contains(WidgetState.selected);
-          return IconThemeData(
-            color: selected ? c.primary : c.iconDefault,
-          );
+          return IconThemeData(color: selected ? c.primary : c.iconDefault);
         }),
       ),
       bottomNavigationBarTheme: BottomNavigationBarThemeData(

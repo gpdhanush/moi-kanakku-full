@@ -10,12 +10,17 @@ export function Toaster() {
       {toasts.map(function ({ id, title, description, action, ...props }) {
         return (
           <Toast key={id} {...props}>
-            {props.variant === "destructive" && (
-              <AlertTriangle className="h-7 w-7 shrink-0 text-[#b22b2b] dark:text-red-300" aria-hidden="true" />
-            )}
-            <div className="mr-auto grid gap-1">
+            <div className="mr-auto flex min-w-0 items-center gap-x-2">
+              {props.variant === "destructive" && (
+                <AlertTriangle
+                  className="h-7 w-7 shrink-0 text-[#b22b2b] dark:text-red-200"
+                  aria-hidden="true"
+                />
+              )}
+              <div className="grid min-w-0 gap-1">
               {title && <ToastTitle>{title}</ToastTitle>}
               {description && <ToastDescription>{description}</ToastDescription>}
+              </div>
             </div>
             {action}
             <ToastClose />

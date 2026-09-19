@@ -8,11 +8,14 @@ class AppColors {
   AppColors._();
 
   // ── Brand (shared) ──────────────────────────────────────────────
-  static const Color primary = Color(0xFFB7E600);
-  static const Color primaryDark = Color(0xFF8EBA00);
-  static const Color primaryLight = Color(0xFFD0FF22);
-  static const Color charcoal = Color(0xFF171717);
-  static const Color warmCream = Color(0xFFFAF7F0);
+  static const Color primary = Color(0xFFB7E34A);
+  static const Color primaryDark = Color(0xFF8BCF22);
+  static const Color primaryLight = Color(0xFFEEF8D7);
+  static const Color charcoal = Color(0xFF171A1C);
+  static const Color warmCream = Color(0xFFF8F6F0);
+  static const Color saffronGold = Color(0xFFF2B84B);
+  static const Color lightPrimary = charcoal;
+  static const Color darkPrimary = Color(0xFFF4F6F2);
 
   /// Locked brand seed — replaces the former multi-accent picker.
   static const Color brandSeed = primary;
@@ -28,37 +31,37 @@ class AppColors {
   // ── Light palette ───────────────────────────────────────────────
   static const Color lightBackground = warmCream;
   static const Color lightSurface = Color(0xFFFFFFFF);
-  static const Color lightSurfaceVariant = Color(0xFFF1EEE6);
+  static const Color lightSurfaceVariant = Color(0xFFF1F2ED);
   static const Color lightSurfaceElevated = Color(0xFFFFFFFF);
   static const Color lightTextPrimary = charcoal;
-  static const Color lightTextSecondary = Color(0xFF686868);
-  static const Color lightTextMuted = Color(0xFF929292);
-  static const Color lightBorder = Color(0xFFE4E1D9);
-  static const Color lightSuccess = Color(0xFF43A047);
-  static const Color lightWarning = Color(0xFFF4B400);
-  static const Color lightError = Color(0xFFD93025);
-  static const Color lightInfo = Color(0xFF4285F4);
-  static const Color lightMoiGiven = charcoal;
-  static const Color lightMoiReceivedSoft = Color(0xFFF3FCE0);
-  static const Color lightMoiGivenSoft = Color(0xFFF1EEE6);
+  static const Color lightTextSecondary = Color(0xFF687078);
+  static const Color lightTextMuted = Color(0xFF98A0A5);
+  static const Color lightBorder = Color(0xFFE3E5DF);
+  static const Color lightSuccess = Color(0xFF4E9F3D);
+  static const Color lightWarning = Color(0xFFE5A928);
+  static const Color lightError = Color(0xFFD94A4A);
+  static const Color lightInfo = Color(0xFF4D8FD8);
+  static const Color lightMoiGiven = saffronGold;
+  static const Color lightMoiReceivedSoft = Color(0xFFEEF8D7);
+  static const Color lightMoiGivenSoft = Color(0xFFFFF4D9);
 
   // ── Dark palette ────────────────────────────────────────────────
-  static const Color darkBackground = Color(0xFF1E1D2A);
-  static const Color darkSurface = Color(0xFF1A1A23);
-  static const Color darkSurfaceVariant = Color(0xFF272635);
-  static const Color darkSurfaceElevated = Color(0xFF2E2D3D);
-  static const Color darkTextPrimary = Color(0xFFF7F7FA);
-  static const Color darkTextSecondary = Color(0xFFB8B7C4);
-  static const Color darkTextMuted = Color(0xFF858493);
-  static const Color darkBorder = Color(0xFF353443);
-  static const Color darkSuccess = Color(0xFF66BB6A);
-  static const Color darkWarning = Color(0xFFFFC107);
-  static const Color darkError = Color(0xFFFF6B61);
-  static const Color darkInfo = Color(0xFF64B5F6);
-  static const Color darkIcon = Color(0xFFB8B7C4);
-  static const Color darkMoiGiven = Color(0xFFF7F7FA);
-  static const Color darkMoiReceivedSoft = Color(0xFF2A3220);
-  static const Color darkMoiGivenSoft = Color(0xFF272635);
+  static const Color darkBackground = Color(0xFF111315);
+  static const Color darkSurface = Color(0xFF191D20);
+  static const Color darkSurfaceVariant = Color(0xFF1D2225);
+  static const Color darkSurfaceElevated = Color(0xFF22272B);
+  static const Color darkTextPrimary = Color(0xFFF4F6F2);
+  static const Color darkTextSecondary = Color(0xFFAAB1B5);
+  static const Color darkTextMuted = Color(0xFF737B80);
+  static const Color darkBorder = Color(0xFF30363A);
+  static const Color darkSuccess = Color(0xFF69B85A);
+  static const Color darkWarning = Color(0xFFE8B84D);
+  static const Color darkError = Color(0xFFEF6868);
+  static const Color darkInfo = Color(0xFF69A7E8);
+  static const Color darkIcon = Color(0xFFAAB1B5);
+  static const Color darkMoiGiven = saffronGold;
+  static const Color darkMoiReceivedSoft = Color(0xFF29351A);
+  static const Color darkMoiGivenSoft = Color(0xFF3A3018);
 
   /// Financial: Moi Received always uses brand lime.
   static const Color moiReceived = primary;
@@ -103,8 +106,7 @@ class AppColors {
   static bool get isDarkBound => _isDark;
 
   /// Scaffold / page canvas — follows [bindBrightness].
-  static Color get background =>
-      _isDark ? darkBackground : lightBackground;
+  static Color get background => _isDark ? darkBackground : lightBackground;
 
   static Color get surface => _isDark ? darkSurface : lightSurface;
 
@@ -118,8 +120,7 @@ class AppColors {
 
   static Color get borderSubtle => _isDark ? darkBorder : lightBorder;
 
-  static Color get textPrimary =>
-      _isDark ? darkTextPrimary : lightTextPrimary;
+  static Color get textPrimary => _isDark ? darkTextPrimary : lightTextPrimary;
 
   static Color get textSecondary =>
       _isDark ? darkTextSecondary : lightTextSecondary;
@@ -156,8 +157,8 @@ class AppColors {
 
   static Color moiReceivedSoftFor(Brightness brightness) =>
       brightness == Brightness.dark
-          ? darkMoiReceivedSoft
-          : lightMoiReceivedSoft;
+      ? darkMoiReceivedSoft
+      : lightMoiReceivedSoft;
 
   static Color moiGivenSoftFor(Brightness brightness) =>
       brightness == Brightness.dark ? darkMoiGivenSoft : lightMoiGivenSoft;
@@ -229,9 +230,9 @@ class MoiKanakkuColors {
   final Color onPrimary;
 
   static const MoiKanakkuColors light = MoiKanakkuColors(
-    primary: AppColors.primary,
-    primaryDark: AppColors.primaryDark,
-    primaryLight: AppColors.primaryLight,
+    primary: AppColors.lightPrimary,
+    primaryDark: AppColors.charcoal,
+    primaryLight: AppColors.primary,
     background: AppColors.lightBackground,
     surface: AppColors.lightSurface,
     surfaceVariant: AppColors.lightSurfaceVariant,
@@ -249,14 +250,14 @@ class MoiKanakkuColors {
     moiReceivedSoft: AppColors.lightMoiReceivedSoft,
     moiGivenSoft: AppColors.lightMoiGivenSoft,
     iconDefault: AppColors.lightTextSecondary,
-    iconActive: AppColors.primary,
-    onPrimary: AppColors.charcoal,
+    iconActive: AppColors.lightPrimary,
+    onPrimary: AppColors.white,
   );
 
   static const MoiKanakkuColors dark = MoiKanakkuColors(
-    primary: AppColors.primary,
-    primaryDark: AppColors.primaryDark,
-    primaryLight: AppColors.primaryLight,
+    primary: AppColors.darkPrimary,
+    primaryDark: AppColors.darkPrimary,
+    primaryLight: AppColors.primary,
     background: AppColors.darkBackground,
     surface: AppColors.darkSurface,
     surfaceVariant: AppColors.darkSurfaceVariant,

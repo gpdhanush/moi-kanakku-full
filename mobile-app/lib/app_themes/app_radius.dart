@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 
 class AppRadius {
-  static const double sm = 12;
-  static const double md = 16;
+  static const double sm = 8;
+  static const double md = 12;
+  static const double card = 16;
   static const double lg = 20;
   static const double xl = 24;
 

@@ -7,7 +7,8 @@ import 'package:hugeicons/hugeicons.dart';
 
 class AlertServices {
   BuildContext? get _ctx =>
-      navigatorKey.currentContext ?? navigatorKey.currentState?.overlay?.context;
+      navigatorKey.currentContext ??
+      navigatorKey.currentState?.overlay?.context;
 
   String _tr(String key, String fallback) {
     final context = _ctx;
@@ -80,8 +81,8 @@ class AlertServices {
     final context = _ctx;
     if (context == null || !context.mounted) return;
 
-    final colorScheme = Theme.of(context).colorScheme;
-    final messenger = ScaffoldMessenger.maybeOf(context) ??
+    final messenger =
+        ScaffoldMessenger.maybeOf(context) ??
         (navigatorKey.currentState != null
             ? ScaffoldMessenger.maybeOf(navigatorKey.currentState!.context)
             : null);
@@ -93,19 +94,18 @@ class AlertServices {
         SnackBar(
           content: Text(
             message,
-            style: TextStyle(
-              color: colorScheme.onPrimary,
+            style: const TextStyle(
+              color: Colors.white,
               fontSize: 13,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w500,
             ),
           ),
-          backgroundColor: colorScheme.primary,
+          backgroundColor: Colors.black,
           behavior: SnackBarBehavior.floating,
           margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(10),
           ),
-          elevation: 0,
           duration: const Duration(seconds: 2),
         ),
       );

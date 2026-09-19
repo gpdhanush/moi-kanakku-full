@@ -103,6 +103,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
                     },
                     onGenerateRoute: AppRoute.allRoutes,
                     navigatorKey: navigatorKey,
+                    scaffoldMessengerKey: scaffoldMessengerKey,
                   );
                 },
               );

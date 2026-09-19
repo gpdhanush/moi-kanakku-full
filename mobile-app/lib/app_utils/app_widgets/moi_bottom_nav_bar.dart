@@ -46,12 +46,7 @@ class MoiBottomNavBar extends StatelessWidget {
       child: DecoratedBox(
         decoration: BoxDecoration(
           color: colors.surface,
-          border: Border(
-            top: BorderSide(
-              color: colors.border,
-              width: 1,
-            ),
-          ),
+          border: Border(top: BorderSide(color: colors.border, width: 1)),
           boxShadow: [
             BoxShadow(
               color: AppColors.charcoal.withValues(alpha: 0.06),
@@ -73,6 +68,7 @@ class MoiBottomNavBar extends StatelessWidget {
                     selected: index == currentIndex,
                     active: colors.iconActive,
                     inactive: colors.iconDefault,
+                    indicator: colors.moiReceivedSoft,
                     onTap: () => onTap(index),
                   ),
                 );
@@ -90,6 +86,7 @@ class _MoiBottomNavTile extends StatelessWidget {
   final bool selected;
   final Color active;
   final Color inactive;
+  final Color indicator;
   final VoidCallback onTap;
 
   const _MoiBottomNavTile({
@@ -97,6 +94,7 @@ class _MoiBottomNavTile extends StatelessWidget {
     required this.selected,
     required this.active,
     required this.inactive,
+    required this.indicator,
     required this.onTap,
   });
 
@@ -118,9 +116,7 @@ class _MoiBottomNavTile extends StatelessWidget {
             height: 32,
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: selected
-                  ? active.withValues(alpha: 0.14)
-                  : Colors.transparent,
+              color: selected ? indicator : Colors.transparent,
               borderRadius: BorderRadius.circular(16),
             ),
             child: HugeIcon(
