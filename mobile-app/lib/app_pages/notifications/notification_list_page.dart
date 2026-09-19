@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:intl/intl.dart';
 import 'package:moi/app_configs/app_logs.dart';
@@ -25,8 +24,9 @@ class _NotificationListPageState extends State<NotificationListPage> {
   final AlertServices _alertServices = AlertServices();
   final SecureStorageService _storage = SecureStorageService();
   final ScrollController _scrollController = ScrollController();
-  final PaginatedListState<NotificationItem> _paging =
-      PaginatedListState(pageSize: _pageSize);
+  final PaginatedListState<NotificationItem> _paging = PaginatedListState(
+    pageSize: _pageSize,
+  );
 
   List<NotificationItem> get _notifications => _paging.items;
   bool get _isLoading => _paging.isLoading && _paging.items.isEmpty;
@@ -69,13 +69,28 @@ class _NotificationListPageState extends State<NotificationListPage> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: _NotificationsAppHeader(
+      appBar: MoiAppHeader(
         title: title,
+        showBack: true,
         onBack: () => Navigator.pop(context),
-        onMarkAllRead: (_notifications.isNotEmpty && unreadCount > 0)
-            ? _markAllAsRead
-            : null,
-        markAllTooltip: languageProvider.tr('notifications.markAllRead'),
+        actions: [
+          if (_notifications.isNotEmpty && unreadCount > 0)
+            Padding(
+              padding: const EdgeInsets.only(right: 10),
+              child: MoiAppHeader.circleButton(
+                onTap: _markAllAsRead,
+                tooltip: languageProvider.tr('notifications.markAllRead'),
+                child: HugeIcon(
+                  icon: HugeIcons.strokeRoundedTickDouble02,
+                  color: Theme.of(context).colorScheme.onSurface,
+                  size: 20,
+                  strokeWidth: 1.9,
+                ),
+              ),
+            )
+          else
+            const SizedBox(width: 54),
+        ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator(strokeWidth: 2.5))
@@ -87,8 +102,7 @@ class _NotificationListPageState extends State<NotificationListPage> {
                   hasScrollBody: false,
                   child: MoiEmptyState(
                     title: languageProvider.tr('notifications.emptyTitle'),
-                    subtitle:
-                        languageProvider.tr('notifications.emptyMessage'),
+                    subtitle: languageProvider.tr('notifications.emptyMessage'),
                     icon: HugeIcons.strokeRoundedNotification03,
                     accentColor: primary,
                   ),
@@ -97,7 +111,8 @@ class _NotificationListPageState extends State<NotificationListPage> {
             )
           : RefreshIndicator(
               color: primary,
-              onRefresh: () => _fetchNotifications(reset: true, showLoading: false),
+              onRefresh: () =>
+                  _fetchNotifications(reset: true, showLoading: false),
               child: ListView.separated(
                 controller: _scrollController,
                 physics: const AlwaysScrollableScrollPhysics(
@@ -109,7 +124,8 @@ class _NotificationListPageState extends State<NotificationListPage> {
                   AppSpacing.page,
                   AppSpacing.xxl,
                 ),
-                itemCount: _notifications.length +
+                itemCount:
+                    _notifications.length +
                     (_paging.isLoadingMore || _paging.hasMore ? 1 : 0),
                 separatorBuilder: (_, _) =>
                     const SizedBox(height: AppSpacing.sm),
@@ -187,7 +203,14 @@ class _NotificationListPageState extends State<NotificationListPage> {
         accent: accent,
         icon: _getNotificationIcon(notification.type),
         timeAgo: _getTimeAgo(notification.time),
-        onTap: () => _showNotificationDetailSheet(notification, accent),
+        onTap: () async {
+          if (!notification.isRead) {
+            await _markAsRead(notification);
+          }
+          if (mounted) {
+            await _showNotificationDetailSheet(notification, accent);
+          }
+        },
         onDelete: () => _confirmAndDelete(notification, index),
       ),
     );
@@ -368,66 +391,9 @@ class _NotificationListPageState extends State<NotificationListPage> {
                       ),
                     ),
                     const SizedBox(height: 20),
-                    Row(
-                      children: [
-                        if (isUnread) ...[
-                          Tooltip(
-                            message: languageProvider.tr(
-                              'notifications.markAsRead',
-                            ),
-                            child: Material(
-                              color: accent,
-                              shape: const CircleBorder(),
-                              clipBehavior: Clip.antiAlias,
-                              elevation: 0,
-                              child: InkWell(
-                                onTap: () async {
-                                  Navigator.of(sheetContext).pop();
-                                  await _markAsRead(notification);
-                                },
-                                customBorder: const CircleBorder(),
-                                child: const SizedBox(
-                                  width: 48,
-                                  height: 48,
-                                  child: Center(
-                                    child: HugeIcon(
-                                      icon: HugeIcons.strokeRoundedTick02,
-                                      color: Colors.white,
-                                      size: 20,
-                                      strokeWidth: 1.9,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                        ],
-                        Expanded(
-                          child: Material(
-                            color: const Color(0xffF4F4F5),
-                            borderRadius: BorderRadius.circular(14),
-                            child: InkWell(
-                              onTap: () => Navigator.of(sheetContext).pop(),
-                              borderRadius: BorderRadius.circular(14),
-                              child: Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 14),
-                                child: Center(
-                                  child: Text(
-                                    languageProvider.tr('common.cancel'),
-                                    style: AppTypography.label.copyWith(
-                                      color: AppColors.textPrimary,
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
+                    AppButton(
+                      title: languageProvider.tr('common.cancel'),
+                      onPressed: () => Navigator.of(sheetContext).pop(),
                     ),
                   ],
                 ),
@@ -542,8 +508,8 @@ class _NotificationListPageState extends State<NotificationListPage> {
           response['responseValue'] != null) {
         final List<dynamic> notificationsData =
             response['responseValue'] is List
-                ? response['responseValue'] as List
-                : const [];
+            ? response['responseValue'] as List
+            : const [];
         final chunk = notificationsData
             .map((item) => _mapToNotificationItem(item))
             .toList();
@@ -600,8 +566,7 @@ class _NotificationListPageState extends State<NotificationListPage> {
         final parsed = int.tryParse(raw?.toString() ?? '') ?? 0;
         setState(() {
           // Prefer local unread when list already loaded with unread items.
-          final localUnread =
-              _notifications.where((n) => !n.isRead).length;
+          final localUnread = _notifications.where((n) => !n.isRead).length;
           _unreadCount = localUnread > 0 ? localUnread : parsed;
         });
       }
@@ -779,179 +744,6 @@ class _NotificationListPageState extends State<NotificationListPage> {
   }
 }
 
-class _NotificationsAppHeader extends StatelessWidget
-    implements PreferredSizeWidget {
-  final String title;
-  final VoidCallback onBack;
-  final VoidCallback? onMarkAllRead;
-  final String markAllTooltip;
-
-  const _NotificationsAppHeader({
-    required this.title,
-    required this.onBack,
-    required this.onMarkAllRead,
-    required this.markAllTooltip,
-  });
-
-  @override
-  Size get preferredSize => const Size.fromHeight(72);
-
-  @override
-  Widget build(BuildContext context) {
-    final primary = Theme.of(context).colorScheme.primary;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return AppBar(
-      toolbarHeight: preferredSize.height,
-      elevation: 0,
-      scrolledUnderElevation: 0,
-      surfaceTintColor: Colors.transparent,
-      backgroundColor: Colors.transparent,
-      centerTitle: true,
-      automaticallyImplyLeading: false,
-      titleSpacing: 0,
-      systemOverlayStyle: SystemUiOverlayStyle.light.copyWith(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
-        statusBarBrightness: Brightness.dark,
-        systemNavigationBarColor: isDark ? Colors.black : Colors.white,
-        systemNavigationBarIconBrightness:
-            isDark ? Brightness.light : Brightness.dark,
-      ),
-      flexibleSpace: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              primary,
-              AppColors.deepenAccent(primary, amount: 0.35),
-            ],
-          ),
-          borderRadius: const BorderRadius.only(
-            bottomLeft: Radius.circular(22),
-            bottomRight: Radius.circular(22),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: primary.withValues(alpha: 0.28),
-              blurRadius: 16,
-              offset: const Offset(0, 6),
-            ),
-          ],
-        ),
-        child: Stack(
-          children: [
-            Positioned(
-              top: -28,
-              right: -18,
-              child: Container(
-                width: 100,
-                height: 100,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withValues(alpha: 0.08),
-                ),
-              ),
-            ),
-            Positioned(
-              bottom: -36,
-              left: 48,
-              child: Container(
-                width: 90,
-                height: 90,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withValues(alpha: 0.06),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(22),
-          bottomRight: Radius.circular(22),
-        ),
-      ),
-      leadingWidth: 54,
-      leading: Padding(
-        padding: const EdgeInsets.only(left: 10),
-        child: Center(
-          child: Material(
-            color: Colors.white.withValues(alpha: 0.14),
-            shape: const CircleBorder(),
-            clipBehavior: Clip.antiAlias,
-            child: InkWell(
-              onTap: onBack,
-              customBorder: const CircleBorder(),
-              child: const SizedBox(
-                width: 42,
-                height: 42,
-                child: Center(
-                  child: HugeIcon(
-                    icon: HugeIcons.strokeRoundedArrowLeft01,
-                    color: Colors.white,
-                    size: 22,
-                    strokeWidth: 1.9,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-      title: Text(
-        title,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        textAlign: TextAlign.center,
-        style: AppTypography.sectionTitle.copyWith(
-          color: Colors.white,
-          fontSize: 16,
-          fontWeight: FontWeight.w700,
-          letterSpacing: -0.2,
-        ),
-      ),
-      actions: [
-        if (onMarkAllRead != null)
-          Padding(
-            padding: const EdgeInsets.only(right: 10),
-            child: Center(
-              child: Material(
-                color: Colors.white.withValues(alpha: 0.14),
-                shape: const CircleBorder(),
-                clipBehavior: Clip.antiAlias,
-                child: InkWell(
-                  onTap: onMarkAllRead,
-                  customBorder: const CircleBorder(),
-                  child: SizedBox(
-                    width: 42,
-                    height: 42,
-                    child: Tooltip(
-                      message: markAllTooltip,
-                      child: const Center(
-                        child: HugeIcon(
-                          icon: HugeIcons.strokeRoundedTickDouble02,
-                          color: Colors.white,
-                          size: 20,
-                          strokeWidth: 1.9,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          )
-        else
-          const SizedBox(width: 54),
-      ],
-    );
-  }
-}
-
 class _NotificationCard extends StatelessWidget {
   final NotificationItem notification;
   final Color accent;
@@ -985,14 +777,10 @@ class _NotificationCard extends StatelessWidget {
         child: Ink(
           padding: const EdgeInsets.fromLTRB(14, 14, 8, 14),
           decoration: BoxDecoration(
-            color: isUnread
-                ? accent.withValues(alpha: 0.10)
-                : colors.surface,
+            color: isUnread ? accent.withValues(alpha: 0.10) : colors.surface,
             borderRadius: AppRadius.mdAll,
             border: Border.all(
-              color: isUnread
-                  ? accent.withValues(alpha: 0.28)
-                  : colors.border,
+              color: isUnread ? accent.withValues(alpha: 0.28) : colors.border,
             ),
             boxShadow: AppShadows.soft,
           ),

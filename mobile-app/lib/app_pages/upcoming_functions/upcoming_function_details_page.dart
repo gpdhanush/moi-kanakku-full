@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:moi/app_utils/app_widgets/moi_network_image.dart';
-import 'package:flutter/services.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:moi/app_configs/index.dart';
 import 'package:moi/app_pages/upcoming_functions/models/upcoming_function_model.dart';
 import 'package:moi/app_themes/index.dart';
 import 'package:moi/app_utils/app_providers/language_provider.dart';
+import 'package:moi/app_utils/app_widgets/moi_flow_app_header.dart';
+import 'package:moi/app_utils/app_widgets/moi_network_image.dart';
 import 'package:provider/provider.dart';
 
 class UpcomingFunctionDetailsPage extends StatelessWidget {
@@ -28,14 +28,15 @@ class UpcomingFunctionDetailsPage extends StatelessWidget {
 
         return Scaffold(
           backgroundColor: AppColors.background,
-          appBar: _UpcomingDetailsHeader(
+          appBar: MoiFlowAppHeader(
             title: title.isEmpty
                 ? languageProvider
-                    .tr('upcomingFunctions.detailsTitle')
-                    .toUpperCase()
+                      .tr('upcomingFunctions.detailsTitle')
+                      .toUpperCase()
                 : title,
             subtitle: function.functionDate,
             onBack: () => Navigator.pop(context),
+            accent: primary,
           ),
           body: SingleChildScrollView(
             physics: const BouncingScrollPhysics(),
@@ -57,15 +58,19 @@ class UpcomingFunctionDetailsPage extends StatelessWidget {
                 const SizedBox(height: AppSpacing.md),
                 _DetailsSection(
                   primary: primary,
-                  sectionTitle: languageProvider.tr('upcomingFunctions.details'),
-                  nameLabel:
-                      languageProvider.tr('upcomingFunctions.functionName'),
-                  dateLabel:
-                      languageProvider.tr('upcomingFunctions.functionDate'),
-                  statusLabel:
-                      languageProvider.tr('upcomingFunctions.status'),
-                  locationLabel:
-                      languageProvider.tr('upcomingFunctions.location'),
+                  sectionTitle: languageProvider.tr(
+                    'upcomingFunctions.details',
+                  ),
+                  nameLabel: languageProvider.tr(
+                    'upcomingFunctions.functionName',
+                  ),
+                  dateLabel: languageProvider.tr(
+                    'upcomingFunctions.functionDate',
+                  ),
+                  statusLabel: languageProvider.tr('upcomingFunctions.status'),
+                  locationLabel: languageProvider.tr(
+                    'upcomingFunctions.location',
+                  ),
                   notesLabel: languageProvider.tr('upcomingFunctions.notes'),
                   name: function.title,
                   date: function.functionDate,
@@ -131,7 +136,7 @@ class UpcomingFunctionDetailsPage extends StatelessWidget {
                   maxScale: 4,
                   child: imageUrl.isNotEmpty
                       ? MoiNetworkImage(
-                      url: imageUrl,
+                          url: imageUrl,
                           fit: BoxFit.contain,
                           errorBuilder: (context, error, stackTrace) =>
                               Image.asset(AppImages.defaultImage),
@@ -161,165 +166,6 @@ class UpcomingFunctionDetailsPage extends StatelessWidget {
           ),
         );
       },
-    );
-  }
-}
-
-class _UpcomingDetailsHeader extends StatelessWidget
-    implements PreferredSizeWidget {
-  final String title;
-  final String subtitle;
-  final VoidCallback onBack;
-
-  const _UpcomingDetailsHeader({
-    required this.title,
-    required this.subtitle,
-    required this.onBack,
-  });
-
-  @override
-  Size get preferredSize => const Size.fromHeight(72);
-
-  @override
-  Widget build(BuildContext context) {
-    final primary = Theme.of(context).colorScheme.primary;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return AppBar(
-      toolbarHeight: preferredSize.height,
-      elevation: 0,
-      scrolledUnderElevation: 0,
-      surfaceTintColor: Colors.transparent,
-      backgroundColor: Colors.transparent,
-      centerTitle: true,
-      automaticallyImplyLeading: false,
-      titleSpacing: 0,
-      systemOverlayStyle: SystemUiOverlayStyle.light.copyWith(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
-        statusBarBrightness: Brightness.dark,
-        systemNavigationBarColor: isDark ? Colors.black : Colors.white,
-        systemNavigationBarIconBrightness:
-            isDark ? Brightness.light : Brightness.dark,
-      ),
-      flexibleSpace: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              primary,
-              AppColors.deepenAccent(primary, amount: 0.35),
-            ],
-          ),
-          borderRadius: const BorderRadius.only(
-            bottomLeft: Radius.circular(22),
-            bottomRight: Radius.circular(22),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: primary.withValues(alpha: 0.28),
-              blurRadius: 16,
-              offset: const Offset(0, 6),
-            ),
-          ],
-        ),
-        child: Stack(
-          children: [
-            Positioned(
-              top: -28,
-              right: -18,
-              child: Container(
-                width: 100,
-                height: 100,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withValues(alpha: 0.08),
-                ),
-              ),
-            ),
-            Positioned(
-              bottom: -36,
-              left: 48,
-              child: Container(
-                width: 90,
-                height: 90,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withValues(alpha: 0.06),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(22),
-          bottomRight: Radius.circular(22),
-        ),
-      ),
-      leadingWidth: 54,
-      leading: Padding(
-        padding: const EdgeInsets.only(left: 10),
-        child: Center(
-          child: Material(
-            color: Colors.white.withValues(alpha: 0.14),
-            shape: const CircleBorder(),
-            clipBehavior: Clip.antiAlias,
-            child: InkWell(
-              onTap: onBack,
-              customBorder: const CircleBorder(),
-              child: const SizedBox(
-                width: 42,
-                height: 42,
-                child: Center(
-                  child: HugeIcon(
-                    icon: HugeIcons.strokeRoundedArrowLeft01,
-                    color: Colors.white,
-                    size: 22,
-                    strokeWidth: 1.9,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-      title: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            title,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            textAlign: TextAlign.center,
-            style: AppTypography.sectionTitle.copyWith(
-              color: Colors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              letterSpacing: -0.2,
-              height: 1.15,
-            ),
-          ),
-          if (subtitle.isNotEmpty) ...[
-            const SizedBox(height: 2),
-            Text(
-              subtitle,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
-              style: AppTypography.body.copyWith(
-                color: Colors.white.withValues(alpha: 0.82),
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                height: 1.1,
-              ),
-            ),
-          ],
-        ],
-      ),
-      actions: const [SizedBox(width: 54)],
     );
   }
 }
@@ -359,8 +205,10 @@ class _HeroImage extends StatelessWidget {
                   ? MoiNetworkImage(
                       url: imageUrl,
                       fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) =>
-                          Image.asset(AppImages.defaultImage, fit: BoxFit.cover),
+                      errorBuilder: (context, error, stackTrace) => Image.asset(
+                        AppImages.defaultImage,
+                        fit: BoxFit.cover,
+                      ),
                     )
                   : Image.asset(AppImages.defaultImage, fit: BoxFit.cover),
               Positioned(
@@ -443,51 +291,56 @@ class _DetailsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colors = AppColors.of(context);
     final hasNotes = notes.trim().isNotEmpty;
-    final rows = <({
-      List<List<dynamic>> icon,
-      String label,
-      String value,
-      Color? valueColor,
-      int maxLines,
-    })>[
-      (
-        icon: HugeIcons.strokeRoundedWedding,
-        label: nameLabel,
-        value: name.trim().isEmpty ? '—' : name.toUpperCase(),
-        valueColor: null,
-        maxLines: 2,
-      ),
-      (
-        icon: HugeIcons.strokeRoundedCalendar03,
-        label: dateLabel,
-        value: date.trim().isEmpty ? '—' : date.toUpperCase(),
-        valueColor: null,
-        maxLines: 2,
-      ),
-      (
-        icon: HugeIcons.strokeRoundedCheckmarkCircle02,
-        label: statusLabel,
-        value: status.toUpperCase(),
-        valueColor: statusColor,
-        maxLines: 1,
-      ),
-      (
-        icon: HugeIcons.strokeRoundedLocation01,
-        label: locationLabel,
-        value: location.trim().isEmpty ? '—' : location.toUpperCase(),
-        valueColor: null,
-        maxLines: 2,
-      ),
-      if (hasNotes)
-        (
-          icon: HugeIcons.strokeRoundedNote,
-          label: notesLabel,
-          value: notes.toUpperCase(),
-          valueColor: null,
-          maxLines: 6,
-        ),
-    ];
+    final rows =
+        <
+          ({
+            List<List<dynamic>> icon,
+            String label,
+            String value,
+            Color? valueColor,
+            int maxLines,
+          })
+        >[
+          (
+            icon: HugeIcons.strokeRoundedWedding,
+            label: nameLabel,
+            value: name.trim().isEmpty ? '—' : name.toUpperCase(),
+            valueColor: null,
+            maxLines: 2,
+          ),
+          (
+            icon: HugeIcons.strokeRoundedCalendar03,
+            label: dateLabel,
+            value: date.trim().isEmpty ? '—' : date.toUpperCase(),
+            valueColor: null,
+            maxLines: 2,
+          ),
+          (
+            icon: HugeIcons.strokeRoundedCheckmarkCircle02,
+            label: statusLabel,
+            value: status.toUpperCase(),
+            valueColor: statusColor,
+            maxLines: 1,
+          ),
+          (
+            icon: HugeIcons.strokeRoundedLocation01,
+            label: locationLabel,
+            value: location.trim().isEmpty ? '—' : location.toUpperCase(),
+            valueColor: null,
+            maxLines: 2,
+          ),
+          if (hasNotes)
+            (
+              icon: HugeIcons.strokeRoundedNote,
+              label: notesLabel,
+              value: notes.toUpperCase(),
+              valueColor: null,
+              maxLines: 6,
+            ),
+        ];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -495,7 +348,7 @@ class _DetailsSection extends StatelessWidget {
         Text(
           sectionTitle,
           style: AppTypography.label.copyWith(
-            color: AppColors.textPrimary,
+            color: isDark ? colors.textPrimary : AppColors.textPrimary,
             fontSize: 14,
             fontWeight: FontWeight.w700,
           ),
@@ -504,9 +357,20 @@ class _DetailsSection extends StatelessWidget {
         Container(
           width: double.infinity,
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: isDark ? colors.surfaceElevated : Colors.white,
             borderRadius: BorderRadius.circular(16),
-            boxShadow: AppShadows.soft,
+            border: Border.all(
+              color: isDark ? colors.border : AppColors.lightBorder,
+            ),
+            boxShadow: isDark
+                ? [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.18),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ]
+                : AppShadows.soft,
           ),
           child: Column(
             children: [
@@ -549,6 +413,8 @@ class _DetailTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Column(
       children: [
         Padding(
@@ -579,7 +445,9 @@ class _DetailTile extends StatelessWidget {
                     Text(
                       label,
                       style: AppTypography.body.copyWith(
-                        color: AppColors.textSecondary,
+                        color: isDark
+                            ? AppColors.darkTextSecondary
+                            : AppColors.textSecondary,
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                       ),
@@ -590,7 +458,11 @@ class _DetailTile extends StatelessWidget {
                       maxLines: maxLines,
                       overflow: TextOverflow.ellipsis,
                       style: AppTypography.label.copyWith(
-                        color: valueColor ?? AppColors.textPrimary,
+                        color:
+                            valueColor ??
+                            (isDark
+                                ? AppColors.darkTextPrimary
+                                : AppColors.textPrimary),
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
                         letterSpacing: 0.1,
@@ -603,9 +475,12 @@ class _DetailTile extends StatelessWidget {
           ),
         ),
         if (showDivider)
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 14),
-            child: Divider(height: 1, color: Color(0xffF4F4F5)),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            child: Divider(
+              height: 1,
+              color: isDark ? AppColors.darkBorder : const Color(0xffF4F4F5),
+            ),
           ),
       ],
     );

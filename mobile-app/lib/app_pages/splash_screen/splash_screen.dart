@@ -51,16 +51,25 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   Widget build(BuildContext context) {
     final primary = Theme.of(context).colorScheme.primary;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final media = MediaQuery.of(context);
     final labelWidth = (media.size.width * 0.62).clamp(180.0, 280.0);
+    final overlayStyle = isDark
+        ? SystemUiOverlayStyle.light.copyWith(
+            statusBarColor: Colors.transparent,
+            statusBarIconBrightness: Brightness.light,
+            statusBarBrightness: Brightness.dark,
+          )
+        : SystemUiOverlayStyle.dark.copyWith(
+            statusBarColor: Colors.transparent,
+            statusBarIconBrightness: Brightness.dark,
+            statusBarBrightness: Brightness.light,
+          );
 
     return ChangeNotifierProvider.value(
       value: _splashController,
       child: AnnotatedRegion<SystemUiOverlayStyle>(
-        value: SystemUiOverlayStyle.dark.copyWith(
-          statusBarColor: Colors.transparent,
-          statusBarIconBrightness: Brightness.dark,
-        ),
+        value: overlayStyle,
         child: Scaffold(
           backgroundColor: AppColors.background,
           body: DecoratedBox(
@@ -68,12 +77,18 @@ class _SplashScreenState extends State<SplashScreen>
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: [
-                  Colors.white,
-                  AppColors.themeSurface,
-                  AppColors.themeSoft,
-                ],
-                stops: const [0.0, 0.55, 1.0],
+                colors: isDark
+                    ? [
+                        AppColors.darkBackground,
+                        AppColors.darkSurface,
+                        AppColors.darkSurfaceVariant,
+                      ]
+                    : [
+                        Colors.white,
+                        AppColors.themeSurface,
+                        AppColors.themeSoft,
+                      ],
+                stops: isDark ? [0.0, 0.55, 1.0] : [0.0, 0.55, 1.0],
               ),
             ),
             child: SafeArea(
@@ -93,7 +108,9 @@ class _SplashScreenState extends State<SplashScreen>
                         const Spacer(flex: 2),
                         Center(
                           child: Image.asset(
-                            AppImages.splashLabelDark,
+                            Theme.of(context).brightness == Brightness.dark
+                                ? AppImages.splashLightText
+                                : AppImages.splashLabelDark,
                             width: labelWidth,
                             fit: BoxFit.contain,
                           ),

@@ -161,6 +161,20 @@ class _SettingsMenusPanelState extends State<SettingsMenusPanel> {
                   trailingLabel: voiceLabel,
                   onTap: () => _showVoiceLanguagePicker(languageProvider),
                 ),
+                _MenuRow(
+                  icon: HugeIcons.strokeRoundedMoon02,
+                  title: languageProvider.tr('settings.darkMode'),
+                  subtitle: languageProvider.tr('settings.darkModeHint'),
+                  trailing: Switch.adaptive(
+                    value: themeProvider.isDarkMode,
+                    activeTrackColor: primary.withValues(alpha: 0.45),
+                    activeThumbColor: primary,
+                    onChanged: (value) async {
+                      await themeProvider.setDarkMode(value);
+                    },
+                  ),
+                  showDivider: false,
+                ),
                 // _MenuRow(
                 //   icon: HugeIcons.strokeRoundedPaintBrush04,
                 //   title: languageProvider.tr('settings.accentColor'),
@@ -233,6 +247,9 @@ class _SettingsMenusPanelState extends State<SettingsMenusPanel> {
         );
       }
     } on PlatformException catch (e) {
+      if (e.code.toLowerCase().contains('cancel')) {
+        return false;
+      }
       if (e.code == 'no_fragment_activity') {
         _alertServices.errorToast(
           languageProvider.tr('settings.authenticationUnavailable'),
@@ -635,9 +652,7 @@ class _PickerSheet extends StatelessWidget {
                             child: Text(
                               option.label,
                               style: AppTypography.label.copyWith(
-                                color: selected
-                                    ? primary
-                                    : colors.textPrimary,
+                                color: selected ? primary : colors.textPrimary,
                                 fontSize: 14,
                                 fontWeight: FontWeight.w700,
                               ),

@@ -49,16 +49,23 @@ class _VerifyForgotOtpState extends State<VerifyForgotOtp> {
     final languageProvider = context.watch<LanguageProvider>();
     final isKeyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
     final media = MediaQuery.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle.light.copyWith(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
-        statusBarBrightness: Brightness.dark,
-      ),
+      value:
+          (isDarkMode ? SystemUiOverlayStyle.dark : SystemUiOverlayStyle.light)
+              .copyWith(
+                statusBarColor: Colors.transparent,
+                statusBarIconBrightness: isDarkMode
+                    ? Brightness.light
+                    : Brightness.dark,
+                statusBarBrightness: isDarkMode
+                    ? Brightness.dark
+                    : Brightness.light,
+              ),
       child: Scaffold(
         resizeToAvoidBottomInset: true,
-        backgroundColor: Colors.grey.shade50,
+        backgroundColor: theme.scaffoldBackgroundColor,
         body: Column(
           children: [
             Expanded(
@@ -104,7 +111,11 @@ class _VerifyForgotOtpState extends State<VerifyForgotOtp> {
                       const SizedBox(height: 16),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 15),
-                        child: _buildResendBlock(theme, languageProvider, primary),
+                        child: _buildResendBlock(
+                          theme,
+                          languageProvider,
+                          primary,
+                        ),
                       ),
                       const SizedBox(height: 20),
                       Padding(
@@ -199,7 +210,12 @@ class _VerifyForgotOtpState extends State<VerifyForgotOtp> {
                 child: const SizedBox(
                   width: 42,
                   height: 42,
-                  child: HugeIcon(icon: HugeIcons.strokeRoundedArrowLeft01, size: 18, color: Colors.white, strokeWidth: 1.8),
+                  child: HugeIcon(
+                    icon: HugeIcons.strokeRoundedArrowLeft01,
+                    size: 18,
+                    color: Colors.white,
+                    strokeWidth: 1.8,
+                  ),
                 ),
               ),
             ),
@@ -209,10 +225,7 @@ class _VerifyForgotOtpState extends State<VerifyForgotOtp> {
             right: 20,
             top: media.padding.top + 36,
             bottom: 18,
-            child: Image.asset(
-              AppImages.verifyOtpImage,
-              fit: BoxFit.contain,
-            ),
+            child: Image.asset(AppImages.verifyOtpImage, fit: BoxFit.contain),
           ),
         ],
       ),
@@ -231,6 +244,7 @@ class _VerifyForgotOtpState extends State<VerifyForgotOtp> {
               fontWeight: FontWeight.bold,
               fontSize: 24.0,
               fontFamily: 'Inter',
+              color: theme.colorScheme.onSurface,
             ),
           ),
           const SizedBox(height: 8),
@@ -241,14 +255,14 @@ class _VerifyForgotOtpState extends State<VerifyForgotOtp> {
                 TextSpan(
                   text: '${languageProvider.tr('auth.otpSentTo')} ',
                   style: theme.textTheme.bodyMedium?.copyWith(
-                    color: Colors.black87,
+                    color: theme.colorScheme.onSurfaceVariant,
                     fontWeight: FontWeight.normal,
                   ),
                 ),
                 TextSpan(
                   text: maskEmail(widget.email),
                   style: theme.textTheme.bodyMedium?.copyWith(
-                    color: Colors.black87,
+                    color: theme.colorScheme.onSurface,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -269,12 +283,9 @@ class _VerifyForgotOtpState extends State<VerifyForgotOtp> {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: primary.withValues(alpha: 0.1),
-          width: 1,
-        ),
+        border: Border.all(color: primary.withValues(alpha: 0.18), width: 1),
       ),
       child: !enableResend
           ? Text.rich(
@@ -286,7 +297,7 @@ class _VerifyForgotOtpState extends State<VerifyForgotOtp> {
                     style: theme.textTheme.bodyMedium?.copyWith(
                       fontSize: 14,
                       fontWeight: FontWeight.normal,
-                      color: Colors.grey.shade700,
+                      color: theme.colorScheme.onSurfaceVariant,
                     ),
                   ),
                   TextSpan(
@@ -310,7 +321,7 @@ class _VerifyForgotOtpState extends State<VerifyForgotOtp> {
                     style: theme.textTheme.bodyMedium?.copyWith(
                       fontSize: 14,
                       fontWeight: FontWeight.normal,
-                      color: Colors.grey.shade700,
+                      color: theme.colorScheme.onSurfaceVariant,
                     ),
                   ),
                   TextSpan(
@@ -347,7 +358,7 @@ class _VerifyForgotOtpState extends State<VerifyForgotOtp> {
           Text(
             '${languageProvider.tr('auth.rememberPassword')} ',
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: Colors.black54,
+              color: theme.colorScheme.onSurfaceVariant,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -399,10 +410,7 @@ class _VerifyForgotOtpState extends State<VerifyForgotOtp> {
       'otp': otpCtrl.text,
     };
     try {
-      final response = await userServices.verifyOTP(
-        params,
-        showLoading: false,
-      );
+      final response = await userServices.verifyOTP(params, showLoading: false);
       if (response != null && response['responseType'] == 'S') {
         final msg = response['responseValue']['message'].toString();
         alertServices.successToast(msg);

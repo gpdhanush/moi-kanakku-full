@@ -66,6 +66,7 @@ class _NoInternetPageState extends State<NoInternetPage>
         return;
       }
 
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -85,199 +86,182 @@ class _NoInternetPageState extends State<NoInternetPage>
 
   @override
   Widget build(BuildContext context) {
-    final primary = Theme.of(context).colorScheme.primary;
+    final colorScheme = Theme.of(context).colorScheme;
+    final colors = AppColors.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primary = colorScheme.primary;
     final languageProvider = context.watch<LanguageProvider>();
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle.dark.copyWith(
-        statusBarColor: Colors.transparent,
-        systemNavigationBarColor: AppColors.background,
-      ),
+      value: (isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark)
+          .copyWith(
+            statusBarColor: Colors.transparent,
+            statusBarIconBrightness: isDark
+                ? Brightness.light
+                : Brightness.dark,
+            systemNavigationBarColor: colors.background,
+            systemNavigationBarIconBrightness: isDark
+                ? Brightness.light
+                : Brightness.dark,
+          ),
       child: Scaffold(
         backgroundColor: AppColors.background,
-        body: Stack(
-          children: [
-            Positioned(
-              top: -60,
-              right: -40,
-              child: Container(
-                width: 180,
-                height: 180,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: AppColors.moiGiven.withValues(alpha: 0.07),
-                ),
+        body: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.page,
+                AppSpacing.lg,
+                AppSpacing.page,
+                AppSpacing.xl,
               ),
-            ),
-            Positioned(
-              bottom: -50,
-              left: -30,
-              child: Container(
-                width: 150,
-                height: 150,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: primary.withValues(alpha: 0.08),
-                ),
-              ),
-            ),
-            SafeArea(
-              child: Center(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(
-                    AppSpacing.page,
-                    AppSpacing.lg,
-                    AppSpacing.page,
-                    AppSpacing.xl,
-                  ),
-                  child: Column(
-                    children: [
-                      ScaleTransition(
-                        scale: _pulseAnimation,
-                        child: Container(
-                          width: 96,
-                          height: 96,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(28),
-                            border: Border.all(color: const Color(0xffE4E4E7)),
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppColors.moiGiven.withValues(
-                                  alpha: 0.12,
-                                ),
-                                blurRadius: 24,
-                                offset: const Offset(0, 10),
-                              ),
-                            ],
+              child: Column(
+                children: [
+                  ScaleTransition(
+                    scale: _pulseAnimation,
+                    child: Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        color: colors.surface,
+                        borderRadius: BorderRadius.circular(22),
+                        border: Border.all(color: colors.border),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.moiGiven.withValues(alpha: 0.12),
+                            blurRadius: 24,
+                            offset: const Offset(0, 10),
                           ),
-                          alignment: Alignment.center,
-                          child: Container(
-                            width: 56,
-                            height: 56,
-                            decoration: BoxDecoration(
-                              color: AppColors.moiGivenSoft,
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            alignment: Alignment.center,
-                            child: HugeIcon(
-                              icon: HugeIcons.strokeRoundedWifiDisconnected01,
-                              size: 22,
-                              color: AppColors.moiGiven,
-                              strokeWidth: 1.8,
-                            ),
-                          ),
-                        ),
+                        ],
                       ),
-                      const SizedBox(height: 28),
-                      Text(
-                        languageProvider.tr('common.noInternet'),
-                        textAlign: TextAlign.center,
-                        style: AppTypography.sectionTitle.copyWith(
-                          color: AppColors.textPrimary,
-                          fontSize: 24,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: -0.5,
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      Text(
-                        languageProvider.tr('common.checkConnection'),
-                        textAlign: TextAlign.center,
-                        style: AppTypography.body.copyWith(
-                          color: AppColors.textSecondary,
-                          fontSize: 14,
-                          height: 1.55,
-                        ),
-                      ),
-                      const SizedBox(height: 28),
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(14),
+                      alignment: Alignment.center,
+                      child: Container(
+                        width: 48,
+                        height: 48,
                         decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(18),
-                          border: Border.all(color: const Color(0xffE4E4E7)),
-                          boxShadow: AppShadows.soft,
+                          color: AppColors.moiGivenSoft,
+                          borderRadius: BorderRadius.circular(14),
                         ),
-                        child: Column(
-                          children: [
-                            _TipRow(
-                              icon: HugeIcons.strokeRoundedWifi01,
-                              text: languageProvider.tr('offline.enableWifi'),
-                              accent: primary,
-                              soft: AppColors.primarySoft,
-                            ),
-                            const SizedBox(height: 10),
-                            _TipRow(
-                              icon: HugeIcons.strokeRoundedAirplaneMode,
-                              text: languageProvider.tr(
-                                'offline.disableAirplaneMode',
-                              ),
-                              accent: AppColors.accentAmber,
-                              soft: AppColors.accentAmberSoft,
-                            ),
-                            const SizedBox(height: 10),
-                            _TipRow(
-                              icon: HugeIcons.strokeRoundedReload,
-                              text: languageProvider.tr('offline.restartApp'),
-                              accent: AppColors.moiGiven,
-                              soft: AppColors.moiGivenSoft,
-                            ),
-                          ],
+                        alignment: Alignment.center,
+                        child: HugeIcon(
+                          icon: HugeIcons.strokeRoundedWifiDisconnected01,
+                          size: 22,
+                          color: AppColors.moiGiven,
+                          strokeWidth: 1.8,
                         ),
                       ),
-                      const SizedBox(height: 28),
-                      SizedBox(
-                        width: double.infinity,
-                        height: 50,
-                        child: FilledButton.icon(
-                          onPressed: _isChecking ? null : _tryAgain,
-                          icon: _isChecking
-                              ? const SizedBox(
-                                  width: 18,
-                                  height: 18,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2.2,
-                                    color: Colors.white,
-                                  ),
-                                )
-                              : const HugeIcon(
-                                  icon: HugeIcons.strokeRoundedRefresh,
-                                  color: Colors.white,
-                                  size: 18,
-                                  strokeWidth: 1.9,
-                                ),
-                          label: Text(
-                            languageProvider.tr('common.tryAgain'),
-                            style: AppTypography.label.copyWith(
-                              color: Colors.white,
-                              fontSize: 15,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          style: FilledButton.styleFrom(
-                            backgroundColor: AppColors.primary,
-                            disabledBackgroundColor: AppColors.primary
-                                .withValues(alpha: 0.7),
-                            foregroundColor: Colors.white,
-                            disabledForegroundColor: Colors.white,
-                            elevation: 0,
-                            shadowColor: AppColors.primary.withValues(
-                              alpha: 0.26,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
-                ),
+                  const SizedBox(height: 20),
+                  Text(
+                    languageProvider.tr('common.noInternet'),
+                    textAlign: TextAlign.center,
+                    style: AppTypography.sectionTitle.copyWith(
+                      color: colors.textPrimary,
+                      fontSize: 22,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    languageProvider.tr('common.checkConnection'),
+                    textAlign: TextAlign.center,
+                    style: AppTypography.body.copyWith(
+                      color: colors.textSecondary,
+                      fontSize: 14,
+                      height: 1.55,
+                    ),
+                  ),
+                  const SizedBox(height: 22),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: colors.surface,
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(color: colors.border),
+                      boxShadow: AppShadows.soft,
+                    ),
+                    child: Column(
+                      children: [
+                        _TipRow(
+                          icon: HugeIcons.strokeRoundedWifi01,
+                          text: languageProvider.tr('offline.enableWifi'),
+                          accent: primary,
+                          soft: colors.moiReceivedSoft,
+                        ),
+                        const SizedBox(height: 10),
+                        _TipRow(
+                          icon: HugeIcons.strokeRoundedAirplaneMode,
+                          text: languageProvider.tr(
+                            'offline.disableAirplaneMode',
+                          ),
+                          accent: AppColors.accentAmber,
+                          soft: Color.lerp(
+                            colors.surfaceVariant,
+                            AppColors.accentAmber,
+                            0.15,
+                          )!,
+                        ),
+                        const SizedBox(height: 10),
+                        _TipRow(
+                          icon: HugeIcons.strokeRoundedReload,
+                          text: languageProvider.tr('offline.restartApp'),
+                          accent: AppColors.moiGiven,
+                          soft: colors.moiGivenSoft,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 22),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: FilledButton.icon(
+                      onPressed: _isChecking ? null : _tryAgain,
+                      icon: _isChecking
+                          ? SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.2,
+                                color: colorScheme.onPrimary,
+                              ),
+                            )
+                          : HugeIcon(
+                              icon: HugeIcons.strokeRoundedRefresh,
+                              color: colorScheme.onPrimary,
+                              size: 18,
+                              strokeWidth: 1.9,
+                            ),
+                      label: Text(
+                        languageProvider.tr('common.tryAgain'),
+                        style: AppTypography.label.copyWith(
+                          color: colorScheme.onPrimary,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        disabledBackgroundColor: AppColors.primary.withValues(
+                          alpha: 0.7,
+                        ),
+                        foregroundColor: colorScheme.onPrimary,
+                        disabledForegroundColor: colorScheme.onPrimary,
+                        elevation: 0,
+                        shadowColor: AppColors.primary.withValues(alpha: 0.26),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -313,7 +297,7 @@ class _TipRow extends StatelessWidget {
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppColors.of(context).surface,
               borderRadius: BorderRadius.circular(10),
               border: Border.all(color: accent.withValues(alpha: 0.14)),
             ),
@@ -330,7 +314,7 @@ class _TipRow extends StatelessWidget {
             child: Text(
               text,
               style: AppTypography.body.copyWith(
-                color: AppColors.textPrimary,
+                color: AppColors.of(context).textPrimary,
                 fontSize: 13,
                 height: 1.4,
                 fontWeight: FontWeight.w500,

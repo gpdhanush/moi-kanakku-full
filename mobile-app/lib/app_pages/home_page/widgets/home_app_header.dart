@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:moi/app_configs/index.dart';
+import 'package:moi/app_themes/theme_provider.dart';
 import 'package:moi/app_utils/app_widgets/moi_app_header.dart';
+import 'package:provider/provider.dart';
 
 /// Home tab header — shared [MoiAppHeader] with notifications action.
 class HomeAppHeader extends StatelessWidget implements PreferredSizeWidget {
@@ -20,26 +22,36 @@ class HomeAppHeader extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
-    final primary = Theme.of(context).colorScheme.primary;
-    final labelWidth =
-        (MediaQuery.sizeOf(context).width * 0.42).clamp(132.0, 176.0);
+    return Consumer<ThemeProvider>(
+      builder: (context, themeProvider, _) {
+        final primary = Theme.of(context).colorScheme.primary;
+        final isDarkMode = themeProvider.isDarkMode;
+        final labelWidth = (MediaQuery.sizeOf(context).width * 0.42).clamp(
+          132.0,
+          176.0,
+        );
+        final headerLabelAsset = isDarkMode
+            ? AppImages.splashLightText
+            : AppImages.splashLabelDark;
 
-    return MoiAppHeader(
-      height: 72,
-      titleWidget: Image.asset(
-        AppImages.splashLightText,
-        width: labelWidth,
-        fit: BoxFit.contain,
-        filterQuality: FilterQuality.high,
-      ),
-      actions: [
-        MoiAppHeader.notificationButton(
-          onTap: onNotificationsTap,
-          tooltip: notificationsTooltip,
-          unreadCount: unreadNotificationCount,
-          badgeBorderColor: primary,
-        ),
-      ],
+        return MoiAppHeader(
+          height: 72,
+          titleWidget: Image.asset(
+            headerLabelAsset,
+            width: labelWidth,
+            fit: BoxFit.contain,
+            filterQuality: FilterQuality.high,
+          ),
+          actions: [
+            MoiAppHeader.notificationButton(
+              onTap: onNotificationsTap,
+              tooltip: notificationsTooltip,
+              unreadCount: unreadNotificationCount,
+              badgeBorderColor: primary,
+            ),
+          ],
+        );
+      },
     );
   }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:moi/app_themes/index.dart';
 
 /// Utility for showing a date picker with the app's consistent theming and
 /// formatting logic.
@@ -23,6 +24,13 @@ class AppDatePicker {
     bool allowFutureDates = true,
   }) async {
     final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final surface = isDark ? AppColors.darkSurface : Colors.white;
+    final surfaceElevated = isDark
+        ? AppColors.darkSurfaceElevated
+        : Colors.white;
+    final onSurface = isDark ? AppColors.darkTextPrimary : Colors.black87;
+    final muted = isDark ? AppColors.darkTextSecondary : Colors.grey.shade600;
     final now = DateTime.now();
     initialDate ??= now;
     firstDate ??= isOldDateAllowed
@@ -46,38 +54,37 @@ class AppDatePicker {
           data: Theme.of(context).copyWith(
             colorScheme: colorScheme.copyWith(
               primary: colorScheme.primary,
-              onPrimary: Colors.white,
-              surface: Colors.white,
-              onSurface: Colors.black87,
+              onPrimary: AppColors.charcoal,
+              surface: surface,
+              onSurface: onSurface,
             ),
             dialogTheme: DialogThemeData(
+              backgroundColor: surfaceElevated,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(5),
+                borderRadius: BorderRadius.circular(18),
               ),
               elevation: 8,
             ),
-            // Minimal DatePickerThemeData to ensure disabled and selected
-            // day styling matches the app theme. Uses the project's
-            // WidgetStateProperty helpers so colors render correctly.
             datePickerTheme: DatePickerThemeData(
-              backgroundColor: Colors.white,
+              backgroundColor: surface,
+              surfaceTintColor: Colors.transparent,
               headerBackgroundColor: colorScheme.primary,
-              headerForegroundColor: Colors.white,
+              headerForegroundColor: AppColors.charcoal,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(3),
+                borderRadius: BorderRadius.circular(16),
               ),
               dayForegroundColor: WidgetStateProperty.resolveWith((states) {
                 if (states.contains(WidgetState.disabled)) {
-                  return Colors.grey.shade400;
+                  return muted;
                 }
                 if (states.contains(WidgetState.selected)) {
-                  return Colors.white;
+                  return AppColors.charcoal;
                 }
-                return Colors.black87;
+                return onSurface;
               }),
               todayForegroundColor: WidgetStateProperty.resolveWith((states) {
                 if (states.contains(WidgetState.selected)) {
-                  return Colors.white;
+                  return AppColors.charcoal;
                 }
                 return colorScheme.primary;
               }),
@@ -87,43 +94,13 @@ class AppDatePicker {
                 }
                 return Colors.transparent;
               }),
+              dayOverlayColor: WidgetStatePropertyAll(
+                colorScheme.primary.withValues(alpha: 0.12),
+              ),
             ),
             textButtonTheme: TextButtonThemeData(
-              // style: TextButton.styleFrom(
-              //   foregroundColor: colorScheme.primary,
-              //   textStyle: TextStyle(
-              //     fontFamily: 'Inter',
-              //     fontSize: 15,
-              //     fontWeight: FontWeight.w600,
-              //   ),
-              //   padding: const EdgeInsets.symmetric(
-              //     horizontal: 16,
-              //     vertical: 12,
-              //   ),
-              //   shape: RoundedRectangleBorder(
-              //     borderRadius: BorderRadius.circular(12),
-              //   ),
-              // ),
+              style: TextButton.styleFrom(foregroundColor: colorScheme.primary),
             ),
-            // elevatedButtonTheme: ElevatedButtonThemeData(
-            //   style: ElevatedButton.styleFrom(
-            //     backgroundColor: colorScheme.primary,
-            //     foregroundColor: Colors.white,
-            //     elevation: 0,
-            //     textStyle: TextStyle(
-            //       fontFamily: 'Inter',
-            //       fontSize: 15,
-            //       fontWeight: FontWeight.w600,
-            //     ),
-            //     padding: const EdgeInsets.symmetric(
-            //       horizontal: 20,
-            //       vertical: 12,
-            //     ),
-            //     shape: RoundedRectangleBorder(
-            //       borderRadius: BorderRadius.circular(12),
-            //     ),
-            //   ),
-            // ),
           ),
           child: child!,
         );

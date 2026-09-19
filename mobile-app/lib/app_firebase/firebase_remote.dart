@@ -1,96 +1,35 @@
-import 'dart:convert';
-import 'package:firebase_remote_config/firebase_remote_config.dart';
-import 'package:moi/app_configs/api_endpoint_allowlist.dart';
-import 'package:moi/app_configs/app_logs.dart';
+import 'package:dio/dio.dart';
 import 'package:moi/app_configs/app_variables.dart';
 import 'package:moi/app_firebase/app_remote_config.dart';
 
-Future<AppRemoteConfig?> getFirebaseRemoteConfig({
-  bool forceRefresh = true,
-}) async {
+/// Loads non-sensitive runtime values from the backend-managed public config.
+Future<AppRemoteConfig?> getRuntimeConfig() async {
   try {
-    final remoteConfig = FirebaseRemoteConfig.instance;
-
-    await remoteConfig.setDefaults({
-      'moiAppVersionConfig':
-          '{"versionConfig":[{"liveURL":"","imageUrl":"",'
-          '"maintenanceMode":false,"min_app_version":""}]}',
-    });
-
-    await remoteConfig.setConfigSettings(
-      RemoteConfigSettings(
-        fetchTimeout: const Duration(seconds: 30),
-        minimumFetchInterval: forceRefresh
-            ? Duration.zero
-            : const Duration(hours: 1),
+    final response = await Dio(
+      BaseOptions(
+        connectTimeout: const Duration(seconds: 10),
+        receiveTimeout: const Duration(seconds: 15),
+        validateStatus: (status) => status != null && status < 500,
       ),
-    );
+    ).get('$bootstrapApiBaseUri/app-config/public');
 
-    try {
-      final activated = await remoteConfig.fetchAndActivate();
-      printDirect('Remote Config fetchAndActivate: activated=$activated');
-    } catch (e) {
-      printDirect('Remote Config fetch FAILED: $e');
-    }
-
-    final configString = remoteConfig.getString('moiAppVersionConfig');
-    // Do not log raw Remote Config — it may contain apiSecretKey.
-    printDirect(
-      'Remote Config loaded: length=${configString.length}, empty=${configString.isEmpty}',
-    );
-
-    if (configString.isEmpty) return AppRemoteConfig.current;
-
-    final Map<String, dynamic> decoded =
-        jsonDecode(configString) as Map<String, dynamic>;
-
-    final versionConfig = decoded['versionConfig'];
-    final Map<String, dynamic> first;
-    if (versionConfig is List && versionConfig.isNotEmpty) {
-      first = Map<String, dynamic>.from(versionConfig.first as Map);
-    } else if (decoded.containsKey('liveURL') ||
-        decoded.containsKey('imageUrl')) {
-      first = decoded;
-    } else {
+    final data = response.data;
+    if (data is! Map || data['responseType'] != 'S') {
       return AppRemoteConfig.current;
     }
+    final value = data['responseValue'];
+    if (value is! Map) return AppRemoteConfig.current;
 
     final config = AppRemoteConfig.fromJson(
-      first,
-      fallbackLiveUrl: appBaseUri,
+      Map<String, dynamic>.from(value),
+      fallbackLiveUrl: bootstrapApiBaseUri,
       fallbackImageUrl: appImageUrl,
-      fallbackApiSecretKey: apiSecretKey,
     );
-
-    printDirect(
-      'Remote Config parsed: maintenanceMode=${config.maintenanceMode}, '
-      'minAppVersion=${config.minAppVersion}',
-    );
-
-    if (isAllowedApiEndpoint(config.liveURL)) {
-      appBaseUri = config.liveURL;
-    } else if (config.liveURL.trim().isNotEmpty) {
-      printDirect(
-        'Remote Config liveURL rejected: URL is not an approved HTTPS API endpoint',
-      );
-    }
-
-    if (isAllowedHttpsImageUrl(config.imageUrl)) {
-      appImageUrl = config.imageUrl;
-    } else if (config.imageUrl.trim().isNotEmpty) {
-      printDirect(
-        'Remote Config imageUrl rejected: must be HTTPS',
-      );
-    }
-    if (config.apiSecretKey.isNotEmpty) {
-      updateApiSecretKey(config.apiSecretKey);
-    }
+    appBaseUri = config.liveURL;
+    appImageUrl = config.imageUrl;
     AppRemoteConfig.updateCurrent(config);
-
     return config;
-  } catch (e, stackTrace) {
-    printDirect('Error in getFirebaseRemoteConfig: $e');
-    printDirect('Stack trace: $stackTrace');
+  } catch (_) {
     return AppRemoteConfig.current;
   }
 }

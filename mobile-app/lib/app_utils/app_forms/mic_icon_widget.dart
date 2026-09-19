@@ -81,9 +81,12 @@ class _MicIconWidgetState extends State<MicIconWidget> {
       if (!mounted || _isDisposed) return;
       setState(() => _isAvailable = available);
       if (!available) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Speech recognition is not available on this device.'),
+            content: Text(
+              'Speech recognition is not available on this device.',
+            ),
             duration: Duration(seconds: 2),
           ),
         );
@@ -118,6 +121,7 @@ class _MicIconWidgetState extends State<MicIconWidget> {
         if (!mounted || _isDisposed) return;
         setState(() => _isListening = false);
         debugPrint('Mic speech error: $message');
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(message),

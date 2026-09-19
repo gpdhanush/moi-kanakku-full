@@ -6,8 +6,7 @@ import 'package:moi/app_configs/api_endpoint_allowlist.dart';
 enum ApiStartupConfigIssue {
   missingBaseUrl('missing_base_url'),
   invalidBaseUrl('invalid_base_url'),
-  notHttps('not_https'),
-  missingApiKey('missing_api_key');
+  notHttps('not_https');
 
   const ApiStartupConfigIssue(this.diagnosticCode);
 
@@ -15,9 +14,7 @@ enum ApiStartupConfigIssue {
 }
 
 class ApiStartupConfigResult {
-  const ApiStartupConfigResult.valid()
-      : isValid = true,
-        issue = null;
+  const ApiStartupConfigResult.valid() : isValid = true, issue = null;
 
   const ApiStartupConfigResult.invalid(this.issue) : isValid = false;
 
@@ -37,7 +34,7 @@ class ApiStartupConfig {
 
   static const String userErrorTitle = 'Configuration Error';
   static const String userErrorMessage =
-      'பயன்பாட்டு அமைப்பில் சிக்கல் உள்ளது. சரியான API முகவரி மற்றும் API விசை '
+      'பயன்பாட்டு அமைப்பில் சிக்கல் உள்ளது. சரியான API முகவரி '
       'அமைக்கப்படவில்லை. Try Again என்பதை அழுத்தி மீண்டும் முயற்சிக்கவும்.';
 
   /// Used by [Connection] to reject outbound API calls when config is invalid.
@@ -47,13 +44,12 @@ class ApiStartupConfig {
   static bool get apiRequestsAllowed => _apiRequestsAllowed;
   static ApiStartupConfigResult? get lastResult => _lastResult;
 
-  /// Validates [baseUrl] and [apiKey], updates the request gate, and logs a
+  /// Validates [baseUrl], updates the request gate, and logs a
   /// non-sensitive diagnostic when validation fails.
   static ApiStartupConfigResult applyStartupValidation({
     required String baseUrl,
-    required String apiKey,
   }) {
-    final result = validate(baseUrl: baseUrl, apiKey: apiKey);
+    final result = validate(baseUrl: baseUrl);
     _lastResult = result;
     _apiRequestsAllowed = result.isValid;
 
@@ -70,10 +66,7 @@ class ApiStartupConfig {
     _lastResult = null;
   }
 
-  static ApiStartupConfigResult validate({
-    required String baseUrl,
-    required String apiKey,
-  }) {
+  static ApiStartupConfigResult validate({required String baseUrl}) {
     final trimmedBaseUrl = baseUrl.trim();
     if (trimmedBaseUrl.isEmpty) {
       return const ApiStartupConfigResult.invalid(
@@ -99,12 +92,6 @@ class ApiStartupConfig {
     if (!isAllowedApiEndpoint(trimmedBaseUrl)) {
       return const ApiStartupConfigResult.invalid(
         ApiStartupConfigIssue.invalidBaseUrl,
-      );
-    }
-
-    if (apiKey.trim().isEmpty) {
-      return const ApiStartupConfigResult.invalid(
-        ApiStartupConfigIssue.missingApiKey,
       );
     }
 

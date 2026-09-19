@@ -119,9 +119,7 @@ class _TransactionDetailViewPageState extends State<TransactionDetailViewPage> {
                     _AmountHeaderCard(
                       accent: accent,
                       amountText: '₹ $amount',
-                      functionLabel: isCustom
-                          ? customFunction
-                          : functionName,
+                      functionLabel: isCustom ? customFunction : functionName,
                     ),
                     const SizedBox(height: AppSpacing.md),
                     _DetailsSection(
@@ -221,9 +219,7 @@ class _TransactionDetailViewPageState extends State<TransactionDetailViewPage> {
                         ),
                         (
                           icon: HugeIcons.strokeRoundedBriefcase01,
-                          label: languageProvider.tr(
-                            'transactions.occupation',
-                          ),
+                          label: languageProvider.tr('transactions.occupation'),
                           value: occupation.isEmpty
                               ? '—'
                               : occupation.toUpperCase(),
@@ -344,10 +340,7 @@ class _DetailsAppHeader extends StatelessWidget implements PreferredSizeWidget {
   final String title;
   final VoidCallback onBack;
 
-  const _DetailsAppHeader({
-    required this.title,
-    required this.onBack,
-  });
+  const _DetailsAppHeader({required this.title, required this.onBack});
 
   @override
   Size get preferredSize => const Size.fromHeight(72);
@@ -356,6 +349,8 @@ class _DetailsAppHeader extends StatelessWidget implements PreferredSizeWidget {
   Widget build(BuildContext context) {
     final primary = Theme.of(context).colorScheme.primary;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final headerTextColor = isDark ? AppColors.charcoal : Colors.white;
+    final headerIconColor = isDark ? AppColors.charcoal : Colors.white;
 
     return AppBar(
       toolbarHeight: preferredSize.height,
@@ -366,23 +361,27 @@ class _DetailsAppHeader extends StatelessWidget implements PreferredSizeWidget {
       centerTitle: true,
       automaticallyImplyLeading: false,
       titleSpacing: 0,
-      systemOverlayStyle: SystemUiOverlayStyle.light.copyWith(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
-        statusBarBrightness: Brightness.dark,
-        systemNavigationBarColor: isDark ? Colors.black : Colors.white,
-        systemNavigationBarIconBrightness:
-            isDark ? Brightness.light : Brightness.dark,
-      ),
+      systemOverlayStyle:
+          (isDark ? SystemUiOverlayStyle.dark : SystemUiOverlayStyle.light)
+              .copyWith(
+                statusBarColor: Colors.transparent,
+                statusBarIconBrightness: isDark
+                    ? Brightness.dark
+                    : Brightness.light,
+                statusBarBrightness: isDark
+                    ? Brightness.light
+                    : Brightness.dark,
+                systemNavigationBarColor: isDark ? Colors.black : Colors.white,
+                systemNavigationBarIconBrightness: isDark
+                    ? Brightness.dark
+                    : Brightness.light,
+              ),
       flexibleSpace: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              primary,
-              AppColors.deepenAccent(primary, amount: 0.35),
-            ],
+            colors: [primary, AppColors.deepenAccent(primary, amount: 0.35)],
           ),
           borderRadius: const BorderRadius.only(
             bottomLeft: Radius.circular(22),
@@ -442,13 +441,13 @@ class _DetailsAppHeader extends StatelessWidget implements PreferredSizeWidget {
             child: InkWell(
               onTap: onBack,
               customBorder: const CircleBorder(),
-              child: const SizedBox(
+              child: SizedBox(
                 width: 42,
                 height: 42,
                 child: Center(
                   child: HugeIcon(
                     icon: HugeIcons.strokeRoundedArrowLeft01,
-                    color: Colors.white,
+                    color: headerIconColor,
                     size: 22,
                     strokeWidth: 1.9,
                   ),
@@ -464,7 +463,7 @@ class _DetailsAppHeader extends StatelessWidget implements PreferredSizeWidget {
         overflow: TextOverflow.ellipsis,
         textAlign: TextAlign.center,
         style: AppTypography.sectionTitle.copyWith(
-          color: Colors.white,
+          color: headerTextColor,
           fontSize: 16,
           fontWeight: FontWeight.w700,
           letterSpacing: -0.2,
@@ -601,13 +600,15 @@ class _DetailsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           sectionTitle,
           style: AppTypography.label.copyWith(
-            color: AppColors.textPrimary,
+            color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
             fontSize: 14,
             fontWeight: FontWeight.w700,
           ),
@@ -616,9 +617,20 @@ class _DetailsSection extends StatelessWidget {
         Container(
           width: double.infinity,
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: isDark ? AppColors.darkSurface : Colors.white,
             borderRadius: BorderRadius.circular(16),
-            boxShadow: AppShadows.soft,
+            border: Border.all(
+              color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+            ),
+            boxShadow: isDark
+                ? [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.18),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ]
+                : AppShadows.soft,
           ),
           child: Column(
             children: [
@@ -661,6 +673,8 @@ class _DetailTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Column(
       children: [
         Padding(
@@ -672,7 +686,9 @@ class _DetailTile extends StatelessWidget {
                 width: 36,
                 height: 36,
                 decoration: BoxDecoration(
-                  color: primary.withValues(alpha: 0.1),
+                  color: isDark
+                      ? primary.withValues(alpha: 0.18)
+                      : primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 alignment: Alignment.center,
@@ -691,7 +707,9 @@ class _DetailTile extends StatelessWidget {
                     Text(
                       label,
                       style: AppTypography.body.copyWith(
-                        color: AppColors.textSecondary,
+                        color: isDark
+                            ? AppColors.darkTextSecondary
+                            : AppColors.textSecondary,
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                       ),
@@ -702,7 +720,11 @@ class _DetailTile extends StatelessWidget {
                       maxLines: maxLines,
                       overflow: TextOverflow.ellipsis,
                       style: AppTypography.label.copyWith(
-                        color: valueColor ?? AppColors.textPrimary,
+                        color:
+                            valueColor ??
+                            (isDark
+                                ? AppColors.darkTextPrimary
+                                : AppColors.textPrimary),
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
                         letterSpacing: 0.1,
@@ -715,12 +737,12 @@ class _DetailTile extends StatelessWidget {
           ),
         ),
         if (showDivider)
-          const Divider(
+          Divider(
             height: 1,
             thickness: 1,
             indent: 62,
             endIndent: 14,
-            color: Color(0xffF4F4F5),
+            color: isDark ? AppColors.darkBorder : const Color(0xffF4F4F5),
           ),
       ],
     );
@@ -755,10 +777,7 @@ class _ExportButton extends StatelessWidget {
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [
-                primary,
-                AppColors.deepenAccent(primary, amount: 0.28),
-              ],
+              colors: [primary, AppColors.deepenAccent(primary, amount: 0.28)],
             ),
             boxShadow: [
               BoxShadow(

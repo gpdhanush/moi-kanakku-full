@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:intl/intl.dart';
 import 'package:moi/app_configs/index.dart';
@@ -28,8 +27,9 @@ class _TransactionPersonDetailsState extends State<TransactionPersonDetails> {
   final SecureStorageService storage = SecureStorageService();
   final TransactionServices txServices = TransactionServices();
   final ScrollController _scrollController = ScrollController();
-  final PaginatedListState<Map<String, dynamic>> _paging =
-      PaginatedListState(pageSize: _pageSize);
+  final PaginatedListState<Map<String, dynamic>> _paging = PaginatedListState(
+    pageSize: _pageSize,
+  );
 
   String? _userId;
 
@@ -67,9 +67,7 @@ class _TransactionPersonDetailsState extends State<TransactionPersonDetails> {
 
   String _formatNumber(dynamic value) {
     if (value == null) return '0';
-    final numVal = value is num
-        ? value
-        : num.tryParse(value.toString()) ?? 0;
+    final numVal = value is num ? value : num.tryParse(value.toString()) ?? 0;
     if (numVal == 0) return '0';
     return NumberFormat('#,##,000.00').format(numVal);
   }
@@ -160,8 +158,9 @@ class _TransactionPersonDetailsState extends State<TransactionPersonDetails> {
 
         return Scaffold(
           backgroundColor: AppColors.background,
-          appBar: _PersonDetailsHeader(
+          appBar: MoiAppHeader(
             title: title,
+            showBack: true,
             onBack: () => Navigator.pop(context),
           ),
           body: Column(
@@ -192,7 +191,9 @@ class _TransactionPersonDetailsState extends State<TransactionPersonDetails> {
                   ],
                 ),
               ),
-              Expanded(child: _buildTransactionsList(languageProvider, primary)),
+              Expanded(
+                child: _buildTransactionsList(languageProvider, primary),
+              ),
             ],
           ),
         );
@@ -207,7 +208,6 @@ class _TransactionPersonDetailsState extends State<TransactionPersonDetails> {
           child: _QuickActionButton(
             label: languageProvider.tr('moi.moiIn'),
             color: AppColors.moiReceived,
-            icon: HugeIcons.strokeRoundedArrowDownLeft01,
             onTap: () async {
               final result = await Navigator.pushNamed(
                 context,
@@ -225,7 +225,6 @@ class _TransactionPersonDetailsState extends State<TransactionPersonDetails> {
           child: _QuickActionButton(
             label: languageProvider.tr('moi.moiOut'),
             color: AppColors.moiGiven,
-            icon: HugeIcons.strokeRoundedArrowUpRight01,
             onTap: () async {
               final result = await Navigator.pushNamed(
                 context,
@@ -247,9 +246,7 @@ class _TransactionPersonDetailsState extends State<TransactionPersonDetails> {
     Color primary,
   ) {
     if (_paging.isLoading && _paging.items.isEmpty) {
-      return const Center(
-        child: CircularProgressIndicator(strokeWidth: 2.5),
-      );
+      return const Center(child: CircularProgressIndicator(strokeWidth: 2.5));
     }
 
     if (_paging.items.isEmpty) {
@@ -283,7 +280,8 @@ class _TransactionPersonDetailsState extends State<TransactionPersonDetails> {
           AppSpacing.page,
           AppSpacing.xxl,
         ),
-        itemCount: _paging.items.length +
+        itemCount:
+            _paging.items.length +
             (_paging.isLoadingMore || _paging.hasMore ? 1 : 0),
         separatorBuilder: (_, _) => const SizedBox(height: 12),
         itemBuilder: (context, index) {
@@ -469,153 +467,14 @@ class _TransactionPersonDetailsState extends State<TransactionPersonDetails> {
   }
 }
 
-class _PersonDetailsHeader extends StatelessWidget
-    implements PreferredSizeWidget {
-  final String title;
-  final VoidCallback onBack;
-
-  const _PersonDetailsHeader({
-    required this.title,
-    required this.onBack,
-  });
-
-  @override
-  Size get preferredSize => const Size.fromHeight(72);
-
-  @override
-  Widget build(BuildContext context) {
-    final primary = Theme.of(context).colorScheme.primary;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return AppBar(
-      toolbarHeight: preferredSize.height,
-      elevation: 0,
-      scrolledUnderElevation: 0,
-      surfaceTintColor: Colors.transparent,
-      backgroundColor: Colors.transparent,
-      centerTitle: true,
-      automaticallyImplyLeading: false,
-      titleSpacing: 0,
-      systemOverlayStyle: SystemUiOverlayStyle.light.copyWith(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
-        statusBarBrightness: Brightness.dark,
-        systemNavigationBarColor: isDark ? Colors.black : Colors.white,
-        systemNavigationBarIconBrightness:
-            isDark ? Brightness.light : Brightness.dark,
-      ),
-      flexibleSpace: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              primary,
-              AppColors.deepenAccent(primary, amount: 0.35),
-            ],
-          ),
-          borderRadius: const BorderRadius.only(
-            bottomLeft: Radius.circular(22),
-            bottomRight: Radius.circular(22),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: primary.withValues(alpha: 0.28),
-              blurRadius: 16,
-              offset: const Offset(0, 6),
-            ),
-          ],
-        ),
-        child: Stack(
-          children: [
-            Positioned(
-              top: -28,
-              right: -18,
-              child: Container(
-                width: 100,
-                height: 100,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withValues(alpha: 0.08),
-                ),
-              ),
-            ),
-            Positioned(
-              bottom: -36,
-              left: 48,
-              child: Container(
-                width: 90,
-                height: 90,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withValues(alpha: 0.06),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(22),
-          bottomRight: Radius.circular(22),
-        ),
-      ),
-      leadingWidth: 54,
-      leading: Padding(
-        padding: const EdgeInsets.only(left: 10),
-        child: Center(
-          child: Material(
-            color: Colors.white.withValues(alpha: 0.14),
-            shape: const CircleBorder(),
-            clipBehavior: Clip.antiAlias,
-            child: InkWell(
-              onTap: onBack,
-              customBorder: const CircleBorder(),
-              child: const SizedBox(
-                width: 42,
-                height: 42,
-                child: Center(
-                  child: HugeIcon(
-                    icon: HugeIcons.strokeRoundedArrowLeft01,
-                    color: Colors.white,
-                    size: 22,
-                    strokeWidth: 1.9,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-      title: Text(
-        title,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        textAlign: TextAlign.center,
-        style: AppTypography.sectionTitle.copyWith(
-          color: Colors.white,
-          fontSize: 16,
-          fontWeight: FontWeight.w700,
-          letterSpacing: -0.2,
-          height: 1.15,
-        ),
-      ),
-      actions: const [SizedBox(width: 54)],
-    );
-  }
-}
-
 class _QuickActionButton extends StatelessWidget {
   final String label;
   final Color color;
-  final List<List<dynamic>> icon;
   final VoidCallback onTap;
 
   const _QuickActionButton({
     required this.label,
     required this.color,
-    required this.icon,
     required this.onTap,
   });
 
@@ -643,13 +502,6 @@ class _QuickActionButton extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              HugeIcon(
-                icon: icon,
-                color: Colors.white,
-                size: 16,
-                strokeWidth: 1.9,
-              ),
-              const SizedBox(width: 8),
               Flexible(
                 child: Text(
                   label,
@@ -657,7 +509,7 @@ class _QuickActionButton extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: AppTypography.label.copyWith(
-                    color: Colors.white,
+                    color: Colors.black,
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
                   ),
@@ -670,4 +522,3 @@ class _QuickActionButton extends StatelessWidget {
     );
   }
 }
-

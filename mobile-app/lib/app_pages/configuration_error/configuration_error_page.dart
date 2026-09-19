@@ -43,13 +43,12 @@ class _ConfigurationErrorPageState extends State<ConfigurationErrorPage>
     setState(() => _isChecking = true);
 
     try {
-      await getFirebaseRemoteConfig(forceRefresh: true);
+      await getRuntimeConfig();
 
       if (!mounted) return;
 
       final result = ApiStartupConfig.applyStartupValidation(
         baseUrl: appBaseUri,
-        apiKey: apiSecretKey,
       );
 
       if (!mounted) return;
@@ -63,6 +62,7 @@ class _ConfigurationErrorPageState extends State<ConfigurationErrorPage>
         return;
       }
 
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -133,7 +133,12 @@ class _ConfigurationErrorPageState extends State<ConfigurationErrorPage>
                           ),
                         ],
                       ),
-                      child: HugeIcon(icon: HugeIcons.strokeRoundedSettings02, size: 54, color: colorScheme.error, strokeWidth: 1.8),
+                      child: HugeIcon(
+                        icon: HugeIcons.strokeRoundedSettings02,
+                        size: 54,
+                        color: colorScheme.error,
+                        strokeWidth: 1.8,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 32),
@@ -181,7 +186,11 @@ class _ConfigurationErrorPageState extends State<ConfigurationErrorPage>
                                 color: colorScheme.onPrimary,
                               ),
                             )
-                          : HugeIcon(icon: HugeIcons.strokeRoundedRefresh, size: 22, strokeWidth: 1.8),
+                          : HugeIcon(
+                              icon: HugeIcons.strokeRoundedRefresh,
+                              size: 22,
+                              strokeWidth: 1.8,
+                            ),
                       label: Text(
                         _isChecking
                             ? languageProvider.tr('common.checking')

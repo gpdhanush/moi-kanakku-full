@@ -61,6 +61,12 @@ class _ProfilePageState extends State<ProfilePage> {
   String? _selectedGender;
   DateTime? _selectedDateOfBirth;
 
+  DateTime? _validDateOfBirth(DateTime date) {
+    final today = DateUtils.dateOnly(DateTime.now());
+    final normalized = DateUtils.dateOnly(date);
+    return normalized.isAfter(today) ? null : normalized;
+  }
+
   // Helper function to construct full image URL
   String _getFullImageUrl(String? imagePath) {
     if (imagePath == null || imagePath.isEmpty) return '';
@@ -98,7 +104,9 @@ class _ProfilePageState extends State<ProfilePage> {
           try {
             final dobString = _user?["date_of_birth"].toString();
             if (dobString != null) {
-              _selectedDateOfBirth = AppDatePicker.parseDisplay(dobString);
+              _selectedDateOfBirth = _validDateOfBirth(
+                AppDatePicker.parseDisplay(dobString),
+              );
               if (_selectedDateOfBirth != null) {
                 _dobCtrl.text = AppDatePicker.formatForDisplay(
                   _selectedDateOfBirth!,
@@ -172,7 +180,9 @@ class _ProfilePageState extends State<ProfilePage> {
                   profileData["date_of_birth"].toString().isNotEmpty) {
                 try {
                   final dobString = profileData["date_of_birth"].toString();
-                  _selectedDateOfBirth = AppDatePicker.parseDisplay(dobString);
+                  _selectedDateOfBirth = _validDateOfBirth(
+                    AppDatePicker.parseDisplay(dobString),
+                  );
                   if (_selectedDateOfBirth != null) {
                     _dobCtrl.text = AppDatePicker.formatForDisplay(
                       _selectedDateOfBirth!,
@@ -286,8 +296,9 @@ class _ProfilePageState extends State<ProfilePage> {
       builder: (context, languageProvider, _) {
         return Scaffold(
           backgroundColor: AppColors.background,
-          appBar: _ProfileAppHeader(
+          appBar: MoiAppHeader(
             title: languageProvider.tr('profile.title').toUpperCase(),
+            showBack: true,
             onBack: () => Navigator.pop(context),
           ),
           body: SingleChildScrollView(
@@ -355,9 +366,19 @@ class _ProfilePageState extends State<ProfilePage> {
 
   // Profile Header Card — avatar + full name + email (previous layout)
   Widget _buildProfileHeader(LanguageProvider languageProvider) {
-    final primary = Theme.of(context).colorScheme.primary;
-    final deep = AppColors.deepenAccent(primary, amount: 0.28);
-    final soft = Color.lerp(primary, Colors.white, 0.22)!;
+    final theme = Theme.of(context);
+    final primary = theme.colorScheme.primary;
+    final isDarkMode = theme.brightness == Brightness.dark;
+    final deep = AppColors.deepenAccent(
+      primary,
+      amount: isDarkMode ? 0.6 : 0.28,
+    );
+    final soft = isDarkMode
+        ? Color.lerp(primary, AppColors.darkSurface, 0.24)!
+        : Color.lerp(primary, Colors.white, 0.22)!;
+    final glow = isDarkMode
+        ? AppColors.darkSurface.withValues(alpha: 0.28)
+        : Colors.white.withValues(alpha: 0.12);
     final name =
         (_user?["name"]?.toString() ?? languageProvider.tr('profile.user'))
             .trim();
@@ -367,13 +388,21 @@ class _ProfilePageState extends State<ProfilePage> {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(18),
         gradient: LinearGradient(
-          colors: [primary, soft, deep],
+          colors: isDarkMode
+              ? [
+                  AppColors.darkSurface.withValues(alpha: 0.94),
+                  AppColors.darkSurfaceVariant,
+                  primary.withValues(alpha: 0.78),
+                ]
+              : [primary, soft, deep],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         boxShadow: [
           BoxShadow(
-            color: primary.withValues(alpha: 0.28),
+            color: isDarkMode
+                ? primary.withValues(alpha: 0.18)
+                : primary.withValues(alpha: 0.28),
             blurRadius: 18,
             offset: const Offset(0, 8),
           ),
@@ -387,10 +416,7 @@ class _ProfilePageState extends State<ProfilePage> {
             child: Container(
               width: 100,
               height: 100,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white.withValues(alpha: 0.1),
-              ),
+              decoration: BoxDecoration(shape: BoxShape.circle, color: glow),
             ),
           ),
           Positioned(
@@ -401,7 +427,7 @@ class _ProfilePageState extends State<ProfilePage> {
               height: 120,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Colors.white.withValues(alpha: 0.08),
+                color: glow.withValues(alpha: isDarkMode ? 0.8 : 0.7),
               ),
             ),
           ),
@@ -418,9 +444,15 @@ class _ProfilePageState extends State<ProfilePage> {
                         height: 72,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: Colors.white.withValues(alpha: 0.2),
+                          color: isDarkMode
+                              ? AppColors.darkSurfaceVariant.withValues(
+                                  alpha: 0.90,
+                                )
+                              : Colors.white.withValues(alpha: 0.2),
                           border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.35),
+                            color: isDarkMode
+                                ? AppColors.darkBorder
+                                : Colors.white.withValues(alpha: 0.35),
                             width: 2,
                           ),
                         ),
@@ -466,7 +498,9 @@ class _ProfilePageState extends State<ProfilePage> {
                           width: 26,
                           height: 26,
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: isDarkMode
+                                ? AppColors.darkSurfaceElevated
+                                : Colors.white,
                             borderRadius: BorderRadius.circular(8),
                           ),
                           alignment: Alignment.center,
@@ -547,9 +581,25 @@ class _ProfilePageState extends State<ProfilePage> {
       width: double.infinity,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.brightness == Brightness.dark
+            ? AppColors.darkSurface
+            : Colors.white,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: AppShadows.soft,
+        border: Border.all(
+          color: theme.brightness == Brightness.dark
+              ? AppColors.darkBorder
+              : AppColors.lightBorder,
+          width: 1,
+        ),
+        boxShadow: theme.brightness == Brightness.dark
+            ? [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.16),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ]
+            : AppShadows.soft,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -592,6 +642,10 @@ class _ProfilePageState extends State<ProfilePage> {
             required: false,
             // prefixIcon: HugeIcons.strokeRoundedCall, // removed
             keyboardType: TextInputType.phone,
+            inputFormatters: [
+              FilteringTextInputFormatter.digitsOnly,
+              LengthLimitingTextInputFormatter(10),
+            ],
             validator: (value) {
               return PhoneValidator.validatePhone(value, required: false);
             },
@@ -672,11 +726,17 @@ class _ProfilePageState extends State<ProfilePage> {
 
   // Date picker handler
   Future<void> _selectDate(BuildContext context) async {
+    final today = DateUtils.dateOnly(DateTime.now());
+    final selectedDate = _selectedDateOfBirth == null
+        ? today
+        : DateUtils.dateOnly(_selectedDateOfBirth!);
+    final initialDate = selectedDate.isAfter(today) ? today : selectedDate;
+
     final DateTime? picked = await AppDatePicker.pick(
       context,
-      initialDate: _selectedDateOfBirth ?? DateTime.now(),
-      firstDate: DateTime(1950),
-      lastDate: DateTime.now(),
+      initialDate: initialDate,
+      firstDate: DateTime(1900),
+      lastDate: today,
     );
 
     if (picked != null) {
@@ -694,6 +754,7 @@ class _ProfilePageState extends State<ProfilePage> {
     LanguageProvider languageProvider,
   ) {
     final primary = colorScheme.primary;
+    final isDark = theme.brightness == Brightness.dark;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -728,7 +789,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 child: Text(
                   languageProvider.tr('profile.updateProfile'),
                   style: AppTypography.label.copyWith(
-                    color: Colors.white,
+                    color: Colors.black,
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
                   ),
@@ -741,7 +802,7 @@ class _ProfilePageState extends State<ProfilePage> {
         Text(
           languageProvider.tr('profile.accountActions'),
           style: AppTypography.label.copyWith(
-            color: AppColors.textPrimary,
+            color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
             fontSize: 14,
             fontWeight: FontWeight.w700,
           ),
@@ -792,8 +853,10 @@ class _ProfilePageState extends State<ProfilePage> {
     required VoidCallback onTap,
     bool isDestructive = false,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Material(
-      color: Colors.white,
+      color: isDark ? AppColors.darkSurface : Colors.white,
       borderRadius: BorderRadius.circular(14),
       child: InkWell(
         onTap: onTap,
@@ -801,9 +864,11 @@ class _ProfilePageState extends State<ProfilePage> {
         child: Ink(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: isDark ? AppColors.darkSurface : Colors.white,
             borderRadius: BorderRadius.circular(14),
-            boxShadow: AppShadows.soft,
+            border: Border.all(
+              color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+            ),
           ),
           child: Row(
             children: [
@@ -832,6 +897,8 @@ class _ProfilePageState extends State<ProfilePage> {
                       style: AppTypography.label.copyWith(
                         color: isDestructive
                             ? AppColors.moiGiven
+                            : isDark
+                            ? AppColors.darkTextPrimary
                             : AppColors.textPrimary,
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
@@ -843,7 +910,9 @@ class _ProfilePageState extends State<ProfilePage> {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: AppTypography.body.copyWith(
-                        color: AppColors.textSecondary,
+                        color: isDark
+                            ? AppColors.darkTextSecondary
+                            : AppColors.textSecondary,
                         fontSize: 12,
                       ),
                     ),
@@ -856,6 +925,8 @@ class _ProfilePageState extends State<ProfilePage> {
                 size: 16,
                 color: isDestructive
                     ? AppColors.moiGiven.withValues(alpha: 0.55)
+                    : isDark
+                    ? AppColors.darkTextSecondary
                     : const Color(0xffA1A1AA),
               ),
             ],
@@ -1378,13 +1449,26 @@ class _ProfilePageState extends State<ProfilePage> {
     ColorScheme colorScheme,
     LanguageProvider languageProvider,
   ) {
+    final isDark = theme.brightness == Brightness.dark;
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? AppColors.darkSurface : Colors.white,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: AppShadows.soft,
+        border: Border.all(
+          color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+        ),
+        boxShadow: isDark
+            ? [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.16),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ]
+            : AppShadows.soft,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1458,136 +1542,6 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _ProfileAppHeader extends StatelessWidget implements PreferredSizeWidget {
-  final String title;
-  final VoidCallback onBack;
-
-  const _ProfileAppHeader({required this.title, required this.onBack});
-
-  @override
-  Size get preferredSize => const Size.fromHeight(72);
-
-  @override
-  Widget build(BuildContext context) {
-    final primary = Theme.of(context).colorScheme.primary;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return AppBar(
-      toolbarHeight: preferredSize.height,
-      elevation: 0,
-      scrolledUnderElevation: 0,
-      surfaceTintColor: Colors.transparent,
-      backgroundColor: Colors.transparent,
-      centerTitle: true,
-      automaticallyImplyLeading: false,
-      titleSpacing: 0,
-      systemOverlayStyle: SystemUiOverlayStyle.light.copyWith(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
-        statusBarBrightness: Brightness.dark,
-        systemNavigationBarColor: isDark ? Colors.black : Colors.white,
-        systemNavigationBarIconBrightness: isDark
-            ? Brightness.light
-            : Brightness.dark,
-      ),
-      flexibleSpace: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [primary, AppColors.deepenAccent(primary, amount: 0.35)],
-          ),
-          borderRadius: const BorderRadius.only(
-            bottomLeft: Radius.circular(22),
-            bottomRight: Radius.circular(22),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: primary.withValues(alpha: 0.28),
-              blurRadius: 16,
-              offset: const Offset(0, 6),
-            ),
-          ],
-        ),
-        child: Stack(
-          children: [
-            Positioned(
-              top: -28,
-              right: -18,
-              child: Container(
-                width: 100,
-                height: 100,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withValues(alpha: 0.08),
-                ),
-              ),
-            ),
-            Positioned(
-              bottom: -36,
-              left: 48,
-              child: Container(
-                width: 90,
-                height: 90,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withValues(alpha: 0.06),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(22),
-          bottomRight: Radius.circular(22),
-        ),
-      ),
-      leadingWidth: 54,
-      leading: Padding(
-        padding: const EdgeInsets.only(left: 10),
-        child: Center(
-          child: Material(
-            color: Colors.white.withValues(alpha: 0.14),
-            shape: const CircleBorder(),
-            clipBehavior: Clip.antiAlias,
-            child: InkWell(
-              onTap: onBack,
-              customBorder: const CircleBorder(),
-              child: const SizedBox(
-                width: 42,
-                height: 42,
-                child: Center(
-                  child: HugeIcon(
-                    icon: HugeIcons.strokeRoundedArrowLeft01,
-                    strokeWidth: 1.9,
-                    size: 22,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-      title: Text(
-        title,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        textAlign: TextAlign.center,
-        style: AppTypography.sectionTitle.copyWith(
-          color: Colors.white,
-          fontSize: 16,
-          fontWeight: FontWeight.w700,
-          letterSpacing: -0.2,
-        ),
-      ),
-      actions: const [SizedBox(width: 54)],
     );
   }
 }

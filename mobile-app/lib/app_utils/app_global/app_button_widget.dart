@@ -17,13 +17,11 @@ class AppButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = AppColors.of(context);
-
     return Container(
       width: width ?? double.infinity,
       height: 50,
       decoration: BoxDecoration(
-        color: colors.primary,
+        color: AppColors.primary,
         borderRadius: AppRadius.mdAll,
         boxShadow: [
           BoxShadow(
@@ -44,9 +42,9 @@ class AppButton extends StatelessWidget {
             child: Text(
               title,
               style: AppTextStyles.textButtonStyle.copyWith(
-                color: colors.onPrimary,
+                color: AppColors.charcoal,
                 decoration: TextDecoration.none,
-                fontWeight: fontWeight ?? FontWeight.w600,
+                fontWeight: fontWeight ?? FontWeight.w700,
               ),
             ),
           ),

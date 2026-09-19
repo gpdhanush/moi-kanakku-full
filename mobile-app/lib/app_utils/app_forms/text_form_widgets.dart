@@ -39,6 +39,8 @@ class TextFormWidget extends StatelessWidget {
   final TextStyle? helperStyle;
   final bool? obscureText;
   final bool? enabled;
+  final bool? autocorrect;
+  final bool? enableSuggestions;
   final String? obscuringCharacter;
   final String? counterText;
   final int? errorMaxLines;
@@ -79,6 +81,8 @@ class TextFormWidget extends StatelessWidget {
     this.helperStyle,
     this.obscureText,
     this.enabled,
+    this.autocorrect,
+    this.enableSuggestions,
     this.obscuringCharacter,
     this.counterText,
     this.errorMaxLines,
@@ -96,57 +100,45 @@ class TextFormWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final primary = Theme.of(context).colorScheme.primary;
-
     return Column(
       mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         FieldLabel(text: title, required: required),
         const SizedBox(height: 8),
-        DecoratedBox(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(_radius),
-            boxShadow: [
-              BoxShadow(
-                color: primary.withValues(alpha: 0.06),
-                blurRadius: 10,
-                offset: const Offset(0, 3),
-              ),
-            ],
+        TextFormField(
+          maxLines: maxLines ?? 1,
+          minLines: minLines ?? 1,
+          initialValue: initialValue,
+          controller: controller,
+          keyboardType: keyboardType ?? TextInputType.text,
+          textInputAction: textInputAction ?? TextInputAction.next,
+          maxLength: maxLength,
+          obscureText: obscureText ?? false,
+          scrollPadding: EdgeInsets.zero,
+          obscuringCharacter: obscuringCharacter ?? '●',
+          autofocus: autofocus ?? false,
+          autovalidateMode:
+              autovalidateMode ?? AutovalidateMode.onUserInteraction,
+          validator: validator,
+          textCapitalization: textCapitalization ?? TextCapitalization.none,
+          readOnly: readOnly ?? false,
+          enabled: enabled,
+          autocorrect: autocorrect ?? true,
+          enableSuggestions: enableSuggestions ?? true,
+          onSaved: onSaved,
+          onTap: onTap,
+          onChanged: onChanged,
+          inputFormatters: inputFormatters,
+          onFieldSubmitted: onFieldSubmitted,
+          focusNode: focusNode,
+          style: AppTypography.body.copyWith(
+            color: AppColors.textPrimary,
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
+            overflow: TextOverflow.clip,
           ),
-          child: TextFormField(
-            maxLines: maxLines ?? 1,
-            minLines: minLines ?? 1,
-            initialValue: initialValue,
-            controller: controller,
-            keyboardType: keyboardType ?? TextInputType.text,
-            textInputAction: textInputAction ?? TextInputAction.next,
-            maxLength: maxLength,
-            obscureText: obscureText ?? false,
-            scrollPadding: EdgeInsets.zero,
-            obscuringCharacter: obscuringCharacter ?? '●',
-            autofocus: autofocus ?? false,
-            autovalidateMode:
-                autovalidateMode ?? AutovalidateMode.onUserInteraction,
-            validator: validator,
-            textCapitalization: textCapitalization ?? TextCapitalization.none,
-            readOnly: readOnly ?? false,
-            enabled: enabled,
-            onSaved: onSaved,
-            onTap: onTap,
-            onChanged: onChanged,
-            inputFormatters: inputFormatters,
-            onFieldSubmitted: onFieldSubmitted,
-            focusNode: focusNode,
-            style: AppTypography.body.copyWith(
-              color: AppColors.textPrimary,
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
-              overflow: TextOverflow.clip,
-            ),
-            decoration: decoration ?? customDecoration(context),
-          ),
+          decoration: decoration ?? customDecoration(context),
         ),
       ],
     );

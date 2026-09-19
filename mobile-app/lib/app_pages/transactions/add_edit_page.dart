@@ -278,6 +278,7 @@ class _AddEditPageState extends State<AddEditPage> {
           backgroundColor: AppColors.background,
           appBar: MoiFlowAppHeader(
             title: title.toUpperCase(),
+            accent: accent,
             onBack: () => Navigator.pop(context),
           ),
           body: Column(
@@ -296,67 +297,61 @@ class _AddEditPageState extends State<AddEditPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _SectionCard(
+                        _SectionHeader(
                           accent: accent,
                           title: languageProvider
                               .tr('profile.personalInformation')
                               .toUpperCase(),
-                          children: _buildPersonFields(languageProvider),
                         ),
-                        const SizedBox(height: AppSpacing.md),
-                        _SectionCard(
+                        const SizedBox(height: AppSpacing.sm),
+                        ..._buildPersonFields(languageProvider),
+                        const SizedBox(height: AppSpacing.xl),
+                        _SectionHeader(
                           accent: accent,
                           title: languageProvider
                               .tr('transactions.transactionsSection')
                               .toUpperCase(),
-                          children: [
-                            _buildFunctionDropdown(languageProvider),
-                            if (isCustomFunction) ...[
-                              const SizedBox(height: AppSpacing.md),
-                              _buildCustomFunctionField(languageProvider),
-                            ],
-                            const SizedBox(height: AppSpacing.md),
-                            _buildDateField(languageProvider),
-                            const SizedBox(height: AppSpacing.md),
-                            TextFormWidget(
-                              title: languageProvider.tr(
-                                'transactions.amount',
-                              ),
-                              controller: amountCtrl,
-                              prefixIcon: HugeIcons.strokeRoundedMoney01,
-                              prefixText: '₹ ',
-                              required: false,
-                              maxLength: 7,
-                              keyboardType: TextInputType.number,
-                              inputFormatters: [
-                                FilteringTextInputFormatter.digitsOnly,
-                              ],
-                            ),
-                            const SizedBox(height: AppSpacing.md),
-                            TextFormWidget(
-                              title: languageProvider.tr(
-                                'transactions.thing',
-                              ),
-                              controller: thingsCtrl,
-                              prefixIcon: HugeIcons.strokeRoundedGift,
-                              required: false,
-                              enableMic: true,
-                              textInputAction: TextInputAction.done,
-                              maxLines: 3,
-                            ),
-                            const SizedBox(height: AppSpacing.md),
-                            TextFormWidget(
-                              title: languageProvider.tr(
-                                'transactions.notes',
-                              ),
-                              controller: remarksCtrl,
-                              prefixIcon: HugeIcons.strokeRoundedNote,
-                              required: false,
-                              enableMic: true,
-                              textInputAction: TextInputAction.done,
-                              maxLines: 3,
-                            ),
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                        _buildFunctionDropdown(languageProvider),
+                        if (isCustomFunction) ...[
+                          const SizedBox(height: AppSpacing.md),
+                          _buildCustomFunctionField(languageProvider),
+                        ],
+                        const SizedBox(height: AppSpacing.md),
+                        _buildDateField(languageProvider),
+                        const SizedBox(height: AppSpacing.md),
+                        TextFormWidget(
+                          title: languageProvider.tr('transactions.amount'),
+                          controller: amountCtrl,
+                          prefixIcon: HugeIcons.strokeRoundedMoney01,
+                          prefixText: '₹ ',
+                          required: false,
+                          maxLength: 7,
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
                           ],
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                        TextFormWidget(
+                          title: languageProvider.tr('transactions.thing'),
+                          controller: thingsCtrl,
+                          prefixIcon: HugeIcons.strokeRoundedGift,
+                          required: false,
+                          enableMic: true,
+                          textInputAction: TextInputAction.done,
+                          maxLines: 3,
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                        TextFormWidget(
+                          title: languageProvider.tr('transactions.notes'),
+                          controller: remarksCtrl,
+                          prefixIcon: HugeIcons.strokeRoundedNote,
+                          required: false,
+                          enableMic: true,
+                          textInputAction: TextInputAction.done,
+                          maxLines: 3,
                         ),
                       ],
                     ),
@@ -421,6 +416,8 @@ class _AddEditPageState extends State<AddEditPage> {
               required: false,
               keyboardType: TextInputType.phone,
               maxLength: 10,
+              autocorrect: false,
+              enableSuggestions: false,
             ),
           ),
           const SizedBox(width: 12),
@@ -474,8 +471,9 @@ class _AddEditPageState extends State<AddEditPage> {
         }).toList();
         setState(() {
           selectedFunction = selectedValue;
-          selectedFunctionId =
-              select.isNotEmpty ? select[0]['id']?.toString() : null;
+          selectedFunctionId = select.isNotEmpty
+              ? select[0]['id']?.toString()
+              : null;
           isCustomFunction = _isCustomOption(selectedFunction);
           if (!isCustomFunction) {
             customFunctionCtrl.clear();
@@ -542,66 +540,37 @@ class _AddEditPageState extends State<AddEditPage> {
   }
 }
 
-class _SectionCard extends StatelessWidget {
+class _SectionHeader extends StatelessWidget {
   final String title;
   final Color accent;
-  final List<Widget> children;
 
-  const _SectionCard({
-    required this.title,
-    required this.accent,
-    required this.children,
-  });
+  const _SectionHeader({required this.title, required this.accent});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xffE4E4E7)),
-        boxShadow: AppShadows.soft,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
-            child: Row(
-              children: [
-                Container(
-                  width: 3,
-                  height: 14,
-                  decoration: BoxDecoration(
-                    color: accent,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    title,
-                    style: AppTypography.label.copyWith(
-                      color: AppColors.textPrimary,
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 0.35,
-                    ),
-                  ),
-                ),
-              ],
+    return Row(
+      children: [
+        Container(
+          width: 3,
+          height: 14,
+          decoration: BoxDecoration(
+            color: accent,
+            borderRadius: BorderRadius.circular(4),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            title,
+            style: AppTypography.label.copyWith(
+              color: AppColors.textPrimary,
+              fontSize: 12.5,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.35,
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 14, 16, 18),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: children,
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
@@ -622,17 +591,10 @@ class _BottomSaveBar extends StatelessWidget {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Colors.transparent,
         border: Border(
           top: BorderSide(color: AppColors.borderSubtle.withValues(alpha: 0.9)),
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 12,
-            offset: const Offset(0, -4),
-          ),
-        ],
       ),
       child: SafeArea(
         top: false,
@@ -666,7 +628,7 @@ class _BottomSaveBar extends StatelessWidget {
                   child: Text(
                     title,
                     style: AppTypography.label.copyWith(
-                      color: Colors.white,
+                      color: Colors.black,
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
                     ),

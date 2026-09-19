@@ -59,10 +59,7 @@ class AppAlertDialog {
       if (alert.id.isEmpty || alert.title.isEmpty) return;
       if (!context.mounted) return;
 
-      await show(
-        context,
-        alert: alert,
-      );
+      await show(context, alert: alert);
     } catch (e) {
       debugPrint('App alert check failed: $e');
     }
@@ -241,8 +238,9 @@ class _AppAlertDialogBodyState extends State<_AppAlertDialogBody> {
                   SizedBox(
                     width: double.infinity,
                     child: FilledButton(
-                      onPressed:
-                          _busy ? null : () => _openUrl(widget.alert.ctaUrl),
+                      onPressed: _busy
+                          ? null
+                          : () => _openUrl(widget.alert.ctaUrl),
                       style: FilledButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         shape: RoundedRectangleBorder(
@@ -254,38 +252,50 @@ class _AppAlertDialogBodyState extends State<_AppAlertDialogBody> {
                   ),
                 ],
                 const SizedBox(height: 16),
-                SizedBox(
-                  width: double.infinity,
-                  child: FilledButton(
-                    onPressed: _busy ? null : () => _submit('dont_show'),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: colorScheme.primary,
-                      foregroundColor: colorScheme.onPrimary,
-                      padding: const EdgeInsets.symmetric(vertical: 13),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: FilledButton(
+                        onPressed: _busy ? null : () => _submit('dont_show'),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: colorScheme.primary,
+                          foregroundColor: colorScheme.onPrimary,
+                          padding: const EdgeInsets.symmetric(vertical: 13),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: _busy
+                            ? const SizedBox(
+                                height: 18,
+                                width: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : Text(language.tr('appAlert.dontShowAgain')),
                       ),
                     ),
-                    child: _busy
-                        ? const SizedBox(
-                            height: 18,
-                            width: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : Text(language.tr('appAlert.dontShowAgain')),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                SizedBox(
-                  width: double.infinity,
-                  child: TextButton(
-                    onPressed: _busy ? null : () => _submit('remind_later'),
-                    style: TextButton.styleFrom(
-                      foregroundColor:
-                          colorScheme.onSurface.withValues(alpha: 0.65),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: _busy ? null : () => _submit('remind_later'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: colorScheme.onSurface.withValues(
+                            alpha: 0.65,
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 13),
+                          side: BorderSide(
+                            color: colorScheme.outline.withValues(alpha: 0.5),
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: Text(language.tr('appAlert.remindLater')),
+                      ),
                     ),
-                    child: Text(language.tr('appAlert.remindLater')),
-                  ),
+                  ],
                 ),
               ],
             ),

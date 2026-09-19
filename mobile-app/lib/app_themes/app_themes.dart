@@ -256,10 +256,10 @@ class AppThemes {
     return ElevatedButton.styleFrom(
       textStyle: AppTextStyles.buttonStyle,
       elevation: 0,
-      foregroundColor: c.onPrimary,
-      backgroundColor: c.primary,
+      foregroundColor: AppColors.charcoal,
+      backgroundColor: AppColors.primary,
       disabledForegroundColor: c.textMuted,
-      disabledBackgroundColor: c.primary.withValues(alpha: 0.45),
+      disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.45),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
     );
   }
@@ -325,8 +325,8 @@ class AppThemes {
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          foregroundColor: c.onPrimary,
-          backgroundColor: c.primary,
+          foregroundColor: AppColors.charcoal,
+          backgroundColor: AppColors.primary,
         ),
       ),
       textButtonTheme: TextButtonThemeData(
@@ -528,8 +528,8 @@ class AppThemes {
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          foregroundColor: c.onPrimary,
-          backgroundColor: c.primary,
+          foregroundColor: AppColors.charcoal,
+          backgroundColor: AppColors.primary,
         ),
       ),
       textButtonTheme: TextButtonThemeData(

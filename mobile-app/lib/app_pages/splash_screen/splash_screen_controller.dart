@@ -58,8 +58,8 @@ class SplashScreenController extends ChangeNotifier {
       if (!_isActive) return;
 
       final remoteConfig = await StartupTiming.timeAsync(
-        'Splash.remoteConfig',
-        () => getFirebaseRemoteConfig(forceRefresh: true),
+        'Splash.runtimeConfig',
+        getRuntimeConfig,
       );
       if (!_isActive || _context == null) return;
 
@@ -68,7 +68,6 @@ class SplashScreenController extends ChangeNotifier {
 
       final startupConfig = ApiStartupConfig.applyStartupValidation(
         baseUrl: appBaseUri,
-        apiKey: apiSecretKey,
       );
       if (!startupConfig.isValid) {
         await navigation('configuration_error');
@@ -152,8 +151,8 @@ class SplashScreenController extends ChangeNotifier {
       await secureStorage.clearSessionData();
     }
 
-    final permissionsRequested =
-        await secureStorage.hasPermissionsBeenRequested();
+    final permissionsRequested = await secureStorage
+        .hasPermissionsBeenRequested();
     if (!_isActive) return;
 
     if (!permissionsRequested) {

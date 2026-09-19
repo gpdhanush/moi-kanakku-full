@@ -110,15 +110,12 @@ class _TransactionDashboardState extends State<TransactionDashboard> {
         final pageToLoad = reset ? 1 : _page + 1;
         final searchQuery = searchController.text.trim();
 
-        final response = await txServices.getPersons(
-          {
-            'userId': _userId,
-            'page': pageToLoad,
-            'limit': _pageSize,
-            if (searchQuery.isNotEmpty) 'search': searchQuery,
-          },
-          showLoading: false,
-        );
+        final response = await txServices.getPersons({
+          'userId': _userId,
+          'page': pageToLoad,
+          'limit': _pageSize,
+          if (searchQuery.isNotEmpty) 'search': searchQuery,
+        }, showLoading: false);
         printDirect('Dashboard Response page=$pageToLoad: $response');
 
         if (response == null || response is! Map) {
@@ -136,66 +133,67 @@ class _TransactionDashboardState extends State<TransactionDashboard> {
           return;
         }
 
-      if (response['responseType'] == 'S') {
-        final responseValue = response['responseValue'];
-        final chunk = responseValue is List
-            ? List<Map<String, dynamic>>.from(
-                responseValue.map(
-                  (e) => e is Map
-                      ? Map<String, dynamic>.from(e)
-                      : <String, dynamic>{},
-                ),
-              )
-            : <Map<String, dynamic>>[];
+        if (response['responseType'] == 'S') {
+          final responseValue = response['responseValue'];
+          final chunk = responseValue is List
+              ? List<Map<String, dynamic>>.from(
+                  responseValue.map(
+                    (e) => e is Map
+                        ? Map<String, dynamic>.from(e)
+                        : <String, dynamic>{},
+                  ),
+                )
+              : <Map<String, dynamic>>[];
 
-        final total = response['count'] is int
-            ? response['count'] as int
-            : int.tryParse(response['count']?.toString() ?? '') ??
-                (reset ? chunk.length : _totalCount);
-        final hasMore = response['hasMore'] == true ||
-            (response['hasMore'] == null && chunk.length >= _pageSize);
+          final total = response['count'] is int
+              ? response['count'] as int
+              : int.tryParse(response['count']?.toString() ?? '') ??
+                    (reset ? chunk.length : _totalCount);
+          final hasMore =
+              response['hasMore'] == true ||
+              (response['hasMore'] == null && chunk.length >= _pageSize);
 
-        if (mounted) {
+          if (mounted) {
+            setState(() {
+              if (reset) {
+                persons = chunk;
+              } else {
+                persons = [...persons, ...chunk];
+              }
+              _page = pageToLoad;
+              _totalCount = total;
+              _hasMore = hasMore && chunk.isNotEmpty;
+              _isLoading = false;
+              _isLoadingMore = false;
+            });
+          }
+        } else if (mounted) {
           setState(() {
-            if (reset) {
-              persons = chunk;
-            } else {
-              persons = [...persons, ...chunk];
-            }
-            _page = pageToLoad;
-            _totalCount = total;
-            _hasMore = hasMore && chunk.isNotEmpty;
             _isLoading = false;
             _isLoadingMore = false;
+            if (reset) {
+              persons = [];
+              _totalCount = 0;
+              _hasMore = false;
+            }
           });
         }
-      } else if (mounted) {
-        setState(() {
-          _isLoading = false;
-          _isLoadingMore = false;
-          if (reset) {
-            persons = [];
-            _totalCount = 0;
-            _hasMore = false;
-          }
-        });
+      } catch (e) {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+            _isLoadingMore = false;
+            if (reset) {
+              persons = [];
+              _totalCount = 0;
+              _hasMore = false;
+            }
+          });
+          alertServices.errorToast(
+            context.read<LanguageProvider>().tr('transactions.loadError'),
+          );
+        }
       }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-          _isLoadingMore = false;
-          if (reset) {
-            persons = [];
-            _totalCount = 0;
-            _hasMore = false;
-          }
-        });
-        alertServices.errorToast(
-          context.read<LanguageProvider>().tr('transactions.loadError'),
-        );
-      }
-    }
     });
   }
 
@@ -376,7 +374,6 @@ class _TransactionDashboardState extends State<TransactionDashboard> {
           child: _QuickActionButton(
             label: languageProvider.tr('transactions.newInvest'),
             color: AppColors.moiReceived,
-            icon: HugeIcons.strokeRoundedArrowDownLeft01,
             onTap: () async {
               final result = await Navigator.pushNamed(
                 context,
@@ -392,7 +389,6 @@ class _TransactionDashboardState extends State<TransactionDashboard> {
           child: _QuickActionButton(
             label: languageProvider.tr('transactions.newReturn'),
             color: AppColors.moiGiven,
-            icon: HugeIcons.strokeRoundedArrowUpRight01,
             onTap: () async {
               final result = await Navigator.pushNamed(
                 context,
@@ -507,18 +503,19 @@ class _TransactionDashboardState extends State<TransactionDashboard> {
 class _QuickActionButton extends StatelessWidget {
   final String label;
   final Color color;
-  final List<List<dynamic>> icon;
   final VoidCallback onTap;
 
   const _QuickActionButton({
     required this.label,
     required this.color,
-    required this.icon,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final contentColor = isDark ? AppColors.charcoal : AppColors.charcoal;
+
     return Material(
       color: Colors.transparent,
       borderRadius: BorderRadius.circular(14),
@@ -532,7 +529,7 @@ class _QuickActionButton extends StatelessWidget {
             color: color,
             boxShadow: [
               BoxShadow(
-                color: color.withValues(alpha: 0.28),
+                color: color.withValues(alpha: 0.26),
                 blurRadius: 12,
                 offset: const Offset(0, 5),
               ),
@@ -541,13 +538,6 @@ class _QuickActionButton extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              HugeIcon(
-                icon: icon,
-                color: Colors.white,
-                size: 16,
-                strokeWidth: 1.9,
-              ),
-              const SizedBox(width: 8),
               Flexible(
                 child: Text(
                   label,
@@ -555,7 +545,7 @@ class _QuickActionButton extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: AppTypography.label.copyWith(
-                    color: Colors.white,
+                    color: contentColor,
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
                   ),

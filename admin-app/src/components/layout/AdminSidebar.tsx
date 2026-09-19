@@ -12,6 +12,7 @@ import {
   Database,
   ScrollText,
   Settings,
+  SlidersHorizontal,
   LogOut,
   ChevronLeft,
   ChevronRight,
@@ -47,6 +48,7 @@ const menuItems = [
   { name: "Audit Logs", href: "/audit-logs", icon: ScrollText },
   { name: "Database Backup", href: "/database-backup", icon: Database },
   { name: "Settings", href: "/settings", icon: Settings },
+  { name: "App Configuration", href: "/app-configuration", icon: SlidersHorizontal },
 ];
 
 function formatLastLogin(value?: string | null): string {

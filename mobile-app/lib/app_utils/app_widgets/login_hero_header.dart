@@ -12,12 +12,16 @@ class AuthImageHero extends StatefulWidget {
   final bool enableSnow;
   final VoidCallback? onBack;
   final Alignment imageAlignment;
+
   /// Previous marketing headline on the hero (e.g. Every Function Matters).
   final String? headline;
+
   /// Previous marketing support line under [headline].
   final String? support;
+
   /// Welcome title shown at the bottom of the hero.
   final String? title;
+
   /// Welcome subtitle shown under [title].
   final String? subtitle;
 
@@ -78,7 +82,8 @@ class _AuthImageHeroState extends State<AuthImageHero>
   Widget build(BuildContext context) {
     final primary = Theme.of(context).colorScheme.primary;
     final topInset = MediaQuery.paddingOf(context).top;
-    final hasOverlay = _hasText(widget.headline) ||
+    final hasOverlay =
+        _hasText(widget.headline) ||
         _hasText(widget.support) ||
         _hasText(widget.title) ||
         _hasText(widget.subtitle);
@@ -94,7 +99,8 @@ class _AuthImageHeroState extends State<AuthImageHero>
       alignment: widget.imageAlignment,
       filterQuality: FilterQuality.high,
     );
-    final snowLayer = widget.enableSnow &&
+    final snowLayer =
+        widget.enableSnow &&
             _snowController != null &&
             _flakes != null &&
             _snowStartedAt != null
@@ -105,9 +111,10 @@ class _AuthImageHeroState extends State<AuthImageHero>
                   child: AnimatedBuilder(
                     animation: _snowController!,
                     builder: (context, _) {
-                      final elapsed = DateTime.now()
-                          .difference(_snowStartedAt!)
-                          .inMilliseconds /
+                      final elapsed =
+                          DateTime.now()
+                              .difference(_snowStartedAt!)
+                              .inMilliseconds /
                           1000.0;
                       return CustomPaint(
                         painter: _SnowPainter(
@@ -132,11 +139,7 @@ class _AuthImageHeroState extends State<AuthImageHero>
             return const LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [
-                Color(0xFFFFFFFF),
-                Color(0xFFFFFFFF),
-                Color(0x00FFFFFF),
-              ],
+              colors: [Color(0xFFFFFFFF), Color(0xFFFFFFFF), Color(0x00FFFFFF)],
               stops: [0.0, 0.62, 1.0],
             ).createShader(bounds);
           },
@@ -263,7 +266,12 @@ class _AuthImageHeroState extends State<AuthImageHero>
                   child: const SizedBox(
                     width: 42,
                     height: 42,
-                    child: HugeIcon(icon: HugeIcons.strokeRoundedArrowLeft01, size: 18, color: Colors.white, strokeWidth: 1.8),
+                    child: HugeIcon(
+                      icon: HugeIcons.strokeRoundedArrowLeft01,
+                      size: 18,
+                      color: Colors.white,
+                      strokeWidth: 1.8,
+                    ),
                   ),
                 ),
               ),
@@ -326,6 +334,7 @@ class LoginHeroHeader extends StatelessWidget {
   final String? support;
   final String? title;
   final String? subtitle;
+  final Color? fadeColor;
 
   const LoginHeroHeader({
     super.key,
@@ -334,6 +343,7 @@ class LoginHeroHeader extends StatelessWidget {
     this.support,
     this.title,
     this.subtitle,
+    this.fadeColor,
   });
 
   @override
@@ -347,6 +357,7 @@ class LoginHeroHeader extends StatelessWidget {
       support: support,
       title: title,
       subtitle: subtitle,
+      fadeColor: fadeColor ?? Theme.of(context).scaffoldBackgroundColor,
     );
   }
 }
@@ -394,8 +405,8 @@ class _SnowPainter extends CustomPainter {
     for (final flake in flakes) {
       final cycle = flake.startY + elapsed * flake.speed;
       final fall = cycle - cycle.floorToDouble();
-      final sway = math.sin((elapsed * 0.35 + flake.x) * math.pi * 2) *
-          flake.drift;
+      final sway =
+          math.sin((elapsed * 0.35 + flake.x) * math.pi * 2) * flake.drift;
       final dx = (flake.x + sway).clamp(0.0, 1.0) * size.width;
       final dy = fall * size.height;
 

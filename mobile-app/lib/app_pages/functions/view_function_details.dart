@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:intl/intl.dart';
 import 'package:moi/app_configs/index.dart';
@@ -77,11 +76,13 @@ class _ViewFunctionDetailsState extends State<ViewFunctionDetails> {
       if (mounted) {
         if (response != null && response['responseType'] == "S") {
           final stats = response['responseValue'];
-          final investTotal = double.tryParse(
+          final investTotal =
+              double.tryParse(
                 stats is Map ? (stats['investTotal']?.toString() ?? '0') : '0',
               ) ??
               0.0;
-          final returnTotal = double.tryParse(
+          final returnTotal =
+              double.tryParse(
                 stats is Map ? (stats['returnTotal']?.toString() ?? '0') : '0',
               ) ??
               0.0;
@@ -198,9 +199,10 @@ class _ViewFunctionDetailsState extends State<ViewFunctionDetails> {
       builder: (context, languageProvider, _) {
         return Scaffold(
           backgroundColor: AppColors.background,
-          appBar: _DetailsAppHeader(
+          appBar: MoiAppHeader(
             title: functionName.toUpperCase(),
             subtitle: functionDate,
+            showBack: true,
             onBack: () => Navigator.pop(context),
           ),
           body: SingleChildScrollView(
@@ -214,10 +216,7 @@ class _ViewFunctionDetailsState extends State<ViewFunctionDetails> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _HeroImage(
-                  imageUrl: _detailImageUrl,
-                  onTap: _showFullImage,
-                ),
+                _HeroImage(imageUrl: _detailImageUrl, onTap: _showFullImage),
                 const SizedBox(height: AppSpacing.md),
                 _AmountCard(
                   primary: primary,
@@ -238,14 +237,16 @@ class _ViewFunctionDetailsState extends State<ViewFunctionDetails> {
                 const SizedBox(height: AppSpacing.md),
                 _DetailsSection(
                   primary: primary,
-                  sectionTitle:
-                      languageProvider.tr('functionDetails.title'),
-                  nameLabel:
-                      languageProvider.tr('functionDetails.functionName'),
-                  dateLabel:
-                      languageProvider.tr('functionDetails.functionDate'),
-                  locationLabel:
-                      languageProvider.tr('functionDetails.location'),
+                  sectionTitle: languageProvider.tr('functionDetails.title'),
+                  nameLabel: languageProvider.tr(
+                    'functionDetails.functionName',
+                  ),
+                  dateLabel: languageProvider.tr(
+                    'functionDetails.functionDate',
+                  ),
+                  locationLabel: languageProvider.tr(
+                    'functionDetails.location',
+                  ),
                   notesLabel: languageProvider.tr('functionDetails.notes'),
                   name: functionName,
                   date: functionDate,
@@ -278,7 +279,7 @@ class _ViewFunctionDetailsState extends State<ViewFunctionDetails> {
                   maxScale: 4,
                   child: imageUrl != null && imageUrl.isNotEmpty
                       ? MoiNetworkImage(
-                      url: imageUrl,
+                          url: imageUrl,
                           fit: BoxFit.contain,
                           errorBuilder: (context, error, stackTrace) =>
                               Image.asset(AppImages.defaultImage),
@@ -312,136 +313,6 @@ class _ViewFunctionDetailsState extends State<ViewFunctionDetails> {
   }
 }
 
-class _DetailsAppHeader extends StatelessWidget implements PreferredSizeWidget {
-  final String title;
-  final String subtitle;
-  final VoidCallback onBack;
-
-  const _DetailsAppHeader({
-    required this.title,
-    required this.subtitle,
-    required this.onBack,
-  });
-
-  @override
-  Size get preferredSize => const Size.fromHeight(72);
-
-  @override
-  Widget build(BuildContext context) {
-    final primary = Theme.of(context).colorScheme.primary;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return AppBar(
-      toolbarHeight: preferredSize.height,
-      elevation: 0,
-      scrolledUnderElevation: 0,
-      surfaceTintColor: Colors.transparent,
-      backgroundColor: Colors.transparent,
-      centerTitle: true,
-      automaticallyImplyLeading: false,
-      titleSpacing: 0,
-      systemOverlayStyle: SystemUiOverlayStyle.light.copyWith(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
-        statusBarBrightness: Brightness.dark,
-        systemNavigationBarColor: isDark ? Colors.black : Colors.white,
-        systemNavigationBarIconBrightness:
-            isDark ? Brightness.light : Brightness.dark,
-      ),
-      flexibleSpace: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              primary,
-              AppColors.deepenAccent(primary, amount: 0.35),
-            ],
-          ),
-          borderRadius: const BorderRadius.only(
-            bottomLeft: Radius.circular(22),
-            bottomRight: Radius.circular(22),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: primary.withValues(alpha: 0.28),
-              blurRadius: 16,
-              offset: const Offset(0, 6),
-            ),
-          ],
-        ),
-      ),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(22),
-          bottomRight: Radius.circular(22),
-        ),
-      ),
-      leadingWidth: 54,
-      leading: Padding(
-        padding: const EdgeInsets.only(left: 10),
-        child: Center(
-          child: Material(
-            color: Colors.white.withValues(alpha: 0.14),
-            shape: const CircleBorder(),
-            clipBehavior: Clip.antiAlias,
-            child: InkWell(
-              onTap: onBack,
-              customBorder: const CircleBorder(),
-              child: const SizedBox(
-                width: 42,
-                height: 42,
-                child: Center(
-                  child: HugeIcon(
-                    icon: HugeIcons.strokeRoundedArrowLeft01,
-                    color: Colors.white,
-                    size: 22,
-                    strokeWidth: 1.9,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-      title: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            title,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            textAlign: TextAlign.center,
-            style: AppTypography.sectionTitle.copyWith(
-              color: Colors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              letterSpacing: -0.2,
-              height: 1.15,
-            ),
-          ),
-          if (subtitle.isNotEmpty) ...[
-            const SizedBox(height: 2),
-            Text(
-              subtitle,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
-              style: AppTypography.body.copyWith(
-                color: Colors.white.withValues(alpha: 0.82),
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                height: 1.1,
-              ),
-            ),
-          ],
-        ],
-      ),
-      actions: const [SizedBox(width: 54)],
-    );
-  }
-}
-
 class _HeroImage extends StatelessWidget {
   final String? imageUrl;
   final VoidCallback onTap;
@@ -470,8 +341,10 @@ class _HeroImage extends StatelessWidget {
                   ? MoiNetworkImage(
                       url: imageUrl!,
                       fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) =>
-                          Image.asset(AppImages.defaultImage, fit: BoxFit.cover),
+                      errorBuilder: (context, error, stackTrace) => Image.asset(
+                        AppImages.defaultImage,
+                        fit: BoxFit.cover,
+                      ),
                     )
                   : Image.asset(AppImages.defaultImage, fit: BoxFit.cover),
               Positioned(
@@ -518,8 +391,8 @@ class _AmountCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final deep = AppColors.deepenAccent(primary, amount: 0.28);
-    final soft = Color.lerp(primary, Colors.white, 0.22)!;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardColor = AppColors.primaryDark;
 
     return SizedBox(
       width: double.infinity,
@@ -533,99 +406,67 @@ class _AmountCard extends StatelessWidget {
             width: double.infinity,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(18),
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [primary, soft, deep],
-              ),
+              color: cardColor,
               boxShadow: [
                 BoxShadow(
-                  color: primary.withValues(alpha: 0.32),
+                  color: cardColor.withValues(alpha: isDark ? 0.22 : 0.32),
                   blurRadius: 20,
                   offset: const Offset(0, 10),
                 ),
                 BoxShadow(
-                  color: primary.withValues(alpha: 0.12),
+                  color: cardColor.withValues(alpha: 0.12),
                   blurRadius: 6,
                   offset: const Offset(0, 2),
                 ),
               ],
             ),
-            child: Stack(
-              children: [
-                Positioned(
-                  right: -24,
-                  top: -20,
-                  child: Container(
-                    width: 100,
-                    height: 100,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.white.withValues(alpha: 0.10),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: AppTypography.body.copyWith(
+                      color: Colors.black.withValues(alpha: 0.78),
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
-                ),
-                Positioned(
-                  right: 36,
-                  bottom: -28,
-                  child: Container(
-                    width: 72,
-                    height: 72,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.white.withValues(alpha: 0.08),
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        label,
-                        style: AppTypography.body.copyWith(
-                          color: Colors.white.withValues(alpha: 0.78),
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                        ),
+                  const SizedBox(height: 6),
+                  if (isLoading)
+                    const SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(
+                        color: Colors.black,
+                        strokeWidth: 2.4,
                       ),
-                      const SizedBox(height: 6),
-                      if (isLoading)
-                        const SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2.4,
-                          ),
-                        )
-                      else
-                        Text(
-                          amountText,
-                          style: AppTypography.amountLarge.copyWith(
-                            color: Colors.white,
-                            fontSize: 30,
-                            letterSpacing: -0.7,
-                          ),
-                        ),
-                      if (words.trim().isNotEmpty) ...[
-                        const SizedBox(height: 4),
-                        Text(
-                          words,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppTypography.body.copyWith(
-                            color: Colors.white.withValues(alpha: 0.72),
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-              ],
+                    )
+                  else
+                    Text(
+                      amountText,
+                      style: AppTypography.amountLarge.copyWith(
+                        color: Colors.black,
+                        fontSize: 30,
+                        letterSpacing: -0.7,
+                      ),
+                    ),
+                  if (words.trim().isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      words,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTypography.body.copyWith(
+                        color: Colors.black.withValues(alpha: 0.72),
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
             ),
           ),
         ),
@@ -661,39 +502,38 @@ class _DetailsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final hasNotes = notes.isNotEmpty;
-    final rows = <({
-      List<List<dynamic>> icon,
-      String label,
-      String value,
-      int maxLines,
-    })>[
-      (
-        icon: HugeIcons.strokeRoundedWedding,
-        label: nameLabel,
-        value: name.isEmpty ? '—' : name.toUpperCase(),
-        maxLines: 2,
-      ),
-      (
-        icon: HugeIcons.strokeRoundedCalendar01,
-        label: dateLabel,
-        value: date.isEmpty ? '—' : date.toUpperCase(),
-        maxLines: 2,
-      ),
-      (
-        icon: HugeIcons.strokeRoundedLocation01,
-        label: locationLabel,
-        value: location.isEmpty ? '—' : location.toUpperCase(),
-        maxLines: 2,
-      ),
-      if (hasNotes)
-        (
-          icon: HugeIcons.strokeRoundedNote,
-          label: notesLabel,
-          value: notes.toUpperCase(),
-          maxLines: 5,
-        ),
-    ];
+    final rows =
+        <
+          ({List<List<dynamic>> icon, String label, String value, int maxLines})
+        >[
+          (
+            icon: HugeIcons.strokeRoundedWedding,
+            label: nameLabel,
+            value: name.isEmpty ? '—' : name.toUpperCase(),
+            maxLines: 2,
+          ),
+          (
+            icon: HugeIcons.strokeRoundedCalendar01,
+            label: dateLabel,
+            value: date.isEmpty ? '—' : date.toUpperCase(),
+            maxLines: 2,
+          ),
+          (
+            icon: HugeIcons.strokeRoundedLocation01,
+            label: locationLabel,
+            value: location.isEmpty ? '—' : location.toUpperCase(),
+            maxLines: 2,
+          ),
+          if (hasNotes)
+            (
+              icon: HugeIcons.strokeRoundedNote,
+              label: notesLabel,
+              value: notes.toUpperCase(),
+              maxLines: 5,
+            ),
+        ];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -710,9 +550,10 @@ class _DetailsSection extends StatelessWidget {
         Container(
           width: double.infinity,
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: isDark ? AppColors.darkSurface : Colors.white,
             borderRadius: BorderRadius.circular(16),
-            boxShadow: AppShadows.soft,
+            border: isDark ? Border.all(color: AppColors.darkBorder) : null,
+            boxShadow: isDark ? null : AppShadows.soft,
           ),
           child: Column(
             children: [
@@ -724,6 +565,7 @@ class _DetailsSection extends StatelessWidget {
                   value: rows[i].value,
                   maxLines: rows[i].maxLines,
                   showDivider: i < rows.length - 1,
+                  isDark: isDark,
                 ),
             ],
           ),
@@ -740,6 +582,7 @@ class _DetailTile extends StatelessWidget {
   final String value;
   final int maxLines;
   final bool showDivider;
+  final bool isDark;
 
   const _DetailTile({
     required this.primary,
@@ -748,6 +591,7 @@ class _DetailTile extends StatelessWidget {
     required this.value,
     this.maxLines = 2,
     required this.showDivider,
+    required this.isDark,
   });
 
   @override
@@ -806,9 +650,12 @@ class _DetailTile extends StatelessWidget {
           ),
         ),
         if (showDivider)
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 14),
-            child: Divider(height: 1, color: Color(0xffF4F4F5)),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            child: Divider(
+              height: 1,
+              color: isDark ? AppColors.darkBorder : const Color(0xffF4F4F5),
+            ),
           ),
       ],
     );

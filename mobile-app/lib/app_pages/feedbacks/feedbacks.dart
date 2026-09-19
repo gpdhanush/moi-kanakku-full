@@ -67,62 +67,62 @@ class _FeedbacksState extends State<Feedbacks> {
           'userId': userId,
         }, showLoading: false);
 
-      if (response != null) {
-        List<dynamic> feedbacksList = [];
+        if (response != null) {
+          List<dynamic> feedbacksList = [];
 
-        if (response is List) {
-          feedbacksList = response;
-        } else if (response is Map) {
-          if (response['responseValue'] != null &&
-              response['responseValue'] is List) {
-            feedbacksList = response['responseValue'];
-          } else if (response['data'] != null && response['data'] is List) {
-            feedbacksList = response['data'];
-          } else if (response['count'] != null &&
-              response['responseValue'] != null) {
-            feedbacksList = response['responseValue'] is List
-                ? response['responseValue']
-                : [];
+          if (response is List) {
+            feedbacksList = response;
+          } else if (response is Map) {
+            if (response['responseValue'] != null &&
+                response['responseValue'] is List) {
+              feedbacksList = response['responseValue'];
+            } else if (response['data'] != null && response['data'] is List) {
+              feedbacksList = response['data'];
+            } else if (response['count'] != null &&
+                response['responseValue'] != null) {
+              feedbacksList = response['responseValue'] is List
+                  ? response['responseValue']
+                  : [];
+            }
           }
-        }
 
-        final List<dynamic> feedbacks = feedbacksList.where((item) {
-          final active = item['active']?.toString().toUpperCase();
-          return active == null || active.isEmpty || active == 'Y';
-        }).toList();
+          final List<dynamic> feedbacks = feedbacksList.where((item) {
+            final active = item['active']?.toString().toUpperCase();
+            return active == null || active.isEmpty || active == 'Y';
+          }).toList();
 
-        feedbacks.sort((a, b) {
-          final dateA = a['createdAt']?.toString() ?? '';
-          final dateB = b['createdAt']?.toString() ?? '';
-          if (dateA.isEmpty || dateB.isEmpty) return 0;
-          try {
-            return DateTime.parse(dateB).compareTo(DateTime.parse(dateA));
-          } catch (_) {
-            return 0;
+          feedbacks.sort((a, b) {
+            final dateA = a['createdAt']?.toString() ?? '';
+            final dateB = b['createdAt']?.toString() ?? '';
+            if (dateA.isEmpty || dateB.isEmpty) return 0;
+            try {
+              return DateTime.parse(dateB).compareTo(DateTime.parse(dateA));
+            } catch (_) {
+              return 0;
+            }
+          });
+
+          if (mounted) {
+            setState(() {
+              _previousFeedbacks = feedbacks;
+              _isLoading = false;
+            });
           }
-        });
-
-        if (mounted) {
+        } else if (mounted) {
           setState(() {
-            _previousFeedbacks = feedbacks;
+            _previousFeedbacks = [];
             _isLoading = false;
           });
         }
-      } else if (mounted) {
-        setState(() {
-          _previousFeedbacks = [];
-          _isLoading = false;
-        });
+      } catch (e) {
+        debugPrint('Error loading feedbacks: $e');
+        if (mounted) {
+          setState(() {
+            _previousFeedbacks = [];
+            _isLoading = false;
+          });
+        }
       }
-    } catch (e) {
-      debugPrint('Error loading feedbacks: $e');
-      if (mounted) {
-        setState(() {
-          _previousFeedbacks = [];
-          _isLoading = false;
-        });
-      }
-    }
     });
   }
 
@@ -515,14 +515,18 @@ class _FeedbackCard extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
               decoration: BoxDecoration(
-                color: const Color(0xFFE8F5E9).withValues(alpha: 0.55),
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? AppColors.darkSurfaceVariant.withValues(alpha: 0.88)
+                    : const Color(0xFFE8F5E9).withValues(alpha: 0.55),
                 borderRadius: const BorderRadius.only(
                   bottomLeft: Radius.circular(16),
                   bottomRight: Radius.circular(16),
                 ),
                 border: Border(
                   top: BorderSide(
-                    color: const Color(0xFF2E7D32).withValues(alpha: 0.12),
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? AppColors.darkBorder
+                        : const Color(0xFF2E7D32).withValues(alpha: 0.12),
                   ),
                 ),
               ),
@@ -535,15 +539,17 @@ class _FeedbackCard extends StatelessWidget {
                         width: 34,
                         height: 34,
                         decoration: BoxDecoration(
-                          color: const Color(
-                            0xFF2E7D32,
-                          ).withValues(alpha: 0.12),
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? AppColors.darkSuccess.withValues(alpha: 0.18)
+                              : const Color(0xFF2E7D32).withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         alignment: Alignment.center,
-                        child: const HugeIcon(
+                        child: HugeIcon(
                           icon: HugeIcons.strokeRoundedCustomerService01,
-                          color: Color(0xFF2E7D32),
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? AppColors.darkSuccess
+                              : const Color(0xFF2E7D32),
                           size: 16,
                           strokeWidth: 1.8,
                         ),
@@ -556,7 +562,11 @@ class _FeedbackCard extends StatelessWidget {
                             Text(
                               languageProvider.tr('feedback.reply'),
                               style: AppTypography.label.copyWith(
-                                color: const Color(0xFF2E7D32),
+                                color:
+                                    Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? AppColors.darkSuccess
+                                    : const Color(0xFF2E7D32),
                                 fontSize: 13,
                                 fontWeight: FontWeight.w700,
                               ),
@@ -580,15 +590,18 @@ class _FeedbackCard extends StatelessWidget {
                           vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: const Color(
-                            0xFF2E7D32,
-                          ).withValues(alpha: 0.12),
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? AppColors.darkSuccess.withValues(alpha: 0.16)
+                              : const Color(0xFF2E7D32).withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
                           languageProvider.tr('feedback.admin'),
                           style: AppTypography.label.copyWith(
-                            color: const Color(0xFF1B5E20),
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
+                                ? AppColors.darkTextPrimary
+                                : const Color(0xFF1B5E20),
                             fontSize: 10,
                             fontWeight: FontWeight.w700,
                           ),
@@ -601,10 +614,14 @@ class _FeedbackCard extends StatelessWidget {
                     width: double.infinity,
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? AppColors.darkSurface
+                          : AppColors.lightSurface,
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: const Color(0xFF2E7D32).withValues(alpha: 0.12),
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? AppColors.darkBorder
+                            : const Color(0xFF2E7D32).withValues(alpha: 0.12),
                       ),
                     ),
                     child: Text(
@@ -625,14 +642,18 @@ class _FeedbackCard extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
               decoration: BoxDecoration(
-                color: const Color(0xFFFFF8E1).withValues(alpha: 0.7),
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? const Color(0xFF332B1E).withValues(alpha: 0.9)
+                    : const Color(0xFFFFF8E1).withValues(alpha: 0.7),
                 borderRadius: const BorderRadius.only(
                   bottomLeft: Radius.circular(16),
                   bottomRight: Radius.circular(16),
                 ),
                 border: Border(
                   top: BorderSide(
-                    color: const Color(0xFFE65100).withValues(alpha: 0.12),
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? AppColors.darkWarning.withValues(alpha: 0.3)
+                        : const Color(0xFFE65100).withValues(alpha: 0.12),
                   ),
                 ),
               ),
@@ -642,13 +663,17 @@ class _FeedbackCard extends StatelessWidget {
                     width: 34,
                     height: 34,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFFE0B2),
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? AppColors.darkWarning.withValues(alpha: 0.14)
+                          : const Color(0xFFFFE0B2),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     alignment: Alignment.center,
-                    child: const HugeIcon(
+                    child: HugeIcon(
                       icon: HugeIcons.strokeRoundedClock01,
-                      color: Color(0xFFE65100),
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? AppColors.darkWarning
+                          : const Color(0xFFE65100),
                       size: 16,
                       strokeWidth: 1.8,
                     ),
@@ -661,7 +686,10 @@ class _FeedbackCard extends StatelessWidget {
                         Text(
                           languageProvider.tr('feedback.replyPending'),
                           style: AppTypography.label.copyWith(
-                            color: const Color(0xFFE65100),
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
+                                ? AppColors.darkWarning
+                                : const Color(0xFFE65100),
                             fontSize: 13,
                             fontWeight: FontWeight.w700,
                           ),
@@ -712,10 +740,7 @@ class _GradientActionButton extends StatelessWidget {
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [
-                primary,
-                AppColors.deepenAccent(primary, amount: 0.28),
-              ],
+              colors: [primary, AppColors.deepenAccent(primary, amount: 0.28)],
             ),
             boxShadow: [
               BoxShadow(

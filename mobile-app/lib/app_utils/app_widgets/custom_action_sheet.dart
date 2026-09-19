@@ -94,18 +94,23 @@ class _MoiActionSheetShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.paddingOf(context).bottom;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Padding(
       padding: EdgeInsets.only(bottom: bottomInset > 0 ? 0 : 8),
       child: Container(
         margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: isDark ? AppColors.darkSurface : Colors.white,
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: const Color(0xffE4E4E7)),
+          border: Border.all(
+            color: isDark ? AppColors.darkBorder : const Color(0xffE4E4E7),
+          ),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xff09090B).withValues(alpha: 0.12),
+              color: const Color(
+                0xff09090B,
+              ).withValues(alpha: isDark ? 0.26 : 0.12),
               blurRadius: 28,
               offset: const Offset(0, 10),
             ),
@@ -132,7 +137,9 @@ class _MoiActionSheetShell extends StatelessWidget {
                     title,
                     textAlign: TextAlign.center,
                     style: AppTypography.sectionTitle.copyWith(
-                      color: primary,
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? AppColors.darkTextPrimary
+                          : primary,
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
                       letterSpacing: -0.2,
@@ -145,7 +152,9 @@ class _MoiActionSheetShell extends StatelessWidget {
                     subtitle!,
                     textAlign: TextAlign.center,
                     style: AppTypography.body.copyWith(
-                      color: const Color(0xff71717A),
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? AppColors.darkTextSecondary
+                          : const Color(0xff71717A),
                       fontSize: 13,
                     ),
                   ),
@@ -169,7 +178,9 @@ class _MoiActionSheetShell extends StatelessWidget {
                   SizedBox(
                     width: double.infinity,
                     child: Material(
-                      color: const Color(0xffF4F4F5),
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? AppColors.darkSurfaceVariant
+                          : const Color(0xffF4F4F5),
                       borderRadius: BorderRadius.circular(14),
                       child: InkWell(
                         onTap: () => cancelAction!.onPressed(context),
@@ -180,7 +191,11 @@ class _MoiActionSheetShell extends StatelessWidget {
                             cancelAction!.title,
                             textAlign: TextAlign.center,
                             style: AppTypography.label.copyWith(
-                              color: const Color(0xff3F3F46),
+                              color:
+                                  Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? AppColors.darkTextPrimary
+                                  : const Color(0xff3F3F46),
                               fontSize: 14,
                               fontWeight: FontWeight.w700,
                             ),
@@ -212,18 +227,23 @@ class _MoiActionSheetTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final accent = item.isDestructive
         ? AppColors.moiGiven
         : (item.color ?? primary);
     final soft = item.isDestructive
         ? AppColors.moiGivenSoft
+        : isDark
+        ? accent.withValues(alpha: 0.18)
         : accent.withValues(alpha: 0.1);
     final titleColor = item.isDestructive
         ? AppColors.moiGiven
+        : isDark
+        ? AppColors.darkTextPrimary
         : const Color(0xff18181B);
 
     return Material(
-      color: Colors.white,
+      color: isDark ? AppColors.darkSurfaceVariant : Colors.white,
       borderRadius: BorderRadius.circular(14),
       child: InkWell(
         onTap: onTap,
@@ -237,6 +257,8 @@ class _MoiActionSheetTile extends StatelessWidget {
             border: Border.all(
               color: item.isDestructive
                   ? AppColors.moiGiven.withValues(alpha: 0.22)
+                  : isDark
+                  ? AppColors.darkBorder
                   : const Color(0xffE4E4E7),
             ),
           ),
@@ -280,6 +302,8 @@ class _MoiActionSheetTile extends StatelessWidget {
                 icon: HugeIcons.strokeRoundedArrowRight01,
                 color: item.isDestructive
                     ? AppColors.moiGiven.withValues(alpha: 0.55)
+                    : isDark
+                    ? AppColors.darkTextSecondary
                     : const Color(0xffA1A1AA),
                 size: 16,
                 strokeWidth: 1.9,
@@ -315,18 +339,23 @@ Future<bool?> showMoiConfirmSheet({
     barrierColor: Colors.black.withValues(alpha: 0.45),
     builder: (sheetContext) {
       final bottomInset = MediaQuery.paddingOf(sheetContext).bottom;
+      final isDark = Theme.of(sheetContext).brightness == Brightness.dark;
 
       return Padding(
         padding: EdgeInsets.only(bottom: bottomInset > 0 ? 0 : 8),
         child: Container(
           margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: isDark ? AppColors.darkSurface : Colors.white,
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: const Color(0xffE4E4E7)),
+            border: Border.all(
+              color: isDark ? AppColors.darkBorder : const Color(0xffE4E4E7),
+            ),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xff09090B).withValues(alpha: 0.12),
+                color: const Color(
+                  0xff09090B,
+                ).withValues(alpha: isDark ? 0.26 : 0.12),
                 blurRadius: 28,
                 offset: const Offset(0, 10),
               ),
@@ -343,7 +372,9 @@ Future<bool?> showMoiConfirmSheet({
                     width: 40,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: const Color(0xffE4E4E7),
+                      color: isDark
+                          ? AppColors.darkBorder
+                          : const Color(0xffE4E4E7),
                       borderRadius: BorderRadius.circular(999),
                     ),
                   ),
@@ -368,7 +399,9 @@ Future<bool?> showMoiConfirmSheet({
                     title,
                     textAlign: TextAlign.center,
                     style: AppTypography.sectionTitle.copyWith(
-                      color: AppColors.textPrimary,
+                      color: isDark
+                          ? AppColors.darkTextPrimary
+                          : AppColors.textPrimary,
                       fontSize: 17,
                       fontWeight: FontWeight.w700,
                       letterSpacing: -0.2,
@@ -379,7 +412,9 @@ Future<bool?> showMoiConfirmSheet({
                     message,
                     textAlign: TextAlign.center,
                     style: AppTypography.body.copyWith(
-                      color: const Color(0xff71717A),
+                      color: isDark
+                          ? AppColors.darkTextSecondary
+                          : const Color(0xff71717A),
                       fontSize: 14,
                       height: 1.4,
                     ),
@@ -389,11 +424,12 @@ Future<bool?> showMoiConfirmSheet({
                     children: [
                       Expanded(
                         child: Material(
-                          color: const Color(0xffF4F4F5),
+                          color: isDark
+                              ? AppColors.darkSurfaceVariant
+                              : const Color(0xffF4F4F5),
                           borderRadius: BorderRadius.circular(14),
                           child: InkWell(
-                            onTap: () =>
-                                Navigator.of(sheetContext).pop(false),
+                            onTap: () => Navigator.of(sheetContext).pop(false),
                             borderRadius: BorderRadius.circular(14),
                             child: Padding(
                               padding: const EdgeInsets.symmetric(vertical: 14),
@@ -401,7 +437,9 @@ Future<bool?> showMoiConfirmSheet({
                                 cancelLabel,
                                 textAlign: TextAlign.center,
                                 style: AppTypography.label.copyWith(
-                                  color: const Color(0xff3F3F46),
+                                  color: isDark
+                                      ? AppColors.darkTextPrimary
+                                      : const Color(0xff3F3F46),
                                   fontSize: 14,
                                   fontWeight: FontWeight.w700,
                                 ),
@@ -416,8 +454,7 @@ Future<bool?> showMoiConfirmSheet({
                           color: Colors.transparent,
                           borderRadius: BorderRadius.circular(14),
                           child: InkWell(
-                            onTap: () =>
-                                Navigator.of(sheetContext).pop(true),
+                            onTap: () => Navigator.of(sheetContext).pop(true),
                             borderRadius: BorderRadius.circular(14),
                             child: Ink(
                               decoration: BoxDecoration(

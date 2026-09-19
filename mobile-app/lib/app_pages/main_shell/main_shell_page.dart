@@ -47,10 +47,7 @@ class _MainShellPageState extends State<MainShellPage> {
       StartupTiming.log('MainShell tab $index first create');
       switch (index) {
         case 0:
-          return HomePage(
-            isShellTab: true,
-            refreshSignal: _homeRefreshSignal,
-          );
+          return HomePage(isShellTab: true, refreshSignal: _homeRefreshSignal);
         case 1:
           return const FunctionsList(embeddedInShell: true);
         case 2:
@@ -220,10 +217,7 @@ class _MoiAddPillButton extends StatelessWidget {
   final String label;
   final VoidCallback onPressed;
 
-  const _MoiAddPillButton({
-    required this.label,
-    required this.onPressed,
-  });
+  const _MoiAddPillButton({required this.label, required this.onPressed});
 
   @override
   Widget build(BuildContext context) {
@@ -245,7 +239,7 @@ class _MoiAddPillButton extends StatelessWidget {
             child: Text(
               label,
               style: AppTypography.label.copyWith(
-                color: Colors.white,
+                color: AppColors.charcoal,
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
                 letterSpacing: -0.15,

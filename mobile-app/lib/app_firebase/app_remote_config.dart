@@ -1,7 +1,6 @@
 class AppRemoteConfig {
   final String liveURL;
   final String imageUrl;
-  final String apiSecretKey;
   final bool maintenanceMode;
   final String minAppVersion;
 
@@ -12,7 +11,6 @@ class AppRemoteConfig {
   const AppRemoteConfig({
     required this.liveURL,
     required this.imageUrl,
-    required this.apiSecretKey,
     this.maintenanceMode = false,
     this.minAppVersion = '',
   });
@@ -21,19 +19,20 @@ class AppRemoteConfig {
     Map<String, dynamic> json, {
     required String fallbackLiveUrl,
     required String fallbackImageUrl,
-    required String fallbackApiSecretKey,
   }) {
     return AppRemoteConfig(
       liveURL: json['liveURL']?.toString() ?? fallbackLiveUrl,
       imageUrl: json['imageUrl']?.toString() ?? fallbackImageUrl,
-      apiSecretKey:
-          json['apiSecretKey']?.toString() ?? fallbackApiSecretKey,
       maintenanceMode: _parseBool(
         json['maintenanceMode'] ??
             json['maintenance_mode'] ??
             json['maintaincemode'],
       ),
-      minAppVersion: json['min_app_version']?.toString().trim() ?? '',
+      minAppVersion:
+          (json['minAppVersion'] ?? json['min_app_version'])
+              ?.toString()
+              .trim() ??
+          '',
     );
   }
 

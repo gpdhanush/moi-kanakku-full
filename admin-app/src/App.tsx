@@ -32,6 +32,7 @@ const UserOtps = lazy(() => import("./pages/UserOtps"));
 const AuditLogs = lazy(() => import("./pages/AuditLogs"));
 const DatabaseBackup = lazy(() => import("./pages/DatabaseBackup"));
 const Settings = lazy(() => import("./pages/Settings"));
+const RuntimeConfig = lazy(() => import("./pages/RuntimeConfig"));
 const MFASetup = lazy(() => import("./pages/MFASetup"));
 const MFAVerify = lazy(() => import("./pages/MFAVerify"));
 const NotFound = lazy(() => import("./pages/NotFound"));
@@ -79,6 +80,7 @@ const AppContent = () => {
           <Route path="/audit-logs" element={<LazyRoute><AuditLogs /></LazyRoute>} />
           <Route path="/database-backup" element={<LazyRoute><DatabaseBackup /></LazyRoute>} />
           <Route path="/settings" element={<LazyRoute><Settings /></LazyRoute>} />
+          <Route path="/app-configuration" element={<LazyRoute><RuntimeConfig /></LazyRoute>} />
           <Route path="/mfa/setup" element={<LazyRoute><MFASetup /></LazyRoute>} />
         </Route>
         <Route path="*" element={<LazyRoute><NotFound /></LazyRoute>} />

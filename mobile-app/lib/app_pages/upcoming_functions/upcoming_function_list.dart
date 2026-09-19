@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:moi/app_configs/index.dart';
 import 'package:moi/app_pages/upcoming_functions/models/upcoming_function_model.dart';
@@ -110,8 +109,12 @@ class _UpcomingFunctionListState extends State<UpcomingFunctionList> {
     setState(() => searchHistory = filteredList);
   }
 
-  void _goHome() {
-    Navigator.pushNamedAndRemoveUntil(context, 'home', (r) => false);
+  void _goBack() {
+    if (Navigator.of(context).canPop()) {
+      Navigator.of(context).pop();
+    } else {
+      Navigator.pushNamedAndRemoveUntil(context, 'home', (r) => false);
+    }
   }
 
   String _resolveImageUrl(String? path) {
@@ -130,17 +133,19 @@ class _UpcomingFunctionListState extends State<UpcomingFunctionList> {
     return Consumer<LanguageProvider>(
       builder: (context, languageProvider, _) {
         return PopScope(
-          canPop: false,
+          canPop: true,
           onPopInvokedWithResult: (didPop, result) {
-            if (didPop) return;
-            _goHome();
+            if (!didPop) {
+              _goBack();
+            }
           },
           child: Scaffold(
             backgroundColor: AppColors.background,
-            appBar: _UpcomingAppHeader(
+            appBar: MoiFlowAppHeader(
               title:
                   '${languageProvider.tr('upcomingFunctions.title').toUpperCase()} (${upcomingFunctionList.length})',
-              onBack: _goHome,
+              onBack: _goBack,
+              accent: primary,
             ),
             body: isLoading && upcomingFunctionList.isEmpty
                 ? const Center(
@@ -168,8 +173,12 @@ class _UpcomingFunctionListState extends State<UpcomingFunctionList> {
               ),
               backgroundColor: primary,
               tooltip: languageProvider.tr('upcomingFunctions.addFunction'),
-              child: const HugeIcon(icon: HugeIcons.strokeRoundedAdd01,
-                strokeWidth: 2, size: 24, color: Colors.white),
+              child: const HugeIcon(
+                icon: HugeIcons.strokeRoundedAdd01,
+                strokeWidth: 2,
+                size: 24,
+                color: Colors.white,
+              ),
             ),
           ),
         );
@@ -346,26 +355,27 @@ class _UpcomingFunctionListState extends State<UpcomingFunctionList> {
   Future<void> _showStatusChangeSheet(UpcomingFunction function) async {
     final languageProvider = context.read<LanguageProvider>();
 
-    final options = <({String code, String label, Color color, List<List<dynamic>> icon})>[
-      (
-        code: 'ACTIVE',
-        label: languageProvider.tr('upcomingFunctions.active'),
-        color: const Color(0xFF2E7D32),
-        icon: HugeIcons.strokeRoundedCheckmarkCircle02,
-      ),
-      (
-        code: 'CANCELLED',
-        label: languageProvider.tr('upcomingFunctions.cancelled'),
-        color: AppColors.moiGiven,
-        icon: HugeIcons.strokeRoundedCancelCircle,
-      ),
-      (
-        code: 'COMPLETED',
-        label: languageProvider.tr('upcomingFunctions.completed'),
-        color: const Color(0xFFE65100),
-        icon: HugeIcons.strokeRoundedTick02,
-      ),
-    ];
+    final options =
+        <({String code, String label, Color color, List<List<dynamic>> icon})>[
+          (
+            code: 'ACTIVE',
+            label: languageProvider.tr('upcomingFunctions.active'),
+            color: const Color(0xFF2E7D32),
+            icon: HugeIcons.strokeRoundedCheckmarkCircle02,
+          ),
+          (
+            code: 'CANCELLED',
+            label: languageProvider.tr('upcomingFunctions.cancelled'),
+            color: AppColors.moiGiven,
+            icon: HugeIcons.strokeRoundedCancelCircle,
+          ),
+          (
+            code: 'COMPLETED',
+            label: languageProvider.tr('upcomingFunctions.completed'),
+            color: const Color(0xFFE65100),
+            icon: HugeIcons.strokeRoundedTick02,
+          ),
+        ];
 
     final selected = await showModalBottomSheet<String>(
       context: context,
@@ -416,8 +426,12 @@ class _UpcomingFunctionListState extends State<UpcomingFunctionList> {
                         borderRadius: BorderRadius.circular(18),
                       ),
                       alignment: Alignment.center,
-                      child: HugeIcon(icon: HugeIcons.strokeRoundedRefresh,
-                        strokeWidth: 1.8, size: 28, color: AppColors.accentAmber),
+                      child: HugeIcon(
+                        icon: HugeIcons.strokeRoundedRefresh,
+                        strokeWidth: 1.8,
+                        size: 28,
+                        color: AppColors.accentAmber,
+                      ),
                     ),
                     const SizedBox(height: 16),
                     Text(
@@ -658,141 +672,18 @@ class _StatusOptionTile extends StatelessWidget {
                   ),
                 ),
               ),
-              HugeIcon(icon: selected
+              HugeIcon(
+                icon: selected
                     ? HugeIcons.strokeRoundedCheckmarkCircle02
-                    : HugeIcons.strokeRoundedCircle, size: 20, color: selected ? color : colors.textMuted, strokeWidth: 1.8),
+                    : HugeIcons.strokeRoundedCircle,
+                size: 20,
+                color: selected ? color : colors.textMuted,
+                strokeWidth: 1.8,
+              ),
             ],
           ),
         ),
       ),
-    );
-  }
-}
-
-class _UpcomingAppHeader extends StatelessWidget implements PreferredSizeWidget {
-  final String title;
-  final VoidCallback onBack;
-
-  const _UpcomingAppHeader({required this.title, required this.onBack});
-
-  @override
-  Size get preferredSize => const Size.fromHeight(72);
-
-  @override
-  Widget build(BuildContext context) {
-    final primary = Theme.of(context).colorScheme.primary;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return AppBar(
-      toolbarHeight: preferredSize.height,
-      elevation: 0,
-      scrolledUnderElevation: 0,
-      surfaceTintColor: Colors.transparent,
-      backgroundColor: Colors.transparent,
-      centerTitle: true,
-      automaticallyImplyLeading: false,
-      titleSpacing: 0,
-      systemOverlayStyle: SystemUiOverlayStyle.light.copyWith(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
-        statusBarBrightness: Brightness.dark,
-        systemNavigationBarColor: isDark ? Colors.black : Colors.white,
-        systemNavigationBarIconBrightness:
-            isDark ? Brightness.light : Brightness.dark,
-      ),
-      flexibleSpace: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              primary,
-              AppColors.deepenAccent(primary, amount: 0.35),
-            ],
-          ),
-          borderRadius: const BorderRadius.only(
-            bottomLeft: Radius.circular(22),
-            bottomRight: Radius.circular(22),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: primary.withValues(alpha: 0.28),
-              blurRadius: 16,
-              offset: const Offset(0, 6),
-            ),
-          ],
-        ),
-        child: Stack(
-          children: [
-            Positioned(
-              top: -28,
-              right: -18,
-              child: Container(
-                width: 100,
-                height: 100,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withValues(alpha: 0.08),
-                ),
-              ),
-            ),
-            Positioned(
-              bottom: -36,
-              left: 48,
-              child: Container(
-                width: 90,
-                height: 90,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withValues(alpha: 0.06),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(22),
-          bottomRight: Radius.circular(22),
-        ),
-      ),
-      leadingWidth: 54,
-      leading: Padding(
-        padding: const EdgeInsets.only(left: 10),
-        child: Center(
-          child: Material(
-            color: Colors.white.withValues(alpha: 0.14),
-            shape: const CircleBorder(),
-            clipBehavior: Clip.antiAlias,
-            child: InkWell(
-              onTap: onBack,
-              customBorder: const CircleBorder(),
-              child: const SizedBox(
-                width: 42,
-                height: 42,
-                child: Center(
-                  child: HugeIcon(icon: HugeIcons.strokeRoundedArrowLeft01,
-                    strokeWidth: 1.9, size: 22, color: Colors.white),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-      title: Text(
-        title,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        textAlign: TextAlign.center,
-        style: AppTypography.sectionTitle.copyWith(
-          color: Colors.white,
-          fontSize: 16,
-          fontWeight: FontWeight.w700,
-          letterSpacing: -0.2,
-        ),
-      ),
-      actions: const [SizedBox(width: 54)],
     );
   }
 }
@@ -896,8 +787,12 @@ class _UpcomingFunctionCard extends StatelessWidget {
                       const SizedBox(height: 8),
                       Row(
                         children: [
-                          HugeIcon(icon: HugeIcons.strokeRoundedCalendar03,
-                            strokeWidth: 1.8, size: 14, color: Colors.white.withValues(alpha: 0.95)),
+                          HugeIcon(
+                            icon: HugeIcons.strokeRoundedCalendar03,
+                            strokeWidth: 1.8,
+                            size: 14,
+                            color: Colors.white.withValues(alpha: 0.95),
+                          ),
                           const SizedBox(width: 6),
                           Expanded(
                             child: Text(
@@ -917,8 +812,12 @@ class _UpcomingFunctionCard extends StatelessWidget {
                         const SizedBox(height: 5),
                         Row(
                           children: [
-                            HugeIcon(icon: HugeIcons.strokeRoundedLocation01,
-                              strokeWidth: 1.8, size: 14, color: Colors.white.withValues(alpha: 0.95)),
+                            HugeIcon(
+                              icon: HugeIcons.strokeRoundedLocation01,
+                              strokeWidth: 1.8,
+                              size: 14,
+                              color: Colors.white.withValues(alpha: 0.95),
+                            ),
                             const SizedBox(width: 6),
                             Expanded(
                               child: Text(

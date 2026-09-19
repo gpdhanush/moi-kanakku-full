@@ -82,17 +82,25 @@ class _LoginPageState extends State<LoginPage>
     );
     final fadeOverlap = keyboardOpen ? 36.0 : 72.0;
 
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle.light.copyWith(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
-        statusBarBrightness: Brightness.dark,
-      ),
+      value:
+          (isDarkMode ? SystemUiOverlayStyle.dark : SystemUiOverlayStyle.light)
+              .copyWith(
+                statusBarColor: Colors.transparent,
+                statusBarIconBrightness: isDarkMode
+                    ? Brightness.light
+                    : Brightness.dark,
+                statusBarBrightness: isDarkMode
+                    ? Brightness.dark
+                    : Brightness.light,
+              ),
       child: PopScope(
         canPop: false,
         child: Scaffold(
           resizeToAvoidBottomInset: true,
-          backgroundColor: AppColors.white,
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           body: Stack(
             children: [
               Positioned(
@@ -108,6 +116,7 @@ class _LoginPageState extends State<LoginPage>
                   support: keyboardOpen
                       ? null
                       : languageProvider.tr('login.heroSupport'),
+                  fadeColor: Theme.of(context).scaffoldBackgroundColor,
                 ),
               ),
               Column(
@@ -129,160 +138,177 @@ class _LoginPageState extends State<LoginPage>
                                   AppSpacing.page,
                                   AppSpacing.md,
                                 ),
-                            child: Form(
-                              key: _formKey,
-                              autovalidateMode: _submitted
-                                  ? AutovalidateMode.onUserInteraction
-                                  : AutovalidateMode.disabled,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  Text(
-                                    languageProvider.tr('login.title'),
-                                    textAlign: TextAlign.center,
-                                    style: AppTypography.authTitle,
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    languageProvider.tr('login.subtitle'),
-                                    textAlign: TextAlign.center,
-                                    style: AppTypography.authSubtitle,
-                                  ),
-                                  const SizedBox(height: AppSpacing.lg),
-                                  TextFormWidget(
-                                    title: languageProvider.tr('login.email'),
-                                    hintText: languageProvider.tr(
-                                      'login.emailHint',
-                                    ),
-                                    required: true,
-                                    controller: _controller.emailCtrl,
-                                    focusNode: _emailFocus,
-                                    prefixIcon: HugeIcons.strokeRoundedMail01,
-                                    keyboardType: TextInputType.emailAddress,
-                                    textInputAction: TextInputAction.next,
-                                    inputFormatters: [
-                                      FilteringTextInputFormatter.deny(
-                                        RegExp(r'\s'),
+                                child: Form(
+                                  key: _formKey,
+                                  autovalidateMode: _submitted
+                                      ? AutovalidateMode.onUserInteraction
+                                      : AutovalidateMode.disabled,
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.stretch,
+                                    children: [
+                                      Text(
+                                        languageProvider.tr('login.title'),
+                                        textAlign: TextAlign.center,
+                                        style: AppTypography.authTitle.copyWith(
+                                          color: Theme.of(
+                                            context,
+                                          ).colorScheme.onSurface,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        languageProvider.tr('login.subtitle'),
+                                        textAlign: TextAlign.center,
+                                        style: AppTypography.authSubtitle
+                                            .copyWith(
+                                              color: Theme.of(
+                                                context,
+                                              ).colorScheme.onSurfaceVariant,
+                                            ),
+                                      ),
+                                      const SizedBox(height: AppSpacing.lg),
+                                      TextFormWidget(
+                                        title: languageProvider.tr(
+                                          'login.email',
+                                        ),
+                                        hintText: languageProvider.tr(
+                                          'login.emailHint',
+                                        ),
+                                        required: true,
+                                        controller: _controller.emailCtrl,
+                                        focusNode: _emailFocus,
+                                        prefixIcon:
+                                            HugeIcons.strokeRoundedMail01,
+                                        keyboardType:
+                                            TextInputType.emailAddress,
+                                        textInputAction: TextInputAction.next,
+                                        inputFormatters: [
+                                          FilteringTextInputFormatter.deny(
+                                            RegExp(r'\s'),
+                                          ),
+                                        ],
+                                        autovalidateMode: _submitted
+                                            ? AutovalidateMode.onUserInteraction
+                                            : AutovalidateMode.disabled,
+                                        validator: (value) =>
+                                            _controller.validateEmail(
+                                              value,
+                                              languageProvider,
+                                              forceValidate: _submitted,
+                                            ),
+                                        onFieldSubmitted: (_) {
+                                          _passwordFocus.requestFocus();
+                                        },
+                                      ),
+                                      const SizedBox(height: AppSpacing.md),
+                                      TextFormWidget(
+                                        title: languageProvider.tr(
+                                          'login.password',
+                                        ),
+                                        hintText: languageProvider.tr(
+                                          'login.passwordHint',
+                                        ),
+                                        required: true,
+                                        controller: _controller.passCtrl,
+                                        focusNode: _passwordFocus,
+                                        prefixIcon:
+                                            HugeIcons.strokeRoundedLockPassword,
+                                        obscureText: _controller.showPass,
+                                        obscuringCharacter: '●',
+                                        textInputAction: TextInputAction.done,
+                                        maxLength: 64,
+                                        suffixIconTrue: true,
+                                        suffixIcon: _controller.showPass
+                                            ? HugeIcons.strokeRoundedView
+                                            : HugeIcons
+                                                  .strokeRoundedViewOffSlash,
+                                        suffixIconOnPressed: () {
+                                          setState(() {
+                                            _controller
+                                                .togglePasswordVisibility();
+                                          });
+                                        },
+                                        autovalidateMode: _submitted
+                                            ? AutovalidateMode.onUserInteraction
+                                            : AutovalidateMode.disabled,
+                                        validator: (value) =>
+                                            _controller.validatePassword(
+                                              value,
+                                              languageProvider,
+                                            ),
+                                        onFieldSubmitted: (_) => _onLogin(),
+                                      ),
+                                      Align(
+                                        alignment: Alignment.centerRight,
+                                        child: TextButton(
+                                          onPressed: _isLoading
+                                              ? null
+                                              : () => Navigator.pushNamed(
+                                                  context,
+                                                  'forgot_password',
+                                                ),
+                                          style: TextButton.styleFrom(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 4,
+                                              vertical: 10,
+                                            ),
+                                            minimumSize: const Size(48, 48),
+                                            tapTargetSize: MaterialTapTargetSize
+                                                .shrinkWrap,
+                                          ),
+                                          child: Text(
+                                            languageProvider.tr(
+                                              'login.forgotPassword',
+                                            ),
+                                            style: AppTypography.label.copyWith(
+                                              color: primary,
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(height: AppSpacing.sm),
+                                      _LoginPrimaryButton(
+                                        title: languageProvider.tr(
+                                          'login.loginNow',
+                                        ),
+                                        isLoading: _isLoading,
+                                        onPressed: _onLogin,
+                                      ),
+                                      const SizedBox(height: AppSpacing.xl),
+                                      _CreateAccountRow(
+                                        prefix: languageProvider.tr(
+                                          'login.noAccount',
+                                        ),
+                                        action: languageProvider.tr(
+                                          'login.createAccount',
+                                        ),
+                                        enabled: !_isLoading,
+                                        onTap: () => Navigator.pushNamed(
+                                          context,
+                                          'signup',
+                                        ),
+                                      ),
+                                      SizedBox(
+                                        height: media.padding.bottom + 8,
                                       ),
                                     ],
-                                    autovalidateMode: _submitted
-                                        ? AutovalidateMode.onUserInteraction
-                                        : AutovalidateMode.disabled,
-                                    validator: (value) =>
-                                        _controller.validateEmail(
-                                      value,
-                                      languageProvider,
-                                      forceValidate: _submitted,
-                                    ),
-                                    onFieldSubmitted: (_) {
-                                      _passwordFocus.requestFocus();
-                                    },
                                   ),
-                                  const SizedBox(height: AppSpacing.md),
-                                  TextFormWidget(
-                                    title: languageProvider.tr(
-                                      'login.password',
-                                    ),
-                                    hintText: languageProvider.tr(
-                                      'login.passwordHint',
-                                    ),
-                                    required: true,
-                                    controller: _controller.passCtrl,
-                                    focusNode: _passwordFocus,
-                                    prefixIcon: HugeIcons.strokeRoundedLockPassword,
-                                    obscureText: _controller.showPass,
-                                    obscuringCharacter: '●',
-                                    textInputAction: TextInputAction.done,
-                                    maxLength: 64,
-                                    suffixIconTrue: true,
-                                    suffixIcon: _controller.showPass
-                                        ? HugeIcons.strokeRoundedView
-                                        : HugeIcons.strokeRoundedViewOffSlash,
-                                    suffixIconOnPressed: () {
-                                      setState(() {
-                                        _controller.togglePasswordVisibility();
-                                      });
-                                    },
-                                    autovalidateMode: _submitted
-                                        ? AutovalidateMode.onUserInteraction
-                                        : AutovalidateMode.disabled,
-                                    validator: (value) =>
-                                        _controller.validatePassword(
-                                      value,
-                                      languageProvider,
-                                    ),
-                                    onFieldSubmitted: (_) => _onLogin(),
-                                  ),
-                                  Align(
-                                    alignment: Alignment.centerRight,
-                                    child: TextButton(
-                                      onPressed: _isLoading
-                                          ? null
-                                          : () => Navigator.pushNamed(
-                                                context,
-                                                'forgot_password',
-                                              ),
-                                      style: TextButton.styleFrom(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 4,
-                                          vertical: 10,
-                                        ),
-                                        minimumSize: const Size(48, 48),
-                                        tapTargetSize:
-                                            MaterialTapTargetSize.shrinkWrap,
-                                      ),
-                                      child: Text(
-                                        languageProvider.tr(
-                                          'login.forgotPassword',
-                                        ),
-                                        style: AppTypography.label.copyWith(
-                                          color: primary,
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(height: AppSpacing.sm),
-                                  _LoginPrimaryButton(
-                                    title: languageProvider.tr(
-                                      'login.loginNow',
-                                    ),
-                                    isLoading: _isLoading,
-                                    onPressed: _onLogin,
-                                  ),
-                                  const SizedBox(height: AppSpacing.xl),
-                                  _CreateAccountRow(
-                                    prefix: languageProvider.tr(
-                                      'login.noAccount',
-                                    ),
-                                    action: languageProvider.tr(
-                                      'login.createAccount',
-                                    ),
-                                    enabled: !_isLoading,
-                                    onTap: () => Navigator.pushNamed(
-                                      context,
-                                      'signup',
-                                    ),
-                                  ),
-                                  SizedBox(height: media.padding.bottom + 8),
-                                ],
+                                ),
                               ),
                             ),
-                          ),
+                            if (!keyboardOpen)
+                              _LoginWavesPattern(primary: primary),
+                          ],
                         ),
-                        if (!keyboardOpen)
-                          _LoginWavesPattern(
-                            primary: primary,
-                          ),
-                      ],
+                      ),
                     ),
                   ),
-                ),
+                ],
               ),
             ],
-          ),
-        ],
           ),
         ),
       ),
@@ -338,7 +364,7 @@ class _LoginPrimaryButton extends StatelessWidget {
                         child: CircularProgressIndicator(
                           strokeWidth: 2.4,
                           valueColor: AlwaysStoppedAnimation<Color>(
-                            Colors.white,
+                            AppColors.charcoal,
                           ),
                         ),
                       )
@@ -346,7 +372,7 @@ class _LoginPrimaryButton extends StatelessWidget {
                         key: const ValueKey('label'),
                         title,
                         style: AppTypography.label.copyWith(
-                          color: Colors.white,
+                          color: AppColors.charcoal,
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
                         ),

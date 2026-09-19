@@ -5,20 +5,12 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey =
     GlobalKey<ScaffoldMessengerState>();
 
-String appBaseUri = "";
+/// Bootstrap endpoint used only to fetch the public runtime configuration.
+/// The admin-managed liveURL can replace this after the first successful fetch.
+const String bootstrapApiBaseUri = 'https://moi-api.floatwalktiruppur.in/apis';
+
+String appBaseUri = bootstrapApiBaseUri;
 String appImageUrl = "";
-
-// API Secret Key for rate limiting — loaded only from Firebase Remote Config.
-// Never hardcode a production secret in source; empty until Remote Config supplies it.
-String _cachedApiSecretKey = '';
-
-/// Current API secret key (empty until Remote Config updates it).
-String get apiSecretKey => _cachedApiSecretKey;
-
-/// Updates API secret key from Firebase Remote Config.
-void updateApiSecretKey(String newKey) {
-  _cachedApiSecretKey = newKey.trim();
-}
 
 const String appName = "Moi Kanakku";
 String appVersion = "";

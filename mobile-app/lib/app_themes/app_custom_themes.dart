@@ -21,17 +21,11 @@ class AppTextStyles {
     );
   }
 
-  static TextStyle get headline1 => _style(
-    fontSize: 32,
-    fontWeight: FontWeight.bold,
-    color: AppColors.text,
-  );
+  static TextStyle get headline1 =>
+      _style(fontSize: 32, fontWeight: FontWeight.bold, color: AppColors.text);
 
-  static TextStyle get headline2 => _style(
-    fontSize: 24,
-    fontWeight: FontWeight.w600,
-    color: AppColors.text,
-  );
+  static TextStyle get headline2 =>
+      _style(fontSize: 24, fontWeight: FontWeight.w600, color: AppColors.text);
 
   static TextStyle get bodyText => _style(
     fontSize: 16,
@@ -42,34 +36,29 @@ class AppTextStyles {
   static TextStyle get button => _style(
     fontSize: 16,
     fontWeight: FontWeight.w600,
-    color: Colors.white,
+    color: AppColors.charcoal,
   );
 
   /// BUTTON TEXT STYLES
   static TextStyle get buttonStyle => _style(
-    color: Colors.white,
+    color: AppColors.charcoal,
     fontWeight: FontWeight.w500,
     fontSize: 16,
   );
 
   static TextStyle get textButtonStyle => _style(
-    color: Colors.white,
+    color: AppColors.charcoal,
     fontWeight: FontWeight.w500,
     fontSize: 14,
     decoration: TextDecoration.underline,
   );
 
   /// NO DATA FOUND STYLES
-  static TextStyle get noDataPrimary => _style(
-    fontWeight: FontWeight.bold,
-    fontSize: 16,
-  );
+  static TextStyle get noDataPrimary =>
+      _style(fontWeight: FontWeight.bold, fontSize: 16);
 
-  static TextStyle get noDataSecondary => _style(
-    fontWeight: FontWeight.bold,
-    fontSize: 14,
-    color: Colors.black54,
-  );
+  static TextStyle get noDataSecondary =>
+      _style(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.black54);
 
   /// NO INTERNET STYLES
   static TextStyle get noInternetTitle => _style(

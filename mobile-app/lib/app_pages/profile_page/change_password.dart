@@ -71,8 +71,9 @@ class _ChangePasswordState extends State<ChangePassword> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: _ChangePasswordHeader(
+      appBar: MoiFlowAppHeader(
         title: languageProvider.tr('auth.changePassword').toUpperCase(),
+        accent: primary,
         onBack: () => Navigator.pop(context),
       ),
       body: Column(
@@ -91,130 +92,82 @@ class _ChangePasswordState extends State<ChangePassword> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: AppShadows.soft,
-                      ),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            width: 44,
-                            height: 44,
-                            decoration: BoxDecoration(
-                              color: primary.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            alignment: Alignment.center,
-                            child: HugeIcon(icon: HugeIcons.strokeRoundedLockPassword,
-                              strokeWidth: 1.8, size: 20, color: primary),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              languageProvider.tr('auth.passwordSecureHint'),
-                              style: AppTypography.body.copyWith(
-                                color: AppColors.textSecondary,
-                                fontSize: 13,
-                                height: 1.35,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.fromLTRB(14, 16, 14, 16),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: AppShadows.soft,
-                      ),
-                      child: Column(
-                        children: [
-                          _buildPasswordField(
-                            title: languageProvider.tr('auth.oldPassword'),
-                            controller: oldPassCtrl,
-                            obscureText: showOldPass,
-                            toggleVisibility: () {
-                              setState(() => showOldPass = !showOldPass);
-                            },
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return languageProvider.tr(
-                                  'auth.oldPasswordRequired',
-                                );
-                              }
-                              if (value.length < 8) {
-                                return languageProvider.tr(
-                                  'auth.passwordMinLength',
-                                );
-                              }
-                              return null;
-                            },
-                          ),
-                          const SizedBox(height: AppSpacing.md),
-                          _buildPasswordField(
-                            title: languageProvider.tr('auth.newPassword'),
-                            controller: passwordCtrl,
-                            obscureText: showNewPass,
-                            toggleVisibility: () {
-                              setState(() => showNewPass = !showNewPass);
-                            },
-                            validator: (value) {
-                              final key = PasswordValidator.validateSecure(
-                                value,
-                                requiredKey: 'auth.newPasswordRequired',
+                    Column(
+                      children: [
+                        _buildPasswordField(
+                          title: languageProvider.tr('auth.oldPassword'),
+                          controller: oldPassCtrl,
+                          obscureText: showOldPass,
+                          toggleVisibility: () {
+                            setState(() => showOldPass = !showOldPass);
+                          },
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return languageProvider.tr(
+                                'auth.oldPasswordRequired',
                               );
-                              if (key != null) {
-                                return languageProvider.tr(key);
-                              }
-                              if (value!.trim() == oldPassCtrl.text.trim()) {
-                                return languageProvider.tr(
-                                  'auth.passwordSameAsOld',
-                                );
-                              }
-                              return null;
-                            },
-                          ),
-                          const SizedBox(height: AppSpacing.sm),
-                          _PasswordRulesChecklist(
-                            password: passwordCtrl.text,
-                            languageProvider: languageProvider,
-                            primary: primary,
-                          ),
-                          const SizedBox(height: AppSpacing.md),
-                          _buildPasswordField(
-                            title: languageProvider.tr('auth.confirmPassword'),
-                            controller: confirmPassCtrl,
-                            obscureText: showConfirmPass,
-                            toggleVisibility: () {
-                              setState(
-                                () => showConfirmPass = !showConfirmPass,
+                            }
+                            if (value.length < 8) {
+                              return languageProvider.tr(
+                                'auth.passwordMinLength',
                               );
-                            },
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return languageProvider.tr(
-                                  'auth.confirmPasswordRequired',
-                                );
-                              }
-                              if (value != passwordCtrl.text) {
-                                return languageProvider.tr(
-                                  'auth.passwordsDoNotMatch',
-                                );
-                              }
-                              return null;
-                            },
-                          ),
-                        ],
-                      ),
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                        _buildPasswordField(
+                          title: languageProvider.tr('auth.newPassword'),
+                          controller: passwordCtrl,
+                          obscureText: showNewPass,
+                          toggleVisibility: () {
+                            setState(() => showNewPass = !showNewPass);
+                          },
+                          validator: (value) {
+                            final key = PasswordValidator.validateSecure(
+                              value,
+                              requiredKey: 'auth.newPasswordRequired',
+                            );
+                            if (key != null) {
+                              return languageProvider.tr(key);
+                            }
+                            if (value!.trim() == oldPassCtrl.text.trim()) {
+                              return languageProvider.tr(
+                                'auth.passwordSameAsOld',
+                              );
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                        _buildPasswordField(
+                          title: languageProvider.tr('auth.confirmPassword'),
+                          controller: confirmPassCtrl,
+                          obscureText: showConfirmPass,
+                          toggleVisibility: () {
+                            setState(() => showConfirmPass = !showConfirmPass);
+                          },
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return languageProvider.tr(
+                                'auth.confirmPasswordRequired',
+                              );
+                            }
+                            if (value != passwordCtrl.text) {
+                              return languageProvider.tr(
+                                'auth.passwordsDoNotMatch',
+                              );
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                        _PasswordRulesChecklist(
+                          password: passwordCtrl.text,
+                          languageProvider: languageProvider,
+                          primary: primary,
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -266,7 +219,7 @@ class _ChangePasswordState extends State<ChangePassword> {
                       child: Text(
                         languageProvider.tr('auth.changePassword'),
                         style: AppTypography.label.copyWith(
-                          color: Colors.white,
+                          color: AppColors.charcoal,
                           fontSize: 15,
                           fontWeight: FontWeight.w700,
                         ),
@@ -420,11 +373,16 @@ class _PasswordRulesChecklist extends StatelessWidget {
               padding: const EdgeInsets.only(bottom: 6),
               child: Row(
                 children: [
-                  HugeIcon(icon: rule.met
+                  HugeIcon(
+                    icon: rule.met
                         ? HugeIcons.strokeRoundedCheckmarkCircle02
-                        : HugeIcons.strokeRoundedCircle, size: 16, color: rule.met
+                        : HugeIcons.strokeRoundedCircle,
+                    size: 16,
+                    color: rule.met
                         ? const Color(0xFF2E7D32)
-                        : AppColors.textSecondary.withValues(alpha: 0.55), strokeWidth: 1.8),
+                        : AppColors.textSecondary.withValues(alpha: 0.55),
+                    strokeWidth: 1.8,
+                  ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
@@ -435,8 +393,9 @@ class _PasswordRulesChecklist extends StatelessWidget {
                         color: rule.met
                             ? const Color(0xFF2E7D32)
                             : AppColors.textSecondary,
-                        fontWeight:
-                            rule.met ? FontWeight.w600 : FontWeight.w500,
+                        fontWeight: rule.met
+                            ? FontWeight.w600
+                            : FontWeight.w500,
                       ),
                     ),
                   ),
@@ -445,135 +404,6 @@ class _PasswordRulesChecklist extends StatelessWidget {
             ),
         ],
       ),
-    );
-  }
-}
-
-class _ChangePasswordHeader extends StatelessWidget
-    implements PreferredSizeWidget {
-  final String title;
-  final VoidCallback onBack;
-
-  const _ChangePasswordHeader({required this.title, required this.onBack});
-
-  @override
-  Size get preferredSize => const Size.fromHeight(72);
-
-  @override
-  Widget build(BuildContext context) {
-    final primary = Theme.of(context).colorScheme.primary;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return AppBar(
-      toolbarHeight: preferredSize.height,
-      elevation: 0,
-      scrolledUnderElevation: 0,
-      surfaceTintColor: Colors.transparent,
-      backgroundColor: Colors.transparent,
-      centerTitle: true,
-      automaticallyImplyLeading: false,
-      titleSpacing: 0,
-      systemOverlayStyle: SystemUiOverlayStyle.light.copyWith(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
-        statusBarBrightness: Brightness.dark,
-        systemNavigationBarColor: isDark ? Colors.black : Colors.white,
-        systemNavigationBarIconBrightness:
-            isDark ? Brightness.light : Brightness.dark,
-      ),
-      flexibleSpace: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              primary,
-              AppColors.deepenAccent(primary, amount: 0.35),
-            ],
-          ),
-          borderRadius: const BorderRadius.only(
-            bottomLeft: Radius.circular(22),
-            bottomRight: Radius.circular(22),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: primary.withValues(alpha: 0.28),
-              blurRadius: 16,
-              offset: const Offset(0, 6),
-            ),
-          ],
-        ),
-        child: Stack(
-          children: [
-            Positioned(
-              top: -28,
-              right: -18,
-              child: Container(
-                width: 100,
-                height: 100,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withValues(alpha: 0.08),
-                ),
-              ),
-            ),
-            Positioned(
-              bottom: -36,
-              left: 48,
-              child: Container(
-                width: 90,
-                height: 90,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withValues(alpha: 0.06),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(22),
-          bottomRight: Radius.circular(22),
-        ),
-      ),
-      leadingWidth: 54,
-      leading: Padding(
-        padding: const EdgeInsets.only(left: 10),
-        child: Center(
-          child: Material(
-            color: Colors.white.withValues(alpha: 0.14),
-            shape: const CircleBorder(),
-            clipBehavior: Clip.antiAlias,
-            child: InkWell(
-              onTap: onBack,
-              customBorder: const CircleBorder(),
-              child: const SizedBox(
-                width: 42,
-                height: 42,
-                child: Center(
-                  child: HugeIcon(icon: HugeIcons.strokeRoundedArrowLeft01,
-                    strokeWidth: 1.9, size: 22, color: Colors.white),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-      title: Text(
-        title,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        textAlign: TextAlign.center,
-        style: AppTypography.sectionTitle.copyWith(
-          color: Colors.white,
-          fontSize: 16,
-          fontWeight: FontWeight.w700,
-          letterSpacing: -0.2,
-        ),
-      ),
-      actions: const [SizedBox(width: 54)],
     );
   }
 }

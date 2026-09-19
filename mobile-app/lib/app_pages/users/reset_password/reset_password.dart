@@ -33,16 +33,23 @@ class _ResetPasswordState extends State<ResetPassword> {
     final languageProvider = context.watch<LanguageProvider>();
     final isKeyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
     final media = MediaQuery.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle.light.copyWith(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
-        statusBarBrightness: Brightness.dark,
-      ),
+      value:
+          (isDarkMode ? SystemUiOverlayStyle.dark : SystemUiOverlayStyle.light)
+              .copyWith(
+                statusBarColor: Colors.transparent,
+                statusBarIconBrightness: isDarkMode
+                    ? Brightness.light
+                    : Brightness.dark,
+                statusBarBrightness: isDarkMode
+                    ? Brightness.dark
+                    : Brightness.light,
+              ),
       child: Scaffold(
         resizeToAvoidBottomInset: true,
-        backgroundColor: Colors.grey.shade50,
+        backgroundColor: theme.scaffoldBackgroundColor,
         body: Column(
           children: [
             Expanded(
@@ -221,7 +228,12 @@ class _ResetPasswordState extends State<ResetPassword> {
                 child: const SizedBox(
                   width: 42,
                   height: 42,
-                  child: HugeIcon(icon: HugeIcons.strokeRoundedArrowLeft01, size: 18, color: Colors.white, strokeWidth: 1.8),
+                  child: HugeIcon(
+                    icon: HugeIcons.strokeRoundedArrowLeft01,
+                    size: 18,
+                    color: Colors.white,
+                    strokeWidth: 1.8,
+                  ),
                 ),
               ),
             ),
@@ -253,6 +265,7 @@ class _ResetPasswordState extends State<ResetPassword> {
               fontWeight: FontWeight.bold,
               fontSize: 24.0,
               fontFamily: 'Inter',
+              color: theme.colorScheme.onSurface,
             ),
           ),
           const SizedBox(height: 8),
@@ -260,7 +273,7 @@ class _ResetPasswordState extends State<ResetPassword> {
             languageProvider.tr('auth.resetSubtitle'),
             textAlign: TextAlign.center,
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: Colors.black87,
+              color: theme.colorScheme.onSurfaceVariant,
               fontWeight: FontWeight.normal,
             ),
           ),
@@ -283,7 +296,7 @@ class _ResetPasswordState extends State<ResetPassword> {
           Text(
             '${languageProvider.tr('auth.rememberPassword')} ',
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: Colors.black54,
+              color: theme.colorScheme.onSurfaceVariant,
               fontWeight: FontWeight.w500,
             ),
           ),

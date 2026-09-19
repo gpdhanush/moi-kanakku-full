@@ -44,7 +44,9 @@ class HomeGreetingHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final primary = Theme.of(context).colorScheme.primary;
+    final theme = Theme.of(context);
+    final primary = theme.colorScheme.primary;
+    final isDark = theme.brightness == Brightness.dark;
 
     return Consumer2<UserProvider, LanguageProvider>(
       builder: (context, userProvider, languageProvider, _) {
@@ -66,16 +68,24 @@ class HomeGreetingHeader extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(16, 14, 14, 14),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(16),
-              color: Colors.white,
-              border: Border.all(color: primary.withValues(alpha: 0.14)),
+              color: isDark ? AppColors.darkSurface : Colors.white,
+              border: Border.all(
+                color: isDark
+                    ? AppColors.darkBorder
+                    : primary.withValues(alpha: 0.14),
+              ),
               boxShadow: [
                 BoxShadow(
-                  color: primary.withValues(alpha: 0.08),
+                  color: isDark
+                      ? Colors.black.withValues(alpha: 0.18)
+                      : primary.withValues(alpha: 0.08),
                   blurRadius: 18,
                   offset: const Offset(0, 8),
                 ),
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.03),
+                  color: isDark
+                      ? Colors.black.withValues(alpha: 0.08)
+                      : Colors.black.withValues(alpha: 0.03),
                   blurRadius: 4,
                   offset: const Offset(0, 1),
                 ),

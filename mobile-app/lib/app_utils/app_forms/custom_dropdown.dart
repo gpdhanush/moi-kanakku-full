@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
+import 'package:moi/app_themes/index.dart';
 
 import 'field_label.dart';
 import 'mic_icon_widget.dart';
@@ -225,8 +226,8 @@ class _CustomDropdownState extends State<CustomDropdown> {
                             height: 14,
                             child: HugeIcon(
                               icon: widget.prefixIcon!,
-                              color: widget.iconColor ??
-                                  theme.colorScheme.primary,
+                              color:
+                                  widget.iconColor ?? theme.colorScheme.primary,
                               size: 14,
                               strokeWidth: 1.5,
                             ),
@@ -317,7 +318,11 @@ class _CustomDropdownState extends State<CustomDropdown> {
                 );
               },
               menuStyle: MenuStyle(
-                backgroundColor: const WidgetStatePropertyAll(Colors.white),
+                backgroundColor: WidgetStatePropertyAll(
+                  Theme.of(context).brightness == Brightness.dark
+                      ? AppColors.darkSurface
+                      : AppColors.lightSurface,
+                ),
                 padding: const WidgetStatePropertyAll(EdgeInsets.zero),
                 elevation: const WidgetStatePropertyAll(15),
                 visualDensity: VisualDensity.adaptivePlatformDensity,

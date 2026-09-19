@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:image_cropper/image_cropper.dart';
@@ -70,8 +69,9 @@ class _AddEditUpcomingFunctionState extends State<AddEditUpcomingFunction> {
         _selectedDate = AppDatePicker.parseDisplay(function.functionDate);
       } catch (_) {
         try {
-          _selectedDate =
-              DateFormat('dd-MMM-yyyy').parse(function.functionDate);
+          _selectedDate = DateFormat(
+            'dd-MMM-yyyy',
+          ).parse(function.functionDate);
         } catch (_) {
           _selectedDate = DateTime.now();
         }
@@ -109,9 +109,10 @@ class _AddEditUpcomingFunctionState extends State<AddEditUpcomingFunction> {
 
         return Scaffold(
           backgroundColor: AppColors.background,
-          appBar: _FormAppHeader(
+          appBar: MoiFlowAppHeader(
             title: headerTitle.toUpperCase(),
             onBack: () => Navigator.pop(context),
+            accent: primary,
           ),
           body: Column(
             children: [
@@ -129,72 +130,64 @@ class _AddEditUpcomingFunctionState extends State<AddEditUpcomingFunction> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _FormSectionCard(
-                          children: [
-                            _buildTextFormWidget(
-                              title: languageProvider.tr(
-                                'upcomingFunctions.functionName',
-                              ),
-                              controller: _titleController,
-                              required: true,
-                              enableMic: true,
-                              maxLength: 120,
-                              validator: _mandatoryValidator(
-                                languageProvider.tr(
-                                  'upcomingFunctions.functionName',
-                                ),
-                                languageProvider,
-                              ),
-                              onSaved: (value) => _requestModel.title = value,
+                        _buildTextFormWidget(
+                          title: languageProvider.tr(
+                            'upcomingFunctions.functionName',
+                          ),
+                          controller: _titleController,
+                          required: true,
+                          enableMic: true,
+                          maxLength: 120,
+                          validator: _mandatoryValidator(
+                            languageProvider.tr(
+                              'upcomingFunctions.functionName',
                             ),
-                            const SizedBox(height: AppSpacing.md),
-                            _buildTextFormWidget(
-                              title: languageProvider.tr(
-                                'upcomingFunctions.functionDate',
-                              ),
-                              controller: _dateController,
-                              required: true,
-                              focusNode: AlwaysDisabledFocusNode(),
-                              onTap: () => _selectDate(context),
-                              validator: _mandatoryValidator(
-                                languageProvider.tr(
-                                  'upcomingFunctions.functionDate',
-                                ),
-                                languageProvider,
-                              ),
-                              onSaved: (value) =>
-                                  _requestModel.functionDate = value,
+                            languageProvider,
+                          ),
+                          onSaved: (value) => _requestModel.title = value,
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                        _buildTextFormWidget(
+                          title: languageProvider.tr(
+                            'upcomingFunctions.functionDate',
+                          ),
+                          controller: _dateController,
+                          required: true,
+                          focusNode: AlwaysDisabledFocusNode(),
+                          onTap: () => _selectDate(context),
+                          validator: _mandatoryValidator(
+                            languageProvider.tr(
+                              'upcomingFunctions.functionDate',
                             ),
-                            const SizedBox(height: AppSpacing.md),
-                            _buildTextFormWidget(
-                              title: languageProvider.tr(
-                                'upcomingFunctions.location',
-                              ),
-                              controller: _locationController,
-                              required: true,
-                              enableMic: true,
-                              maxLength: 150,
-                              validator: _mandatoryValidator(
-                                languageProvider.tr(
-                                  'upcomingFunctions.location',
-                                ),
-                                languageProvider,
-                              ),
-                              onSaved: (value) =>
-                                  _requestModel.location = value,
-                            ),
-                            const SizedBox(height: AppSpacing.md),
-                            _buildTextFormWidget(
-                              title: languageProvider.tr(
-                                'upcomingFunctions.description',
-                              ),
-                              controller: _descriptionController,
-                              enableMic: true,
-                              maxLines: 4,
-                              onSaved: (value) =>
-                                  _requestModel.description = value,
-                            ),
-                          ],
+                            languageProvider,
+                          ),
+                          onSaved: (value) =>
+                              _requestModel.functionDate = value,
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                        _buildTextFormWidget(
+                          title: languageProvider.tr(
+                            'upcomingFunctions.location',
+                          ),
+                          controller: _locationController,
+                          required: true,
+                          enableMic: true,
+                          maxLength: 150,
+                          validator: _mandatoryValidator(
+                            languageProvider.tr('upcomingFunctions.location'),
+                            languageProvider,
+                          ),
+                          onSaved: (value) => _requestModel.location = value,
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                        _buildTextFormWidget(
+                          title: languageProvider.tr(
+                            'upcomingFunctions.description',
+                          ),
+                          controller: _descriptionController,
+                          enableMic: true,
+                          maxLines: 4,
+                          onSaved: (value) => _requestModel.description = value,
                         ),
                         const SizedBox(height: AppSpacing.md),
                         _buildImageUploadWidget(primary, languageProvider),
@@ -212,7 +205,7 @@ class _AddEditUpcomingFunctionState extends State<AddEditUpcomingFunction> {
                     AppSpacing.page,
                     AppSpacing.md,
                   ),
-                  child: _PrimaryActionButton(
+                  child: AppButton(
                     title: isEditing
                         ? languageProvider.tr('common.update')
                         : languageProvider.tr('common.save'),
@@ -275,20 +268,22 @@ class _AddEditUpcomingFunctionState extends State<AddEditUpcomingFunction> {
         _existingImageUrl != null ||
         _uploadedImageUrl != null;
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           languageProvider.tr('upcomingFunctions.invitation'),
           style: AppTypography.label.copyWith(
-            color: AppColors.textPrimary,
+            color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
             fontSize: 14,
             fontWeight: FontWeight.w700,
           ),
         ),
         const SizedBox(height: AppSpacing.sm),
         Material(
-          color: Colors.white,
+          color: isDark ? AppColors.darkSurface : Colors.white,
           borderRadius: BorderRadius.circular(16),
           child: InkWell(
             onTap: hasImage ? _showImageOptions : _showImagePickerOptions,
@@ -297,9 +292,20 @@ class _AddEditUpcomingFunctionState extends State<AddEditUpcomingFunction> {
               height: 200,
               width: double.infinity,
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: isDark ? AppColors.darkSurface : Colors.white,
                 borderRadius: BorderRadius.circular(16),
-                boxShadow: AppShadows.soft,
+                border: Border.all(
+                  color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                ),
+                boxShadow: isDark
+                    ? [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.16),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ]
+                    : AppShadows.soft,
               ),
               child: hasImage
                   ? Stack(
@@ -317,7 +323,7 @@ class _AddEditUpcomingFunctionState extends State<AddEditUpcomingFunction> {
                               : (_existingImageUrl != null &&
                                     _existingImageUrl!.isNotEmpty)
                               ? MoiNetworkImage(
-                      url: _existingImageUrl!,
+                                  url: _existingImageUrl!,
                                   fit: BoxFit.cover,
                                   width: double.infinity,
                                   height: double.infinity,
@@ -683,10 +689,10 @@ class _AddEditUpcomingFunctionState extends State<AddEditUpcomingFunction> {
       final params = {'userId': userId, 'path': 'upcoming-function'};
       final response = await _upcomingFunctionServices
           .uploadUpcomingFunctionImage(
-        params,
-        imageFile.path,
-        showLoading: false,
-      );
+            params,
+            imageFile.path,
+            showLoading: false,
+          );
 
       if (response != null && response['responseType'] == 'S') {
         String uploadedUrl = '';
@@ -729,212 +735,5 @@ class _AddEditUpcomingFunctionState extends State<AddEditUpcomingFunction> {
         return inputDate;
       }
     }
-  }
-}
-
-class _FormAppHeader extends StatelessWidget implements PreferredSizeWidget {
-  final String title;
-  final VoidCallback onBack;
-
-  const _FormAppHeader({required this.title, required this.onBack});
-
-  @override
-  Size get preferredSize => const Size.fromHeight(72);
-
-  @override
-  Widget build(BuildContext context) {
-    final primary = Theme.of(context).colorScheme.primary;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return AppBar(
-      toolbarHeight: preferredSize.height,
-      elevation: 0,
-      scrolledUnderElevation: 0,
-      surfaceTintColor: Colors.transparent,
-      backgroundColor: Colors.transparent,
-      centerTitle: true,
-      automaticallyImplyLeading: false,
-      titleSpacing: 0,
-      systemOverlayStyle: SystemUiOverlayStyle.light.copyWith(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
-        statusBarBrightness: Brightness.dark,
-        systemNavigationBarColor: isDark ? Colors.black : Colors.white,
-        systemNavigationBarIconBrightness:
-            isDark ? Brightness.light : Brightness.dark,
-      ),
-      flexibleSpace: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              primary,
-              AppColors.deepenAccent(primary, amount: 0.35),
-            ],
-          ),
-          borderRadius: const BorderRadius.only(
-            bottomLeft: Radius.circular(22),
-            bottomRight: Radius.circular(22),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: primary.withValues(alpha: 0.28),
-              blurRadius: 16,
-              offset: const Offset(0, 6),
-            ),
-          ],
-        ),
-        child: Stack(
-          children: [
-            Positioned(
-              top: -28,
-              right: -18,
-              child: Container(
-                width: 100,
-                height: 100,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withValues(alpha: 0.08),
-                ),
-              ),
-            ),
-            Positioned(
-              bottom: -36,
-              left: 48,
-              child: Container(
-                width: 90,
-                height: 90,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withValues(alpha: 0.06),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(22),
-          bottomRight: Radius.circular(22),
-        ),
-      ),
-      leadingWidth: 54,
-      leading: Padding(
-        padding: const EdgeInsets.only(left: 10),
-        child: Center(
-          child: Material(
-            color: Colors.white.withValues(alpha: 0.14),
-            shape: const CircleBorder(),
-            clipBehavior: Clip.antiAlias,
-            child: InkWell(
-              onTap: onBack,
-              customBorder: const CircleBorder(),
-              child: const SizedBox(
-                width: 42,
-                height: 42,
-                child: Center(
-                  child: HugeIcon(
-                    icon: HugeIcons.strokeRoundedArrowLeft01,
-                    color: Colors.white,
-                    size: 22,
-                    strokeWidth: 1.9,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-      title: Text(
-        title,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        textAlign: TextAlign.center,
-        style: AppTypography.sectionTitle.copyWith(
-          color: Colors.white,
-          fontSize: 16,
-          fontWeight: FontWeight.w700,
-          letterSpacing: -0.2,
-        ),
-      ),
-      actions: const [SizedBox(width: 54)],
-    );
-  }
-}
-
-class _FormSectionCard extends StatelessWidget {
-  final List<Widget> children;
-
-  const _FormSectionCard({required this.children});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(14, 16, 14, 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: AppShadows.soft,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: children,
-      ),
-    );
-  }
-}
-
-class _PrimaryActionButton extends StatelessWidget {
-  final String title;
-  final VoidCallback onPressed;
-
-  const _PrimaryActionButton({required this.title, required this.onPressed});
-
-  @override
-  Widget build(BuildContext context) {
-    final primary = Theme.of(context).colorScheme.primary;
-
-    return Material(
-      color: Colors.transparent,
-      borderRadius: BorderRadius.circular(14),
-      child: InkWell(
-        onTap: onPressed,
-        borderRadius: BorderRadius.circular(14),
-        child: Ink(
-          height: 52,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(14),
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                primary,
-                AppColors.deepenAccent(primary, amount: 0.28),
-              ],
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: primary.withValues(alpha: 0.28),
-                blurRadius: 14,
-                offset: const Offset(0, 6),
-              ),
-            ],
-          ),
-          child: Center(
-            child: Text(
-              title,
-              style: AppTypography.label.copyWith(
-                color: Colors.white,
-                fontSize: 15,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
   }
 }

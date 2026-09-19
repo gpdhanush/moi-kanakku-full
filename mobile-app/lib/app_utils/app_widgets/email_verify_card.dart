@@ -82,6 +82,14 @@ class _EmailVerifyCardState extends State<EmailVerifyCard> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final surface = isDark ? AppColors.darkSurface : Colors.white;
+    final textPrimary = isDark
+        ? AppColors.darkTextPrimary
+        : AppColors.textPrimary;
+    final textSecondary = isDark
+        ? AppColors.darkTextSecondary
+        : AppColors.textSecondary;
 
     return Consumer2<UserProvider, LanguageProvider>(
       builder: (context, userProvider, languageProvider, _) {
@@ -99,7 +107,7 @@ class _EmailVerifyCardState extends State<EmailVerifyCard> {
           width: double.infinity,
           padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: surface,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
               color: colorScheme.primary.withValues(alpha: 0.18),
@@ -136,7 +144,7 @@ class _EmailVerifyCardState extends State<EmailVerifyCard> {
                           style: AppTypography.label.copyWith(
                             fontWeight: FontWeight.w700,
                             fontSize: 14,
-                            color: AppColors.textPrimary,
+                            color: textPrimary,
                           ),
                         ),
                         if (email.isNotEmpty) ...[
@@ -145,7 +153,7 @@ class _EmailVerifyCardState extends State<EmailVerifyCard> {
                             email,
                             style: AppTypography.body.copyWith(
                               fontSize: 12,
-                              color: AppColors.textSecondary,
+                              color: textSecondary,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -162,7 +170,7 @@ class _EmailVerifyCardState extends State<EmailVerifyCard> {
                 style: AppTypography.body.copyWith(
                   fontSize: 13,
                   height: 1.4,
-                  color: AppColors.textSecondary,
+                  color: textSecondary,
                 ),
               ),
               const SizedBox(height: 12),

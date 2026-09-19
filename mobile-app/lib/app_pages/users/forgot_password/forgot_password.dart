@@ -35,15 +35,23 @@ class _ForgotPasswordState extends State<ForgotPassword> {
     final isKeyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
     final media = MediaQuery.of(context);
 
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle.light.copyWith(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
-        statusBarBrightness: Brightness.dark,
-      ),
+      value:
+          (isDarkMode ? SystemUiOverlayStyle.dark : SystemUiOverlayStyle.light)
+              .copyWith(
+                statusBarColor: Colors.transparent,
+                statusBarIconBrightness: isDarkMode
+                    ? Brightness.light
+                    : Brightness.dark,
+                statusBarBrightness: isDarkMode
+                    ? Brightness.dark
+                    : Brightness.light,
+              ),
       child: Scaffold(
         resizeToAvoidBottomInset: true,
-        backgroundColor: Colors.grey.shade50,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         body: Column(
           children: [
             Expanded(
@@ -173,7 +181,12 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                 child: const SizedBox(
                   width: 42,
                   height: 42,
-                  child: HugeIcon(icon: HugeIcons.strokeRoundedArrowLeft01, size: 18, color: Colors.white, strokeWidth: 1.8),
+                  child: HugeIcon(
+                    icon: HugeIcons.strokeRoundedArrowLeft01,
+                    size: 18,
+                    color: Colors.white,
+                    strokeWidth: 1.8,
+                  ),
                 ),
               ),
             ),
@@ -205,6 +218,7 @@ class _ForgotPasswordState extends State<ForgotPassword> {
               fontWeight: FontWeight.bold,
               fontSize: 24.0,
               fontFamily: 'Inter',
+              color: theme.colorScheme.onSurface,
             ),
           ),
           const SizedBox(height: 8),
@@ -212,7 +226,7 @@ class _ForgotPasswordState extends State<ForgotPassword> {
             languageProvider.tr('auth.forgotSubtitle'),
             textAlign: TextAlign.center,
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: Colors.black87,
+              color: theme.colorScheme.onSurfaceVariant,
               fontWeight: FontWeight.normal,
             ),
           ),
@@ -235,7 +249,7 @@ class _ForgotPasswordState extends State<ForgotPassword> {
           Text(
             '${languageProvider.tr('auth.rememberPassword')} ',
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: Colors.black54,
+              color: theme.colorScheme.onSurfaceVariant,
               fontWeight: FontWeight.w500,
             ),
           ),

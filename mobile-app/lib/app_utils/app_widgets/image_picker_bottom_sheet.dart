@@ -56,6 +56,7 @@ class ImagePickerBottomSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
     final options = <Widget>[];
 
     if (showDelete) {
@@ -64,7 +65,7 @@ class ImagePickerBottomSheet extends StatelessWidget {
           context,
           icon: HugeIcons.strokeRoundedDelete02,
           label: deleteLabel,
-          color: Colors.redAccent,
+          color: colorScheme.error,
           onTap: () => Navigator.pop(context, ImagePickerAction.delete),
         ),
       );
@@ -97,11 +98,12 @@ class ImagePickerBottomSheet extends StatelessWidget {
         constraints: const BoxConstraints(minHeight: 360),
         padding: const EdgeInsets.fromLTRB(20, 18, 20, 30),
         decoration: BoxDecoration(
-          color: colorScheme.surface,
+          color: colorScheme.surfaceContainerHigh,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(5)),
+          border: Border.all(color: colorScheme.outlineVariant),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.16),
+              color: colorScheme.shadow.withValues(alpha: 0.16),
               blurRadius: 22,
               offset: const Offset(0, -5),
             ),
@@ -140,8 +142,9 @@ class ImagePickerBottomSheet extends StatelessWidget {
                 Expanded(
                   child: Text(
                     title,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    style: textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w800,
+                      color: colorScheme.onSurface,
                     ),
                   ),
                 ),
@@ -154,9 +157,9 @@ class ImagePickerBottomSheet extends StatelessWidget {
                 child: Text(
                   permissionsMessage,
                   textAlign: TextAlign.center,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodyMedium?.copyWith(color: colorScheme.error),
+                  style: textTheme.bodyMedium?.copyWith(
+                    color: colorScheme.error,
+                  ),
                 ),
               )
             else
@@ -174,6 +177,8 @@ class ImagePickerBottomSheet extends StatelessWidget {
     required Color color,
     required VoidCallback onTap,
   }) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: Material(
@@ -196,7 +201,7 @@ class ImagePickerBottomSheet extends StatelessWidget {
                   alignment: Alignment.center,
                   child: HugeIcon(
                     icon: icon,
-                    color: Colors.white,
+                    color: colorScheme.onPrimary,
                     size: 20,
                     strokeWidth: 1.8,
                   ),
@@ -207,6 +212,7 @@ class ImagePickerBottomSheet extends StatelessWidget {
                     label,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       fontWeight: FontWeight.w700,
+                      color: colorScheme.onSurface,
                     ),
                   ),
                 ),

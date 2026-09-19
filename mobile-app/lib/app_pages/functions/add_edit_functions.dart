@@ -102,8 +102,9 @@ class _AddEditFunctionsState extends State<AddEditFunctions> {
 
         return Scaffold(
           backgroundColor: AppColors.background,
-          appBar: _FormAppHeader(
+          appBar: MoiFlowAppHeader(
             title: headerTitle.toUpperCase(),
+            accent: primary,
             onBack: () => Navigator.pop(context),
           ),
           body: Column(
@@ -122,56 +123,48 @@ class _AddEditFunctionsState extends State<AddEditFunctions> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _FormSectionCard(
-                          children: [
-                            _buildTextFormWidget(
-                              title: languageProvider.tr(
-                                'functions.functionName',
-                              ),
-                              controller: _functionNameController,
-                              required: true,
-                              enableMic: true,
-                              maxLength: 100,
-                              inputFormatters: _nameInputFormatters(),
-                              validator: _mandatoryValidator(
-                                languageProvider.tr('functions.functionName'),
-                                languageProvider,
-                              ),
-                              onSaved: (value) =>
-                                  _requestModel.functionName = value,
-                            ),
-                            const SizedBox(height: AppSpacing.md),
-                            _buildTextFormWidget(
-                              title: languageProvider.tr('functions.date'),
-                              controller: _dateController,
-                              required: true,
-                              focusNode: AlwaysDisabledFocusNode(),
-                              onTap: () => _selectDate(context),
-                              validator: _mandatoryValidator(
-                                languageProvider.tr('functions.date'),
-                                languageProvider,
-                              ),
-                              onSaved: (value) => _requestModel.date = value,
-                            ),
-                            const SizedBox(height: AppSpacing.md),
-                            _buildTextFormWidget(
-                              title: languageProvider.tr('functions.location'),
-                              enableMic: true,
-                              controller: _placeController,
-                              inputFormatters: _nameInputFormatters(),
-                              onSaved: (value) =>
-                                  _requestModel.nativePlace = value,
-                            ),
-                            const SizedBox(height: AppSpacing.md),
-                            _buildTextFormWidget(
-                              title: languageProvider.tr('functions.notes'),
-                              enableMic: true,
-                              controller: _notesController,
-                              inputFormatters: _nameInputFormatters(),
-                              onSaved: (value) =>
-                                  _requestModel.nativePlace = value,
-                            ),
-                          ],
+                        _buildTextFormWidget(
+                          title: languageProvider.tr('functions.functionName'),
+                          controller: _functionNameController,
+                          required: true,
+                          enableMic: true,
+                          maxLength: 100,
+                          inputFormatters: _nameInputFormatters(),
+                          validator: _mandatoryValidator(
+                            languageProvider.tr('functions.functionName'),
+                            languageProvider,
+                          ),
+                          onSaved: (value) =>
+                              _requestModel.functionName = value,
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                        _buildTextFormWidget(
+                          title: languageProvider.tr('functions.date'),
+                          controller: _dateController,
+                          required: true,
+                          focusNode: AlwaysDisabledFocusNode(),
+                          onTap: () => _selectDate(context),
+                          validator: _mandatoryValidator(
+                            languageProvider.tr('functions.date'),
+                            languageProvider,
+                          ),
+                          onSaved: (value) => _requestModel.date = value,
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                        _buildTextFormWidget(
+                          title: languageProvider.tr('functions.location'),
+                          enableMic: true,
+                          controller: _placeController,
+                          inputFormatters: _nameInputFormatters(),
+                          onSaved: (value) => _requestModel.nativePlace = value,
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                        _buildTextFormWidget(
+                          title: languageProvider.tr('functions.notes'),
+                          enableMic: true,
+                          controller: _notesController,
+                          inputFormatters: _nameInputFormatters(),
+                          onSaved: (value) => _requestModel.nativePlace = value,
                         ),
                         const SizedBox(height: AppSpacing.md),
                         _buildImageUploadWidget(primary),
@@ -189,7 +182,7 @@ class _AddEditFunctionsState extends State<AddEditFunctions> {
                     AppSpacing.page,
                     AppSpacing.md,
                   ),
-                  child: _PrimaryActionButton(
+                  child: AppButton(
                     title: isEditing
                         ? languageProvider.tr('home.updateFunction')
                         : languageProvider.tr('common.save'),
@@ -344,6 +337,8 @@ class _AddEditFunctionsState extends State<AddEditFunctions> {
       context,
       listen: false,
     );
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final bool hasImage =
         _functionImage != null ||
         _existingImageUrl != null ||
@@ -355,14 +350,14 @@ class _AddEditFunctionsState extends State<AddEditFunctions> {
         Text(
           languageProvider.tr('functions.image'),
           style: AppTypography.label.copyWith(
-            color: AppColors.textPrimary,
+            color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
             fontSize: 14,
             fontWeight: FontWeight.w700,
           ),
         ),
         const SizedBox(height: AppSpacing.sm),
         Material(
-          color: Colors.white,
+          color: Colors.transparent,
           borderRadius: BorderRadius.circular(16),
           child: InkWell(
             onTap: hasImage ? _showImageOptions : _showImagePickerOptions,
@@ -371,9 +366,11 @@ class _AddEditFunctionsState extends State<AddEditFunctions> {
               height: 200,
               width: double.infinity,
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: isDark ? AppColors.darkSurface : Colors.white,
                 borderRadius: BorderRadius.circular(16),
-                boxShadow: AppShadows.soft,
+                border: Border.all(
+                  color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                ),
               ),
               child: hasImage
                   ? Stack(
@@ -391,7 +388,7 @@ class _AddEditFunctionsState extends State<AddEditFunctions> {
                               : (_existingImageUrl != null &&
                                     _existingImageUrl!.isNotEmpty)
                               ? MoiNetworkImage(
-                      url: _existingImageUrl!,
+                                  url: _existingImageUrl!,
                                   fit: BoxFit.cover,
                                   width: double.infinity,
                                   height: double.infinity,
@@ -430,6 +427,8 @@ class _AddEditFunctionsState extends State<AddEditFunctions> {
   }
 
   Widget _buildPlaceholder(Color primary) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -438,7 +437,9 @@ class _AddEditFunctionsState extends State<AddEditFunctions> {
             width: 56,
             height: 56,
             decoration: BoxDecoration(
-              color: primary.withValues(alpha: 0.1),
+              color: isDark
+                  ? primary.withValues(alpha: 0.18)
+                  : primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(16),
             ),
             alignment: Alignment.center,
@@ -453,7 +454,9 @@ class _AddEditFunctionsState extends State<AddEditFunctions> {
           Text(
             context.read<LanguageProvider>().tr('functions.selectImage'),
             style: AppTypography.body.copyWith(
-              color: AppColors.textSecondary,
+              color: isDark
+                  ? AppColors.darkTextSecondary
+                  : AppColors.textSecondary,
               fontSize: 13,
               fontWeight: FontWeight.w600,
             ),
@@ -722,184 +725,5 @@ class _AddEditFunctionsState extends State<AddEditFunctions> {
     _placeController.dispose();
     _notesController.dispose();
     super.dispose();
-  }
-}
-
-class _FormAppHeader extends StatelessWidget implements PreferredSizeWidget {
-  final String title;
-  final VoidCallback onBack;
-
-  const _FormAppHeader({required this.title, required this.onBack});
-
-  @override
-  Size get preferredSize => const Size.fromHeight(72);
-
-  @override
-  Widget build(BuildContext context) {
-    final primary = Theme.of(context).colorScheme.primary;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return AppBar(
-      toolbarHeight: preferredSize.height,
-      elevation: 0,
-      scrolledUnderElevation: 0,
-      surfaceTintColor: Colors.transparent,
-      backgroundColor: Colors.transparent,
-      centerTitle: true,
-      automaticallyImplyLeading: false,
-      titleSpacing: 0,
-      systemOverlayStyle: SystemUiOverlayStyle.light.copyWith(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
-        statusBarBrightness: Brightness.dark,
-        systemNavigationBarColor: isDark ? Colors.black : Colors.white,
-        systemNavigationBarIconBrightness:
-            isDark ? Brightness.light : Brightness.dark,
-      ),
-      flexibleSpace: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              primary,
-              AppColors.deepenAccent(primary, amount: 0.35),
-            ],
-          ),
-          borderRadius: const BorderRadius.only(
-            bottomLeft: Radius.circular(22),
-            bottomRight: Radius.circular(22),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: primary.withValues(alpha: 0.28),
-              blurRadius: 16,
-              offset: const Offset(0, 6),
-            ),
-          ],
-        ),
-      ),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(22),
-          bottomRight: Radius.circular(22),
-        ),
-      ),
-      leadingWidth: 54,
-      leading: Padding(
-        padding: const EdgeInsets.only(left: 10),
-        child: Center(
-          child: Material(
-            color: Colors.white.withValues(alpha: 0.14),
-            shape: const CircleBorder(),
-            clipBehavior: Clip.antiAlias,
-            child: InkWell(
-              onTap: onBack,
-              customBorder: const CircleBorder(),
-              child: const SizedBox(
-                width: 42,
-                height: 42,
-                child: Center(
-                  child: HugeIcon(
-                    icon: HugeIcons.strokeRoundedArrowLeft01,
-                    color: Colors.white,
-                    size: 22,
-                    strokeWidth: 1.9,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-      title: Text(
-        title,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        textAlign: TextAlign.center,
-        style: AppTypography.sectionTitle.copyWith(
-          color: Colors.white,
-          fontSize: 16,
-          fontWeight: FontWeight.w700,
-          letterSpacing: -0.2,
-        ),
-      ),
-      actions: const [SizedBox(width: 54)],
-    );
-  }
-}
-
-class _FormSectionCard extends StatelessWidget {
-  final List<Widget> children;
-
-  const _FormSectionCard({required this.children});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(14, 16, 14, 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: AppShadows.soft,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: children,
-      ),
-    );
-  }
-}
-
-class _PrimaryActionButton extends StatelessWidget {
-  final String title;
-  final VoidCallback onPressed;
-
-  const _PrimaryActionButton({required this.title, required this.onPressed});
-
-  @override
-  Widget build(BuildContext context) {
-    final primary = Theme.of(context).colorScheme.primary;
-
-    return Material(
-      color: Colors.transparent,
-      borderRadius: BorderRadius.circular(14),
-      child: InkWell(
-        onTap: onPressed,
-        borderRadius: BorderRadius.circular(14),
-        child: Ink(
-          height: 52,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(14),
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                primary,
-                AppColors.deepenAccent(primary, amount: 0.28),
-              ],
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: primary.withValues(alpha: 0.28),
-                blurRadius: 14,
-                offset: const Offset(0, 6),
-              ),
-            ],
-          ),
-          child: Center(
-            child: Text(
-              title,
-              style: AppTypography.label.copyWith(
-                color: Colors.white,
-                fontSize: 15,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
   }
 }

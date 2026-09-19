@@ -76,24 +76,35 @@ class _SignupState extends State<Signup> with SingleTickerProviderStateMixin {
     final primary = Theme.of(context).colorScheme.primary;
     final media = MediaQuery.of(context);
     final keyboardOpen = media.viewInsets.bottom > 0;
-    final heroHeight = (media.size.height * (keyboardOpen ? 0.18 : 0.34))
-        .clamp(keyboardOpen ? 120.0 : 200.0, keyboardOpen ? 160.0 : 300.0);
+    final heroHeight = (media.size.height * (keyboardOpen ? 0.18 : 0.34)).clamp(
+      keyboardOpen ? 120.0 : 200.0,
+      keyboardOpen ? 160.0 : 300.0,
+    );
+
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle.light.copyWith(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
-        statusBarBrightness: Brightness.dark,
-      ),
+      value:
+          (isDarkMode ? SystemUiOverlayStyle.dark : SystemUiOverlayStyle.light)
+              .copyWith(
+                statusBarColor: Colors.transparent,
+                statusBarIconBrightness: isDarkMode
+                    ? Brightness.light
+                    : Brightness.dark,
+                statusBarBrightness: isDarkMode
+                    ? Brightness.dark
+                    : Brightness.light,
+              ),
       child: Scaffold(
         resizeToAvoidBottomInset: true,
-        backgroundColor: AppColors.white,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         body: Column(
           children: [
             AuthImageHero(
               height: heroHeight,
               imageAsset: AppImages.signupHeroImage,
               enableSnow: false,
+              fadeColor: Theme.of(context).scaffoldBackgroundColor,
             ),
             Expanded(
               child: FadeTransition(
@@ -118,13 +129,19 @@ class _SignupState extends State<Signup> with SingleTickerProviderStateMixin {
                           Text(
                             languageProvider.tr('auth.createAccountTitle'),
                             textAlign: TextAlign.center,
-                            style: AppTypography.authTitle,
+                            style: AppTypography.authTitle.copyWith(
+                              color: Theme.of(context).colorScheme.onSurface,
+                            ),
                           ),
                           const SizedBox(height: 8),
                           Text(
                             languageProvider.tr('auth.createAccountSubtitle'),
                             textAlign: TextAlign.center,
-                            style: AppTypography.authSubtitle,
+                            style: AppTypography.authSubtitle.copyWith(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
+                            ),
                           ),
                           const SizedBox(height: AppSpacing.lg),
                           TextFormWidget(
@@ -148,7 +165,9 @@ class _SignupState extends State<Signup> with SingleTickerProviderStateMixin {
                                 );
                               }
                               if (value.toString().length < 3) {
-                                return languageProvider.tr('auth.nameMinLength');
+                                return languageProvider.tr(
+                                  'auth.nameMinLength',
+                                );
                               }
                               return null;
                             },
@@ -207,8 +226,7 @@ class _SignupState extends State<Signup> with SingleTickerProviderStateMixin {
                                   textCapitalization:
                                       TextCapitalization.characters,
                                   onSaved: (value) {
-                                    requestModel.city =
-                                        value.toString().trim();
+                                    requestModel.city = value.toString().trim();
                                   },
                                   validator: (value) {
                                     if (value.toString().trim().isEmpty) {
@@ -317,8 +335,7 @@ class _SignupState extends State<Signup> with SingleTickerProviderStateMixin {
       requestModel.fcm_token = requestModel.fcm_token ?? '';
     }
     try {
-      if (requestModel.fcm_token == null ||
-          requestModel.fcm_token!.isEmpty) {
+      if (requestModel.fcm_token == null || requestModel.fcm_token!.isEmpty) {
         final fcmToken = await FirebaseMessaging.instance.getToken();
         if (fcmToken != null && fcmToken.isNotEmpty) {
           await secureStorage.saveNotificationToken(fcmToken);
@@ -390,14 +407,16 @@ class _SignupPrimaryButton extends StatelessWidget {
                       height: 22,
                       child: CircularProgressIndicator(
                         strokeWidth: 2.4,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          AppColors.charcoal,
+                        ),
                       ),
                     )
                   : Text(
                       key: const ValueKey('label'),
                       title,
                       style: AppTypography.label.copyWith(
-                        color: Colors.white,
+                        color: AppColors.charcoal,
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
                       ),

@@ -4,18 +4,23 @@ import 'package:flutter/material.dart';
 ///
 /// Lime is an accent only — never a full-screen background.
 /// Use [of] / [forBrightness] for light/dark semantic surfaces and text.
-class AppColors {
-  AppColors._();
+abstract final class AppColors {
+  const AppColors._();
 
-  // ── Brand (shared) ──────────────────────────────────────────────
-  static const Color primary = Color(0xFFB7E34A);
-  static const Color primaryDark = Color(0xFF8BCF22);
-  static const Color primaryLight = Color(0xFFEEF8D7);
+  // Brand palette from the requested Moi Kanakku design spec.
+  static const Color accent = Color(0xFFB7E34A);
+  static const Color accentStrong = Color(0xFF8BCF22);
+  static const Color accentDark = Color(0xFF99D62F);
+  static const Color accentSoft = Color(0xFFEEF8D7);
+
+  static const Color primary = accent;
+  static const Color primaryDark = accentStrong;
+  static const Color primaryLight = accentSoft;
   static const Color charcoal = Color(0xFF171A1C);
   static const Color warmCream = Color(0xFFF8F6F0);
   static const Color saffronGold = Color(0xFFF2B84B);
-  static const Color lightPrimary = charcoal;
-  static const Color darkPrimary = Color(0xFFF4F6F2);
+  static const Color lightPrimary = accent;
+  static const Color darkPrimary = accent;
 
   /// Locked brand seed — replaces the former multi-accent picker.
   static const Color brandSeed = primary;
@@ -28,12 +33,13 @@ class AppColors {
   static const Color brandBlue = Color(0xFF4285F4);
   static const Color brandGreen = primary;
 
-  // ── Light palette ───────────────────────────────────────────────
-  static const Color lightBackground = warmCream;
+  // Light palette
+  static const Color lightBackground = Color(0xFFF8F6F0);
   static const Color lightSurface = Color(0xFFFFFFFF);
-  static const Color lightSurfaceVariant = Color(0xFFF1F2ED);
+  static const Color lightSurfaceSoft = Color(0xFFF1F2ED);
+  static const Color lightSurfaceVariant = lightSurfaceSoft;
   static const Color lightSurfaceElevated = Color(0xFFFFFFFF);
-  static const Color lightTextPrimary = charcoal;
+  static const Color lightTextPrimary = Color(0xFF171A1C);
   static const Color lightTextSecondary = Color(0xFF687078);
   static const Color lightTextMuted = Color(0xFF98A0A5);
   static const Color lightBorder = Color(0xFFE3E5DF);
@@ -45,7 +51,7 @@ class AppColors {
   static const Color lightMoiReceivedSoft = Color(0xFFEEF8D7);
   static const Color lightMoiGivenSoft = Color(0xFFFFF4D9);
 
-  // ── Dark palette ────────────────────────────────────────────────
+  // Dark palette
   static const Color darkBackground = Color(0xFF111315);
   static const Color darkSurface = Color(0xFF191D20);
   static const Color darkSurfaceVariant = Color(0xFF1D2225);
@@ -62,6 +68,14 @@ class AppColors {
   static const Color darkMoiGiven = saffronGold;
   static const Color darkMoiReceivedSoft = Color(0xFF29351A);
   static const Color darkMoiGivenSoft = Color(0xFF3A3018);
+
+  // Brand-level aliases requested in the design system
+  static const Color lightBackgroundBase = lightBackground;
+  static const Color darkBackgroundBase = darkBackground;
+  static const Color lightCard = lightSurface;
+  static const Color darkCard = darkSurface;
+  static const Color lightSurfaceBorder = lightBorder;
+  static const Color darkSurfaceBorder = darkBorder;
 
   /// Financial: Moi Received always uses brand lime.
   static const Color moiReceived = primary;
@@ -251,7 +265,7 @@ class MoiKanakkuColors {
     moiGivenSoft: AppColors.lightMoiGivenSoft,
     iconDefault: AppColors.lightTextSecondary,
     iconActive: AppColors.lightPrimary,
-    onPrimary: AppColors.white,
+    onPrimary: AppColors.charcoal,
   );
 
   static const MoiKanakkuColors dark = MoiKanakkuColors(

@@ -36,7 +36,6 @@ dependencies:
   # FIREBASE PLUGINS
   firebase_core: ^4.15.0
   firebase_crashlytics: ^5.4.0
-  firebase_remote_config: ^6.7.0
   firebase_messaging: ^16.7.0
   flutter_local_notifications: ^22.3.1
   check_disposable_email: ^0.2.1
@@ -59,18 +58,20 @@ dev_dependencies:
 flutter_launcher_icons:
   android: "ic_launcher"
   ios: false
-  image_path: "assets/logo/moi_kanakku.png"
+  image_path: "assets/app-logo/light-logo.png"
   adaptive_icon_background: "#087F5B"
-  adaptive_icon_foreground: "assets/logo/moi_kanakku_foreground.png"
-  adaptive_icon_monochrome: "assets/logo/moi_kanakku_monochrome.png"
+  adaptive_icon_foreground: "assets/app-logo/light-logo.png"
+  adaptive_icon_monochrome: "assets/app-logo/notification-logo.png"
   min_sdk_android: 21
 
 flutter:
   uses-material-design: true
   assets:
     - assets/images/
+    - assets/images/maintainence/
     - assets/images/splash/
     - assets/logo/
+    - assets/app-logo/
     - assets/translations/
     # Needed for PDF rootBundle.load (also registered as NotoSansTamil below).
     - assets/fonts/NotoSansTamil-Regular.ttf
@@ -102,3 +103,7 @@ flutter:
     - family: NotoSansTamil
       fonts:
         - asset: assets/fonts/NotoSansTamil-Regular.ttf
+
+    - family: BonheurRoyale
+      fonts:
+        - asset: assets/fonts/BonheurRoyale-Regular.ttf

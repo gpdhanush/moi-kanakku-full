@@ -30,8 +30,9 @@ class _AllTransactionsPageState extends State<AllTransactionsPage> {
   final AlertServices _alertServices = AlertServices();
   final TextEditingController _searchController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-  final PaginatedListState<Map<String, dynamic>> _paging =
-      PaginatedListState(pageSize: _pageSize);
+  final PaginatedListState<Map<String, dynamic>> _paging = PaginatedListState(
+    pageSize: _pageSize,
+  );
   Timer? _debounce;
   String? _userId;
 
@@ -39,8 +40,7 @@ class _AllTransactionsPageState extends State<AllTransactionsPage> {
   bool get _isGiven => widget.type == 'RETURN';
   bool get _isSearching => _searchController.text.trim().isNotEmpty;
 
-  Color get _accent =>
-      _isReceived ? AppColors.moiReceived : AppColors.moiGiven;
+  Color get _accent => _isReceived ? AppColors.moiReceived : AppColors.moiGiven;
 
   @override
   void initState() {
@@ -325,7 +325,8 @@ class _AllTransactionsPageState extends State<AllTransactionsPage> {
     }
 
     final itemCount =
-        _paging.items.length + (_paging.isLoadingMore || _paging.hasMore ? 1 : 0);
+        _paging.items.length +
+        (_paging.isLoadingMore || _paging.hasMore ? 1 : 0);
 
     return RefreshIndicator(
       color: _accent,
@@ -365,10 +366,8 @@ class _AllTransactionsPageState extends State<AllTransactionsPage> {
           final t = _paging.items[index];
           final type = t['type']?.toString().toUpperCase() ?? '';
           final isInvest = type == 'INVEST';
-          final amount =
-              double.tryParse(t['amount']?.toString() ?? '0') ?? 0;
-          final first =
-              t['person']?['firstName']?.toString().trim() ?? '';
+          final amount = double.tryParse(t['amount']?.toString() ?? '0') ?? 0;
+          final first = t['person']?['firstName']?.toString().trim() ?? '';
           final last =
               t['person']?['lastName']?.toString().trim() ??
               t['person']?['secondName']?.toString().trim() ??
@@ -432,18 +431,16 @@ class _MoiFlowHeader extends StatelessWidget implements PreferredSizeWidget {
         statusBarIconBrightness: Brightness.light,
         statusBarBrightness: Brightness.dark,
         systemNavigationBarColor: isDark ? Colors.black : Colors.white,
-        systemNavigationBarIconBrightness:
-            isDark ? Brightness.light : Brightness.dark,
+        systemNavigationBarIconBrightness: isDark
+            ? Brightness.light
+            : Brightness.dark,
       ),
       flexibleSpace: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              primary,
-              AppColors.deepenAccent(primary, amount: 0.35),
-            ],
+            colors: [primary, AppColors.deepenAccent(primary, amount: 0.35)],
           ),
           borderRadius: const BorderRadius.only(
             bottomLeft: Radius.circular(22),

@@ -48,8 +48,7 @@ class MoiAppHeader extends StatelessWidget implements PreferredSizeWidget {
       builder: (context) {
         final colors = AppColors.of(context);
         final button = Material(
-          color: backgroundColor ??
-              colors.textPrimary.withValues(alpha: 0.06),
+          color: backgroundColor ?? colors.textPrimary.withValues(alpha: 0.06),
           shape: const CircleBorder(),
           clipBehavior: Clip.antiAlias,
           child: InkWell(
@@ -102,8 +101,10 @@ class MoiAppHeader extends StatelessWidget implements PreferredSizeWidget {
                         decoration: BoxDecoration(
                           color: const Color(0xffFF4D4F),
                           borderRadius: BorderRadius.circular(8),
-                          border:
-                              Border.all(color: badgeBorderColor, width: 1.5),
+                          border: Border.all(
+                            color: badgeBorderColor,
+                            width: 1.5,
+                          ),
                         ),
                         child: Text(
                           unreadCount > 99 ? '99+' : '$unreadCount',
@@ -131,7 +132,7 @@ class MoiAppHeader extends StatelessWidget implements PreferredSizeWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final hasSubtitle = subtitle != null && subtitle!.trim().isNotEmpty;
     final accentColor = accent ?? colors.primary;
-    final titleColor = colors.textPrimary;
+    final titleColor = isDark ? colors.textPrimary : AppColors.charcoal;
 
     return AppBar(
       toolbarHeight: preferredSize.height,
@@ -147,8 +148,9 @@ class MoiAppHeader extends StatelessWidget implements PreferredSizeWidget {
         statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
         statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
         systemNavigationBarColor: colors.surface,
-        systemNavigationBarIconBrightness:
-            isDark ? Brightness.light : Brightness.dark,
+        systemNavigationBarIconBrightness: isDark
+            ? Brightness.light
+            : Brightness.dark,
       ),
       flexibleSpace: Container(
         decoration: BoxDecoration(
@@ -241,7 +243,8 @@ class MoiAppHeader extends StatelessWidget implements PreferredSizeWidget {
               ),
             )
           : const SizedBox(width: 54),
-      title: titleWidget ??
+      title:
+          titleWidget ??
           (hasSubtitle
               ? Column(
                   mainAxisSize: MainAxisSize.min,
@@ -252,7 +255,7 @@ class MoiAppHeader extends StatelessWidget implements PreferredSizeWidget {
                       overflow: TextOverflow.ellipsis,
                       textAlign: TextAlign.center,
                       style: AppTypography.sectionTitle.copyWith(
-                        color: Colors.white,
+                        color: titleColor,
                         fontSize: titleFontSize,
                         fontWeight: FontWeight.w700,
                         letterSpacing: -0.2,
@@ -266,7 +269,7 @@ class MoiAppHeader extends StatelessWidget implements PreferredSizeWidget {
                       overflow: TextOverflow.ellipsis,
                       textAlign: TextAlign.center,
                       style: AppTypography.body.copyWith(
-                        color: Colors.white.withValues(alpha: 0.78),
+                        color: titleColor.withValues(alpha: 0.78),
                         fontSize: 11.5,
                         fontWeight: FontWeight.w500,
                       ),
@@ -279,7 +282,7 @@ class MoiAppHeader extends StatelessWidget implements PreferredSizeWidget {
                   overflow: TextOverflow.ellipsis,
                   textAlign: TextAlign.center,
                   style: AppTypography.sectionTitle.copyWith(
-                    color: Colors.white,
+                    color: titleColor,
                     fontSize: titleFontSize,
                     fontWeight: FontWeight.w700,
                     letterSpacing: titleFontSize >= 18 ? -0.3 : -0.2,

@@ -10,7 +10,6 @@ import 'package:moi/app_pages/home_page/widgets/home_moi_overview_card.dart';
 import 'package:moi/app_pages/home_page/widgets/home_section_reveal.dart';
 import 'package:moi/app_pages/home_page/widgets/modern_upgrade_alert.dart';
 import 'package:moi/app_pages/app_alerts/app_alert_dialog.dart';
-import 'package:moi/app_services/app_alert_services.dart';
 import 'package:moi/app_utils/app_widgets/email_verify_card.dart';
 import 'package:moi/app_services/moi_services.dart';
 import 'package:moi/app_services/notification_services.dart';
@@ -161,7 +160,7 @@ class _HomePageState extends State<HomePage> {
           ),
         );
         unawaited(_initializeNotificationPipeline());
-        unawaited(_maybeShowAppAlertToast());
+        unawaited(_maybeShowAppAlertDialog());
       } catch (e) {
         debugPrint('Error during initialization: $e');
         if (mounted) {
@@ -245,8 +244,8 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  /// Show the active admin alert as a lightweight toast instead of a blocking modal.
-  Future<void> _maybeShowAppAlertToast() async {
+  /// Show the active admin alert with its complete popup content once per launch.
+  Future<void> _maybeShowAppAlertDialog() async {
     if (_appAlertCheckedThisLaunch) return;
     _appAlertCheckedThisLaunch = true;
     if (!mounted) return;
@@ -254,26 +253,9 @@ class _HomePageState extends State<HomePage> {
     try {
       await Future<void>.delayed(const Duration(milliseconds: 450));
       if (!mounted) return;
-
-      final response = await AppAlertServices().getActiveAlert();
-      if (response == null || response['responseType'] != 'S') return;
-
-      final value = response['responseValue'];
-      if (value is! Map) return;
-
-      final alert = AppAlertData.fromJson(Map<String, dynamic>.from(value));
-      if (alert.id.isEmpty || alert.title.isEmpty) return;
-
-      final message = [
-        alert.title.trim(),
-        alert.content.trim(),
-      ].where((segment) => segment.isNotEmpty).join(' - ');
-
-      if (message.isNotEmpty) {
-        _alertServices.toast(message);
-      }
+      await AppAlertDialog.showIfNeeded(context);
     } catch (e) {
-      debugPrint('App alert toast check failed: $e');
+      debugPrint('App alert dialog check failed: $e');
     }
   }
 

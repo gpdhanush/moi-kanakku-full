@@ -15,9 +15,9 @@ class Connection {
   final SecureStorageService secureStorage = SecureStorageService();
   final AlertServices _alertServices = AlertServices();
 
-  // Base header without API key (will be added dynamically)
   final Map<String, String> _baseHeader = {'Content-Type': 'application/json'};
   String? _cachedToken;
+
   /// Prevents duplicate "session expired" toasts / login redirects when many
   /// in-flight requests fail with 401 at once (timeout or backend restart).
   bool _isHandlingUnauthorized = false;
@@ -57,9 +57,6 @@ class Connection {
                 message: ApiStartupConfig.blockedRequestMessage,
               ),
             );
-          }
-          if (options.headers['X-API-Key'] == null) {
-            options.headers['X-API-Key'] = apiSecretKey;
           }
           final useToken = options.extra['useToken'] as bool? ?? true;
           if (!useToken) {
@@ -103,7 +100,8 @@ class Connection {
           final options = e.requestOptions;
           final alreadyRetried = options.extra['retried'] == true;
           final isGet = options.method.toUpperCase() == 'GET';
-          final transient = e.type == DioExceptionType.connectionTimeout ||
+          final transient =
+              e.type == DioExceptionType.connectionTimeout ||
               e.type == DioExceptionType.receiveTimeout ||
               e.type == DioExceptionType.connectionError ||
               _isNetworkError(e);
@@ -154,7 +152,6 @@ class Connection {
 
   Future<Map<String, String>> _getHeader(bool useToken) async {
     final headers = Map<String, String>.from(_baseHeader);
-    headers['X-API-Key'] = apiSecretKey;
     if (useToken) {
       final token = await _getCachedToken();
       if (token != null) {
@@ -409,9 +406,7 @@ class Connection {
           endpoint.startsWith('http://') || endpoint.startsWith('https://');
       final fullUrl = isFullUrl ? endpoint : '$appBaseUri$endpoint';
 
-      printContent(
-        "===> Uploading file size: ${await file.length()} bytes",
-      );
+      printContent("===> Uploading file size: ${await file.length()} bytes");
       printContent("===> Full URL: $fullUrl");
       printContent(
         "===> Form data keys: ${formData.fields.map((e) => e.key).toList()}",
@@ -460,9 +455,7 @@ class Connection {
             e.message ?? e.response?.statusMessage ?? e.type.toString();
       }
 
-      printContent(
-        "===> Upload URL: $endpoint \n===> ERROR: $errorMessage",
-      );
+      printContent("===> Upload URL: $endpoint \n===> ERROR: $errorMessage");
       logApiErrorToCrashlytics(
         e,
         endpoint: endpoint,
@@ -564,8 +557,7 @@ class Connection {
           );
           break;
         case 401:
-          final useToken =
-              e.requestOptions.extra['useToken'] as bool? ?? true;
+          final useToken = e.requestOptions.extra['useToken'] as bool? ?? true;
           if (useToken) {
             // Interceptor may already be handling this; guard prevents duplicates.
             unawaited(_handleUnauthorized(e));

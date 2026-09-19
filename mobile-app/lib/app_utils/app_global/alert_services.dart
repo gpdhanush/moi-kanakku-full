@@ -27,24 +27,27 @@ class AlertServices {
 
     final context = _ctx;
     if (context != null) {
-      ThemeData theme = Theme.of(context);
-      final colorScheme = Theme.of(context).colorScheme;
+      final theme = Theme.of(context);
+      final colorScheme = theme.colorScheme;
+      final isDarkMode = theme.brightness == Brightness.dark;
 
       EasyLoading.instance
         ..loadingStyle = EasyLoadingStyle.custom
         ..indicatorType = EasyLoadingIndicatorType.pulse
         ..indicatorColor = colorScheme.primary
         ..progressColor = colorScheme.primary
-        ..backgroundColor = Colors.white
-        ..textColor = colorScheme.primary
+        ..backgroundColor = isDarkMode
+            ? const Color(0xFF171A1C).withValues(alpha: 0.94)
+            : Colors.white
+        ..textColor = isDarkMode ? colorScheme.onSurface : colorScheme.primary
         ..toastPosition = EasyLoadingToastPosition.center
         ..animationStyle = EasyLoadingAnimationStyle.scale
         ..dismissOnTap = false
         ..userInteractions = false
         ..maskType = EasyLoadingMaskType.black
         ..textStyle = theme.textTheme.bodyMedium?.copyWith(
-          color: colorScheme.primary,
-          fontWeight: FontWeight.w500,
+          color: isDarkMode ? colorScheme.onSurface : colorScheme.primary,
+          fontWeight: FontWeight.w600,
         );
     }
 
