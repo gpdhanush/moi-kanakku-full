@@ -38,17 +38,21 @@ import {
 const menuItems = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "Users Master", href: "/users", icon: Users },
-  { name: "Transactions", href: "/transactions", icon: ArrowLeftRight },
-  { name: "Functions", href: "/functions", icon: PartyPopper },
-  { name: "Upcoming Functions", href: "/upcoming-functions", icon: CalendarDays },
+  // { name: "Transactions", href: "/transactions", icon: ArrowLeftRight },
+  // { name: "Functions", href: "/functions", icon: PartyPopper },
+  // { name: "Upcoming Functions", href: "/upcoming-functions", icon: CalendarDays },
   { name: "Feedback", href: "/feedback", icon: MessageSquare },
   { name: "Notifications", href: "/notifications", icon: Bell },
   { name: "App Alerts", href: "/app-alerts", icon: Megaphone },
   { name: "User OTPs", href: "/user-otps", icon: KeyRound },
   { name: "Audit Logs", href: "/audit-logs", icon: ScrollText },
   { name: "Database Backup", href: "/database-backup", icon: Database },
+  {
+    name: "App Configuration",
+    href: "/app-configuration",
+    icon: SlidersHorizontal,
+  },
   { name: "Settings", href: "/settings", icon: Settings },
-  { name: "App Configuration", href: "/app-configuration", icon: SlidersHorizontal },
 ];
 
 function formatLastLogin(value?: string | null): string {

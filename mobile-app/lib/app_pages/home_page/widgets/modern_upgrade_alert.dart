@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_exit_app/flutter_exit_app.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:moi/app_pages/force_update/rotating_settings_icon.dart';
 import 'package:moi/app_themes/index.dart';
@@ -20,10 +21,7 @@ class ModernUpgradeAlert extends UpgradeAlert {
     super.onIgnore,
     super.onLater,
     super.onUpdate,
-  }) : super(
-          upgrader: upgrader,
-          dialogStyle: UpgradeDialogStyle.material,
-        );
+  }) : super(upgrader: upgrader, dialogStyle: UpgradeDialogStyle.material);
 
   @override
   UpgradeAlertState createState() => _ModernUpgradeAlertState();
@@ -58,8 +56,8 @@ class _ModernUpgradeAlertState extends UpgradeAlertState {
     final fallbackWhatsNew = languageProvider.tr('forceUpdate.whatsNew');
     final notesContent =
         (releaseNotes != null && releaseNotes.trim().isNotEmpty)
-            ? releaseNotes.trim()
-            : fallbackWhatsNew;
+        ? releaseNotes.trim()
+        : fallbackWhatsNew;
 
     return Dialog(
       key: key,
@@ -119,8 +117,9 @@ class _ModernUpgradeAlertState extends UpgradeAlertState {
                           style: AppTypography.body.copyWith(
                             fontSize: 13.5,
                             fontWeight: FontWeight.w600,
-                            color:
-                                colorScheme.onSurface.withValues(alpha: 0.88),
+                            color: colorScheme.onSurface.withValues(
+                              alpha: 0.88,
+                            ),
                           ),
                         ),
                       ],
@@ -155,8 +154,9 @@ class _ModernUpgradeAlertState extends UpgradeAlertState {
                               style: AppTypography.body.copyWith(
                                 fontSize: 13,
                                 height: 1.4,
-                                color: colorScheme.onSurface
-                                    .withValues(alpha: 0.72),
+                                color: colorScheme.onSurface.withValues(
+                                  alpha: 0.72,
+                                ),
                               ),
                             ),
                           ],
@@ -167,26 +167,49 @@ class _ModernUpgradeAlertState extends UpgradeAlertState {
                 ),
               ),
               const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton.icon(
-                  onPressed: () =>
-                      onUserUpdated(context, !widget.upgrader.blocked()),
-                  icon: const HugeIcon(
-                    icon: HugeIcons.strokeRoundedDownload01,
-                    size: 20,
-                    strokeWidth: 1.8,
-                  ),
-                  label: Text(updateLabel),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: colorScheme.primary,
-                    foregroundColor: colorScheme.onPrimary,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+              Row(
+                children: [
+                  Expanded(
+                    child: FilledButton.icon(
+                      onPressed: () =>
+                          onUserUpdated(context, !widget.upgrader.blocked()),
+                      icon: const HugeIcon(
+                        icon: HugeIcons.strokeRoundedDownload01,
+                        size: 20,
+                        strokeWidth: 1.8,
+                      ),
+                      label: Text(updateLabel),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: colorScheme.primary,
+                        foregroundColor: colorScheme.onPrimary,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
                     ),
                   ),
-                ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: FilledButton.icon(
+                      onPressed: FlutterExitApp.exitApp,
+                      icon: const HugeIcon(
+                        icon: HugeIcons.strokeRoundedLogout01,
+                        size: 20,
+                        strokeWidth: 1.8,
+                      ),
+                      label: Text(languageProvider.tr('forceUpdate.exitApp')),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: colorScheme.error,
+                        foregroundColor: colorScheme.onError,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
               if (showLater) ...[
                 const SizedBox(height: 10),
@@ -213,8 +236,9 @@ class _ModernUpgradeAlertState extends UpgradeAlertState {
                 TextButton(
                   onPressed: () => onUserIgnored(context, true),
                   style: TextButton.styleFrom(
-                    foregroundColor:
-                        colorScheme.onSurface.withValues(alpha: 0.55),
+                    foregroundColor: colorScheme.onSurface.withValues(
+                      alpha: 0.55,
+                    ),
                   ),
                   child: Text(ignoreLabel),
                 ),

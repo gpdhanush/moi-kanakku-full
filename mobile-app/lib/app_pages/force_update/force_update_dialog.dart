@@ -87,10 +87,7 @@ class _ForceUpdateDialogBody extends StatelessWidget {
             const SizedBox(height: 16),
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.symmetric(
-                horizontal: 14,
-                vertical: 12,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               decoration: BoxDecoration(
                 color: colorScheme.primary.withValues(alpha: 0.06),
                 borderRadius: AppRadius.mdAll,
@@ -124,10 +121,7 @@ class _ForceUpdateDialogBody extends StatelessWidget {
             const SizedBox(height: 16),
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.symmetric(
-                horizontal: 14,
-                vertical: 12,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               decoration: BoxDecoration(
                 color: colorScheme.surfaceContainerHighest.withValues(
                   alpha: 0.45,
@@ -152,42 +146,46 @@ class _ForceUpdateDialogBody extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton.icon(
-                onPressed: openAppPlayStoreListing,
-                icon: const HugeIcon(
-                  icon: HugeIcons.strokeRoundedDownload01,
-                  size: 20,
-                  strokeWidth: 1.8,
-                ),
-                label: Text(languageProvider.tr('forceUpdate.updateApp')),
-                style: FilledButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+            Row(
+              children: [
+                Expanded(
+                  child: FilledButton.icon(
+                    onPressed: openAppPlayStoreListing,
+                    icon: const HugeIcon(
+                      icon: HugeIcons.strokeRoundedDownload01,
+                      size: 20,
+                      strokeWidth: 1.8,
+                    ),
+                    label: Text(languageProvider.tr('forceUpdate.updateApp')),
+                    style: FilledButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            ),
-            const SizedBox(height: 10),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: FlutterExitApp.exitApp,
-                icon: const HugeIcon(
-                  icon: HugeIcons.strokeRoundedLogout01,
-                  size: 20,
-                  strokeWidth: 1.8,
-                ),
-                label: Text(languageProvider.tr('forceUpdate.exitApp')),
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: FilledButton.icon(
+                    onPressed: FlutterExitApp.exitApp,
+                    icon: const HugeIcon(
+                      icon: HugeIcons.strokeRoundedLogout01,
+                      size: 20,
+                      strokeWidth: 1.8,
+                    ),
+                    label: Text(languageProvider.tr('forceUpdate.exitApp')),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: colorScheme.error,
+                      foregroundColor: colorScheme.onError,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
                   ),
                 ),
-              ),
+              ],
             ),
           ],
         ),

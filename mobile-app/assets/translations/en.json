@@ -298,8 +298,8 @@
     "checkStatus": "Press Try Again to check the status",
     "description": "We are making updates for a better experience. Please try again later.",
     "stillActive": "Maintenance is still in progress. Please try again later.",
-    "subtitle": "Maintenance work is in progress",
-    "title": "Under Maintenance"
+    "subtitle": "Maintainence",
+    "title": "Under"
   },
   "menu": {
     "contactUs": "Contact Us",

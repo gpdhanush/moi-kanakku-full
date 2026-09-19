@@ -6,34 +6,26 @@ void main() {
     ApiStartupConfig.reset();
   });
 
-  test('blocks empty api key', () {
-    final result = ApiStartupConfig.validate(
-      baseUrl: 'https://moi-api.floatwalktiruppur.in',
-      apiKey: '',
-    );
+  test('blocks empty base URL', () {
+    final result = ApiStartupConfig.validate(baseUrl: '');
     expect(result.isValid, isFalse);
-    expect(result.issue, ApiStartupConfigIssue.missingApiKey);
+    expect(result.issue, ApiStartupConfigIssue.missingBaseUrl);
   });
 
-  test('accepts valid https + key', () {
+  test('accepts valid https URL', () {
     final result = ApiStartupConfig.validate(
       baseUrl: 'https://moi-api.floatwalktiruppur.in',
-      apiKey: 'test-key',
     );
     expect(result.isValid, isTrue);
   });
 
   test('applyStartupValidation gates requests', () {
-    final invalid = ApiStartupConfig.applyStartupValidation(
-      baseUrl: '',
-      apiKey: 'x',
-    );
+    final invalid = ApiStartupConfig.applyStartupValidation(baseUrl: '');
     expect(invalid.isValid, isFalse);
     expect(ApiStartupConfig.apiRequestsAllowed, isFalse);
 
     final valid = ApiStartupConfig.applyStartupValidation(
       baseUrl: 'https://moi-api.floatwalktiruppur.in',
-      apiKey: 'test-key',
     );
     expect(valid.isValid, isTrue);
     expect(ApiStartupConfig.apiRequestsAllowed, isTrue);
