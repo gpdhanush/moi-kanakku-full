@@ -233,6 +233,21 @@
 }
 
 @layer utilities {
+  /* The navigation intentionally mirrors the compact, focused interaction of
+     the admin side-menu: the item under the pointer remains prominent while
+     its siblings recede slightly. Keyboard focus is never blurred. */
+  @media (hover: hover) {
+    .sidebar-nav:hover > a:not(:hover) {
+      filter: blur(1px);
+      opacity: 0.72;
+      transform: scale(0.98);
+    }
+
+    .sidebar-nav:hover > a[aria-current="page"]:not(:hover) {
+      transform: translateX(0.5rem) scale(0.98);
+    }
+  }
+
   .glass-card {
     @apply rounded-lg border-2 border-border/50 bg-card/80 backdrop-blur-xl;
   }

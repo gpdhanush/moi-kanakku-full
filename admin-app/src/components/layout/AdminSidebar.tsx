@@ -22,7 +22,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { getCurrentUser, clearAuth } from "@/lib/auth";
-import { APP_LOGO_SRC } from "@/components/Logo";
 import { ENV_CONFIG } from "@/lib/config";
 import {
   AlertDialog,
@@ -123,68 +122,35 @@ export function AdminSidebar({ collapsed, onCollapsedChange }: AdminSidebarProps
     <>
       <aside
         className={cn(
-          "relative flex h-screen flex-col border-r border-sidebar-border bg-sidebar transition-all duration-300",
-          collapsed ? "w-16" : "w-64"
+          "relative z-50 flex h-screen flex-col overflow-visible border-r border-sidebar-border bg-sidebar text-sidebar-foreground shadow-xl transition-[width] duration-300",
+          collapsed ? "w-16" : "w-72"
         )}
       >
-        <div className="flex h-14 items-center border-b border-sidebar-border px-3">
-          {!collapsed ? (
-            <div className="flex min-w-0 flex-1 items-center gap-2 px-1">
-              <img
-                src={APP_LOGO_SRC}
-                alt="Moi Kanakku"
-                className="h-10 w-auto max-w-[160px] object-contain"
-              />
-            </div>
-          ) : (
-            <div className="flex flex-1 justify-center">
-              <img
-                src={APP_LOGO_SRC}
-                alt="Moi Kanakku"
-                className="h-8 w-8 rounded object-cover"
-              />
-            </div>
-          )}
-          {!collapsed && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 shrink-0 text-muted-foreground"
-              onClick={() => onCollapsedChange(true)}
-              aria-label="Collapse sidebar"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-          )}
-        </div>
-
-        {collapsed && (
-          <Button
-            variant="outline"
-            size="icon"
-            className="absolute -right-3 top-4 z-50 h-6 w-6 rounded-full bg-background shadow-sm"
-            onClick={() => onCollapsedChange(false)}
-            aria-label="Expand sidebar"
-          >
-            <ChevronRight className="h-3 w-3" />
-          </Button>
-        )}
+        <Button
+          variant="outline"
+          size="icon"
+          className="absolute -right-3 top-4 z-50 h-6 w-6 rounded-full border-sidebar-border bg-sidebar text-muted-foreground shadow-sm hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+          onClick={() => onCollapsedChange(!collapsed)}
+          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+        >
+          {collapsed ? <ChevronRight className="h-3 w-3" /> : <ChevronLeft className="h-3 w-3" />}
+        </Button>
 
         <div
           className={cn(
-            "border-b border-sidebar-border px-3 py-4",
+            "border-b border-sidebar-border px-4 py-5",
             collapsed && "flex justify-center px-2"
           )}
         >
           <div className={cn("flex items-center gap-3", collapsed && "justify-center")}>
             <Avatar className="h-10 w-10 shrink-0">
-              <AvatarFallback className="bg-primary/10 text-sm font-semibold text-primary">
+              <AvatarFallback className="bg-primary/20 text-sm font-semibold text-primary">
                 {userInitials}
               </AvatarFallback>
             </Avatar>
             {!collapsed && (
               <div className="min-w-0">
-                <p className="truncate text-sm font-semibold uppercase tracking-wide">
+                <p className="truncate text-sm font-semibold uppercase tracking-wide text-sidebar-foreground">
                   {userName}
                 </p>
                 <p className="mt-0.5 flex items-center gap-1.5 text-xs text-muted-foreground">
@@ -196,9 +162,9 @@ export function AdminSidebar({ collapsed, onCollapsedChange }: AdminSidebarProps
           </div>
         </div>
 
-        <nav className="flex-1 space-y-1 overflow-y-auto p-3">
+        <nav aria-label="Main navigation" className="sidebar-nav flex-1 space-y-1 overflow-y-auto px-3 py-4">
           {!collapsed && (
-            <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <p className="mb-3 px-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
               Main Navigation
             </p>
           )}
@@ -207,32 +173,38 @@ export function AdminSidebar({ collapsed, onCollapsedChange }: AdminSidebarProps
               key={item.href}
               to={item.href}
               title={collapsed ? item.name : undefined}
+              aria-current={isActive(item.href) ? "page" : undefined}
               className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200",
+                "group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-foreground/80 transition-all duration-200 before:absolute before:bottom-1 before:left-0 before:top-1 before:w-1 before:rounded-full before:bg-primary before:opacity-0 before:transition-opacity hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
                 collapsed && "justify-center px-2",
                 isActive(item.href)
-                  ? "bg-primary/10 text-primary"
-                  : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                  ? cn(
+                      "bg-sidebar-accent text-sidebar-accent-foreground before:opacity-100",
+                      !collapsed && "translate-x-2"
+                    )
+                  : "hover:translate-x-1"
               )}
             >
-              <item.icon className="h-4 w-4 shrink-0" />
+              <item.icon className="h-[18px] w-[18px] shrink-0 text-muted-foreground transition-colors group-hover:text-primary group-[[aria-current=page]]:text-primary" />
               {!collapsed && <span>{item.name}</span>}
             </NavLink>
           ))}
+        </nav>
 
+        <div className="shrink-0 border-t border-sidebar-border p-3">
           <button
             type="button"
             title={collapsed ? "Logout" : undefined}
             onClick={() => setShowLogoutDialog(true)}
             className={cn(
-              "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-destructive transition-all duration-200 hover:bg-destructive/10",
+              "group relative flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-destructive transition-all duration-200 hover:translate-x-1 hover:bg-destructive/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive",
               collapsed && "justify-center px-2"
             )}
           >
             <LogOut className="h-4 w-4 shrink-0" />
             {!collapsed && <span>Logout</span>}
           </button>
-        </nav>
+        </div>
       </aside>
 
       <AlertDialog open={showLogoutDialog} onOpenChange={setShowLogoutDialog}>
