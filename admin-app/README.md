@@ -94,6 +94,12 @@ To build the static production bundle:
 
 ```bash
 npm run build
+
+npm run version:patch
+npm run version:minor
+npm run version:major
+
+
 ```
 
 The output will be placed in the `dist/` directory.
