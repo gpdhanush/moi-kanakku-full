@@ -479,13 +479,25 @@ class _MenuRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final colors = AppColors.of(context);
     final colorScheme = Theme.of(context).colorScheme;
-    final iconColor = isDestructive ? colorScheme.error : colorScheme.primary;
-    final iconBg = iconColor.withValues(alpha: 0.1);
+
+    final iconColor = isDestructive
+        ? (isDark ? colorScheme.error : const Color(0xFFEF4444))
+        : (isDark ? colorScheme.primary : const Color(0xFF059669));
+
+    final iconBg = isDestructive
+        ? (isDark
+            ? colorScheme.error.withValues(alpha: 0.1)
+            : const Color(0xFFFEE2E2))
+        : (isDark
+            ? colorScheme.primary.withValues(alpha: 0.1)
+            : const Color(0xFFE8F6EB));
+
     final titleColor = isDestructive
-        ? colorScheme.error
-        : AppColors.textPrimary;
+        ? (isDark ? colorScheme.error : const Color(0xFFEF4444))
+        : colors.textPrimary;
 
     return Column(
       children: [

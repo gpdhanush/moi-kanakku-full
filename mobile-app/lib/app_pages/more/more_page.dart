@@ -19,6 +19,7 @@ class MorePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    context.watch<ThemeProvider>();
     return Consumer<LanguageProvider>(
       builder: (context, languageProvider, _) {
         return Scaffold(
@@ -49,6 +50,12 @@ class MorePage extends StatelessWidget {
                         context,
                         'upcoming-function-list',
                       ),
+                    ),
+                    _MoreRow(
+                      icon: HugeIcons.strokeRoundedComment01,
+                      title: languageProvider.tr('nav.feedbacks'),
+                      subtitle: languageProvider.tr('more.feedbacksHint'),
+                      onTap: () => Navigator.pushNamed(context, 'feedbacks'),
                     ),
                     _MoreRow(
                       icon: HugeIcons.strokeRoundedUserCircle02,
@@ -300,10 +307,14 @@ class _MoreRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final colorScheme = Theme.of(context).colorScheme;
     final colors = AppColors.of(context);
-    final iconColor = colorScheme.primary;
-    final iconBg = colorScheme.primary.withValues(alpha: 0.1);
+
+    final iconColor = isDark ? colorScheme.primary : const Color(0xFF059669);
+    final iconBg = isDark
+        ? colorScheme.primary.withValues(alpha: 0.1)
+        : const Color(0xFFE8F6EB);
 
     return Column(
       children: [

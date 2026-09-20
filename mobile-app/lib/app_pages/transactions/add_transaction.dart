@@ -521,37 +521,9 @@ class _BottomSaveBar extends StatelessWidget {
             AppSpacing.page,
             12,
           ),
-          child: Material(
-            color: Colors.transparent,
-            borderRadius: BorderRadius.circular(14),
-            child: InkWell(
-              onTap: onPressed,
-              borderRadius: BorderRadius.circular(14),
-              child: Ink(
-                height: 50,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(14),
-                  color: accent,
-                  boxShadow: [
-                    BoxShadow(
-                      color: accent.withValues(alpha: 0.26),
-                      blurRadius: 12,
-                      offset: const Offset(0, 5),
-                    ),
-                  ],
-                ),
-                child: Center(
-                  child: Text(
-                    title,
-                    style: AppTypography.label.copyWith(
-                      color: AppColors.charcoal,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ),
-            ),
+          child: AppButton(
+            title: title,
+            onPressed: onPressed,
           ),
         ),
       ),

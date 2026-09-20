@@ -5,9 +5,10 @@ import { logger } from './logger';
 export interface ErrorToastOptions {
   title?: string;
   description?: string;
-  variant?: 'default' | 'destructive';
+  variant?: 'default' | 'destructive' | 'success' | 'error' | 'info';
   duration?: number;
 }
+
 
 /**
  * Centralized error handler for API errors
@@ -132,7 +133,7 @@ export function handleSuccess(message: string, title = 'Success'): void {
   toast({
     title,
     description: message,
-    variant: 'default',
+    variant: 'success',
     duration: 3000,
   });
 }

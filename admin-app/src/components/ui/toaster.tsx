@@ -1,6 +1,6 @@
 import { useToast } from "@/hooks/use-toast";
 import { Toast, ToastClose, ToastDescription, ToastProvider, ToastTitle, ToastViewport } from "@/components/ui/toast";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Info } from "lucide-react";
 
 export function Toaster() {
   const { toasts } = useToast();
@@ -8,18 +8,32 @@ export function Toaster() {
   return (
     <ToastProvider>
       {toasts.map(function ({ id, title, description, action, ...props }) {
+        const variant = props.variant || "default";
+
         return (
           <Toast key={id} {...props}>
             <div className="mr-auto flex min-w-0 items-center gap-x-2">
-              {props.variant === "destructive" && (
+              {(variant === "destructive" || variant === "error") && (
                 <AlertTriangle
-                  className="h-7 w-7 shrink-0 text-[#b22b2b] dark:text-red-200"
+                  className="h-7 w-7 shrink-0 text-current"
+                  aria-hidden="true"
+                />
+              )}
+              {variant === "success" && (
+                <CheckCircle2
+                  className="h-7 w-7 shrink-0 text-current"
+                  aria-hidden="true"
+                />
+              )}
+              {(variant === "default" || variant === "info") && (
+                <Info
+                  className="h-7 w-7 shrink-0 text-current"
                   aria-hidden="true"
                 />
               )}
               <div className="grid min-w-0 gap-1">
-              {title && <ToastTitle>{title}</ToastTitle>}
-              {description && <ToastDescription>{description}</ToastDescription>}
+                {title && <ToastTitle>{title}</ToastTitle>}
+                {description && <ToastDescription>{description}</ToastDescription>}
               </div>
             </div>
             {action}
@@ -31,3 +45,4 @@ export function Toaster() {
     </ToastProvider>
   );
 }
+

@@ -309,6 +309,7 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    context.watch<ThemeProvider>();
     final content = _buildModernUpgradeAlert();
     if (widget.isShellTab) return content;
 
@@ -342,7 +343,7 @@ class _HomePageState extends State<HomePage> {
     final netBalance = totalAmount - totalMOAmount;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: HomeAppHeader(
         unreadNotificationCount: _unreadNotificationCount,
         notificationsTooltip: context.read<LanguageProvider>().tr(

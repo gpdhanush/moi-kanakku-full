@@ -128,12 +128,13 @@ class _FeedbacksState extends State<Feedbacks> {
 
   @override
   Widget build(BuildContext context) {
+    context.watch<ThemeProvider>();
     return Consumer<LanguageProvider>(
       builder: (context, languageProvider, _) {
         final primary = Theme.of(context).colorScheme.primary;
 
         return Scaffold(
-          backgroundColor: AppColors.background,
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           appBar: MoiAppHeader(
             title: languageProvider.tr('feedback.title'),
             showBack: !widget.embeddedInShell,
@@ -207,10 +208,9 @@ class _FeedbacksState extends State<Feedbacks> {
               },
             ),
             const SizedBox(height: AppSpacing.md),
-            _GradientActionButton(
-              primary: primary,
-              label: languageProvider.tr('common.save'),
-              onTap: _onSavePressed,
+            AppButton(
+              title: languageProvider.tr('common.save'),
+              onPressed: _onSavePressed,
             ),
           ],
         ),
@@ -714,54 +714,3 @@ class _FeedbackCard extends StatelessWidget {
   }
 }
 
-class _GradientActionButton extends StatelessWidget {
-  final Color primary;
-  final String label;
-  final VoidCallback onTap;
-
-  const _GradientActionButton({
-    required this.primary,
-    required this.label,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      borderRadius: BorderRadius.circular(14),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
-        child: Ink(
-          height: 52,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(14),
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [primary, AppColors.deepenAccent(primary, amount: 0.28)],
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: primary.withValues(alpha: 0.28),
-                blurRadius: 14,
-                offset: const Offset(0, 6),
-              ),
-            ],
-          ),
-          child: Center(
-            child: Text(
-              label,
-              style: AppTypography.label.copyWith(
-                color: Colors.white,
-                fontSize: 15,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}

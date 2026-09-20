@@ -117,12 +117,13 @@ class _FunctionsListState extends State<FunctionsList> {
 
   @override
   Widget build(BuildContext context) {
+    context.watch<ThemeProvider>();
     final primary = Theme.of(context).colorScheme.primary;
 
     return Consumer<LanguageProvider>(
       builder: (context, languageProvider, _) {
         final scaffold = Scaffold(
-            backgroundColor: AppColors.background,
+            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
             appBar: MoiAppHeader(
               title: languageProvider.tr('functions.title'),
               showBack: !widget.embeddedInShell,

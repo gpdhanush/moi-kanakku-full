@@ -12,7 +12,7 @@ class MoiBottomNavItem {
 /// Full-width bottom menu bar for the main app shell.
 class MoiBottomNavBar extends StatelessWidget {
   /// Content height of the menu row (excluding system bottom inset).
-  static const double barHeight = 76;
+  static const double barHeight = 72;
 
   /// Kept for callers that previously padded above the floating pill.
   static const double bottomGap = 0;
@@ -20,12 +20,14 @@ class MoiBottomNavBar extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onTap;
   final List<MoiBottomNavItem> items;
+  final VoidCallback? onAddTap;
 
   const MoiBottomNavBar({
     super.key,
     required this.currentIndex,
     required this.onTap,
     required this.items,
+    this.onAddTap,
   });
 
   /// Space pages / FABs should leave clear above the bottom bar.
@@ -41,48 +43,137 @@ class MoiBottomNavBar extends StatelessWidget {
     final barColor = isDark ? AppColors.surface : AppColors.white;
     final colors = AppColors.of(context);
 
-    return Material(
-      color: barColor,
-      elevation: 0,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
+    final isCenterAddLayout = onAddTap != null && items.length == 4;
+
+    return Stack(
+      clipBehavior: Clip.none,
+      alignment: Alignment.topCenter,
+      children: [
+        Material(
           color: barColor,
-          border: Border(
-            top: BorderSide(
-              color: primary,
-              width: 2,
+          elevation: 0,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: barColor,
+              border: Border(
+                top: BorderSide(
+                  color: primary,
+                  width: 2,
+                ),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.charcoal.withValues(alpha: 0.06),
+                  blurRadius: 10,
+                  offset: const Offset(0, -2),
+                ),
+              ],
+            ),
+            child: Padding(
+              padding: EdgeInsets.only(bottom: bottomInset),
+              child: SizedBox(
+                height: barHeight,
+                width: double.infinity,
+                child: isCenterAddLayout
+                    ? Row(
+                        children: [
+                          Expanded(
+                            child: _MoiBottomNavTile(
+                              item: items[0],
+                              selected: currentIndex == 0,
+                              active: colors.iconActive,
+                              inactive: colors.iconDefault,
+                              indicator: colors.moiReceivedSoft,
+                              onTap: () => onTap(0),
+                            ),
+                          ),
+                          Expanded(
+                            child: _MoiBottomNavTile(
+                              item: items[1],
+                              selected: currentIndex == 1,
+                              active: colors.iconActive,
+                              inactive: colors.iconDefault,
+                              indicator: colors.moiReceivedSoft,
+                              onTap: () => onTap(1),
+                            ),
+                          ),
+                          const Expanded(child: SizedBox.shrink()),
+                          Expanded(
+                            child: _MoiBottomNavTile(
+                              item: items[2],
+                              selected: currentIndex == 2,
+                              active: colors.iconActive,
+                              inactive: colors.iconDefault,
+                              indicator: colors.moiReceivedSoft,
+                              onTap: () => onTap(2),
+                            ),
+                          ),
+                          Expanded(
+                            child: _MoiBottomNavTile(
+                              item: items[3],
+                              selected: currentIndex == 3,
+                              active: colors.iconActive,
+                              inactive: colors.iconDefault,
+                              indicator: colors.moiReceivedSoft,
+                              onTap: () => onTap(3),
+                            ),
+                          ),
+                        ],
+                      )
+                    : Row(
+                        children: List.generate(items.length, (index) {
+                          return Expanded(
+                            child: _MoiBottomNavTile(
+                              item: items[index],
+                              selected: index == currentIndex,
+                              active: colors.iconActive,
+                              inactive: colors.iconDefault,
+                              indicator: colors.moiReceivedSoft,
+                              onTap: () => onTap(index),
+                            ),
+                          );
+                        }),
+                      ),
+              ),
             ),
           ),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.charcoal.withValues(alpha: 0.06),
-              blurRadius: 10,
-              offset: const Offset(0, -2),
-            ),
-          ],
         ),
-        child: Padding(
-          padding: EdgeInsets.only(bottom: bottomInset),
-          child: SizedBox(
-            height: barHeight,
-            width: double.infinity,
-            child: Row(
-              children: List.generate(items.length, (index) {
-                return Expanded(
-                  child: _MoiBottomNavTile(
-                    item: items[index],
-                    selected: index == currentIndex,
-                    active: colors.iconActive,
-                    inactive: colors.iconDefault,
-                    indicator: colors.moiReceivedSoft,
-                    onTap: () => onTap(index),
+        if (isCenterAddLayout)
+          Positioned(
+            top: -26,
+            child: Material(
+              color: Colors.transparent,
+              elevation: 0,
+              child: InkWell(
+                onTap: onAddTap,
+                customBorder: const CircleBorder(),
+                child: Container(
+                  width: 52,
+                  height: 52,
+                  decoration: BoxDecoration(
+                    color: primary,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: primary.withValues(alpha: 0.38),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
-                );
-              }),
+                  child: Center(
+                    child: HugeIcon(
+                      icon: HugeIcons.strokeRoundedAdd01,
+                      color: Colors.white,
+                      size: 26,
+                      strokeWidth: 2.4,
+                    ),
+                  ),
+                ),
+              ),
             ),
           ),
-        ),
-      ),
+      ],
     );
   }
 }

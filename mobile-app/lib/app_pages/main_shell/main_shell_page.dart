@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_exit_app/flutter_exit_app.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:moi/app_configs/startup_timing.dart';
-import 'package:moi/app_pages/feedbacks/feedbacks.dart';
 import 'package:moi/app_pages/functions/functions_list.dart';
 import 'package:moi/app_pages/home_page/home_page.dart';
 import 'package:moi/app_pages/more/more_page.dart';
@@ -26,8 +25,8 @@ class _MainShellPageState extends State<MainShellPage> {
   final ValueNotifier<int> _homeRefreshSignal = ValueNotifier<int>(0);
   int _currentIndex = 0;
 
-  /// Home | Function | Overview | Feedbacks | More  (Overview centered)
-  static const _tabCount = 5;
+  /// Home | Function | Overview | More  (Center Add + button protruding in half of border)
+  static const _tabCount = 4;
 
   final Set<int> _visitedTabs = {0};
   final Map<int, Widget> _pageCache = {};
@@ -49,12 +48,10 @@ class _MainShellPageState extends State<MainShellPage> {
         case 0:
           return HomePage(isShellTab: true, refreshSignal: _homeRefreshSignal);
         case 1:
-          return const FunctionsList(embeddedInShell: true);
-        case 2:
           return const TransactionDashboard(embeddedInShell: true);
+        case 2:
+          return const FunctionsList(embeddedInShell: true);
         case 3:
-          return const Feedbacks(embeddedInShell: true);
-        case 4:
           return const MorePage();
         default:
           return const SizedBox.shrink();
@@ -151,6 +148,7 @@ class _MainShellPageState extends State<MainShellPage> {
 
   @override
   Widget build(BuildContext context) {
+    context.watch<ThemeProvider>();
     return Consumer<LanguageProvider>(
       builder: (context, languageProvider, _) {
         final items = [
@@ -159,16 +157,12 @@ class _MainShellPageState extends State<MainShellPage> {
             label: languageProvider.tr('nav.home'),
           ),
           MoiBottomNavItem(
-            icon: HugeIcons.strokeRoundedWedding,
-            label: languageProvider.tr('nav.function'),
-          ),
-          MoiBottomNavItem(
             icon: HugeIcons.strokeRoundedAnalytics01,
             label: languageProvider.tr('nav.overview'),
           ),
           MoiBottomNavItem(
-            icon: HugeIcons.strokeRoundedComment01,
-            label: languageProvider.tr('nav.feedbacks'),
+            icon: HugeIcons.strokeRoundedWedding,
+            label: languageProvider.tr('nav.function'),
           ),
           MoiBottomNavItem(
             icon: HugeIcons.strokeRoundedMoreHorizontal,
@@ -182,7 +176,7 @@ class _MainShellPageState extends State<MainShellPage> {
             if (!didPop) _onBack();
           },
           child: Scaffold(
-            backgroundColor: AppColors.background,
+            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
             body: IndexedStack(
               index: _currentIndex.clamp(0, _tabCount - 1),
               children: List.generate(_tabCount, (index) {
@@ -192,63 +186,15 @@ class _MainShellPageState extends State<MainShellPage> {
                 return _pageFor(index);
               }),
             ),
-            floatingActionButtonLocation:
-                FloatingActionButtonLocation.centerFloat,
-            floatingActionButton: _currentIndex == 0
-                ? _MoiAddPillButton(
-                    label: languageProvider.tr('moi.addMoi'),
-                    onPressed: _openAddMoiSheet,
-                  )
-                : null,
             bottomNavigationBar: MoiBottomNavBar(
               currentIndex: _currentIndex,
               items: items,
               onTap: _goToTab,
+              onAddTap: _openAddMoiSheet,
             ),
           ),
         );
       },
-    );
-  }
-}
-
-/// Capsule floating “Add Moi” action (label only, theme primary fill).
-class _MoiAddPillButton extends StatelessWidget {
-  final String label;
-  final VoidCallback onPressed;
-
-  const _MoiAddPillButton({required this.label, required this.onPressed});
-
-  @override
-  Widget build(BuildContext context) {
-    final color = Theme.of(context).colorScheme.primary;
-
-    return Material(
-      color: Colors.transparent,
-      elevation: 0,
-      child: InkWell(
-        onTap: onPressed,
-        borderRadius: BorderRadius.circular(999),
-        child: Ink(
-          decoration: BoxDecoration(
-            color: color,
-            borderRadius: BorderRadius.circular(999),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 11),
-            child: Text(
-              label,
-              style: AppTypography.label.copyWith(
-                color: AppColors.charcoal,
-                fontSize: 14,
-                fontWeight: FontWeight.w700,
-                letterSpacing: -0.15,
-                height: 1.1,
-              ),
-            ),
-          ),
-        ),
-      ),
     );
   }
 }

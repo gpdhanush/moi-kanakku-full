@@ -19,7 +19,7 @@ abstract final class AppColors {
   static const Color charcoal = Color(0xFF171A1C);
   static const Color warmCream = Color(0xFFF8F6F0);
   static const Color saffronGold = Color(0xFFF2B84B);
-  static const Color lightPrimary = accent;
+  static const Color lightPrimary = Color(0xFF059669);
   static const Color darkPrimary = accent;
 
   /// Locked brand seed — replaces the former multi-accent picker.
@@ -48,7 +48,7 @@ abstract final class AppColors {
   static const Color lightError = Color(0xFFD94A4A);
   static const Color lightInfo = Color(0xFF4D8FD8);
   static const Color lightMoiGiven = saffronGold;
-  static const Color lightMoiReceivedSoft = Color(0xFFEEF8D7);
+  static const Color lightMoiReceivedSoft = Color(0xFFE8F6EB);
   static const Color lightMoiGivenSoft = Color(0xFFFFF4D9);
 
   // Dark palette

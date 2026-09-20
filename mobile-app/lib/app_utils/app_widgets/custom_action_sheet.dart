@@ -229,15 +229,17 @@ class _MoiActionSheetTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final accent = item.isDestructive
-        ? AppColors.moiGiven
+        ? const Color(0xFFEF4444)
         : (item.color ?? primary);
     final soft = item.isDestructive
-        ? AppColors.moiGivenSoft
+        ? (isDark
+            ? const Color(0xFFEF4444).withValues(alpha: 0.18)
+            : const Color(0xFFFEE2E2))
         : isDark
         ? accent.withValues(alpha: 0.18)
         : accent.withValues(alpha: 0.1);
     final titleColor = item.isDestructive
-        ? AppColors.moiGiven
+        ? const Color(0xFFEF4444)
         : isDark
         ? AppColors.darkTextPrimary
         : const Color(0xff18181B);
@@ -256,7 +258,7 @@ class _MoiActionSheetTile extends StatelessWidget {
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
               color: item.isDestructive
-                  ? AppColors.moiGiven.withValues(alpha: 0.22)
+                  ? const Color(0xFFEF4444).withValues(alpha: 0.22)
                   : isDark
                   ? AppColors.darkBorder
                   : const Color(0xffE4E4E7),
@@ -301,7 +303,7 @@ class _MoiActionSheetTile extends StatelessWidget {
               HugeIcon(
                 icon: HugeIcons.strokeRoundedArrowRight01,
                 color: item.isDestructive
-                    ? AppColors.moiGiven.withValues(alpha: 0.55)
+                    ? const Color(0xFFEF4444).withValues(alpha: 0.55)
                     : isDark
                     ? AppColors.darkTextSecondary
                     : const Color(0xffA1A1AA),
@@ -327,10 +329,7 @@ Future<bool?> showMoiConfirmSheet({
   bool isDestructive = false,
 }) {
   final primary = Theme.of(context).colorScheme.primary;
-  final accent = isDestructive ? AppColors.moiGiven : primary;
-  final soft = isDestructive
-      ? AppColors.moiGivenSoft
-      : primary.withValues(alpha: 0.1);
+  final accent = isDestructive ? const Color(0xFFEF4444) : primary;
 
   return showModalBottomSheet<bool>(
     context: context,
@@ -340,6 +339,11 @@ Future<bool?> showMoiConfirmSheet({
     builder: (sheetContext) {
       final bottomInset = MediaQuery.paddingOf(sheetContext).bottom;
       final isDark = Theme.of(sheetContext).brightness == Brightness.dark;
+      final soft = isDestructive
+          ? (isDark
+              ? const Color(0xFFEF4444).withValues(alpha: 0.18)
+              : const Color(0xFFFEE2E2))
+          : primary.withValues(alpha: 0.1);
 
       return Padding(
         padding: EdgeInsets.only(bottom: bottomInset > 0 ? 0 : 8),
@@ -464,12 +468,8 @@ Future<bool?> showMoiConfirmSheet({
                                   end: Alignment.bottomRight,
                                   colors: isDestructive
                                       ? [
-                                          AppColors.moiGiven,
-                                          Color.lerp(
-                                            AppColors.moiGiven,
-                                            const Color(0xff9F1239),
-                                            0.25,
-                                          )!,
+                                          const Color(0xFFEF4444),
+                                          const Color(0xFFDC2626),
                                         ]
                                       : [
                                           primary,

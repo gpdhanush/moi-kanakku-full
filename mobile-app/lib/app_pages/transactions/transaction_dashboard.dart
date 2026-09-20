@@ -277,13 +277,14 @@ class _TransactionDashboardState extends State<TransactionDashboard> {
 
   @override
   Widget build(BuildContext context) {
+    context.watch<ThemeProvider>();
     return Consumer<LanguageProvider>(
       builder: (context, languageProvider, _) {
         final scaffold = Scaffold(
-          backgroundColor: AppColors.background,
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           appBar: MoiAppHeader(
             title: languageProvider.tr('nav.overview'),
-            showBack: !widget.embeddedInShell,
+            showBack: true,
             onBack: _goHome,
           ),
           body: MoiRefreshIndicator(
@@ -368,12 +369,18 @@ class _TransactionDashboardState extends State<TransactionDashboard> {
   }
 
   Widget _buildActionButtons(LanguageProvider languageProvider) {
+    const greenBg = Color(0xFF10B981);
+
     return Row(
       children: [
         Expanded(
           child: _QuickActionButton(
             label: languageProvider.tr('transactions.newInvest'),
-            color: AppColors.moiReceived,
+            icon: HugeIcons.strokeRoundedUserAdd01,
+            color: greenBg,
+            textColor: Colors.white,
+            iconColor: Colors.white,
+            iconBgColor: Colors.white.withValues(alpha: 0.22),
             onTap: () async {
               final result = await Navigator.pushNamed(
                 context,
@@ -388,7 +395,15 @@ class _TransactionDashboardState extends State<TransactionDashboard> {
         Expanded(
           child: _QuickActionButton(
             label: languageProvider.tr('transactions.newReturn'),
-            color: AppColors.moiGiven,
+            icon: HugeIcons.strokeRoundedUserAdd01,
+            gradient: const LinearGradient(
+              colors: [Color(0xFFFBBF24), Color(0xFFF97316)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            textColor: AppColors.charcoal,
+            iconColor: Colors.white,
+            iconBgColor: Colors.white.withValues(alpha: 0.28),
             onTap: () async {
               final result = await Navigator.pushNamed(
                 context,
@@ -441,11 +456,11 @@ class _TransactionDashboardState extends State<TransactionDashboard> {
           final mobile = person['mobile']?.toString() ?? '';
           final displayName =
               '${firstName.toTitleCase()} ${secondName.toTitleCase()}'.trim();
-          final subtitle = [
-            if (city.isNotEmpty) city.toUpperCase(),
-            if (mobile.isNotEmpty) mobile,
-            if (business.isNotEmpty) business.toUpperCase(),
-          ].join(' · ');
+          final subtitleParts = <String>[];
+          if (city.isNotEmpty) subtitleParts.add(city);
+          if (mobile.isNotEmpty) subtitleParts.add(mobile);
+          if (business.isNotEmpty) subtitleParts.add(business);
+          final subtitle = subtitleParts.join(' · ');
 
           Future<void> openDetails() async {
             final result = await Navigator.pushNamed(
@@ -502,19 +517,28 @@ class _TransactionDashboardState extends State<TransactionDashboard> {
 
 class _QuickActionButton extends StatelessWidget {
   final String label;
-  final Color color;
+  final List<List<dynamic>> icon;
+  final Color? color;
+  final Gradient? gradient;
+  final Color textColor;
+  final Color iconColor;
+  final Color iconBgColor;
   final VoidCallback onTap;
 
   const _QuickActionButton({
     required this.label,
-    required this.color,
+    required this.icon,
+    this.color,
+    this.gradient,
+    required this.textColor,
+    required this.iconColor,
+    required this.iconBgColor,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final contentColor = isDark ? AppColors.charcoal : AppColors.charcoal;
+    final shadowColor = (color ?? const Color(0xFFF97316)).withValues(alpha: 0.26);
 
     return Material(
       color: Colors.transparent,
@@ -524,12 +548,14 @@ class _QuickActionButton extends StatelessWidget {
         borderRadius: BorderRadius.circular(14),
         child: Ink(
           height: 48,
+          padding: const EdgeInsets.symmetric(horizontal: 10),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(14),
             color: color,
+            gradient: gradient,
             boxShadow: [
               BoxShadow(
-                color: color.withValues(alpha: 0.26),
+                color: shadowColor,
                 blurRadius: 12,
                 offset: const Offset(0, 5),
               ),
@@ -538,6 +564,22 @@ class _QuickActionButton extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              Container(
+                width: 28,
+                height: 28,
+                decoration: BoxDecoration(
+                  color: iconBgColor,
+                  shape: BoxShape.circle,
+                ),
+                alignment: Alignment.center,
+                child: HugeIcon(
+                  icon: icon,
+                  color: iconColor,
+                  size: 15,
+                  strokeWidth: 2.0,
+                ),
+              ),
+              const SizedBox(width: 8),
               Flexible(
                 child: Text(
                   label,
@@ -545,8 +587,8 @@ class _QuickActionButton extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: AppTypography.label.copyWith(
-                    color: contentColor,
-                    fontSize: 12,
+                    color: textColor,
+                    fontSize: 12.5,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -583,14 +625,24 @@ class _PersonCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final greenIconColor = isDark ? primary : const Color(0xFF059669);
+    final greenBgColor =
+        isDark ? primary.withValues(alpha: 0.15) : const Color(0xFFE8F6EB);
+    final deleteIconColor =
+        isDark ? colors.error : const Color(0xFFEF4444);
+    final deleteBgColor =
+        isDark ? colors.error.withValues(alpha: 0.15) : const Color(0xFFFEE2E2);
+
     return Material(
       color: colors.surface,
       borderRadius: BorderRadius.circular(16),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(16),
-        splashColor: primary.withValues(alpha: 0.06),
-        highlightColor: primary.withValues(alpha: 0.03),
+        splashColor: greenIconColor.withValues(alpha: 0.06),
+        highlightColor: greenIconColor.withValues(alpha: 0.03),
         child: Ink(
           padding: const EdgeInsets.fromLTRB(14, 12, 10, 12),
           decoration: BoxDecoration(
@@ -605,13 +657,13 @@ class _PersonCard extends StatelessWidget {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
+                  color: greenBgColor,
+                  borderRadius: BorderRadius.circular(14),
                 ),
                 alignment: Alignment.center,
                 child: HugeIcon(
                   icon: HugeIcons.strokeRoundedUser,
-                  color: primary,
+                  color: greenIconColor,
                   size: 20,
                   strokeWidth: 1.8,
                 ),
@@ -650,14 +702,16 @@ class _PersonCard extends StatelessWidget {
               const SizedBox(width: 4),
               _IconAction(
                 icon: HugeIcons.strokeRoundedPencilEdit02,
-                color: primary,
+                color: greenIconColor,
+                backgroundColor: greenBgColor,
                 tooltip: editTooltip,
                 onTap: onEdit,
               ),
               const SizedBox(width: 4),
               _IconAction(
                 icon: HugeIcons.strokeRoundedDelete02,
-                color: AppColors.moiGiven,
+                color: deleteIconColor,
+                backgroundColor: deleteBgColor,
                 tooltip: deleteTooltip,
                 onTap: onDelete,
               ),
@@ -672,22 +726,25 @@ class _PersonCard extends StatelessWidget {
 class _IconAction extends StatelessWidget {
   final List<List<dynamic>> icon;
   final Color color;
+  final Color? backgroundColor;
   final String tooltip;
   final VoidCallback onTap;
 
   const _IconAction({
     required this.icon,
     required this.color,
+    this.backgroundColor,
     required this.tooltip,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
+    final bgColor = backgroundColor ?? color.withValues(alpha: 0.1);
     return Tooltip(
       message: tooltip,
       child: Material(
-        color: color.withValues(alpha: 0.1),
+        color: bgColor,
         borderRadius: BorderRadius.circular(10),
         child: InkWell(
           onTap: onTap,
