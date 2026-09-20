@@ -474,19 +474,19 @@ class _FunctionListHeader extends StatelessWidget
         padding: const EdgeInsets.only(left: 10),
         child: Center(
           child: Material(
-            color: Colors.white.withValues(alpha: 0.14),
+            color: Colors.transparent,
             shape: const CircleBorder(),
             clipBehavior: Clip.antiAlias,
             child: InkWell(
               onTap: onBack,
               customBorder: const CircleBorder(),
-              child: const SizedBox(
+              child: SizedBox(
                 width: 42,
                 height: 42,
                 child: Center(
                   child: HugeIcon(
                     icon: HugeIcons.strokeRoundedArrowLeft01,
-                    color: Colors.white,
+                    color: Theme.of(context).colorScheme.primary,
                     size: 22,
                     strokeWidth: 1.9,
                   ),

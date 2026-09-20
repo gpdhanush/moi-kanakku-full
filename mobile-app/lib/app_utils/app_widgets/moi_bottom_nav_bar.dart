@@ -44,136 +44,147 @@ class MoiBottomNavBar extends StatelessWidget {
     final colors = AppColors.of(context);
 
     final isCenterAddLayout = onAddTap != null && items.length == 4;
+    const overflowTop = 26.0;
 
-    return Stack(
-      clipBehavior: Clip.none,
-      alignment: Alignment.topCenter,
-      children: [
-        Material(
-          color: barColor,
-          elevation: 0,
-          child: DecoratedBox(
-            decoration: BoxDecoration(
+    return SizedBox(
+      height: (isCenterAddLayout ? overflowTop : 0) + barHeight + bottomInset,
+      width: double.infinity,
+      child: Stack(
+        clipBehavior: Clip.none,
+        alignment: Alignment.topCenter,
+        children: [
+          Positioned(
+            left: 0,
+            right: 0,
+            top: isCenterAddLayout ? overflowTop : 0,
+            bottom: 0,
+            child: Material(
               color: barColor,
-              border: Border(
-                top: BorderSide(
-                  color: primary,
-                  width: 2,
+              elevation: 0,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: barColor,
+                  border: Border(
+                    top: BorderSide(
+                      color: primary,
+                      width: 2,
+                    ),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.charcoal.withValues(alpha: 0.06),
+                      blurRadius: 10,
+                      offset: const Offset(0, -2),
+                    ),
+                  ],
                 ),
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.charcoal.withValues(alpha: 0.06),
-                  blurRadius: 10,
-                  offset: const Offset(0, -2),
+                child: Padding(
+                  padding: EdgeInsets.only(bottom: bottomInset),
+                  child: SizedBox(
+                    height: barHeight,
+                    width: double.infinity,
+                    child: isCenterAddLayout
+                        ? Row(
+                            children: [
+                              Expanded(
+                                child: _MoiBottomNavTile(
+                                  item: items[0],
+                                  selected: currentIndex == 0,
+                                  active: colors.iconActive,
+                                  inactive: colors.iconDefault,
+                                  indicator: colors.moiReceivedSoft,
+                                  onTap: () => onTap(0),
+                                ),
+                              ),
+                              Expanded(
+                                child: _MoiBottomNavTile(
+                                  item: items[1],
+                                  selected: currentIndex == 1,
+                                  active: colors.iconActive,
+                                  inactive: colors.iconDefault,
+                                  indicator: colors.moiReceivedSoft,
+                                  onTap: () => onTap(1),
+                                ),
+                              ),
+                              const Expanded(child: SizedBox.shrink()),
+                              Expanded(
+                                child: _MoiBottomNavTile(
+                                  item: items[2],
+                                  selected: currentIndex == 2,
+                                  active: colors.iconActive,
+                                  inactive: colors.iconDefault,
+                                  indicator: colors.moiReceivedSoft,
+                                  onTap: () => onTap(2),
+                                ),
+                              ),
+                              Expanded(
+                                child: _MoiBottomNavTile(
+                                  item: items[3],
+                                  selected: currentIndex == 3,
+                                  active: colors.iconActive,
+                                  inactive: colors.iconDefault,
+                                  indicator: colors.moiReceivedSoft,
+                                  onTap: () => onTap(3),
+                                ),
+                              ),
+                            ],
+                          )
+                        : Row(
+                            children: List.generate(items.length, (index) {
+                              return Expanded(
+                                child: _MoiBottomNavTile(
+                                  item: items[index],
+                                  selected: index == currentIndex,
+                                  active: colors.iconActive,
+                                  inactive: colors.iconDefault,
+                                  indicator: colors.moiReceivedSoft,
+                                  onTap: () => onTap(index),
+                                ),
+                              );
+                            }),
+                          ),
+                  ),
                 ),
-              ],
-            ),
-            child: Padding(
-              padding: EdgeInsets.only(bottom: bottomInset),
-              child: SizedBox(
-                height: barHeight,
-                width: double.infinity,
-                child: isCenterAddLayout
-                    ? Row(
-                        children: [
-                          Expanded(
-                            child: _MoiBottomNavTile(
-                              item: items[0],
-                              selected: currentIndex == 0,
-                              active: colors.iconActive,
-                              inactive: colors.iconDefault,
-                              indicator: colors.moiReceivedSoft,
-                              onTap: () => onTap(0),
-                            ),
-                          ),
-                          Expanded(
-                            child: _MoiBottomNavTile(
-                              item: items[1],
-                              selected: currentIndex == 1,
-                              active: colors.iconActive,
-                              inactive: colors.iconDefault,
-                              indicator: colors.moiReceivedSoft,
-                              onTap: () => onTap(1),
-                            ),
-                          ),
-                          const Expanded(child: SizedBox.shrink()),
-                          Expanded(
-                            child: _MoiBottomNavTile(
-                              item: items[2],
-                              selected: currentIndex == 2,
-                              active: colors.iconActive,
-                              inactive: colors.iconDefault,
-                              indicator: colors.moiReceivedSoft,
-                              onTap: () => onTap(2),
-                            ),
-                          ),
-                          Expanded(
-                            child: _MoiBottomNavTile(
-                              item: items[3],
-                              selected: currentIndex == 3,
-                              active: colors.iconActive,
-                              inactive: colors.iconDefault,
-                              indicator: colors.moiReceivedSoft,
-                              onTap: () => onTap(3),
-                            ),
-                          ),
-                        ],
-                      )
-                    : Row(
-                        children: List.generate(items.length, (index) {
-                          return Expanded(
-                            child: _MoiBottomNavTile(
-                              item: items[index],
-                              selected: index == currentIndex,
-                              active: colors.iconActive,
-                              inactive: colors.iconDefault,
-                              indicator: colors.moiReceivedSoft,
-                              onTap: () => onTap(index),
-                            ),
-                          );
-                        }),
-                      ),
               ),
             ),
           ),
-        ),
-        if (isCenterAddLayout)
-          Positioned(
-            top: -26,
-            child: Material(
-              color: Colors.transparent,
-              elevation: 0,
-              child: InkWell(
-                onTap: onAddTap,
-                customBorder: const CircleBorder(),
-                child: Container(
-                  width: 52,
-                  height: 52,
-                  decoration: BoxDecoration(
-                    color: primary,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: primary.withValues(alpha: 0.38),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
+          if (isCenterAddLayout)
+            Positioned(
+              top: 0,
+              child: Material(
+                color: Colors.transparent,
+                elevation: 0,
+                child: InkWell(
+                  onTap: onAddTap,
+                  customBorder: const CircleBorder(),
+                  child: Container(
+                    width: 52,
+                    height: 52,
+                    decoration: BoxDecoration(
+                      color: primary,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: primary.withValues(alpha: 0.38),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: const Center(
+                      child: HugeIcon(
+                        icon: HugeIcons.strokeRoundedAdd01,
+                        color: Colors.white,
+                        size: 26,
+                        strokeWidth: 2.4,
                       ),
-                    ],
-                  ),
-                  child: Center(
-                    child: HugeIcon(
-                      icon: HugeIcons.strokeRoundedAdd01,
-                      color: Colors.white,
-                      size: 26,
-                      strokeWidth: 2.4,
                     ),
                   ),
                 ),
               ),
             ),
-          ),
-      ],
+        ],
+      ),
     );
   }
 }

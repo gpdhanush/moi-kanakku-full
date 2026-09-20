@@ -38,8 +38,6 @@ class _ContactUsState extends State<ContactUs> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _SupportHero(message: languageProvider.tr('contacts.header')),
-                const SizedBox(height: AppSpacing.md),
                 Text(
                   languageProvider.tr('contacts.title'),
                   style: AppTypography.label.copyWith(
@@ -83,6 +81,7 @@ class _ContactUsState extends State<ContactUs> {
                   title: languageProvider.tr('contacts.workingHours'),
                   days: languageProvider.tr('contacts.mondayToFriday'),
                   hours: languageProvider.tr('contacts.morningToNight'),
+                  hint: languageProvider.tr('contacts.workingHoursHint'),
                 ),
               ],
             ),
@@ -119,69 +118,6 @@ class _ContactUsState extends State<ContactUs> {
       ).tr('contacts.whatsappNotInstalled');
       AlertServices().toast(toastMsg);
     }
-  }
-}
-
-class _SupportHero extends StatelessWidget {
-  final String message;
-
-  const _SupportHero({required this.message});
-
-  @override
-  Widget build(BuildContext context) {
-    const cardColor = AppColors.primaryDark;
-
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(18),
-        color: cardColor,
-        boxShadow: [
-          BoxShadow(
-            color: cardColor.withValues(alpha: 0.28),
-            blurRadius: 18,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(18, 20, 18, 20),
-        child: SizedBox(
-          width: double.infinity,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Container(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.10),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                alignment: Alignment.center,
-                child: const HugeIcon(
-                  icon: HugeIcons.strokeRoundedCustomerService01,
-                  color: Colors.black,
-                  size: 26,
-                  strokeWidth: 1.8,
-                ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                message,
-                textAlign: TextAlign.center,
-                style: AppTypography.body.copyWith(
-                  color: Colors.black.withValues(alpha: 0.82),
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  height: 1.35,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
   }
 }
 
@@ -298,80 +234,144 @@ class _WorkingHoursCard extends StatelessWidget {
   final String title;
   final String days;
   final String hours;
+  final String hint;
 
   const _WorkingHoursCard({
     required this.primary,
     required this.title,
     required this.days,
     required this.hours,
+    required this.hint,
   });
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardBg = isDark ? AppColors.darkSurface : Colors.white;
+    final pillBg = isDark ? const Color(0xFF162E21) : const Color(0xFFE8F7EC);
+    final primaryGreen = const Color(0xFF16A34A);
+    final darkGreen = isDark ? const Color(0xFF4ADE80) : const Color(0xFF087443);
+    final titleColor = isDark ? Colors.white : const Color(0xFF102A2A);
+    final hoursColor = isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569);
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurface : Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        color: cardBg,
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+          color: isDark ? AppColors.darkBorder : const Color(0xFFE2E8E5),
+          width: 1.0,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
-      child: SizedBox(
-        width: double.infinity,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Container(
-              width: 42,
-              height: 42,
+              width: 52,
+              height: 52,
               decoration: BoxDecoration(
-                color: primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
+                color: pillBg,
+                borderRadius: BorderRadius.circular(16),
               ),
               alignment: Alignment.center,
               child: HugeIcon(
                 icon: HugeIcons.strokeRoundedClock01,
-                color: primary,
-                size: 18,
-                strokeWidth: 1.8,
+                color: darkGreen,
+                size: 26,
+                strokeWidth: 2.0,
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 14),
             Text(
               title,
               textAlign: TextAlign.center,
-              style: AppTypography.label.copyWith(
-                color: isDark
-                    ? AppColors.darkTextPrimary
-                    : AppColors.textPrimary,
-                fontSize: 15,
+              style: AppTypography.sectionTitle.copyWith(
+                color: titleColor,
+                fontSize: 18,
                 fontWeight: FontWeight.w700,
+                letterSpacing: -0.2,
               ),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                HugeIcon(
+                  icon: HugeIcons.strokeRoundedCalendar01,
+                  color: primaryGreen,
+                  size: 20,
+                  strokeWidth: 2.0,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  days,
+                  textAlign: TextAlign.center,
+                  style: AppTypography.body.copyWith(
+                    color: primaryGreen,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 6),
-            Text(
-              days,
-              textAlign: TextAlign.center,
-              style: AppTypography.body.copyWith(
-                color: primary,
-                fontSize: 14,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            const SizedBox(height: 4),
             Text(
               hours,
               textAlign: TextAlign.center,
               style: AppTypography.body.copyWith(
-                color: isDark
-                    ? AppColors.darkTextSecondary
-                    : AppColors.textSecondary,
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
+                color: hoursColor,
+                fontSize: 15,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 18),
+            Divider(
+              height: 1,
+              thickness: 1,
+              color: isDark ? AppColors.darkBorder : const Color(0xFFE2E8E5),
+            ),
+            const SizedBox(height: 14),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              decoration: BoxDecoration(
+                color: pillBg,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  HugeIcon(
+                    icon: HugeIcons.strokeRoundedIdea01,
+                    color: primaryGreen,
+                    size: 20,
+                    strokeWidth: 2.0,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      hint,
+                      textAlign: TextAlign.center,
+                      style: AppTypography.body.copyWith(
+                        color: darkGreen,
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ],

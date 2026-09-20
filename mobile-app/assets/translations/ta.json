@@ -138,7 +138,8 @@
     "whatsapp": "வாட்ஸ்அப்",
     "whatsappMessage": "வணக்கம், எனக்கு உதவி தேவை",
     "whatsappNotInstalled": "WhatsApp நிறுவப்படவில்லை.",
-    "workingHours": "பணிநேரம்"
+    "workingHours": "பணிநேரம்",
+    "workingHoursHint": "பணிநேரத்தில் எங்களை தாராளமாக தொடர்பு கொள்ளலாம்."
   },
   "feedback": {
     "admin": "அதிகாரி",

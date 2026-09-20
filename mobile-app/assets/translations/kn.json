@@ -138,7 +138,8 @@
     "whatsapp": "ವಾಟ್ಸ್‌ಆಪ್",
     "whatsappMessage": "ನಮಸ್ಕಾರ, ನನಗೆ ಸಹಾಯ ಬೇಕಾಗಿದೆ",
     "whatsappNotInstalled": "WhatsApp ಸ್ಥಾಪಿಸಲಾಗಿಲ್ಲ.",
-    "workingHours": "ಕೆಲಸದ ಸಮಯ"
+    "workingHours": "ಕೆಲಸದ ಸಮಯ",
+    "workingHoursHint": "ಕೆಲಸದ ಸಮಯದಲ್ಲಿ ನಮ್ಮನ್ನು ಸಂಪರ್ಕಿಸಬಹುದು."
   },
   "feedback": {
     "admin": "ನಿರ್ವಾಹಕರು",

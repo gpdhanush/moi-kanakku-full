@@ -218,12 +218,10 @@ class MoiAppHeader extends StatelessWidget implements PreferredSizeWidget {
               child: Center(
                 child: circleButton(
                   onTap: onBack ?? () => Navigator.maybePop(context),
-                  backgroundColor: isDark
-                      ? const Color(0xFF1E2D2D)
-                      : const Color(0xFFECFCCB).withValues(alpha: 0.65),
+                  backgroundColor: Colors.transparent,
                   child: HugeIcon(
                     icon: HugeIcons.strokeRoundedArrowLeft01,
-                    color: const Color(0xFF102A2A),
+                    color: Theme.of(context).colorScheme.primary,
                     size: 22,
                     strokeWidth: 1.9,
                   ),
@@ -386,12 +384,10 @@ class MoiBannerHeader extends StatelessWidget implements PreferredSizeWidget {
                     if (showBack) ...[
                       MoiAppHeader.circleButton(
                         onTap: onBack ?? () => Navigator.maybePop(context),
-                        backgroundColor: isDark
-                            ? const Color(0xFF1E2D2D)
-                            : const Color(0xFFECFCCB).withValues(alpha: 0.65),
+                        backgroundColor: Colors.transparent,
                         child: HugeIcon(
                           icon: HugeIcons.strokeRoundedArrowLeft01,
-                          color: const Color(0xFF102A2A),
+                          color: Theme.of(context).colorScheme.primary,
                           size: 22,
                           strokeWidth: 1.9,
                         ),

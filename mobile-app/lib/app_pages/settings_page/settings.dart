@@ -113,13 +113,13 @@ class _SettingsAppHeader extends StatelessWidget implements PreferredSizeWidget 
         padding: const EdgeInsets.only(left: 10),
         child: Center(
           child: Material(
-            color: Colors.white.withValues(alpha: 0.14),
+            color: Colors.transparent,
             shape: const CircleBorder(),
             clipBehavior: Clip.antiAlias,
             child: InkWell(
               onTap: onBack,
               customBorder: const CircleBorder(),
-              child: const SizedBox(
+              child: SizedBox(
                 width: 42,
                 height: 42,
                 child: Center(
@@ -127,7 +127,7 @@ class _SettingsAppHeader extends StatelessWidget implements PreferredSizeWidget 
                     icon: HugeIcons.strokeRoundedArrowLeft01,
                     strokeWidth: 1.9,
                     size: 22,
-                    color: Colors.white,
+                    color: Theme.of(context).colorScheme.primary,
                   ),
                 ),
               ),

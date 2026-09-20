@@ -257,20 +257,22 @@ class _AuthImageHeroState extends State<AuthImageHero>
               top: topInset + 8,
               left: 8,
               child: Material(
-                color: Colors.white.withValues(alpha: 0.16),
+                color: Colors.transparent,
                 shape: const CircleBorder(),
                 clipBehavior: Clip.antiAlias,
                 child: InkWell(
                   onTap: widget.onBack,
                   customBorder: const CircleBorder(),
-                  child: const SizedBox(
+                  child: SizedBox(
                     width: 42,
                     height: 42,
-                    child: HugeIcon(
-                      icon: HugeIcons.strokeRoundedArrowLeft01,
-                      size: 18,
-                      color: Colors.white,
-                      strokeWidth: 1.8,
+                    child: Center(
+                      child: HugeIcon(
+                        icon: HugeIcons.strokeRoundedArrowLeft01,
+                        size: 22,
+                        color: Theme.of(context).colorScheme.primary,
+                        strokeWidth: 1.9,
+                      ),
                     ),
                   ),
                 ),

@@ -435,7 +435,7 @@ class _DetailsAppHeader extends StatelessWidget implements PreferredSizeWidget {
         padding: const EdgeInsets.only(left: 10),
         child: Center(
           child: Material(
-            color: Colors.white.withValues(alpha: 0.14),
+            color: Colors.transparent,
             shape: const CircleBorder(),
             clipBehavior: Clip.antiAlias,
             child: InkWell(
@@ -447,7 +447,7 @@ class _DetailsAppHeader extends StatelessWidget implements PreferredSizeWidget {
                 child: Center(
                   child: HugeIcon(
                     icon: HugeIcons.strokeRoundedArrowLeft01,
-                    color: headerIconColor,
+                    color: Theme.of(context).colorScheme.primary,
                     size: 22,
                     strokeWidth: 1.9,
                   ),
