@@ -59,6 +59,7 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                 physics: const BouncingScrollPhysics(),
                 child: Form(
                   key: _formKey,
+                  autovalidateMode: AutovalidateMode.disabled,
                   child: Column(
                     children: [
                       _buildCreativeHero(media, primary),
@@ -74,6 +75,7 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                           controller: emailCtrl,
                           keyboardType: TextInputType.emailAddress,
                           textInputAction: TextInputAction.done,
+                          autovalidateMode: AutovalidateMode.disabled,
                           onChanged: (String value) {
                             emailCtrl.text = value.toLowerCase();
                           },
@@ -93,6 +95,7 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                         padding: const EdgeInsets.symmetric(horizontal: 15),
                         child: AppButton(
                           title: languageProvider.tr('auth.sendCode'),
+                          showIcon: false,
                           onPressed: () {
                             if (_formKey.currentState!.validate()) {
                               _formKey.currentState!.save();

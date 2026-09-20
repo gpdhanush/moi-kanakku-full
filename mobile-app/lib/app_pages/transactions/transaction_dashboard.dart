@@ -284,8 +284,8 @@ class _TransactionDashboardState extends State<TransactionDashboard> {
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           appBar: MoiAppHeader(
             title: languageProvider.tr('nav.overview'),
-            showBack: true,
-            onBack: _goHome,
+            showBack: false,
+            onBack: null,
           ),
           body: MoiRefreshIndicator(
             onRefresh: () => fetchPersonLists(reset: true, showLoading: false),

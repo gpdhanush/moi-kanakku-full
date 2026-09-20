@@ -110,12 +110,12 @@ class _LoginPageState extends State<LoginPage>
                 height: heroHeight + fadeOverlap,
                 child: LoginHeroHeader(
                   height: heroHeight + fadeOverlap,
-                  headline: keyboardOpen
-                      ? null
-                      : languageProvider.tr('login.heroHeadline'),
-                  support: keyboardOpen
-                      ? null
-                      : languageProvider.tr('login.heroSupport'),
+                  // headline: keyboardOpen
+                  //     ? null
+                  //     : languageProvider.tr('login.heroHeadline'),
+                  // support: keyboardOpen
+                  //     ? null
+                  //     : languageProvider.tr('login.heroSupport'),
                   fadeColor: Theme.of(context).scaffoldBackgroundColor,
                 ),
               ),
@@ -154,6 +154,8 @@ class _LoginPageState extends State<LoginPage>
                                           color: Theme.of(
                                             context,
                                           ).colorScheme.onSurface,
+                                          fontSize: 22,
+                                          fontWeight: FontWeight.w700,
                                         ),
                                       ),
                                       const SizedBox(height: 8),
@@ -165,6 +167,8 @@ class _LoginPageState extends State<LoginPage>
                                               color: Theme.of(
                                                 context,
                                               ).colorScheme.onSurfaceVariant,
+                                              fontFamily: "Fredoka",
+                                              fontSize: 14,
                                             ),
                                       ),
                                       const SizedBox(height: AppSpacing.lg),

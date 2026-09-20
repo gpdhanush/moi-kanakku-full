@@ -73,6 +73,7 @@ class _VerifyForgotOtpState extends State<VerifyForgotOtp> {
                 physics: const BouncingScrollPhysics(),
                 child: Form(
                   key: _formKey,
+                  autovalidateMode: AutovalidateMode.disabled,
                   child: Column(
                     children: [
                       _buildCreativeHero(media, primary),
@@ -89,6 +90,7 @@ class _VerifyForgotOtpState extends State<VerifyForgotOtp> {
                           maxLength: 6,
                           keyboardType: TextInputType.phone,
                           textInputAction: TextInputAction.done,
+                          autovalidateMode: AutovalidateMode.disabled,
                           onChanged: (value) {
                             if (value.length == 6) {
                               FocusScope.of(context).unfocus();
@@ -122,6 +124,7 @@ class _VerifyForgotOtpState extends State<VerifyForgotOtp> {
                         padding: const EdgeInsets.symmetric(horizontal: 15),
                         child: AppButton(
                           title: languageProvider.tr('auth.verify'),
+                          showIcon: false,
                           onPressed: () {
                             if (_formKey.currentState!.validate()) {
                               _formKey.currentState!.save();

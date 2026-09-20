@@ -57,6 +57,7 @@ class _ResetPasswordState extends State<ResetPassword> {
                 physics: const BouncingScrollPhysics(),
                 child: Form(
                   key: _formKey,
+                  autovalidateMode: AutovalidateMode.disabled,
                   child: Column(
                     children: [
                       _buildCreativeHero(media, primary),
@@ -81,6 +82,7 @@ class _ResetPasswordState extends State<ResetPassword> {
                             });
                           },
                           required: true,
+                          autovalidateMode: AutovalidateMode.disabled,
                           validator: (value) {
                             confirmPass = value.toString();
                             final key = PasswordValidator.validateSecure(
@@ -106,6 +108,7 @@ class _ResetPasswordState extends State<ResetPassword> {
                           maxLength: 16,
                           textInputAction: TextInputAction.done,
                           required: true,
+                          autovalidateMode: AutovalidateMode.disabled,
                           validator: (value) {
                             if (value.toString().isEmpty) {
                               return languageProvider.tr(
@@ -140,6 +143,7 @@ class _ResetPasswordState extends State<ResetPassword> {
                         padding: const EdgeInsets.symmetric(horizontal: 15),
                         child: AppButton(
                           title: languageProvider.tr('auth.changePassword'),
+                          showIcon: false,
                           onPressed: () {
                             if (_formKey.currentState!.validate()) {
                               _formKey.currentState!.save();

@@ -93,7 +93,28 @@ class _NotificationListPageState extends State<NotificationListPage> {
         ],
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(strokeWidth: 2.5))
+          ? Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.page,
+                AppSpacing.sm,
+                AppSpacing.page,
+                AppSpacing.xxl,
+              ),
+              child: ListView.separated(
+                physics: const AlwaysScrollableScrollPhysics(
+                  parent: BouncingScrollPhysics(),
+                ),
+                itemCount: 6,
+                separatorBuilder: (_, _) =>
+                    const SizedBox(height: AppSpacing.sm),
+                itemBuilder: (context, index) {
+                  return AppSkeletonListTile(
+                    showAvatar: true,
+                    showTrailing: index % 2 == 0,
+                  );
+                },
+              ),
+            )
           : _notifications.isEmpty
           ? CustomScrollView(
               physics: const BouncingScrollPhysics(),
