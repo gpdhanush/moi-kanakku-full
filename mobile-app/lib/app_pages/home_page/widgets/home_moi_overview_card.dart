@@ -34,10 +34,10 @@ class HomeMoiOverviewCard extends StatelessWidget {
     final heroMuted = isDark
         ? const Color(0xFF7EE8C7)
         : heroFg.withValues(alpha: 0.78);
-    const receivedAccent = Color(0xFF0E8A63);
-    const receivedSoft = Color(0xFFEAF7F0);
-    const givenAccent = Color(0xFFE38B3D);
-    const givenSoft = Color(0xFFF8E6D6);
+    const receivedAccent = Color(0xFF16A34A);
+    const receivedSoft = Color(0x1A16A34A);
+    const givenAccent = Color(0xFFF2B84B);
+    const givenSoft = Color(0x1AF2B84B);
 
     return Semantics(
       label:
@@ -191,6 +191,77 @@ class _FlowMetricTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
+    if (isDark) {
+      return Material(
+        color: Colors.transparent,
+        borderRadius: AppRadius.lgAll,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: AppRadius.lgAll,
+          child: Ink(
+            decoration: BoxDecoration(
+              borderRadius: AppRadius.lgAll,
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: isDark
+                    ? [const Color(0xFF0A1215), const Color(0xFF0A1215)]
+                    : [softTop, softBottom],
+              ),
+              border: Border.all(
+                color: accent.withValues(alpha: 0.8),
+                width: 1.5,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: accent.withValues(alpha: 0.22),
+                  blurRadius: 12,
+                  offset: const Offset(0, 0),
+                ),
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.26),
+                  blurRadius: 10,
+                  offset: const Offset(0, 5),
+                ),
+              ],
+            ),
+            child: Container(
+              constraints: const BoxConstraints(minHeight: 88),
+              padding: const EdgeInsets.all(AppSpacing.md),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    title,
+                    style: AppTypography.label.copyWith(
+                      color: accent.withValues(alpha: 0.9),
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    amount,
+                    style: AppTypography.amountMedium.copyWith(
+                      color: accent,
+                      fontSize: 18,
+                      letterSpacing: -0.3,
+                      fontWeight: FontWeight.w800,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
     return Material(
       color: Colors.transparent,
       borderRadius: AppRadius.lgAll,
@@ -200,39 +271,15 @@ class _FlowMetricTile extends StatelessWidget {
         child: Ink(
           decoration: BoxDecoration(
             borderRadius: AppRadius.lgAll,
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: isDark
-                  ? [const Color(0xFF0A1215), const Color(0xFF0A1215)]
-                  : [softTop, softBottom],
-            ),
-            border: Border.all(
-              color: isDark
-                  ? accent.withValues(alpha: 0.8)
-                  : accent.withValues(alpha: 0.2),
-              width: isDark ? 1.5 : 1.0,
-            ),
-            boxShadow: isDark
-                ? [
-                    BoxShadow(
-                      color: accent.withValues(alpha: 0.22),
-                      blurRadius: 12,
-                      offset: const Offset(0, 0),
-                    ),
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.26),
-                      blurRadius: 10,
-                      offset: const Offset(0, 5),
-                    ),
-                  ]
-                : [
-                    BoxShadow(
-                      color: accent.withValues(alpha: 0.12),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
+            color: softTop,
+            border: Border.all(color: accent.withValues(alpha: 0.18), width: 1),
+            boxShadow: [
+              BoxShadow(
+                color: accent.withValues(alpha: 0.12),
+                blurRadius: 10,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
           child: Container(
             constraints: const BoxConstraints(minHeight: 88),
@@ -244,7 +291,11 @@ class _FlowMetricTile extends StatelessWidget {
                 Text(
                   title,
                   style: AppTypography.label.copyWith(
-                    color: accent.withValues(alpha: 0.9),
+                    color:
+                        title.toLowerCase().contains('out') ||
+                            title.toLowerCase().contains('given')
+                        ? const Color(0xFF102A2A)
+                        : accent,
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
                   ),
@@ -255,7 +306,11 @@ class _FlowMetricTile extends StatelessWidget {
                 Text(
                   amount,
                   style: AppTypography.amountMedium.copyWith(
-                    color: accent,
+                    color:
+                        title.toLowerCase().contains('out') ||
+                            title.toLowerCase().contains('given')
+                        ? const Color(0xFF102A2A)
+                        : accent,
                     fontSize: 18,
                     letterSpacing: -0.3,
                     fontWeight: FontWeight.w800,
