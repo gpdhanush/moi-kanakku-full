@@ -1,6 +1,19 @@
 const db = require('../config/database');
 const logger = require('../config/logger');
 const cache = require('../utils/cache');
+const { fromBinaryUUID } = require('../helpers/uuid');
+
+function getAnalyticsMonth(value) {
+    const current = new Date();
+    const fallback = `${current.getFullYear()}-${String(current.getMonth() + 1).padStart(2, '0')}`;
+    return /^\d{4}-(0[1-9]|1[0-2])$/.test(String(value || '')) ? String(value) : fallback;
+}
+
+function getPreviousMonth(month) {
+    const [year, monthNumber] = month.split('-').map(Number);
+    const date = new Date(Date.UTC(year, monthNumber - 2, 1));
+    return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}`;
+}
 
 exports.controller = {
     /**
@@ -288,6 +301,103 @@ exports.controller = {
             return res.status(500).json({
                 responseType: "F",
                 responseValue: { message: error.toString() }
+            });
+        }
+    },
+
+    /**
+     * Get user growth and activity analytics for the admin dashboard.
+     * The selected month controls signup trends and month-over-month comparison.
+     */
+    getDashboardAnalytics: async (req, res) => {
+        try {
+            const month = getAnalyticsMonth(req.query.month);
+            const previousMonth = getPreviousMonth(month);
+            const cacheKey = `dashboard:analytics:${month}`;
+            const cachedAnalytics = cache.get(cacheKey);
+            if (cachedAnalytics) {
+                return res.status(200).json(cachedAnalytics);
+            }
+
+            const [monthUsersResult, previousMonthUsersResult, todayUsersResult, dailySignupsResult, recentLoginsResult, cityBreakdownResult] = await Promise.all([
+                db.query(`SELECT COUNT(*) AS count FROM users
+                          WHERE (is_deleted = 0 OR is_deleted IS NULL)
+                            AND created_at >= ?
+                            AND created_at < DATE_ADD(?, INTERVAL 1 MONTH)`, [`${month}-01`, `${month}-01`]),
+                db.query(`SELECT COUNT(*) AS count FROM users
+                          WHERE (is_deleted = 0 OR is_deleted IS NULL)
+                            AND created_at >= ?
+                            AND created_at < DATE_ADD(?, INTERVAL 1 MONTH)`, [`${previousMonth}-01`, `${previousMonth}-01`]),
+                db.query(`SELECT COUNT(*) AS count FROM users
+                          WHERE (is_deleted = 0 OR is_deleted IS NULL)
+                            AND created_at >= CURDATE()
+                            AND created_at < DATE_ADD(CURDATE(), INTERVAL 1 DAY)`),
+                db.query(`SELECT DATE(created_at) AS date, COUNT(*) AS count
+                          FROM users
+                          WHERE (is_deleted = 0 OR is_deleted IS NULL)
+                            AND created_at >= ?
+                            AND created_at < DATE_ADD(?, INTERVAL 1 MONTH)
+                          GROUP BY DATE(created_at)
+                          ORDER BY date ASC`, [`${month}-01`, `${month}-01`]),
+                db.query(`SELECT u.id, u.full_name, u.email, u.last_activity_at, up.city
+                          FROM users u
+                          LEFT JOIN user_profiles up ON up.user_id = u.id
+                          WHERE (u.is_deleted = 0 OR u.is_deleted IS NULL)
+                            AND u.last_activity_at IS NOT NULL
+                          ORDER BY u.last_activity_at DESC
+                          LIMIT 8`),
+                db.query(`SELECT COALESCE(NULLIF(TRIM(up.city), ''), 'Unknown') AS city, COUNT(*) AS count
+                          FROM users u
+                          LEFT JOIN user_profiles up ON up.user_id = u.id
+                          WHERE (u.is_deleted = 0 OR u.is_deleted IS NULL)
+                          GROUP BY COALESCE(NULLIF(TRIM(up.city), ''), 'Unknown')
+                          ORDER BY count DESC, city ASC
+                          LIMIT 8`),
+            ]);
+
+            const monthSignups = Number(monthUsersResult[0][0]?.count || 0);
+            const previousMonthSignups = Number(previousMonthUsersResult[0][0]?.count || 0);
+            const changePercent = previousMonthSignups === 0
+                ? (monthSignups > 0 ? 100 : 0)
+                : Math.round(((monthSignups - previousMonthSignups) / previousMonthSignups) * 100);
+
+            const analytics = {
+                month,
+                previousMonth,
+                summary: {
+                    monthSignups,
+                    previousMonthSignups,
+                    changePercent,
+                    todaySignups: Number(todayUsersResult[0][0]?.count || 0),
+                },
+                dailySignups: dailySignupsResult[0].map((row) => ({
+                    date: row.date,
+                    count: Number(row.count || 0),
+                })),
+                recentLogins: recentLoginsResult[0].map((row) => ({
+                    id: fromBinaryUUID(row.id),
+                    name: row.full_name || 'Unnamed user',
+                    email: row.email || null,
+                    city: row.city || null,
+                    lastLogin: row.last_activity_at,
+                })),
+                cityBreakdown: cityBreakdownResult[0].map((row) => ({
+                    city: row.city,
+                    count: Number(row.count || 0),
+                })),
+            };
+
+            const response = {
+                responseType: 'S',
+                responseValue: analytics,
+            };
+            cache.set(cacheKey, response, cache.TTL.DASHBOARD);
+            return res.status(200).json(response);
+        } catch (error) {
+            logger.error('Error fetching dashboard analytics:', error);
+            return res.status(500).json({
+                responseType: 'F',
+                responseValue: { message: error.toString() },
             });
         }
     }

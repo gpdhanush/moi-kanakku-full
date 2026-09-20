@@ -11,4 +11,7 @@ router.get('/', controller.getDashboard);
 // GET /dashboard/detailed
 router.get('/detailed', controller.getDashboardDetailed);
 
+// Get user growth, activity, and city analytics
+router.get('/analytics', controller.getDashboardAnalytics);
+
 module.exports = router;
