@@ -598,6 +598,16 @@ button.no-hover-lift:active,
   transform: none;
 }
 
+.audit-log-clear-button:hover,
+.audit-log-clear-button:active {
+  transform: translateY(-50%);
+}
+
+.toast-close-button:hover,
+.toast-close-button:active {
+  transform: translateY(-50%);
+}
+
 /* ── Admin Login Portal ─────────────────────────────────────────── */
 .admin-login-page {
   background: #0f172a;

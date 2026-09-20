@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Sep 09, 2026 at 12:26 AM
+-- Generation Time: Sep 21, 2026 at 02:41 AM
 -- Server version: 11.4.13-MariaDB-cll-lve
 -- PHP Version: 8.4.24
 
@@ -53,7 +53,88 @@ CREATE TABLE `admins` (
 --
 
 INSERT INTO `admins` (`id`, `full_name`, `email`, `mobile`, `password_hash`, `password_changed_at`, `status`, `failed_login_attempts`, `locked_until`, `email_verified_at`, `reset_token`, `reset_token_expires_at`, `last_login_at`, `last_activity_at`, `is_deleted`, `deleted_at`, `created_at`, `updated_at`) VALUES
-(1, 'GNANA PRAKASAM A', 'agprakash406@gmail.com', '7845456609', '$2a$10$0hCM5XkCycvSts2xKekrgedadfmU5nWXZGq/DJWiBrvIDoi5Txquy', '2026-08-09 00:27:37', 'ACTIVE', 0, NULL, NULL, '78a931f7e23f6b0d5ceba605cd4e35f32b670bc17550cb34670da3c2b039af55', '2026-08-09 01:26:06', '2026-09-08 23:40:56', '2026-09-08 23:40:56', 0, NULL, '2026-03-03 00:28:45', '2026-09-08 18:10:56');
+(1, 'GNANA PRAKASAM', 'agprakash406@gmail.com', '7845456609', '$2a$10$0hCM5XkCycvSts2xKekrgedadfmU5nWXZGq/DJWiBrvIDoi5Txquy', '2026-08-09 00:27:37', 'ACTIVE', 0, NULL, NULL, '78a931f7e23f6b0d5ceba605cd4e35f32b670bc17550cb34670da3c2b039af55', '2026-08-09 01:26:06', '2026-09-21 00:14:10', '2026-09-21 00:14:10', 0, NULL, '2026-03-03 00:28:45', '2026-09-20 18:44:10');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `app_alerts`
+--
+
+CREATE TABLE `app_alerts` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `title` varchar(255) NOT NULL,
+  `content` text NOT NULL,
+  `image_url` varchar(500) DEFAULT NULL,
+  `video_url` varchar(500) DEFAULT NULL,
+  `cta_label` varchar(120) DEFAULT NULL,
+  `cta_url` varchar(500) DEFAULT NULL,
+  `is_active` tinyint(1) NOT NULL DEFAULT 1,
+  `starts_at` datetime DEFAULT NULL,
+  `ends_at` datetime DEFAULT NULL,
+  `created_by_admin_id` bigint(20) UNSIGNED DEFAULT NULL,
+  `is_deleted` tinyint(1) NOT NULL DEFAULT 0,
+  `deleted_at` datetime DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `app_alerts`
+--
+
+INSERT INTO `app_alerts` (`id`, `title`, `content`, `image_url`, `video_url`, `cta_label`, `cta_url`, `is_active`, `starts_at`, `ends_at`, `created_by_admin_id`, `is_deleted`, `deleted_at`, `created_at`, `updated_at`) VALUES
+(1, 'Test', 'test content', NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, 1, '2026-09-19 23:45:09', '2026-09-18 17:30:59', '2026-09-19 18:15:09'),
+(2, 'Test title', 'test content', NULL, 'https://www.youtube.com/watch?v=zeENRuECQiE', 'Click', 'https://www.youtube.com/watch?v=zeENRuECQiE', 0, NULL, NULL, NULL, 1, '2026-09-19 22:23:39', '2026-09-19 14:59:31', '2026-09-19 16:53:39');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `app_alert_user_states`
+--
+
+CREATE TABLE `app_alert_user_states` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `alert_id` bigint(20) UNSIGNED NOT NULL,
+  `user_id` bigint(20) UNSIGNED NOT NULL,
+  `status` enum('dont_show','remind_later') NOT NULL,
+  `remind_at` datetime DEFAULT NULL,
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `app_alert_user_states`
+--
+
+INSERT INTO `app_alert_user_states` (`id`, `alert_id`, `user_id`, `status`, `remind_at`, `updated_at`, `created_at`) VALUES
+(1, 1, 20, 'remind_later', '2026-09-19 23:05:12', '2026-09-18 17:35:12', '2026-09-18 17:35:12'),
+(2, 1, 2, 'remind_later', '2026-09-20 01:57:36', '2026-09-18 20:27:36', '2026-09-18 20:27:36'),
+(3, 2, 2, 'remind_later', '2026-09-20 20:37:52', '2026-09-19 15:07:52', '2026-09-19 15:07:52');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `app_runtime_config`
+--
+
+CREATE TABLE `app_runtime_config` (
+  `id` tinyint(3) UNSIGNED NOT NULL,
+  `live_url` varchar(500) NOT NULL,
+  `image_url` varchar(500) NOT NULL,
+  `maintenance_mode` tinyint(1) NOT NULL DEFAULT 0,
+  `min_app_version` varchar(32) NOT NULL DEFAULT '',
+  `updated_by` bigint(20) UNSIGNED DEFAULT NULL,
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `app_runtime_config`
+--
+
+INSERT INTO `app_runtime_config` (`id`, `live_url`, `image_url`, `maintenance_mode`, `min_app_version`, `updated_by`, `created_at`, `updated_at`) VALUES
+(1, 'https://moi-api.floatwalktiruppur.in/apis', 'https://moi-api.floatwalktiruppur.in', 0, '5.0.0', 1, '2026-09-20 01:54:15', '2026-09-20 02:36:52');
 
 -- --------------------------------------------------------
 
@@ -137,6 +218,36 @@ CREATE TABLE `notifications` (
   `is_deleted` tinyint(1) DEFAULT 0,
   `deleted_at` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `notifications`
+--
+
+INSERT INTO `notifications` (`id`, `user_id`, `title`, `body`, `type`, `is_read`, `read_at`, `created_at`, `updated_at`, `is_deleted`, `deleted_at`) VALUES
+(1, 2, 'நாளைய நிகழ்வு நினைவூட்டல்', 'Puthiya upcoming function இடம்: Chennai', 'function', 1, '2026-09-17 14:15:40', '2026-09-09 06:00:08', '2026-09-17 19:37:45', 1, '2026-09-17 19:37:45'),
+(18, 47, 'கடவுச்சொல் மீட்டமைக்கப்பட்டது', 'உங்கள் கடவுச்சொல் வெற்றிகரமாக மீட்டமைக்கப்பட்டது. உங்கள் கணக்கின் பாதுகாப்பை உறுதிப்படுத்த, வழக்கமாக கடவுச்சொல்லை மாற்றவும்.', 'account', 0, NULL, '2026-09-11 11:06:13', '2026-09-11 11:06:13', 0, NULL),
+(30, 53, 'பயனர் வெற்றிகரமாக பதிவு செய்யப்பட்டார்', 'இப்போது நீங்கள் இந்த பயன்பாட்டைப் பயன்படுத்தலாம்', 'account', 0, NULL, '2026-09-13 12:15:07', '2026-09-13 12:15:07', 0, NULL),
+(31, 54, 'பயனர் வெற்றிகரமாக பதிவு செய்யப்பட்டார்', 'இப்போது நீங்கள் இந்த பயன்பாட்டைப் பயன்படுத்தலாம்', 'account', 1, '2026-09-14 12:41:42', '2026-09-14 12:39:19', '2026-09-14 12:41:42', 0, NULL),
+(45, 56, '🎉 வரவேற்கிறோம்!', 'எங்கள் செயலியை நிறுவியதற்கு மிக்க நன்றி! ❤️\nஉங்களுக்கு ஏதேனும் சந்தேகம் அல்லது உதவி தேவைப்பட்டால் எங்களைத் தொடர்பு கொள்ளுங்கள். உங்கள் கருத்துகள் மற்றும் பரிந்துரைகள் எங்கள் செயலியை மேலும் சிறப்பாக உருவாக்க உதவும்.', 'general', 0, NULL, '2026-09-16 22:01:20', '2026-09-16 22:01:20', 0, NULL),
+(50, 2, 'கருத்து தெரிவிக்கவும்', 'உங்கள் கருத்தை எங்களுடன் பகிருங்கள்\nஏதேனும் சந்தேகம், சிக்கல் அல்லது புதிய வசதி தேவைப்பட்டால் கீழே தெரிவிக்கவும்.', 'general', 1, '2026-09-17 19:40:53', '2026-09-16 22:03:47', '2026-09-17 19:42:59', 1, '2026-09-17 19:42:59'),
+(68, 20, 'கருத்து தெரிவிக்கவும்', 'உங்கள் கருத்தை எங்களுடன் பகிருங்கள்\nஏதேனும் சந்தேகம், சிக்கல் அல்லது புதிய வசதி தேவைப்பட்டால் கீழே தெரிவிக்கவும்.', 'general', 0, NULL, '2026-09-16 22:03:47', '2026-09-18 04:13:06', 1, '2026-09-18 04:13:06'),
+(97, 2, 'New Feedback Submitted', 'Your feedback has been successfully submitted. We will review it shortly.', 'general', 1, '2026-09-17 19:40:53', '2026-09-17 05:25:45', '2026-09-17 19:42:57', 1, '2026-09-17 19:42:57'),
+(98, 2, 'Feedback Response', 'thanks', 'general', 1, '2026-09-17 19:40:53', '2026-09-17 05:26:32', '2026-09-17 19:42:53', 1, '2026-09-17 19:42:53'),
+(99, 2, 'New Feedback Submitted', 'Your feedback has been successfully submitted. We will review it shortly.', 'general', 1, '2026-09-17 19:37:59', '2026-09-17 05:29:36', '2026-09-17 19:38:27', 1, '2026-09-17 19:38:27'),
+(100, 2, 'New Feedback Submitted', 'Your feedback has been successfully submitted. We will review it shortly.', 'general', 1, '2026-09-17 09:16:32', '2026-09-17 05:30:31', '2026-09-17 19:39:17', 1, '2026-09-17 19:39:17'),
+(106, 20, 'New Feedback Submitted', 'Your feedback has been successfully submitted. We will review it shortly.', 'general', 0, NULL, '2026-09-17 18:51:22', '2026-09-18 04:13:03', 1, '2026-09-18 04:13:03'),
+(107, 2, 'New Feedback Submitted', 'Your feedback has been successfully submitted. We will review it shortly.', 'general', 1, '2026-09-17 19:34:14', '2026-09-17 19:03:13', '2026-09-17 19:37:53', 1, '2026-09-17 19:37:53'),
+(108, 2, 'New Feedback Submitted', 'Your feedback has been successfully submitted. We will review it shortly.', 'general', 1, '2026-09-17 19:34:14', '2026-09-17 19:04:18', '2026-09-17 19:37:52', 1, '2026-09-17 19:37:52'),
+(109, 2, 'Feedback Response', 'thanks', 'general', 1, '2026-09-17 19:34:14', '2026-09-17 19:05:28', '2026-09-17 19:37:51', 1, '2026-09-17 19:37:51'),
+(111, 2, 'test', 'test', 'function', 1, '2026-09-17 19:47:26', '2026-09-17 19:47:19', '2026-09-17 19:47:31', 1, '2026-09-17 19:47:31'),
+(112, 2, 'hi', 'hi', 'general', 1, '2026-09-17 19:48:51', '2026-09-17 19:48:37', '2026-09-17 19:50:06', 1, '2026-09-17 19:50:06'),
+(113, 2, 'If you specifically mean', 'If you mean adding a <script> tag containing text/content dynamically in Angular, tell me what script you\'re trying to add (Google Analytics, JSON-LD/SEO, third-party script, etc.), and I can give you the exact Angular implementation.', 'general', 1, '2026-09-17 19:51:55', '2026-09-17 19:51:43', '2026-09-17 19:51:58', 1, '2026-09-17 19:51:58'),
+(114, 59, 'பயனர் வெற்றிகரமாக பதிவு செய்யப்பட்டார்', 'இப்போது நீங்கள் இந்த பயன்பாட்டைப் பயன்படுத்தலாம்', 'account', 1, '2026-09-17 22:37:48', '2026-09-17 20:02:58', '2026-09-17 22:37:48', 0, NULL),
+(115, 59, '💬 உங்கள் கருத்து எங்களுக்கு முக்கியம்!', 'உங்களுக்கு ஏதேனும் சந்தேகம், பிரச்சனை அல்லது மேம்படுத்த வேண்டிய விஷயம் இருந்தால் எங்களிடம் Feedback பகிருங்கள். உங்கள் கருத்தின் அடிப்படையில் செயலியை மேலும் சிறப்பாக மேம்படுத்துவோம். ❤️', 'general', 0, NULL, '2026-09-17 20:09:07', '2026-09-17 20:09:07', 0, NULL),
+(119, 20, 'New Feedback Submitted', 'Your feedback has been successfully submitted. We will review it shortly.', 'general', 0, NULL, '2026-09-17 20:42:17', '2026-09-18 04:13:02', 1, '2026-09-18 04:13:02'),
+(129, 19, 'கடவுச்சொல் மீட்டமைக்கப்பட்டது', 'உங்கள் கடவுச்சொல் வெற்றிகரமாக மீட்டமைக்கப்பட்டது. உங்கள் கணக்கின் பாதுகாப்பை உறுதிப்படுத்த, வழக்கமாக கடவுச்சொல்லை மாற்றவும்.', 'account', 0, NULL, '2026-09-18 20:06:56', '2026-09-18 20:06:56', 0, NULL),
+(147, 61, 'பயனர் வெற்றிகரமாக பதிவு செய்யப்பட்டார்', 'இப்போது நீங்கள் இந்த பயன்பாட்டைப் பயன்படுத்தலாம்', 'account', 0, NULL, '2026-09-20 15:15:12', '2026-09-20 15:15:12', 0, NULL),
+(148, 61, 'Feedback', 'If you want any feedback, just go and share the feedbacks', 'general', 0, NULL, '2026-09-20 20:41:55', '2026-09-20 20:41:55', 0, NULL);
 
 -- --------------------------------------------------------
 
@@ -406,7 +517,7 @@ INSERT INTO `persons` (`id`, `user_id`, `first_name`, `last_name`, `mobile`, `ci
 (243, 11, 'VEERAPUTHIRAN', NULL, NULL, 'CHINNA KATTALAI', NULL, '2026-03-11 10:03:36', '2026-07-06 13:15:40'),
 (244, 19, 'MANI MANAI GVB NAGAR', NULL, NULL, 'BANGALORE KARADICHITTUR ', NULL, '2026-03-06 08:12:38', '2026-07-06 13:15:40'),
 (245, 2, 'சீசர்', 'சசிகலா', NULL, 'சின்னப்பபுரம்', NULL, '2026-03-06 06:27:02', '2026-07-06 13:15:40'),
-(246, 2, 'ARUL VICTOR', 'RANI', NULL, 'வடக்கு மேட்டுப்பட்டி', NULL, '2026-03-06 06:05:32', '2026-07-06 13:15:40'),
+(246, 2, 'ARUL VICTOR', 'RANI', NULL, 'வடக்கு மேட்டுப்பட்டி', NULL, '2026-03-06 06:05:32', '2026-09-19 08:27:25'),
 (247, 29, 'செல்லப்பாண்டி', 'காலேஜ் ஃபிரண்ட்', NULL, 'சின்ன கட்டளை', 'ஜெகதாபட்டினம் போட்டிங்', '2026-03-25 08:30:25', '2026-07-06 13:15:40'),
 (248, 29, 'செல்வராஜ்', 'நையாண்டி மகன்', NULL, 'நாகை கவுண்டன்பட்டி', 'பால் பண்ணை ஒர்க்', '2026-03-15 09:53:11', '2026-07-06 13:15:40'),
 (249, 19, 'R. SELLAMUTHU, SAMUNDEEAWARI AGENCY', NULL, NULL, 'AMMAN NAGAR, KALLAKURICHI ', 'fencing', '2026-03-06 08:12:56', '2026-07-06 13:15:40'),
@@ -689,7 +800,7 @@ INSERT INTO `persons` (`id`, `user_id`, `first_name`, `last_name`, `mobile`, `ci
 (525, 2, 'செபஸ்தியார்', 'சிவகாமி', NULL, 'முத்தழகுபட்டி', NULL, '2026-03-06 06:05:04', '2026-07-06 13:15:40'),
 (526, 19, 'SHANKAR PREMA VELLACHI', NULL, NULL, 'MADHAVACHERI ', NULL, '2026-03-06 08:12:57', '2026-07-06 13:15:40'),
 (527, 2, 'சேவியர்', 'ஆரோக்கியம்மாள்', NULL, 'திண்டுக்கல்', 'பழக்கடை', '2026-03-06 06:05:04', '2026-07-06 13:15:40'),
-(528, 2, 'A. ஜேம்ஸ் ராஜ்', NULL, NULL, 'மேட்டுப்பட்டி', NULL, '2026-03-06 06:05:04', '2026-07-06 13:15:40'),
+(528, 2, 'A. ஜேம்ஸ் ராஜ்', NULL, NULL, 'மேட்டுப்பட்டி', NULL, '2026-03-06 06:05:04', '2026-09-19 09:06:50'),
 (529, 2, 'கசாவடி மகன் முருகன்', NULL, NULL, 'ஒட்டுப்பட்டி', NULL, '2026-03-06 07:31:03', '2026-07-06 13:15:40'),
 (530, 33, 'வெள்ளைச்சாமி', NULL, '9750395396', 'இராமேசுவரம்', NULL, '2026-03-12 17:30:02', '2026-07-06 13:15:40'),
 (531, 16, 'உதயகுமார்', 'கீதா', NULL, 'மதுரை (பறவை)', NULL, '2026-03-06 07:47:28', '2026-07-06 13:15:40'),
@@ -964,7 +1075,7 @@ INSERT INTO `persons` (`id`, `user_id`, `first_name`, `last_name`, `mobile`, `ci
 (801, 31, 'பார்த்திபன்', 'ராமச்சந்திரன்', NULL, 'வெள்ளூர்', NULL, '2026-04-07 13:18:42', '2026-07-06 13:15:40'),
 (853, 46, 'NATARAJAN', 'C', NULL, 'RAJAPALAYAM', NULL, '2026-08-24 10:08:11', '2026-08-24 12:24:17'),
 (854, 46, 'BALAMURUGAN', 'M', NULL, 'KUTTALAM', NULL, '2026-08-24 10:10:13', '2026-08-24 16:58:57'),
-(855, 46, 'PANDIAN', NULL, NULL, 'RAJAPALAYAM', NULL, '2026-08-24 10:11:10', '2026-08-24 10:11:10'),
+(855, 46, 'PANDIAN', 'N', NULL, 'RAJAPALAYAM', NULL, '2026-08-24 10:11:10', '2026-09-09 23:28:08'),
 (856, 46, 'KASTHURI', NULL, NULL, 'THIRUKKADAIYUR', NULL, '2026-08-24 10:12:23', '2026-08-24 10:12:23'),
 (857, 46, 'CHANDRASEKAR', NULL, NULL, 'PERAMBUR', NULL, '2026-08-24 10:13:25', '2026-08-24 10:13:25'),
 (858, 46, 'VENKATESH', 'J', NULL, 'MAYILADUTHURAI', NULL, '2026-08-24 10:14:37', '2026-08-24 10:14:37'),
@@ -975,7 +1086,6 @@ INSERT INTO `persons` (`id`, `user_id`, `first_name`, `last_name`, `mobile`, `ci
 (863, 46, 'RAVI', 'M', NULL, 'RAJAPALAYAM', NULL, '2026-08-24 10:19:38', '2026-08-24 10:19:38'),
 (864, 46, 'HARIDOSS', 'R', NULL, 'RAJAPALAYAM', NULL, '2026-08-24 10:20:07', '2026-08-24 10:20:07'),
 (865, 46, 'THIRUCHANGU', NULL, NULL, 'KURUVADI', NULL, '2026-08-24 10:20:48', '2026-08-24 10:20:48'),
-(866, 46, 'MULLAISELCAN', 'S', NULL, 'RAJAPALAYAM', NULL, '2026-08-24 10:21:24', '2026-08-24 10:21:24'),
 (867, 46, 'PATTUSWAMY', 'S', NULL, 'RAJAPALAYAM', NULL, '2026-08-24 10:21:54', '2026-08-24 10:21:54'),
 (868, 46, 'PALANISWAMI', 'T', NULL, 'RAJAPALAYAM', NULL, '2026-08-24 10:22:32', '2026-08-24 10:22:32'),
 (869, 46, 'VASUDHEVAN', 'V', NULL, 'RAJAPALAYAM', NULL, '2026-08-24 10:23:27', '2026-08-24 10:23:27'),
@@ -1003,7 +1113,7 @@ INSERT INTO `persons` (`id`, `user_id`, `first_name`, `last_name`, `mobile`, `ci
 (891, 46, 'KALYANASUNDARAM', NULL, NULL, 'PUTHUR', NULL, '2026-08-24 10:40:20', '2026-08-24 10:40:20'),
 (892, 46, 'ARIVUKADAL', 'R', NULL, 'RAYANALLUR', NULL, '2026-08-24 10:40:57', '2026-08-24 10:40:57'),
 (893, 46, 'KALIYAMURTHI', 'S', NULL, 'RAJAPALAYAM', NULL, '2026-08-24 10:41:37', '2026-08-24 10:41:37'),
-(894, 46, 'PALANIVELU', 'SRP', NULL, 'THIRUCHAMPALLI', NULL, '2026-08-24 10:42:27', '2026-08-26 05:06:26'),
+(894, 46, 'PALANIVELU', 'SRP', NULL, 'THIRUCHAMPALLI', 'Maligai', '2026-08-24 10:42:27', '2026-09-09 18:30:58'),
 (895, 46, 'NAGARAJAN', 'S', NULL, 'RAJAPALAYAM', NULL, '2026-08-24 10:43:12', '2026-08-24 10:43:12'),
 (896, 46, 'CHITHRA', 'A', NULL, 'RAJAPALAYAM', NULL, '2026-08-24 10:43:41', '2026-08-24 10:43:41'),
 (897, 46, 'SANTHOSH KUMAR', 'K', NULL, 'RAJAPALAYAM', NULL, '2026-08-24 10:44:15', '2026-08-24 10:44:15'),
@@ -1030,7 +1140,7 @@ INSERT INTO `persons` (`id`, `user_id`, `first_name`, `last_name`, `mobile`, `ci
 (918, 46, 'ANBURAJ', NULL, NULL, 'MUDIKANDANALLUR', NULL, '2026-08-24 11:27:01', '2026-08-24 11:27:01'),
 (919, 46, 'SELVARAJ', NULL, NULL, 'PATTAVARTHI', NULL, '2026-08-24 11:27:42', '2026-08-24 11:27:42'),
 (920, 46, 'SUBRAMANYAM', NULL, NULL, 'PATTAVARTHI', NULL, '2026-08-24 11:28:14', '2026-08-24 11:28:14'),
-(921, 46, 'RANI', NULL, NULL, 'ANNAPERUMALKOIL', NULL, '2026-08-24 11:28:48', '2026-08-24 11:28:48'),
+(921, 46, 'PALANIVELU', 'R', NULL, 'ANNAPERUMALKOIL', NULL, '2026-08-24 11:28:48', '2026-09-09 20:10:30'),
 (922, 46, 'NAMACHIVAYAM', NULL, NULL, 'KUDAVASAL', NULL, '2026-08-24 11:29:24', '2026-08-24 11:29:24'),
 (923, 46, 'THIRUNAVUKARASU', 'R', NULL, 'THIRUCARUR', NULL, '2026-08-24 11:29:58', '2026-08-24 11:29:58'),
 (924, 46, 'RAJASEKAR', 'SRVS', NULL, 'MAYILADUTHURAI', NULL, '2026-08-24 11:30:32', '2026-08-24 11:30:32'),
@@ -1061,13 +1171,13 @@ INSERT INTO `persons` (`id`, `user_id`, `first_name`, `last_name`, `mobile`, `ci
 (951, 46, 'KALYANASUNDARAM', NULL, NULL, 'APPARASAPURAM PUTHUR', NULL, '2026-08-24 12:06:56', '2026-08-24 12:06:56'),
 (952, 46, 'EXECUTIVE  DIRECTOR', 'T', NULL, 'MAYILADUTHURAI', NULL, '2026-08-24 12:16:57', '2026-08-24 12:16:57'),
 (954, 46, 'MALA', 'RAJENDRAN', NULL, 'MANJAKOLLAI', NULL, '2026-08-24 13:08:58', '2026-08-24 13:08:58'),
-(955, 46, 'SHANKAR', 'M', NULL, 'RAJAPALAYAM', NULL, '2026-08-24 13:10:37', '2026-08-24 13:10:37'),
+(955, 46, 'SHANKAR', 'M', NULL, 'RAJAPALAYAM', 'VAO', '2026-08-24 13:10:37', '2026-09-16 03:51:41'),
 (959, 46, 'VINITHA', 'MALA', NULL, 'VANDAIYAN KUPPAM', NULL, '2026-08-25 05:46:38', '2026-08-25 05:46:38'),
 (960, 46, 'RAJARAMAN', 'JANAGI', NULL, 'SEMBANARKOIL', NULL, '2026-08-25 05:48:41', '2026-08-25 05:48:41'),
 (961, 46, 'PANDIYAN', 'N', NULL, 'RAJAPALAYAM', NULL, '2026-08-25 05:50:32', '2026-08-25 05:50:32'),
-(962, 46, 'PANDIAN', 'N', NULL, 'RAJAPALAYAM', NULL, '2026-08-25 05:52:57', '2026-08-25 05:52:57');
+(962, 46, 'PANDIAN', 'N', NULL, 'RAJAPALAYAM', NULL, '2026-08-25 05:52:57', '2026-09-09 23:29:26'),
+(963, 46, 'PALANI', 'R', NULL, 'RAJAPALAYAM', NULL, '2026-08-25 05:54:21', '2026-08-25 05:54:21');
 INSERT INTO `persons` (`id`, `user_id`, `first_name`, `last_name`, `mobile`, `city`, `occupation`, `created_at`, `updated_at`) VALUES
-(963, 46, 'PALANI', 'R', NULL, 'RAJAPALAYAM', NULL, '2026-08-25 05:54:21', '2026-08-25 05:54:21'),
 (964, 46, 'SIVANANDHAN', 'R', NULL, 'MUDIKANDANALLUR', NULL, '2026-08-25 05:57:08', '2026-08-25 05:57:08'),
 (965, 46, 'BABU', 'P', NULL, 'RAJAPALAYAM', NULL, '2026-08-25 05:59:07', '2026-08-25 05:59:07'),
 (966, 46, 'KALIYAMURTHI', 'K', NULL, 'MUDIKANDANALLUR', NULL, '2026-08-25 06:01:11', '2026-08-25 06:01:11'),
@@ -1138,21 +1248,19 @@ INSERT INTO `persons` (`id`, `user_id`, `first_name`, `last_name`, `mobile`, `ci
 (1031, 46, 'CHEZHIYAN', 'M', NULL, 'RAJAPALAYAM', 'TEACHER', '2026-08-26 05:27:43', '2026-08-26 05:27:43'),
 (1032, 46, 'DURGA', 'M', NULL, 'MEMATHUR', NULL, '2026-08-26 05:28:19', '2026-08-26 05:28:19'),
 (1033, 46, 'KALYANASUNDARAM', 'C', NULL, 'RAJAPALAYAM', NULL, '2026-08-26 05:29:00', '2026-08-26 05:29:00'),
-(1034, 46, 'PALANIVEL', 'R', NULL, 'ANNANKOVIL', NULL, '2026-08-26 05:30:30', '2026-08-26 05:30:30'),
 (1035, 46, 'MANI', 'M', NULL, 'RAJAPALAYAM', NULL, '2026-08-26 05:31:52', '2026-08-26 05:31:52'),
 (1036, 46, 'MURALI', 'R', NULL, 'MUDIKANDANALLUR', NULL, '2026-08-26 05:35:20', '2026-08-26 05:35:20'),
 (1037, 46, 'RAMESH', 'K', NULL, 'KALAHASTHINATHAPURAM', 'TAILOR', '2026-08-26 05:36:06', '2026-08-26 05:36:06'),
 (1038, 46, 'NADANASABABATHI', 'K', NULL, 'SEMBANARKOIL', 'TEACHER', '2026-08-26 05:36:48', '2026-08-26 05:36:48'),
 (1039, 46, 'MUTHUKUMARASWAMY', 'GMR', NULL, 'PERAMBUR', NULL, '2026-08-26 05:37:29', '2026-08-26 05:37:29'),
 (1040, 46, 'RAMALINGAM', 'P', NULL, 'KEELAIYUR', 'TEACHER', '2026-08-26 05:38:21', '2026-08-26 05:38:21'),
-(1041, 46, 'PALANIVEL', 'R', NULL, 'RAJAPALAYAM', 'MILL', '2026-08-26 05:39:03', '2026-08-26 05:39:03'),
+(1041, 46, 'PALANIVELU', 'R', NULL, 'RAJAPALAYAM', 'MILL', '2026-08-26 05:39:03', '2026-09-09 20:02:29'),
 (1042, 46, 'NEDUMARAN', 'S', NULL, 'MEMATHUR', NULL, '2026-08-26 05:39:36', '2026-08-26 05:39:36'),
 (1043, 46, 'SUNDAR', 'T', NULL, 'PANDUR', NULL, '2026-08-26 05:40:21', '2026-08-26 05:40:21'),
 (1044, 46, 'RAJARATHINAM', 'GMR', NULL, 'PERAMBUR', NULL, '2026-08-26 05:41:02', '2026-08-26 05:41:02'),
 (1045, 46, 'SARAVANAN', 'S', NULL, 'CHOZHAMPETTAI', 'ATS', '2026-08-26 05:42:18', '2026-08-26 05:42:18'),
 (1046, 46, 'CHELLADURAI', 'G', NULL, 'MAYILADUTHURAI', 'AVC', '2026-08-26 05:42:58', '2026-08-26 05:42:58'),
 (1047, 46, 'GANAPATHI', 'N', NULL, 'KALAHASTHINATHAPURAM', 'ஆசாரி', '2026-08-26 05:43:43', '2026-08-26 05:43:43'),
-(1048, 46, 'PALANIVEL', 'SRP', NULL, 'THIRUCHAMPALLI', 'MALIGAI', '2026-08-26 05:44:44', '2026-08-26 05:44:44'),
 (1049, 46, 'GNANAPRAKASAM', 'S', NULL, 'RAJAPALAYAM', NULL, '2026-08-26 05:45:30', '2026-08-26 05:45:30'),
 (1050, 46, 'RAVICHANDRAN', 'T', NULL, 'PANDUR', 'ATS', '2026-08-26 05:46:12', '2026-08-26 05:46:12'),
 (1052, 46, 'DINESH', 'T', NULL, 'MAYILADUTHURAI', 'ATS', '2026-08-26 05:47:41', '2026-08-26 05:47:41'),
@@ -1276,9 +1384,6 @@ INSERT INTO `persons` (`id`, `user_id`, `first_name`, `last_name`, `mobile`, `ci
 (1170, 46, 'PANDIDURAI', 'R', NULL, 'KATTUTHERU', NULL, '2026-08-26 11:55:17', '2026-08-26 11:55:17'),
 (1171, 46, 'PALANI', 'R', NULL, 'KEELAIYUR', NULL, '2026-08-26 11:56:24', '2026-08-26 11:56:24'),
 (1175, 46, 'RAMANI', 'E', NULL, 'VIRALUR', 'ATS', '2026-08-27 01:29:38', '2026-08-27 01:29:38'),
-(1176, 20, 'தர்மேந்திரன்', 'சங்கர்', '8072053727', 'சென்னை', 'Swiggy', '2026-08-27 04:29:06', '2026-08-27 04:49:41'),
-(1177, 20, 'சுபா', NULL, NULL, 'திண்டுக்கல்', NULL, '2026-08-27 04:52:49', '2026-08-27 04:52:49'),
-(1178, 20, 'முதல் பெயர்', NULL, '7845456609', 'சென்னை', NULL, '2026-08-27 04:54:23', '2026-08-27 05:06:38'),
 (1179, 48, 'ILAYA MURUGAN', NULL, NULL, 'KUNICHAMPET', NULL, '2026-08-28 02:25:25', '2026-08-28 02:25:25'),
 (1180, 48, 'முரளி அம்சா', NULL, NULL, 'தேத்தாம்பாக்கம்', NULL, '2026-08-28 02:27:30', '2026-08-28 02:27:30'),
 (1181, 48, 'புன்னியமூர்த்தி', NULL, NULL, 'செட்டிப்பட்டு', NULL, '2026-08-28 02:28:35', '2026-08-28 02:28:35'),
@@ -1289,7 +1394,6 @@ INSERT INTO `persons` (`id`, `user_id`, `first_name`, `last_name`, `mobile`, `ci
 (1186, 46, 'SIVAPRAKASH', 'C', NULL, 'MAYILADUTHURAI', 'ATS', '2026-08-29 04:31:39', '2026-08-29 04:31:39'),
 (1187, 46, 'SUBRAMANIYAN', 'R', NULL, 'THIRUCHAMPALLI', 'PAINTER', '2026-08-29 04:32:27', '2026-08-29 04:32:27'),
 (1188, 46, 'SUDHA', 'G', NULL, 'SITHARKADU', 'ATS', '2026-08-29 04:33:02', '2026-08-29 04:33:02'),
-(1189, 46, 'ANBUMANI', 'P', NULL, 'KALAHASTHINATHAPURAM', 'BARBER', '2026-08-29 04:33:56', '2026-08-29 04:33:56'),
 (1190, 46, 'SHANMUGAM', 'M', NULL, 'SEMBANARKOIL', 'TAILOR', '2026-08-29 04:34:35', '2026-08-29 04:34:35'),
 (1191, 46, 'LAKSHMIKANDHAN', 'LP', NULL, 'VELLUR', NULL, '2026-08-29 04:35:24', '2026-08-29 04:35:24'),
 (1192, 46, 'BALU', NULL, NULL, 'THIRUCHAMPALLI', 'MANGO', '2026-08-29 04:35:54', '2026-08-29 04:35:54'),
@@ -1361,7 +1465,34 @@ INSERT INTO `persons` (`id`, `user_id`, `first_name`, `last_name`, `mobile`, `ci
 (1269, 52, 'பிரதீப்', 'சௌமியா', NULL, 'எரணம்பட்டி', 'டிரைவர்', '2026-09-06 02:53:44', '2026-09-06 05:10:11'),
 (1271, 52, 'Sk ராஜா', 'உமா', NULL, 'ஊத்துப்பட்டி', 'காமாட்சி கமிஷன் மண்டி', '2026-09-06 05:05:23', '2026-09-06 05:06:15'),
 (1272, 52, 'N. ராஜ்குமார்', 'R.கௌசல்யா', NULL, 'சின்னமனூர்', 'டிரைவர்', '2026-09-06 08:54:38', '2026-09-06 08:54:38'),
-(1273, 49, 'சண்முகையா', 'இந்திரா', NULL, 'சிந்தாமணி', NULL, '2026-09-07 05:50:05', '2026-09-07 05:50:05');
+(1273, 49, 'சண்முகையா', 'இந்திரா', NULL, 'சிந்தாமணி', NULL, '2026-09-07 05:50:05', '2026-09-07 05:50:05'),
+(1277, 46, 'VEMBU AYAL', 'S', NULL, 'RAJAPALAYAM', NULL, '2026-09-09 20:57:11', '2026-09-09 20:57:11'),
+(1278, 47, 'GNANAN', NULL, NULL, 'VAYALCHERI', NULL, '2026-09-11 05:38:15', '2026-09-11 05:38:15'),
+(1279, 47, 'SATHISHKUMAR KATTIMANI MAGAN', NULL, NULL, 'ARASAKULAM', NULL, '2026-09-11 05:38:52', '2026-09-11 05:38:52'),
+(1280, 47, 'SATHIYAMOORTHI', 'URA KADAI AKSHAYA AGRO TRADERS', NULL, 'AVIYUR', NULL, '2026-09-11 05:39:40', '2026-09-11 05:39:40'),
+(1281, 47, 'PERIYASAMI', 'OM MURUGA LARI', NULL, 'PARAPATHI', NULL, '2026-09-11 05:40:12', '2026-09-11 05:40:12'),
+(1282, 24, 'SENTHIL DEEPA', 'SELVA NAGAR SAATHANOOR', NULL, 'TRICHY', NULL, '2026-09-14 14:46:35', '2026-09-14 14:46:35'),
+(1283, 24, 'SATHAIYA', 'SERUPPU KADAI', NULL, 'TRICHY', NULL, '2026-09-14 14:47:19', '2026-09-14 14:47:19'),
+(1284, 24, 'VIJAYAN', NULL, NULL, 'MADURAI', NULL, '2026-09-14 14:48:09', '2026-09-14 14:48:09'),
+(1285, 24, 'RATHIGA', NULL, NULL, 'KOVAI', NULL, '2026-09-14 14:48:33', '2026-09-14 14:48:33'),
+(1287, 54, 'KANDHA ROOPAN', 'NIVETHA', '+91 98944', 'MADURAI', NULL, '2026-09-17 10:38:45', '2026-09-17 10:38:45'),
+(1297, 59, 'சக்திவேல்', 'ஆசைக்கிளி', NULL, 'மதுரை M.K.PURAM', NULL, '2026-09-17 16:36:39', '2026-09-17 16:36:39'),
+(1298, 59, 'சேகர்', 'பஞ்சவர்ணம்', NULL, 'மதுரை M.K.PURAM', NULL, '2026-09-17 16:37:43', '2026-09-17 16:37:43'),
+(1299, 59, 'சங்குநாதன்', 'வாலேஷ்வரி', NULL, 'பாண்டிகோவில்', NULL, '2026-09-17 16:38:24', '2026-09-17 16:38:24'),
+(1300, 59, 'வினோத்', 'சங்கரி', NULL, 'KK NAGAR', NULL, '2026-09-17 16:39:07', '2026-09-17 16:39:07'),
+(1301, 59, 'முனியசாமி', 'சித்ரா', NULL, 'இராமநாதபுரம் கலூர்ணி', NULL, '2026-09-17 16:40:04', '2026-09-17 16:40:04'),
+(1302, 59, 'சேகர்', 'கோவிந்தம்மாள்', NULL, 'மதுரை ஹவுசிங் போர்ட் (வில்லபுரம்)', NULL, '2026-09-17 16:46:12', '2026-09-17 16:46:12'),
+(1303, 59, 'பாலா', 'செல்வி', NULL, 'TVS NAGAR மதுரை', NULL, '2026-09-17 16:46:56', '2026-09-17 16:46:56'),
+(1304, 59, 'சேதுகாவலன் (AVM)', 'பஞ்சவர்ணம்', NULL, 'சோலையலகுபுரம்', NULL, '2026-09-17 16:48:01', '2026-09-17 16:48:01'),
+(1305, 59, 'ஆறுமுகம்', 'செல்வி', NULL, 'ராமநாதபுரம்', NULL, '2026-09-17 16:48:49', '2026-09-17 16:48:49'),
+(1306, 59, 'MARISELVI', NULL, NULL, 'M.K.PURAM', NULL, '2026-09-17 16:49:50', '2026-09-17 16:49:50'),
+(1307, 59, 'செல்வம்', 'மது பாலா ( முத்து சித்தி)', NULL, 'ஜீவா நகர்', NULL, '2026-09-17 16:52:12', '2026-09-17 16:52:12'),
+(1308, 59, 'A.வினோத்', 'அருணா', NULL, 'TVS NAGAR', NULL, '2026-09-17 16:53:00', '2026-09-17 16:53:00'),
+(1309, 59, 'மனோகரன்', 'மாயலாகு ( மருமகன்)', NULL, 'பாண்டிகோவில்', NULL, '2026-09-17 16:54:03', '2026-09-17 16:54:03'),
+(1310, 59, 'குமார்', 'SELVI', NULL, 'M.K.PURAM', NULL, '2026-09-17 16:54:52', '2026-09-17 16:54:52'),
+(1311, 59, 'திருப்பதி', 'கவிதா', NULL, 'ஜெய்ஹிந்த் PURAM ( ANNAMAI MAHAL VEERAKALIAMMAN KOVIL )', NULL, '2026-09-17 16:57:26', '2026-09-17 16:57:26'),
+(1312, 59, 'குமார் (குறட்டை)', 'DEEPA', NULL, 'மேல் அனுபானடி', NULL, '2026-09-17 17:02:45', '2026-09-17 17:02:45'),
+(1313, 61, 'CHANDRU & LATHA', NULL, '9047474494', 'SHOOLAGIRI', NULL, '2026-09-20 09:50:13', '2026-09-20 09:50:13');
 
 -- --------------------------------------------------------
 
@@ -2149,7 +2280,6 @@ INSERT INTO `transactions` (`id`, `user_id`, `person_id`, `transaction_function_
 (809, 46, 863, 21, 'ஆயா கருமாதி', '2025-03-20', 'INVEST', 200.00, NULL, NULL, 0, NULL, 0, NULL, '2026-08-24 10:19:38', '2026-08-24 10:19:38'),
 (810, 46, 864, 21, 'ஆயா கருமாதி', '2025-03-20', 'INVEST', 200.00, NULL, NULL, 0, NULL, 0, NULL, '2026-08-24 10:20:07', '2026-08-24 10:20:07'),
 (811, 46, 865, 21, 'ஆயா கருமாதி', '2025-03-20', 'INVEST', 200.00, NULL, NULL, 0, NULL, 0, NULL, '2026-08-24 10:20:48', '2026-08-24 10:20:48'),
-(812, 46, 866, 21, 'ஆயா கருமாதி', '2025-03-20', 'INVEST', 500.00, NULL, NULL, 0, NULL, 0, NULL, '2026-08-24 10:21:24', '2026-08-24 10:21:24'),
 (813, 46, 867, 21, 'ஆயா கருமாதி', '2025-03-20', 'INVEST', 200.00, NULL, NULL, 0, NULL, 0, NULL, '2026-08-24 10:21:54', '2026-08-24 10:21:54'),
 (814, 46, 868, 21, 'ஆயா கருமாதி', '2025-03-20', 'INVEST', 500.00, NULL, NULL, 0, NULL, 0, NULL, '2026-08-24 10:22:32', '2026-08-24 10:22:32'),
 (815, 46, 869, 21, 'ஆயா கருமாதி', '2025-03-20', 'INVEST', 500.00, NULL, NULL, 0, NULL, 0, NULL, '2026-08-24 10:23:27', '2026-08-24 10:23:27'),
@@ -2242,8 +2372,8 @@ INSERT INTO `transactions` (`id`, `user_id`, `person_id`, `transaction_function_
 (905, 46, 853, 12, 'மற்றவை', '2025-12-11', 'RETURN', 500.00, NULL, 'Subiksha Birthday', 1, 'சுபிக்சா பிறந்தநாள்', 0, NULL, '2026-08-24 12:57:25', '2026-08-25 07:15:22'),
 (906, 46, 853, 3, 'இல்ல புதுமனை புகுவிழா', '2026-05-29', 'RETURN', 500.00, NULL, NULL, 0, NULL, 0, NULL, '2026-08-24 12:58:09', '2026-08-25 07:30:43'),
 (907, 46, 853, 10, 'இல்ல திருமண விழா', '2026-08-23', 'RETURN', 15000.00, 'Gold Coin 1.014Gr', NULL, 0, NULL, 0, NULL, '2026-08-24 12:59:08', '2026-08-24 12:59:08'),
-(908, 46, 853, 10, 'இல்ல திருமண விழா', '2026-08-21', 'RETURN', 1000.00, NULL, 'நலுங்கு', 0, NULL, 0, NULL, '2026-08-24 12:59:52', '2026-08-24 12:59:52'),
-(909, 46, 853, 10, 'இல்ல திருமண விழா', '2026-08-23', 'RETURN', 200.00, NULL, 'பூணூல்', 0, NULL, 0, NULL, '2026-08-24 13:00:33', '2026-08-24 13:00:33'),
+(908, 46, 853, 9, 'மற்றவை', '2026-08-21', 'RETURN', 1000.00, NULL, 'நலுங்கு', 1, 'நலுங்கு', 0, NULL, '2026-08-24 12:59:52', '2026-09-16 04:12:54'),
+(909, 46, 853, 9, 'மற்றவை', '2026-08-23', 'RETURN', 200.00, NULL, 'பூணூல்', 1, 'பூணூல்', 0, NULL, '2026-08-24 13:00:33', '2026-09-16 04:11:28'),
 (910, 46, 954, 5, 'புதுமனை புகுவிழா', '2023-08-15', 'RETURN', 500.00, NULL, 'Ashish Birthday', 0, NULL, 0, NULL, '2026-08-24 13:08:58', '2026-08-24 13:08:58'),
 (911, 46, 955, 9, 'மற்றவை', '2023-09-01', 'RETURN', 500.00, NULL, NULL, 1, 'Muniasamy Karumathi', 0, NULL, '2026-08-24 13:10:37', '2026-08-24 13:10:37'),
 (915, 46, 959, 12, 'இல்ல காதணி விழா', '2023-08-15', 'RETURN', 1500.00, NULL, NULL, 0, NULL, 0, NULL, '2026-08-25 05:46:38', '2026-08-25 05:46:38'),
@@ -2358,7 +2488,6 @@ INSERT INTO `transactions` (`id`, `user_id`, `person_id`, `transaction_function_
 (1024, 46, 1032, 22, 'அபிநயா சடங்கு', '2016-06-10', 'INVEST', 1000.00, NULL, NULL, 0, NULL, 0, NULL, '2026-08-26 05:28:19', '2026-08-26 05:28:19'),
 (1025, 46, 1033, 22, 'அபிநயா சடங்கு', '2016-06-10', 'INVEST', 500.00, NULL, NULL, 0, NULL, 0, NULL, '2026-08-26 05:29:00', '2026-08-26 05:29:00'),
 (1026, 46, 890, 22, 'அபிநயா சடங்கு', '2016-06-10', 'INVEST', 200.00, NULL, NULL, 0, NULL, 0, NULL, '2026-08-26 05:29:49', '2026-08-26 05:29:49'),
-(1027, 46, 1034, 22, 'அபிநயா சடங்கு', '2016-06-10', 'INVEST', 200.00, NULL, NULL, 0, NULL, 0, NULL, '2026-08-26 05:30:30', '2026-08-26 05:30:30'),
 (1028, 46, 885, 22, 'அபிநயா சடங்கு', '2016-06-10', 'INVEST', 200.00, NULL, NULL, 0, NULL, 0, NULL, '2026-08-26 05:31:24', '2026-08-26 05:31:24'),
 (1029, 46, 1035, 22, 'அபிநயா சடங்கு', '2016-06-10', 'INVEST', 200.00, NULL, NULL, 0, NULL, 0, NULL, '2026-08-26 05:31:52', '2026-08-26 05:31:52'),
 (1030, 46, 1036, 22, 'அபிநயா சடங்கு', '2016-06-10', 'INVEST', 100.00, NULL, NULL, 0, NULL, 0, NULL, '2026-08-26 05:35:20', '2026-08-26 05:35:20'),
@@ -2373,7 +2502,6 @@ INSERT INTO `transactions` (`id`, `user_id`, `person_id`, `transaction_function_
 (1039, 46, 1045, 22, 'அபிநயா சடங்கு', '2016-06-10', 'INVEST', 100.00, NULL, NULL, 0, NULL, 0, NULL, '2026-08-26 05:42:18', '2026-08-26 05:42:18'),
 (1040, 46, 1046, 22, 'அபிநயா சடங்கு', '2016-06-10', 'INVEST', 100.00, NULL, NULL, 0, NULL, 0, NULL, '2026-08-26 05:42:58', '2026-08-26 05:42:58'),
 (1041, 46, 1047, 22, 'அபிநயா சடங்கு', '2016-06-10', 'INVEST', 100.00, NULL, NULL, 0, NULL, 0, NULL, '2026-08-26 05:43:43', '2026-08-26 05:43:43'),
-(1042, 46, 1048, 22, 'அபிநயா சடங்கு', '2016-06-10', 'INVEST', 500.00, NULL, NULL, 0, NULL, 0, NULL, '2026-08-26 05:44:44', '2026-08-26 05:44:44'),
 (1043, 46, 1049, 22, 'அபிநயா சடங்கு', '2016-06-10', 'INVEST', 100.00, NULL, NULL, 0, NULL, 0, NULL, '2026-08-26 05:45:30', '2026-08-26 05:45:30'),
 (1044, 46, 1050, 22, 'அபிநயா சடங்கு', '2016-06-10', 'INVEST', 100.00, NULL, NULL, 0, NULL, 0, NULL, '2026-08-26 05:46:12', '2026-08-26 05:46:12'),
 (1046, 46, 1052, 22, 'அபிநயா சடங்கு', '2016-06-10', 'INVEST', 100.00, NULL, NULL, 0, NULL, 0, NULL, '2026-08-26 05:47:41', '2026-08-26 05:47:41'),
@@ -2402,11 +2530,11 @@ INSERT INTO `transactions` (`id`, `user_id`, `person_id`, `transaction_function_
 (1069, 46, 1074, 22, 'அபிநயா சடங்கு', '2016-06-10', 'INVEST', 200.00, NULL, NULL, 0, NULL, 0, NULL, '2026-08-26 06:33:41', '2026-08-26 06:33:41'),
 (1070, 46, 1075, 22, 'அபிநயா சடங்கு', '2016-06-10', 'INVEST', 300.00, NULL, NULL, 0, NULL, 0, NULL, '2026-08-26 06:35:00', '2026-08-26 06:35:00'),
 (1071, 46, 1076, 22, 'அபிநயா சடங்கு', '2016-06-10', 'INVEST', 100.00, NULL, NULL, 0, NULL, 0, NULL, '2026-08-26 06:36:50', '2026-08-26 06:36:50'),
-(1072, 46, 865, 22, 'அபிநயா சடங்கு', '2016-06-10', 'INVEST', 100.00, NULL, NULL, 0, NULL, 0, NULL, '2026-08-26 06:37:21', '2026-08-26 06:37:21');
-INSERT INTO `transactions` (`id`, `user_id`, `person_id`, `transaction_function_id`, `transaction_function_name`, `transaction_date`, `type`, `amount`, `item_name`, `notes`, `is_custom`, `custom_function`, `is_deleted`, `deleted_at`, `created_at`, `updated_at`) VALUES
+(1072, 46, 865, 22, 'அபிநயா சடங்கு', '2016-06-10', 'INVEST', 100.00, NULL, NULL, 0, NULL, 0, NULL, '2026-08-26 06:37:21', '2026-08-26 06:37:21'),
 (1073, 46, 1077, 22, 'அபிநயா சடங்கு', '2016-06-10', 'INVEST', 100.00, NULL, NULL, 0, NULL, 0, NULL, '2026-08-26 06:40:09', '2026-08-26 06:40:09'),
 (1074, 46, 1078, 22, 'அபிநயா சடங்கு', '2016-06-10', 'INVEST', 100.00, NULL, NULL, 0, NULL, 0, NULL, '2026-08-26 06:41:02', '2026-08-26 06:41:02'),
-(1075, 46, 965, 22, 'அபிநயா சடங்கு', '2016-06-10', 'INVEST', 100.00, NULL, NULL, 0, NULL, 0, NULL, '2026-08-26 06:41:28', '2026-08-26 06:41:28'),
+(1075, 46, 965, 22, 'அபிநயா சடங்கு', '2016-06-10', 'INVEST', 100.00, NULL, NULL, 0, NULL, 0, NULL, '2026-08-26 06:41:28', '2026-08-26 06:41:28');
+INSERT INTO `transactions` (`id`, `user_id`, `person_id`, `transaction_function_id`, `transaction_function_name`, `transaction_date`, `type`, `amount`, `item_name`, `notes`, `is_custom`, `custom_function`, `is_deleted`, `deleted_at`, `created_at`, `updated_at`) VALUES
 (1076, 46, 1079, 22, 'அபிநயா சடங்கு', '2016-06-10', 'INVEST', 100.00, NULL, NULL, 0, NULL, 0, NULL, '2026-08-26 06:42:07', '2026-08-26 06:42:07'),
 (1077, 46, 1080, 22, 'அபிநயா சடங்கு', '2016-06-10', 'INVEST', 100.00, NULL, NULL, 0, NULL, 0, NULL, '2026-08-26 06:43:54', '2026-08-26 06:43:54'),
 (1078, 46, 1081, 22, 'அபிநயா சடங்கு', '2016-06-10', 'INVEST', 100.00, NULL, NULL, 0, NULL, 0, NULL, '2026-08-26 06:44:25', '2026-08-26 06:44:25'),
@@ -2518,10 +2646,6 @@ INSERT INTO `transactions` (`id`, `user_id`, `person_id`, `transaction_function_
 (1184, 46, 1171, 22, 'அபிநயா சடங்கு', '2016-06-10', 'INVEST', 100.00, NULL, NULL, 0, NULL, 0, NULL, '2026-08-26 11:56:24', '2026-08-26 11:56:24'),
 (1188, 46, 1175, 10, 'இல்ல திருமண விழா', '2024-09-08', 'RETURN', 200.00, NULL, NULL, 0, NULL, 0, NULL, '2026-08-27 01:29:38', '2026-08-27 01:29:38'),
 (1189, 46, 968, 21, 'ஆயா கருமாதி', '2025-03-20', 'INVEST', 2000.00, NULL, NULL, 0, NULL, 0, NULL, '2026-08-27 04:20:41', '2026-08-27 04:20:41'),
-(1190, 20, 1176, 3, 'இல்ல புதுமனை புகுவிழா', '2026-08-24', 'INVEST', 500.00, NULL, NULL, 0, NULL, 0, NULL, '2026-08-27 04:29:06', '2026-08-27 04:34:56'),
-(1191, 20, 1176, 6, 'திருமண நிச்சயதார்த்த விழா', '2026-08-27', 'RETURN', 5000.00, NULL, NULL, 0, NULL, 0, NULL, '2026-08-27 04:35:38', '2026-08-27 04:35:38'),
-(1192, 20, 1177, 2, 'கிடா வெட்டு விழா', '2026-08-26', 'RETURN', 500.00, NULL, NULL, 0, NULL, 0, NULL, '2026-08-27 04:52:49', '2026-08-27 04:53:10'),
-(1193, 20, 1178, 24, 'Test', '2026-08-20', 'RETURN', 500.00, NULL, NULL, 0, NULL, 0, NULL, '2026-08-27 04:54:23', '2026-08-27 04:54:23'),
 (1194, 48, 1179, 9, 'மற்றவை', '2023-10-16', 'INVEST', 1000.00, NULL, NULL, 1, 'மஞ்சள் நீராட்டு விழா', 0, NULL, '2026-08-28 02:25:25', '2026-08-28 02:25:25'),
 (1195, 48, 1180, 9, 'மற்றவை', '2026-08-28', 'INVEST', 300.00, NULL, NULL, 1, 'மஞ்சள் நீராட்டு விழா', 0, NULL, '2026-08-28 02:27:30', '2026-08-28 02:27:30'),
 (1196, 48, 1181, 9, 'மற்றவை', '2026-08-28', 'INVEST', 200.00, NULL, NULL, 1, 'மஞ்சள் நீராட்டு விழா', 0, NULL, '2026-08-28 02:28:35', '2026-08-28 02:28:35'),
@@ -2532,7 +2656,6 @@ INSERT INTO `transactions` (`id`, `user_id`, `person_id`, `transaction_function_
 (1201, 46, 1186, 22, 'அபிநயா சடங்கு', '2016-06-10', 'INVEST', 100.00, NULL, NULL, 0, NULL, 0, NULL, '2026-08-29 04:31:39', '2026-08-29 04:31:39'),
 (1202, 46, 1187, 22, 'அபிநயா சடங்கு', '2016-06-10', 'INVEST', 100.00, NULL, NULL, 0, NULL, 0, NULL, '2026-08-29 04:32:27', '2026-08-29 04:32:27'),
 (1203, 46, 1188, 22, 'அபிநயா சடங்கு', '2016-06-10', 'INVEST', 100.00, NULL, NULL, 0, NULL, 0, NULL, '2026-08-29 04:33:02', '2026-08-29 04:33:02'),
-(1204, 46, 1189, 22, 'அபிநயா சடங்கு', '2016-06-10', 'INVEST', 100.00, NULL, NULL, 0, NULL, 0, NULL, '2026-08-29 04:33:56', '2026-08-29 04:33:56'),
 (1205, 46, 1190, 22, 'அபிநயா சடங்கு', '2016-06-10', 'INVEST', 100.00, NULL, NULL, 0, NULL, 0, NULL, '2026-08-29 04:34:35', '2026-08-29 04:34:35'),
 (1206, 46, 1191, 22, 'அபிநயா சடங்கு', '2016-06-10', 'INVEST', 200.00, NULL, NULL, 0, NULL, 0, NULL, '2026-08-29 04:35:24', '2026-08-29 04:35:24'),
 (1207, 46, 1192, 22, 'அபிநயா சடங்கு', '2016-06-10', 'INVEST', 100.00, NULL, NULL, 0, NULL, 0, NULL, '2026-08-29 04:35:54', '2026-08-29 04:35:54'),
@@ -2610,7 +2733,41 @@ INSERT INTO `transactions` (`id`, `user_id`, `person_id`, `transaction_function_
 (1292, 52, 1269, 14, 'மொய் விருந்து விழா', '2026-09-06', 'RETURN', 2000.00, NULL, NULL, 0, NULL, 0, NULL, '2026-09-06 02:53:44', '2026-09-06 02:53:44'),
 (1294, 52, 1271, 14, 'மொய் விருந்து விழா', '2026-09-06', 'RETURN', 20000.00, NULL, NULL, 0, NULL, 0, NULL, '2026-09-06 05:05:23', '2026-09-06 05:05:23'),
 (1295, 52, 1272, 12, 'இல்ல காதணி விழா', '2026-09-06', 'RETURN', 2000.00, NULL, NULL, 0, NULL, 0, NULL, '2026-09-06 08:54:38', '2026-09-06 08:54:38'),
-(1296, 49, 1273, 13, 'இல்ல பூப்புனித நீராட்டு விழா', '2026-09-06', 'RETURN', 500.00, NULL, NULL, 0, NULL, 0, NULL, '2026-09-07 05:50:05', '2026-09-07 05:50:05');
+(1296, 49, 1273, 13, 'இல்ல பூப்புனித நீராட்டு விழா', '2026-09-06', 'RETURN', 500.00, NULL, NULL, 0, NULL, 0, NULL, '2026-09-07 05:50:05', '2026-09-07 05:50:05'),
+(1298, 46, 1141, 21, 'ஆயா கருமாதி', '2025-03-20', 'INVEST', 500.00, NULL, NULL, 0, NULL, 0, NULL, '2026-09-09 19:51:40', '2026-09-09 19:51:40'),
+(1299, 46, 894, 22, 'அபிநயா சடங்கு', '2016-06-10', 'INVEST', 500.00, NULL, NULL, 0, NULL, 0, NULL, '2026-09-09 19:57:48', '2026-09-09 19:57:48'),
+(1301, 46, 1041, 21, 'ஆயா கருமாதி', '2025-03-20', 'INVEST', 200.00, NULL, NULL, 0, NULL, 0, NULL, '2026-09-09 20:04:43', '2026-09-09 20:04:43'),
+(1303, 46, 921, 22, 'அபிநயா சடங்கு', '2016-06-10', 'INVEST', 200.00, NULL, NULL, 0, NULL, 0, NULL, '2026-09-09 20:13:51', '2026-09-09 20:13:51'),
+(1304, 46, 940, 22, 'அபிநயா சடங்கு', '2016-06-10', 'INVEST', 200.00, NULL, NULL, 0, NULL, 0, NULL, '2026-09-09 20:19:02', '2026-09-09 20:19:02'),
+(1305, 46, 1277, 30, 'எங்கள் திருமணம்', '2000-02-09', 'INVEST', 1000.00, '1 Sovereign Bracelet', NULL, 0, NULL, 0, NULL, '2026-09-09 20:57:11', '2026-09-09 20:57:11'),
+(1306, 47, 1278, 10, 'இல்ல திருமண விழா', '2026-08-30', 'RETURN', 1000.00, NULL, NULL, 0, NULL, 0, NULL, '2026-09-11 05:38:15', '2026-09-11 05:38:15'),
+(1307, 47, 1279, 12, 'இல்ல காதணி விழா', '2026-09-11', 'RETURN', 1000.00, NULL, NULL, 0, NULL, 0, NULL, '2026-09-11 05:38:52', '2026-09-11 05:38:52'),
+(1308, 47, 1280, 3, 'இல்ல புதுமனை புகுவிழா', '2026-09-11', 'RETURN', 1000.00, NULL, NULL, 0, NULL, 0, NULL, '2026-09-11 05:39:40', '2026-09-11 05:39:40'),
+(1309, 47, 1281, 12, 'இல்ல காதணி விழா', '2026-09-11', 'RETURN', 501.00, NULL, NULL, 0, NULL, 0, NULL, '2026-09-11 05:40:12', '2026-09-11 05:40:12'),
+(1310, 24, 1282, 10, 'இல்ல திருமண விழா', '2026-09-14', 'RETURN', 2000.00, NULL, NULL, 0, NULL, 0, NULL, '2026-09-14 14:46:35', '2026-09-14 14:46:35'),
+(1311, 24, 1283, 13, 'இல்ல பூப்புனித நீராட்டு விழா', '2026-09-14', 'RETURN', 1500.00, NULL, NULL, 0, NULL, 0, NULL, '2026-09-14 14:47:19', '2026-09-14 14:47:19'),
+(1312, 24, 1284, 13, 'இல்ல பூப்புனித நீராட்டு விழா', '2026-09-14', 'RETURN', 5000.00, NULL, NULL, 0, NULL, 0, NULL, '2026-09-14 14:48:09', '2026-09-14 14:48:09'),
+(1313, 24, 1285, 13, 'இல்ல பூப்புனித நீராட்டு விழா', '2026-09-14', 'RETURN', 3000.00, NULL, NULL, 0, NULL, 0, NULL, '2026-09-14 14:48:33', '2026-09-14 14:48:33'),
+(1315, 46, 955, 9, 'மற்றவை', '2026-09-16', 'RETURN', 500.00, NULL, NULL, 1, 'Baby Karumathi', 0, NULL, '2026-09-16 03:55:30', '2026-09-16 03:55:30'),
+(1316, 46, 955, 9, 'மற்றவை', '2016-06-09', 'INVEST', 200.00, NULL, NULL, 1, 'அபிநயா சடங்கு', 0, NULL, '2026-09-16 17:55:01', '2026-09-16 17:56:03'),
+(1317, 54, 1287, 12, 'இல்ல காதணி விழா', '2026-09-17', 'INVEST', 1000.00, NULL, NULL, 0, NULL, 0, NULL, '2026-09-17 10:38:45', '2026-09-17 10:38:45'),
+(1327, 59, 1297, 12, 'இல்ல காதணி விழா', '2026-09-17', 'RETURN', 501.00, NULL, 'நாங்கள் செய்தது', 0, NULL, 0, NULL, '2026-09-17 16:36:39', '2026-09-17 16:36:39'),
+(1328, 59, 1298, 10, 'இல்ல திருமண விழா', '2026-09-17', 'RETURN', 501.00, NULL, 'நாங்கள் செய்தது', 0, NULL, 0, NULL, '2026-09-17 16:37:43', '2026-09-17 16:37:43'),
+(1329, 59, 1299, 10, 'இல்ல திருமண விழா', '2026-09-17', 'RETURN', 1000.00, NULL, 'நாங்கள் செய்தது', 0, NULL, 0, NULL, '2026-09-17 16:38:24', '2026-09-17 16:38:24'),
+(1330, 59, 1300, 12, 'இல்ல காதணி விழா', '2026-09-17', 'RETURN', 1000.00, NULL, 'செய்தது', 0, NULL, 0, NULL, '2026-09-17 16:39:07', '2026-09-17 16:39:07'),
+(1331, 59, 1301, 12, 'இல்ல காதணி விழா', '2026-09-17', 'RETURN', 2000.00, NULL, 'செய்தது', 0, NULL, 0, NULL, '2026-09-17 16:40:04', '2026-09-17 16:40:04'),
+(1332, 59, 1302, 10, 'இல்ல திருமண விழா', '2026-09-17', 'RETURN', 501.00, NULL, 'செய்தது', 0, NULL, 0, NULL, '2026-09-17 16:46:12', '2026-09-17 16:46:12'),
+(1333, 59, 1303, 10, 'இல்ல திருமண விழா', '2026-09-17', 'RETURN', 501.00, NULL, 'செய்தது', 0, NULL, 0, NULL, '2026-09-17 16:46:56', '2026-09-17 16:46:56'),
+(1334, 59, 1304, 10, 'இல்ல திருமண விழா', '2026-09-17', 'RETURN', 2001.00, NULL, 'செய்தது', 0, NULL, 0, NULL, '2026-09-17 16:48:01', '2026-09-17 16:48:01'),
+(1335, 59, 1305, 10, 'இல்ல திருமண விழா', '2026-09-17', 'RETURN', 501.00, NULL, 'செய்தது', 0, NULL, 0, NULL, '2026-09-17 16:48:49', '2026-09-17 16:48:49'),
+(1336, 59, 1306, 12, 'இல்ல காதணி விழா', '2026-09-17', 'RETURN', 501.00, NULL, 'செய்தது', 0, NULL, 0, NULL, '2026-09-17 16:49:50', '2026-09-17 16:49:50'),
+(1337, 59, 1307, 9, 'மற்றவை', '2026-09-17', 'RETURN', 501.00, NULL, 'செய்தது', 1, 'anything', 0, NULL, '2026-09-17 16:52:12', '2026-09-17 16:52:12'),
+(1338, 59, 1308, 9, 'மற்றவை', '2026-09-17', 'RETURN', 501.00, NULL, 'செய்தது', 1, 'anything', 0, NULL, '2026-09-17 16:53:00', '2026-09-17 16:53:00'),
+(1339, 59, 1309, 14, 'மொய் விருந்து விழா', '2026-09-17', 'RETURN', 501.00, NULL, 'செய்தது', 0, NULL, 0, NULL, '2026-09-17 16:54:03', '2026-09-17 16:54:03'),
+(1340, 59, 1310, 14, 'மொய் விருந்து விழா', '2026-09-13', 'RETURN', 501.00, NULL, 'செய்தது', 0, NULL, 0, NULL, '2026-09-17 16:54:52', '2026-09-17 16:54:52'),
+(1341, 59, 1311, 12, 'இல்ல காதணி விழா', '2026-08-09', 'RETURN', 1001.00, NULL, 'செய்தது', 0, NULL, 0, NULL, '2026-09-17 16:57:26', '2026-09-17 16:57:26'),
+(1342, 59, 1312, 14, 'மொய் விருந்து விழா', '2026-09-17', 'RETURN', 501.00, NULL, 'செய்தது', 0, NULL, 0, NULL, '2026-09-17 17:02:45', '2026-09-17 17:02:45'),
+(1343, 61, 1313, 40, 'Baby shower', '2026-09-20', 'RETURN', 500.00, NULL, 'Kamatchi Mahal, Shoolagiri', 0, NULL, 0, NULL, '2026-09-20 09:50:13', '2026-09-20 09:50:13');
 
 -- --------------------------------------------------------
 
@@ -2640,8 +2797,8 @@ INSERT INTO `transaction_functions` (`id`, `user_id`, `function_name`, `function
 (1, 3, 'காதணி விழா', '2025-09-14', 'TPS MARRIAGE HALL', 'விவேக் சுவேதா/ஷன்விகா/கிரிஷ்விக்', NULL, 0, NULL, '2026-03-03 00:17:17', '2026-07-06 19:21:32'),
 (2, 6, 'MARRIAGE', '2019-10-30', 'K Venkata subba Naidu Kalyana Mandapam Pulliyamarathu Kottai', 'LOGANATHAN MADHUMITHA', NULL, 0, NULL, '2026-03-02 23:19:08', '2026-07-06 19:21:32'),
 (3, 22, 'மொய் விருந்து', '2021-10-20', NULL, 'குமரேசன்', NULL, 0, NULL, '2026-03-03 00:18:30', '2026-07-06 19:21:32'),
-(4, 2, 'PRIYA MARRIAGE', '2023-05-21', 'பிரியா வீட்டில்', NULL, NULL, 0, NULL, '2026-03-02 13:11:42', '2026-07-06 19:21:32'),
-(5, 2, 'GP KIRUBA MARRIAGE', '2021-09-10', 'இந்திரா கம்யூனிட்டி ஹால்', 'அய்யன்குளம்', NULL, 0, NULL, '2026-03-02 13:10:32', '2026-07-06 19:21:32'),
+(4, 2, 'Priya marriage', '2023-05-21', 'பிரியா வீட்டில்', NULL, 'uploads/2/function-image/file-1789829114565-878747453.jpg', 0, NULL, '2026-03-02 13:11:42', '2026-09-19 14:45:17'),
+(5, 2, 'Gp kiruba marriage', '2021-09-10', 'இந்திரா கம்யூனிட்டி ஹால்', 'அய்யன்குளம்', 'uploads/2/function-image/file-1789597678868-999372462.jpg', 0, NULL, '2026-03-02 13:10:32', '2026-09-19 08:23:18'),
 (6, 7, 'Mudhal thiruvirundhu', '2026-06-02', 'James mahal', NULL, NULL, 0, NULL, '2026-06-21 11:05:19', '2026-07-06 19:21:32'),
 (7, 31, 'Birthday', '2026-04-07', 'Vellur', NULL, NULL, 1, '2026-04-07 18:53:19', '2026-04-07 13:17:24', '2026-07-06 19:21:32'),
 (8, 28, 'நாமகரணம் எ பெயர் சூட்டும்  விழா', '2025-02-02', 'பெத்தான் ஆண்டவர் கோவில்', 'தினேஷ் அபிநயா', NULL, 0, NULL, '2026-03-03 00:15:43', '2026-07-06 19:21:32'),
@@ -2659,13 +2816,24 @@ INSERT INTO `transaction_functions` (`id`, `user_id`, `function_name`, `function
 (20, 46, 'Praveen marriage', '2026-08-23', 'ஜி மகாலட்சுமி திருமண மண்டபம்', NULL, 'uploads/46/function-image/file-1787409701505-272859895.jpg', 1, '2026-08-23 14:10:52', '2026-08-22 14:41:47', '2026-08-23 08:40:52'),
 (21, 46, 'ஆயா கருமாதி', '2025-03-20', 'ராஜபாளையம்', NULL, 'uploads/46/function-image/file-1787474531617-452821427.jpg', 0, NULL, '2026-08-23 08:42:15', '2026-08-23 08:48:13'),
 (22, 46, 'அபிநயா சடங்கு', '2016-06-10', 'Srr thirumana mandabam', NULL, 'uploads/46/function-image/file-1787588469241-726896824.jpg', 0, NULL, '2026-08-24 16:21:18', '2026-08-25 15:50:24'),
-(23, 20, 'கல்யாணம்', '2026-08-26', 'திண்டுக்கல்', NULL, 'uploads/20/function-image/file-1787804911931-786341005.jpg', 0, NULL, '2026-08-27 04:28:33', '2026-08-27 07:57:51'),
-(24, 20, 'Test', '2026-08-20', 'Location', 'Notes', NULL, 0, NULL, '2026-08-27 04:53:40', '2026-08-27 04:53:40'),
-(25, 20, 'Test', '2026-08-27', NULL, NULL, NULL, 0, NULL, '2026-08-27 07:58:03', '2026-08-27 07:58:03'),
+(23, 20, 'கல்யாணம்', '2026-08-26', 'திண்டுக்கல்', NULL, 'uploads/20/function-image/file-1787804911931-786341005.jpg', 1, '2026-09-17 20:32:32', '2026-08-27 04:28:33', '2026-09-17 15:02:32'),
+(24, 20, 'Test', '2026-08-20', 'Location', 'Notes', NULL, 1, '2026-09-17 20:32:34', '2026-08-27 04:53:40', '2026-09-17 15:02:34'),
+(25, 20, 'Test', '2026-08-27', NULL, NULL, NULL, 1, '2026-09-17 20:32:30', '2026-08-27 07:58:03', '2026-09-17 15:02:30'),
 (26, 49, 'இல்ல திருமண விழா', '2020-02-26', 'ரத்தினபுரி', NULL, NULL, 1, '2026-08-30 11:57:34', '2026-08-29 10:41:42', '2026-08-30 06:27:34'),
 (27, 51, 'இல்ல திருமண வரவே', '2026-09-02', 'தேவகோட்டை', 'மினி மஹால்', 'uploads/51/function-image/file-1788287702571-324161945.jpg', 0, NULL, '2026-09-01 18:35:06', '2026-09-01 18:35:06'),
 (28, 13, 'வளைகாப்பு விழா - moni', '2025-09-07', 'Annavasal', 'In home', 'uploads/13/function-image/file-1788592687869-769900642.jpg', 0, NULL, '2026-09-05 07:18:13', '2026-09-06 02:18:26'),
-(29, 13, 'பெயர் சூட்டும் விழா sastika', '2025-10-27', 'Annavasal', 'In home', 'uploads/13/function-image/file-1788592959473-258377851.jpg', 0, NULL, '2026-09-05 07:22:43', '2026-09-06 02:16:54');
+(29, 13, 'பெயர் சூட்டும் விழா sastika', '2025-10-27', 'Annavasal', 'In home', 'uploads/13/function-image/file-1788592959473-258377851.jpg', 0, NULL, '2026-09-05 07:22:43', '2026-09-06 02:16:54'),
+(30, 46, 'எங்கள் திருமணம்', '2000-02-09', 'Anna thirumana mandapam', NULL, 'uploads/46/function-image/file-1788985989934-844089349.jpg', 0, NULL, '2026-09-09 20:33:17', '2026-09-09 20:34:11'),
+(31, 55, 'My marriage', '2026-06-21', 'Buddi reddi patri', NULL, NULL, 0, NULL, '2026-09-15 01:40:53', '2026-09-15 01:40:53'),
+(32, 2, 'Tezt', '2026-09-01', 'Check', NULL, NULL, 1, '2026-09-17 19:55:43', '2026-09-17 10:13:11', '2026-09-17 14:25:43'),
+(33, 2, 'New function', '2026-09-01', 'Dindigul', NULL, 'uploads/2/function-image/file-1789655493295-897162416.jpg', 1, '2026-09-17 20:01:40', '2026-09-17 14:31:10', '2026-09-17 14:31:40'),
+(34, 20, 'New function', '2026-09-01', 'Madurai mattuthavani', NULL, 'uploads/20/function-image/file-1789657032381-825955145.jpg', 1, '2026-09-17 20:32:27', '2026-09-17 14:57:14', '2026-09-17 15:02:27'),
+(35, 20, 'Test function', '2026-09-01', 'Test location', NULL, NULL, 1, '2026-09-18 04:13:17', '2026-09-17 15:09:55', '2026-09-17 22:43:17'),
+(36, 20, 'Test', '2026-09-18', NULL, NULL, NULL, 1, '2026-09-18 21:21:21', '2026-09-18 15:51:15', '2026-09-18 15:51:21'),
+(37, 2, 'Tes', '2026-09-19', NULL, NULL, NULL, 1, '2026-09-19 04:58:53', '2026-09-18 23:05:03', '2026-09-18 23:28:53'),
+(38, 2, 'Test', '2026-09-16', NULL, NULL, NULL, 1, '2026-09-19 04:58:56', '2026-09-18 23:05:21', '2026-09-18 23:28:56'),
+(39, 2, 'Gp new function', '2026-09-09', 'Dindigul', NULL, NULL, 1, '2026-09-19 04:59:00', '2026-09-18 23:06:15', '2026-09-18 23:29:00'),
+(40, 61, 'Baby shower', '2026-09-20', 'Kamatchi mahal', 'Chandru  latha', NULL, 0, NULL, '2026-09-20 09:47:22', '2026-09-20 09:47:22');
 
 -- --------------------------------------------------------
 
@@ -2693,12 +2861,14 @@ CREATE TABLE `upcoming_functions` (
 --
 
 INSERT INTO `upcoming_functions` (`id`, `user_id`, `title`, `description`, `function_date`, `location`, `invitation_url`, `status`, `is_deleted`, `deleted_at`, `created_at`, `updated_at`) VALUES
-(1, 33, 'காதணி விழா', NULL, '2026-03-13', 'இராமநாதபுரம்', NULL, 'ACTIVE', 0, NULL, '2026-03-12 17:26:34', '2026-07-06 19:23:09'),
-(2, 46, 'பிரவீன் திருமணம்', '', '2026-08-23', 'செம்பனார்கோவில்', NULL, 'ACTIVE', 1, '2026-09-03 19:00:11', '2026-08-22 02:00:17', '2026-09-03 13:30:11'),
-(3, 20, 'முதல் வரி', NULL, '2026-08-27', 'திண்டுக்கல்', NULL, 'ACTIVE', 0, NULL, '2026-08-27 07:03:01', '2026-08-27 07:03:01'),
-(4, 2, 'upcoming function', NULL, '2026-08-27', 'Velachery Chennai', NULL, 'ACTIVE', 1, '2026-09-08 18:31:50', '2026-08-27 11:57:36', '2026-09-08 13:01:50'),
-(5, 51, 'திருமண விழா', 'சஷ்டிகா மினி ஹால்', '2026-09-02', 'தேவகோட்டை', 'uploads/51/upcoming-function/file-1788287642515-980291778.jpg', 'ACTIVE', 0, NULL, '2026-09-01 18:34:03', '2026-09-01 18:34:03'),
-(6, 2, 'Puthiya upcoming function', NULL, '2026-09-10', 'Chennai', 'uploads/2/upcoming-function/file-1788872495164-906099599.jpg', 'ACTIVE', 0, NULL, '2026-09-08 13:01:35', '2026-09-08 13:01:35');
+(1, 33, 'காதணி விழா', NULL, '2026-03-13', 'இராமநாதபுரம்', NULL, 'COMPLETED', 0, NULL, '2026-03-12 17:26:34', '2026-09-18 15:50:43'),
+(2, 46, 'பிரவீன் திருமணம்', '', '2026-08-23', 'செம்பனார்கோவில்', NULL, 'COMPLETED', 1, '2026-09-03 19:00:11', '2026-08-22 02:00:17', '2026-09-18 15:50:43'),
+(3, 20, 'முதல் வரி', NULL, '2026-08-27', 'திண்டுக்கல்', NULL, 'COMPLETED', 1, '2026-09-21 01:23:39', '2026-08-27 07:03:01', '2026-09-20 19:53:39'),
+(4, 2, 'upcoming function', NULL, '2026-08-27', 'Velachery Chennai', NULL, 'COMPLETED', 1, '2026-09-08 18:31:50', '2026-08-27 11:57:36', '2026-09-18 15:50:43'),
+(5, 51, 'திருமண விழா', 'சஷ்டிகா மினி ஹால்', '2026-09-02', 'தேவகோட்டை', 'uploads/51/upcoming-function/file-1788287642515-980291778.jpg', 'COMPLETED', 0, NULL, '2026-09-01 18:34:03', '2026-09-18 15:50:43'),
+(6, 2, 'Puthiya upcoming function', 'Test', '2026-09-10', 'Chennai', 'uploads/2/upcoming-function/file-1789604039697-568986556.jpg', 'COMPLETED', 1, '2026-09-17 22:03:33', '2026-09-08 13:01:35', '2026-09-17 16:33:33'),
+(7, 2, 'Test', NULL, '2026-09-19', 'Dindigul', 'uploads/2/upcoming-function/file-1789591351525-225561401.jpg', 'CANCELLED', 1, '2026-09-17 22:03:35', '2026-09-16 20:42:31', '2026-09-17 16:33:35'),
+(8, 2, 'Mahesh Ku Kalyanam', '', '2026-09-19', 'Chennai Mandapam', 'uploads/2/upcoming-function/file-1789662805526-106876077.jpg', 'CANCELLED', 0, NULL, '2026-09-17 16:33:26', '2026-09-20 18:24:58');
 
 -- --------------------------------------------------------
 
@@ -2728,29 +2898,29 @@ CREATE TABLE `users` (
 
 INSERT INTO `users` (`id`, `full_name`, `email`, `mobile`, `referral_code`, `status`, `is_verified`, `email_verified_at`, `last_activity_at`, `is_deleted`, `deleted_at`, `created_at`, `updated_at`) VALUES
 (1, 'P SANTHOSHRAJ', 'bccnmart@gmail.com', '9087471277', 'JVDG4TZV', 'ACTIVE', 0, NULL, NULL, 0, NULL, '2026-03-02 12:37:30', '2026-03-02 12:37:30'),
-(2, 'Gnana Prakasam A', 'agprakash406@gmail.com', '7845456609', 'JVQWEX7D', 'ACTIVE', 1, '2026-03-11 22:09:39', '2026-09-08 18:22:46', 0, NULL, '2026-03-02 12:31:58', '2026-09-08 12:52:46'),
+(2, 'Gnana Prakasam A', 'agprakash406@gmail.com', '7845456609', 'JVQWEX7D', 'ACTIVE', 0, NULL, '2026-09-21 00:18:50', 0, NULL, '2026-03-02 12:31:58', '2026-09-20 18:49:20'),
 (3, 'VIVEK', 'suvekavivek@gmail.com', '7397004496', 'KU6AVPSU', 'ACTIVE', 0, NULL, NULL, 0, NULL, '2026-03-02 12:45:27', '2026-03-02 12:45:27'),
 (4, 'MURUGAVEL', 'murukavel2001@gmail.com', '6381018318', 'ZP2SP4WH', 'ACTIVE', 0, NULL, '2026-05-31 11:09:47', 0, NULL, '2026-05-31 05:39:25', '2026-05-31 05:39:47'),
 (5, 'KOWSALYA', 'kowsalya25071996@gmail.com', '6381377512', 'HX7Z4QPF', 'ACTIVE', 0, NULL, NULL, 0, NULL, '2026-03-02 12:43:20', '2026-03-02 12:43:20'),
 (6, 'LOGU', 'eeelogu11490@gmail.com', '9976791028', 'TDPK75UX', 'ACTIVE', 0, NULL, NULL, 0, NULL, '2026-03-02 12:41:33', '2026-03-02 12:41:33'),
 (7, 'GURU', 'gurumanohar1977@gmail.com', '7402288006', 'TF6RH7C2', 'ACTIVE', 0, NULL, '2026-06-21 16:24:14', 0, NULL, '2026-06-21 10:53:43', '2026-06-21 10:54:14'),
-(8, 'J KIRENA', 'jkirena@gmail.com', '8072427471', 'WNV4HKAM', 'ACTIVE', 0, NULL, '2026-03-06 19:36:50', 0, NULL, '2026-03-06 08:33:21', '2026-03-06 08:36:50'),
+(8, 'J KIRENA', 'jkirena@gmail.com', '8072427471', 'WNV4HKAM', 'ACTIVE', 0, NULL, '2026-09-17 19:11:13', 0, NULL, '2026-03-06 08:33:21', '2026-09-17 13:41:13'),
 (9, 'MANI', 'manigg1988.july@gmail.com', '9047248029', 'ECX4XHZN', 'ACTIVE', 0, NULL, '2026-05-30 23:37:28', 0, NULL, '2026-05-30 14:18:57', '2026-05-30 18:07:28'),
 (10, 'JEGADEESAN', 'jegadeesan528@gmail.com', '9487639047', 'J6FJ9HMP', 'ACTIVE', 0, NULL, NULL, 0, NULL, '2026-03-02 12:44:40', '2026-03-02 12:44:40'),
 (11, 'DANNY R', 'devrajdani@gmail.com', '9790363201', 'GMW3GJCS', 'ACTIVE', 0, NULL, '2026-05-31 11:55:31', 0, NULL, '2026-03-02 12:49:44', '2026-05-31 06:25:31'),
 (12, 'AYYATHURSI', 'ayyathuraivayyayhuraiv@gmail.com', '9698802185', 'AG3RQG9K', 'ACTIVE', 0, NULL, '2026-03-15 13:15:22', 0, NULL, '2026-03-15 07:45:08', '2026-03-15 07:45:22'),
-(13, 'RAJKUMAR', 'rajhomebp@gmail.com', '8056586026', '8VSKHDHU', 'ACTIVE', 0, NULL, '2026-09-05 18:53:55', 0, NULL, '2026-06-01 12:02:30', '2026-09-05 13:23:55'),
+(13, 'RAJKUMAR', 'rajhomebp@gmail.com', '8056586026', '8VSKHDHU', 'ACTIVE', 1, '2026-09-20 07:07:21', '2026-09-20 07:06:13', 0, NULL, '2026-06-01 12:02:30', '2026-09-20 02:35:11'),
 (14, 'BOOPATHI', 'boopathibaskar1104@gmail.com', '8608505183', 'FGD5QAAS', 'ACTIVE', 0, NULL, NULL, 0, NULL, '2026-03-02 12:45:01', '2026-03-02 12:45:01'),
 (15, 'KARUNAMOORTHY', 'karunarajaram33@gmail.com', '9042833328', '4K6PQ4YC', 'ACTIVE', 0, NULL, NULL, 0, NULL, '2026-03-02 12:47:59', '2026-03-02 12:47:59'),
 (16, 'SARAVANAN', 'saravanan0894@gmail.com', '8220105076', 'HSCX59AN', 'ACTIVE', 0, NULL, '2026-05-09 17:12:59', 0, NULL, '2026-03-02 12:42:30', '2026-05-09 11:42:59'),
 (17, 'Sathyaprakash', 'sathya@gmail.com', '9940030304', 'N3NJE3B2', 'ACTIVE', 0, NULL, NULL, 0, NULL, '2026-03-02 12:48:14', '2026-03-02 12:48:14'),
 (18, 'PRIYANGA', 'bpriyanga2013@gmail.com', '9345089270', 'NZABV889', 'ACTIVE', 0, NULL, NULL, 0, NULL, '2026-03-02 12:45:47', '2026-03-02 12:45:47'),
-(19, 'THIRUMALAIKANNAN', 'vthirumalaikannan@gmail.com', '8778702712', '8SW6NV7D', 'ACTIVE', 0, NULL, '2026-06-11 10:01:04', 0, NULL, '2026-03-02 12:49:29', '2026-06-11 04:31:04'),
-(20, 'RENZO ROWAN', 'renzorowan1@gmail.com', '9865243275', 'S4GPUZEG', 'ACTIVE', 0, NULL, '2026-08-28 02:24:42', 0, NULL, '2026-03-02 12:52:27', '2026-08-27 20:54:42'),
+(19, 'THIRUMALAIKANNAN', 'vthirumalaikannan@gmail.com', '8778702712', '8SW6NV7D', 'ACTIVE', 0, NULL, '2026-09-18 20:07:25', 0, NULL, '2026-03-02 12:49:29', '2026-09-18 14:37:25'),
+(20, 'RENZO ROWAN', 'renzorowan1@gmail.com', '9865243275', 'S4GPUZEG', 'ACTIVE', 1, '2026-09-18 23:04:59', '2026-09-21 02:34:15', 0, NULL, '2026-03-02 12:52:27', '2026-09-20 21:04:15'),
 (21, 'JAYAPRAKASH B', 'bjayaprakash75@gmail.com', '8098985612', 'CAPHNB5G', 'ACTIVE', 0, NULL, NULL, 0, NULL, '2026-03-02 12:43:41', '2026-03-02 12:43:41'),
 (22, 'B KRISHNA', 'kmoorthy362@gmail.com', '9940955808', 'NVJE7YBD', 'ACTIVE', 0, NULL, '2026-03-06 19:20:24', 0, NULL, '2026-03-02 12:46:07', '2026-03-06 08:20:24'),
 (23, 'KUPPUSAMY', 'shobibuvi@gmail.com', '9791585924', 'U7UWPKYR', 'ACTIVE', 0, NULL, NULL, 0, NULL, '2026-03-02 12:49:52', '2026-03-02 12:49:52'),
-(24, 'SARANYA', 'nsaranya1192@gmail.com', '7010363314', 'UDGG3UCG', 'ACTIVE', 0, NULL, '2026-06-24 13:57:54', 0, NULL, '2026-06-24 08:27:37', '2026-06-24 08:27:54'),
+(24, 'SARANYA', 'nsaranya1192@gmail.com', '7010363314', 'UDGG3UCG', 'ACTIVE', 0, NULL, '2026-09-14 20:15:28', 0, NULL, '2026-06-24 08:27:37', '2026-09-14 14:45:28'),
 (25, 'SARAVANAN', 'saranvijay4564@gmail.com', '9345160921', 'VHAHRATE', 'ACTIVE', 0, NULL, NULL, 0, NULL, '2026-03-02 12:49:15', '2026-03-02 12:49:15'),
 (26, 'RAJESHWARAN S', 'rajeshtrisha007@gmail.com', '7373139756', 'SCP9DMRW', 'ACTIVE', 0, NULL, NULL, 0, NULL, '2026-03-02 12:49:21', '2026-03-02 12:49:21'),
 (27, 'GANDHI', 'dhigan88@gmail.com', '7811882453', 'WTCWDW6S', 'ACTIVE', 0, NULL, '2026-03-06 19:39:47', 0, NULL, '2026-03-02 12:50:01', '2026-03-06 08:39:47'),
@@ -2761,13 +2931,61 @@ INSERT INTO `users` (`id`, `full_name`, `email`, `mobile`, `referral_code`, `sta
 (32, 'KARTHIKEYAN', 'tkarthik8656@gmail.com', '8056511475', 'CCMZBZ5F', 'ACTIVE', 0, NULL, NULL, 0, NULL, '2026-03-02 12:44:20', '2026-03-02 12:44:20'),
 (33, 'MUTHU', 'thendralcommunication1@gmail.com', '7200170016', 'GUTXXPHC', 'ACTIVE', 0, NULL, '2026-03-13 22:41:46', 0, NULL, '2026-03-12 17:17:24', '2026-03-13 17:11:46'),
 (45, 'KALAIMANI', 'nkmanimail@gmail.com', '9500885241', 'BXZ2R3D6', 'ACTIVE', 0, NULL, NULL, 0, NULL, '2026-07-16 07:00:27', '2026-07-16 07:00:27'),
-(46, 'NAMBIRAJAN', 'rnambirajan.rajan@gmail.com', '9750091483', 'K4EJUUHA', 'ACTIVE', 0, NULL, '2026-09-02 13:49:05', 0, NULL, '2026-08-22 01:35:24', '2026-09-02 08:19:05'),
-(47, 'KODEESWARAN', 'eswara1126@gmail.com', '9385504975', 'PZA9A8PT', 'ACTIVE', 0, NULL, '2026-08-25 10:50:00', 0, NULL, '2026-08-25 05:19:37', '2026-08-25 05:20:00'),
+(46, 'NAMBIRAJAN', 'rnambirajan.rajan@gmail.com', '9750091483', 'K4EJUUHA', 'ACTIVE', 0, NULL, '2026-09-16 09:18:29', 0, NULL, '2026-08-22 01:35:24', '2026-09-16 03:48:29'),
+(47, 'KODEESWARAN', 'eswara1126@gmail.com', '9385504975', 'PZA9A8PT', 'ACTIVE', 0, NULL, '2026-09-11 11:06:32', 0, NULL, '2026-08-25 05:19:37', '2026-09-11 05:36:32'),
 (48, 'MARTIN', 'dhinadhinakar47@gmail.com', '8489916581', 'EUKKHKX5', 'ACTIVE', 0, NULL, '2026-08-28 07:52:30', 0, NULL, '2026-08-28 02:21:34', '2026-08-28 02:22:30'),
 (49, 'PRAKASH', 'prakashbose21@gmail.com', '9566383091', 'YSVFD7FE', 'ACTIVE', 0, NULL, '2026-09-03 16:43:27', 0, NULL, '2026-08-29 10:14:06', '2026-09-03 11:13:27'),
-(50, 'MVR', 'lugarlugar033@gmail.com', '6380026532', 'X7CR4A2C', 'ACTIVE', 0, NULL, '2026-09-01 22:01:58', 0, NULL, '2026-09-01 15:53:50', '2026-09-01 16:31:58'),
+(50, 'MVR', 'lugarlugar033@gmail.com', '6380026532', 'X7CR4A2C', 'INACTIVE', 0, NULL, '2026-09-01 22:01:58', 0, NULL, '2026-09-01 15:53:50', '2026-09-18 23:13:13'),
 (51, 'SIVAKUMAR', 'rahulsmith4918@gmail.com', '9566901334', 'Q5HDGAC6', 'ACTIVE', 0, NULL, '2026-09-02 00:01:31', 0, NULL, '2026-09-01 15:59:41', '2026-09-01 18:31:31'),
-(52, 'ARUNMAYI', 'arunmayi555@gmail.com', '8012572334', 'EQEWRH8D', 'ACTIVE', 0, NULL, '2026-09-06 08:12:25', 0, NULL, '2026-09-06 02:41:56', '2026-09-06 02:42:25');
+(52, 'ARUNMAYI', 'arunmayi555@gmail.com', '8012572334', 'EQEWRH8D', 'ACTIVE', 0, NULL, '2026-09-06 08:12:25', 0, NULL, '2026-09-06 02:41:56', '2026-09-06 02:42:25'),
+(53, 'Sathishkumar', 'mageshkmr95@gmail.com', '9965184945', 'UJGR6G32', 'ACTIVE', 0, NULL, '2026-09-13 12:15:31', 0, NULL, '2026-09-13 06:44:48', '2026-09-13 06:45:31'),
+(54, 'NIVAS DEVARAJ', 'nivasdevaraj93@gmail.com', '9087542047', '7NCDZK9Y', 'ACTIVE', 0, NULL, '2026-09-17 16:04:52', 0, NULL, '2026-09-14 07:09:15', '2026-09-17 10:34:52'),
+(55, 'SAKTHIVEL', 'letsmail.shakthi@gmail.com', '8220424383', '2NXQS7CP', 'ACTIVE', 0, NULL, '2026-09-15 07:10:05', 0, NULL, '2026-09-15 01:39:48', '2026-09-15 01:40:05'),
+(56, 'DHURKA V', 'dhurkav@gmail.com', '9677203677', 'ACEAFBSN', 'ACTIVE', 0, NULL, NULL, 0, NULL, '2026-09-16 16:11:06', '2026-09-16 16:11:06'),
+(59, 'KOKILA SIVA', 'kokilakokila252@gmail.com', '7871004527', 'C3EPCZU9', 'ACTIVE', 0, NULL, '2026-09-17 20:03:14', 0, NULL, '2026-09-17 14:32:51', '2026-09-17 14:48:43'),
+(61, 'RAMESH', 'ramesh1943fo@gmail.com', '8668130862', 'RPC3W7HQ', 'ACTIVE', 1, '2026-09-20 15:16:07', '2026-09-20 15:15:24', 0, NULL, '2026-09-20 09:45:12', '2026-09-20 09:46:07');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `user_audit_logs`
+--
+
+CREATE TABLE `user_audit_logs` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `user_id` bigint(20) UNSIGNED NOT NULL,
+  `action` varchar(64) NOT NULL,
+  `entity_type` varchar(64) DEFAULT NULL,
+  `entity_id` varchar(64) DEFAULT NULL,
+  `summary` varchar(255) NOT NULL,
+  `metadata` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`metadata`)),
+  `ip_address` varchar(64) DEFAULT NULL,
+  `user_agent` varchar(255) DEFAULT NULL,
+  `device_id` varchar(500) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `user_audit_logs`
+--
+
+INSERT INTO `user_audit_logs` (`id`, `user_id`, `action`, `entity_type`, `entity_id`, `summary`, `metadata`, `ip_address`, `user_agent`, `device_id`, `created_at`) VALUES
+(158, 13, 'LOGIN', 'user', '13', 'User logged in', '{\"email\":\"rajhomebp@gmail.com\"}', '49.47.219.235', 'Dart/3.13 (dart:io)', NULL, '2026-09-20 01:36:13'),
+(159, 13, 'DEVICE_REGISTER', 'device', 'TP1A.220624.014', 'Device registered or refreshed', '{\"device_name\":\"Raj safety\",\"platform\":\"android\",\"app_version\":\"5.1.1\"}', '49.47.219.235', 'Dart/3.13 (dart:io)', 'TP1A.220624.014', '2026-09-20 01:36:13'),
+(160, 13, 'PROFILE_PHOTO_UPDATE', 'user', '13', 'Profile photo removed', NULL, '49.47.219.235', 'Dart/3.13 (dart:io)', NULL, '2026-09-20 01:36:13'),
+(161, 13, 'DEVICE_REGISTER', 'device', 'TP1A.220624.014', 'Device registered or refreshed', '{\"device_name\":\"Raj safety\",\"platform\":\"android\",\"app_version\":\"5.1.1\"}', '49.47.219.235', 'Dart/3.13 (dart:io)', 'TP1A.220624.014', '2026-09-20 02:34:28'),
+(162, 13, 'PROFILE_UPDATE', 'user', '13', 'Profile updated', '{\"name\":\"RAJKUMAR\",\"email\":\"rajhomebp@gmail.com\"}', '49.47.219.235', 'Dart/3.13 (dart:io)', NULL, '2026-09-20 02:35:11'),
+(183, 61, 'SIGNUP', 'user', '61', 'New user registered', '{\"email\":\"ramesh1943fo@gmail.com\",\"mobile\":\"8668130862\"}', '106.192.76.92', 'Dart/3.13 (dart:io)', 'BP2A.250605.015', '2026-09-20 09:45:12'),
+(184, 61, 'LOGIN', 'user', '61', 'User logged in', '{\"email\":\"ramesh1943fo@gmail.com\"}', '106.192.76.92', 'Dart/3.13 (dart:io)', NULL, '2026-09-20 09:45:24'),
+(185, 61, 'DEVICE_REGISTER', 'device', 'BP2A.250605.015', 'Device registered or refreshed', '{\"device_name\":\"OPPO F27 Pro+ 5G\",\"platform\":\"android\",\"app_version\":\"5.1.1\"}', '106.192.76.92', 'Dart/3.13 (dart:io)', 'BP2A.250605.015', '2026-09-20 09:45:24'),
+(186, 61, 'FUNCTION_CREATE', 'function', '40', 'Function created: Baby shower', '{\"location\":\"Kamatchi mahal\"}', '106.192.76.92', 'Dart/3.13 (dart:io)', NULL, '2026-09-20 09:47:22'),
+(187, 61, 'TRANSACTION_CREATE', 'transaction', '1343', 'Transaction created (RETURN)', '{\"type\":\"RETURN\",\"amount\":500,\"personId\":\"1313\"}', '106.192.76.92', 'Dart/3.13 (dart:io)', NULL, '2026-09-20 09:50:13'),
+(209, 20, 'LOGIN', 'user', '20', 'User logged in', '{\"email\":\"renzorowan1@gmail.com\"}', '74.125.214.193', 'Dart/3.13 (dart:io)', NULL, '2026-09-20 20:54:31'),
+(210, 20, 'LOGIN', 'user', '20', 'User logged in', '{\"email\":\"renzorowan1@gmail.com\"}', '74.125.214.193', 'Dart/3.13 (dart:io)', NULL, '2026-09-20 20:54:33'),
+(211, 20, 'LOGIN', 'user', '20', 'User logged in', '{\"email\":\"renzorowan1@gmail.com\"}', '66.102.8.3', 'Dart/3.13 (dart:io)', NULL, '2026-09-20 20:55:13'),
+(212, 20, 'LOGIN', 'user', '20', 'User logged in', '{\"email\":\"renzorowan1@gmail.com\"}', '66.249.88.34', 'Dart/3.13 (dart:io)', NULL, '2026-09-20 21:03:40'),
+(213, 20, 'LOGIN', 'user', '20', 'User logged in', '{\"email\":\"renzorowan1@gmail.com\"}', '66.249.88.35', 'Dart/3.13 (dart:io)', NULL, '2026-09-20 21:03:55'),
+(214, 20, 'LOGIN', 'user', '20', 'User logged in', '{\"email\":\"renzorowan1@gmail.com\"}', '66.249.88.35', 'Dart/3.13 (dart:io)', NULL, '2026-09-20 21:04:15');
 
 -- --------------------------------------------------------
 
@@ -2789,13 +3007,13 @@ CREATE TABLE `user_credentials` (
 
 INSERT INTO `user_credentials` (`user_id`, `password_hash`, `password_changed_at`, `failed_login_attempts`, `login_blocked_until`) VALUES
 (1, '$2y$10$ctQqAqLktyqo1pkQPqR8veocodi27vPJ06HDHjlLXIT2UM.KbS0/K', '2026-03-02 23:59:14', 0, NULL),
-(2, '$2a$10$l8F7ooXEvlnLjb8X8NZpjuvr6zC/ySizt.tWg8DJM7n4QzR70V0Me', '2026-07-20 20:23:39', 0, NULL),
+(2, '$2a$10$/3kiOt0cJUaZAVNRFDZgkOWeZt3zHbOKr0pHZ2azLj.2hTblQeyoa', '2026-09-19 16:12:11', 0, NULL),
 (3, '$2a$10$2b/tycxBWslcSITObnwVoOvvu0mOnv/Xbx4Tqko2LVMt5ch.eYaky', '2026-03-02 23:59:14', 0, NULL),
 (4, '$2a$10$xCECLBBxAIffITGHB4joKe6ppNpcPhEzAJpisDiaRinsCymL4WNF.', '2026-05-31 11:09:25', 0, NULL),
 (5, '$2a$10$VWnSl0g0YTQm13bljDqx6udRrrGLMVJ2i5LDmyby4Z7cseN6IpDmK', '2026-03-02 23:59:14', 0, NULL),
 (6, '$2y$10$UvrPcm0FeIcVR02l1iJdW.IEyFWBdXM25ypLiNOPlNji5et5aEwoO', '2026-03-02 23:59:14', 0, NULL),
 (7, '$2a$10$GDwCVD5s3AB4a9wq4lIQzuvKGwiKvPFg5ZmNqMj9HbCBUSqgs8kp6', '2026-06-21 16:23:43', 0, NULL),
-(8, '$2a$10$YshRhOkbHjyOBccaIkIVvOH89ZMx88XoTz90qV6r9WArlstDu.HRu', '2026-03-06 19:33:21', 0, NULL),
+(8, '$2a$10$sq62p9bf6QQK4n/AlC5NsujmP67HD7RgNG4d7ktuHl6TP3QqVCWNS', '2026-09-17 19:11:01', 0, NULL),
 (9, '$2a$10$b6ut3oAHT/tnlxLyWH2O2.Cq2FmlhAMC/dPj2FbSHD.t/7p6I6kTi', '2026-05-30 19:48:57', 0, NULL),
 (10, '$2a$10$FQJdd8O0meH1MHJIfZnpseHx5xry22yUiwa.Zmo/vSXxGOxUmbM4y', '2026-03-02 23:59:14', 0, NULL),
 (11, '$2a$10$sy5ygxw9lEB.wXFS0d69K.1FE4vs3FJi.RcfO//9J4/4hvswHjJhG', '2026-03-17 20:02:39', 0, NULL),
@@ -2806,12 +3024,12 @@ INSERT INTO `user_credentials` (`user_id`, `password_hash`, `password_changed_at
 (16, '$2a$10$/xIRjNIapZwpN1TaPIUNVOqj97p.xuNwD5W2rhuffa9df9.gVmZ.q', '2026-03-17 22:30:13', 0, NULL),
 (17, '$2a$10$8MP/CF.oJCm9TQx6I4wtKO8bFcPX6yDJF5KHc.budwjE1GCFAthXS', '2026-03-02 23:59:14', 0, NULL),
 (18, '$2a$10$J1dS5YyFbPZqbC/XF.Tx.uMKAVZyHGUxbLaQbYftzWO5mloZxO6Jq', '2026-03-02 23:59:14', 0, NULL),
-(19, '$2a$10$PMVjtynjev84Iv4v0e4RlOEcmljY0mKLqIyqlEX6pezYZn8quTtq.', '2026-04-29 09:36:46', 0, NULL),
+(19, '$2a$10$D5xD5IkI3tt.Mj1/CUydFuZMSLWlsWHQXFOKX0qlcKUZyZHITTQze', '2026-09-18 20:06:56', 0, NULL),
 (20, '$2a$10$ybXIPflt77omND.1EDW7AeQolmmne/rOLL6C3zTZqFmOFoR8PN21y', '2026-08-12 09:00:44', 0, NULL),
 (21, '$2a$10$CZdOs8EWtLVNQ4OzqoABlO4ou4brqXWPoigDHJFkfTtFr.ywQWwIa', '2026-03-02 23:59:14', 0, NULL),
 (22, '$2a$10$TwnKA0li8DQcX0SHsMh3BeBDSi2B72Vckt14H5ZxlL6dP6FBdCwle', '2026-03-06 19:20:17', 0, NULL),
 (23, '$2a$10$QenKgMouhzacAQpPUWt42.YZSnH9k2u5JQ.U2.n/Ha3ZPz6oFzEi2', '2026-03-02 23:59:14', 0, NULL),
-(24, '$2a$10$Nz99Cr9w27bRc128oIQbkuOpevUvPyFp/WPy5Ief3sbfzhkdGI4KK', '2026-06-24 13:57:37', 0, NULL),
+(24, '$2a$10$qWwKcSoZCiLfUYoQmDZ/2.6epEK1YuL6/QOaOlBUb.HVAOx4MxHgO', '2026-09-14 20:15:15', 0, NULL),
 (25, '$2a$10$Byn5HKt3yH1Mj26SGRsBE.4Bv5fryEuhxS1ftiUezx0XUeXyu0aj.', '2026-03-02 23:59:14', 0, NULL),
 (26, '$2a$10$0ppemowGk05tYK9FrmzTIecv0XPwulevisdJYk3FJymVorPK1tXDq', '2026-03-02 23:59:14', 0, NULL),
 (27, '$2a$10$DJveKJxDkwXwcAeD7ESQoOdG9zTMDZ4SZzrl2/U7Zv.POD9gw3N.i', '2026-03-06 19:39:42', 0, NULL),
@@ -2823,12 +3041,18 @@ INSERT INTO `user_credentials` (`user_id`, `password_hash`, `password_changed_at
 (33, '$2a$10$HIldg94UE6FX09pdByT/CeHo46GygMUtgcBo.Q4yvd9V1oMVDgq3C', '2026-03-13 15:52:13', 0, NULL),
 (45, '$2a$10$7f7lokoVEQdSshgQtnmz6.LZZqfgolbh9ZOJ1Su9wfhCsKpeh1/O.', '2026-07-16 12:30:27', 1, NULL),
 (46, '$2a$10$rpkMh8YOcD0lVM//rRyme.xicmDUlc73Kya2fvKz27.3al2wwMReq', '2026-08-22 07:05:24', 0, NULL),
-(47, '$2a$10$UHR7x3PshwBA0a3SvDfMUunlApSKVH2rz2IzKyquvYcN0gweGAscm', '2026-08-25 10:49:37', 0, NULL),
+(47, '$2a$10$fwTgF5p8WJ5qKMXHEwwbte4qx6iW/AM6XERVURWAjllxWjZ7//ZP6', '2026-09-11 11:06:13', 0, NULL),
 (48, '$2a$10$kF5YMazEhSTrtRbvWOitxuKYBcA11HXr3B.NMTensIqPS5MRaAmPW', '2026-08-28 07:51:34', 0, NULL),
 (49, '$2a$10$FpZ9Qteo2PBzyjtyDxHb3.nEQZoEDF9L9.3FPKO8Sc3pTiMqCtvru', '2026-08-29 15:44:06', 0, NULL),
 (50, '$2a$10$U6.y.gz.lhgH6./Xbeakhe/ce.5eleoRKBxKLSprsN8bZC4EjIgMu', '2026-09-01 21:35:12', 0, NULL),
 (51, '$2a$10$m/JTHOJnfPgVMd3mv1gHWOUe4h.jx7.f4IG.OjXU72z.cH6bBbzF.', '2026-09-01 21:29:41', 0, NULL),
-(52, '$2a$10$ZKVPd91JA8sgwzFH.Quo1OTFnRkzxNsLPU/SOQxsWuwtaZCToWQw2', '2026-09-06 08:11:56', 0, NULL);
+(52, '$2a$10$ZKVPd91JA8sgwzFH.Quo1OTFnRkzxNsLPU/SOQxsWuwtaZCToWQw2', '2026-09-06 08:11:56', 0, NULL),
+(53, '$2a$10$pPkvvIMd046h1xyQ1Kv.E.bidE/7f.wec91PkveKiCVQLgL72M1Eq', '2026-09-13 12:14:48', 0, NULL),
+(54, '$2a$10$YBSGShfeFvf7kPi8wtgEdu/Th4N5lAFArAybg/xggrnJ60DGJvwf2', '2026-09-14 12:39:15', 0, NULL),
+(55, '$2a$10$zLuw4hdMxtAAFcwuL/UpJ.va6IA7lPrij/2mVDi5ML6fZidQfPnmq', '2026-09-15 07:09:48', 0, NULL),
+(56, '$2a$10$CUV7c.m2WrnH94WkOCkr1.I2Y0Gjuv6pZnr6/b..9fmovUiXXHP6K', '2026-09-16 21:41:06', 1, NULL),
+(59, '$2a$10$nYS5nTN8Sr4ZVWONoGdfAOCtYPdwuYObaFcSFhTgFgUZL04QqzVP2', '2026-09-17 20:02:51', 0, NULL),
+(61, '$2a$10$NNs/uaQkF3hWR.K32uOdOeJvxNTaKzUH2OQJJWKUgJ4dPhC89ZS/m', '2026-09-20 15:15:12', 0, NULL);
 
 -- --------------------------------------------------------
 
@@ -2847,8 +3071,12 @@ CREATE TABLE `user_devices` (
   `ram_size` varchar(10) DEFAULT NULL,
   `fcm_token` varchar(255) NOT NULL,
   `android_version` varchar(64) DEFAULT NULL,
+  `platform` varchar(20) NOT NULL DEFAULT 'android',
+  `app_version` varchar(32) DEFAULT NULL,
   `is_active` tinyint(1) DEFAULT 1,
+  `token_status` enum('active','invalid') NOT NULL DEFAULT 'active',
   `last_used_at` datetime DEFAULT NULL,
+  `uninstalled_at` datetime DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   `is_deleted` tinyint(1) DEFAULT 0,
@@ -2859,30 +3087,37 @@ CREATE TABLE `user_devices` (
 -- Dumping data for table `user_devices`
 --
 
-INSERT INTO `user_devices` (`id`, `user_id`, `device_id`, `device_name`, `brand`, `manufacturer`, `model`, `ram_size`, `fcm_token`, `android_version`, `is_active`, `last_used_at`, `created_at`, `updated_at`, `is_deleted`, `deleted_at`) VALUES
-(24, 33, 'BP2A.250605.015', 'OPPO Reno12 Pro 5G', 'OPPO', 'OPPO', 'CPH2629', '11.19', 'cLVWIovYR8eTI9R3pPsYIm:APA91bEFHeUhrm0wQVrgUhTsujbEFX8_S9lq1vhGV5tPFdJfBujKqIMs2P1TXKm5dxdU3D_RFZsqAmPV4-1Wbn-cj5XH3s_wuBa1cbRwzZkydtNp0NgLKYw', '16', 1, '2026-03-13 22:41:47', '2026-03-13 17:11:47', '2026-07-06 19:25:38', 0, NULL),
-(25, 12, 'W1VC36H.14-20-19', 'motorola edge 60 fusion', 'motorola', 'motorola', 'motorola edge 60 fusion', '7.24', 'ez3QSBTWQBqU-q4WWTa3-p:APA91bEANPoTwKyy5PyW6-1TkQH7xAZfsPX2HvyCUTABjdzj8PzzDQPFl25k4amnxJ4I7_nCMd6Hap4mhuWi8GBVK09-1f19jWH1tEpT77u94_R4sLbj1yM', '16', 0, '2026-03-15 13:15:08', '2026-03-15 07:45:08', '2026-07-06 19:25:38', 0, NULL),
-(36, 31, 'BP2A.250605.031.A3', 'Parthiban\'s phone', 'samsung', 'samsung', 'SM-E066B', '5.38', 'e2VlKQHBRKmJ9u61Q9IfAC:APA91bHiaEOCVjNSUUqzGbpsWtC8ydV6k5WhJcX-14B4vpEsb2RvxdbeiKVov8j0aMM_zmmjaaWvQmIRoEIokHIDh4N8QMn4DY4-HXl8nKa1M6zcu-nUUw0', '16', 0, '2026-04-07 18:52:20', '2026-04-07 13:22:20', '2026-07-08 03:30:00', 0, NULL),
-(44, 16, 'UKQ1.230924.001', 'OnePlus Nord CE 3 Lite 5G', 'OnePlus', 'OnePlus', 'CPH2467', '7.21', 'c3KJsGnFSW--PcDGsAqQIu:APA91bGz6yfvSmGVqtzQUkK1z3aFJK0KIs8V0ijtG0z46RnADbO7ivN1w08ZokQXYIcCa9YCUQEXvo_nN2AwIuxuuhdVlEbDVhgWrsAtHefXG__Te3-h8fQ', '15', 0, '2026-05-09 17:13:00', '2026-05-09 11:43:00', '2026-07-06 19:25:38', 0, NULL),
-(46, 9, 'AP3A.240905.015.A2_V000L1', 'I2410', 'iQOO', 'vivo', 'I2410', '7.28', 'eT7btJH5S-eliQIpyUK0DM:APA91bES1IH8TJYXs7MpAiSL6e9Oa2ZQgs6f6F5K-TA1t7DPA60mu_EHSPXDcvi6aTitzIuUnokl27tmrL382WYl15cslCQUL_Aybjje0quwj0gMADpGMJU', '15', 0, '2026-05-30 23:37:29', '2026-05-30 18:07:29', '2026-08-07 15:54:01', 0, NULL),
-(47, 4, 'TP1A.220624.014', 'V2058', 'vivo', 'vivo', 'V2058', '7.56', 'ekG6jxm2RnCyoFlpkR1Qet:APA91bFyzx4U5Zak0zakHGXqZ1F2B0oImkzP87CRVaamW_UYK1ZrIpvc_tT57wzGaMKl8N7pdf7HGivtUfev_DtK2D9Px8wY5IBL0fBPL4fYGtL30sBQpG4', '13', 0, '2026-05-31 11:09:25', '2026-05-31 05:39:26', '2026-08-07 15:54:00', 0, NULL),
-(48, 11, 'TP1A.220624.014', 'V2109', 'vivo', 'vivo', 'V2109', '7.56', 'eFPGKiztS9mVk7GWvNbkWO:APA91bERQep7-m1MJYjtz4-hg_QlkjEJJSuDom0Gy1Kdw7S2iCNlI8ylhbLQvN3d6MpZ65wb1qPTKDae6YffOfBIdA_OI3rtua1TaMet0z2eIML3CffMoVE', '13', 1, '2026-05-31 11:55:33', '2026-05-31 06:25:33', '2026-07-06 19:25:38', 0, NULL),
-(51, 30, 'BP2A.250605.031.A3', 'V2403', 'vivo', 'vivo', 'V2403', '7.29', 'cekLFkf8R02AOISPV1_MBp:APA91bHyCnYPRSs9oJQqN_nUBITwCrQhICES2HIBqVmW6LIQfLzBr_4hp236Q8EwUCZj6QLHkLBw8wxUCi7EMFRK8iqJvzxPtiymR2ZaU6g5vZikPQ4MtSo', '16', 0, '2026-06-07 08:36:50', '2026-06-07 03:06:50', '2026-08-07 15:54:01', 0, NULL),
-(53, 19, 'BP2A.250605.031.A3_V000L1', 'V2548', 'vivo', 'vivo', 'V2548', '11.02', 'c5GQFIm1SjuF2cwOpPo7gF:APA91bEtxaLYI-B-CH9gcj2kc3UJ0a6srQda40PRghvWrvpt_HiiAqCEnub2KLMB_-oTVfHl8Aa_BkX0RKIyzuVhZDdjAtxm0sV08lIQ4ZTXqpQvH1iCcvo', '16', 1, '2026-06-11 10:01:06', '2026-06-11 04:31:06', '2026-07-06 19:25:38', 0, NULL),
-(54, 7, 'BP2A.250605.031.A3_V000L1', 'V2575', 'vivo', 'vivo', 'V2575', '3.54', 'cdEEtG7uQhGpew8m9xWRn8:APA91bFxgwDkgMo8ny73rTmgCtvrx_joCbGkrzeUGMG-tE7euQHLk243-W2Dwx_gFMDkq70c5RyKaGbbozXnKZ8dCGF1mAFP9cX52qDgvPLcsAyh_bXXzk8', '16', 0, '2026-06-21 16:23:43', '2026-06-21 10:53:43', '2026-08-07 15:54:00', 0, NULL),
-(55, 24, 'BP2A.250605.031.A3', 'V2355', 'vivo', 'vivo', 'V2355', '7.31', 'fEV8u366QuK_EFDpR6k45j:APA91bGsxyMKN2FqurnfcOrqKFF5nNB2CJs6I5xi76JnJyeUc9oKtbAAn33wnvixBo8uIcESMbC5m2Lapuhf_HTtDzdGF-ASdxDmhwXlYttGAwGrNImd9cs', '16', 1, '2026-06-24 13:57:37', '2026-06-24 08:27:37', '2026-07-06 19:25:38', 0, NULL),
-(68, 45, 'UKQ1.230924.001', 'OPPO F23 5G', 'OPPO', 'OPPO', 'CPH2527', '7.21', 'dZhhVJkIS7GFbQysLN4Z7p:APA91bEvw9M7O2xd0l-DqUULtzNXBoqjfmnEOQOraKHluIxVPTqxKhLqbyynI47G0BemswStU_hkskeY7kj5p6sCIrgPoRw3NXF0gd6As_DBt5FOsYWEy68', '15', 1, '2026-07-16 12:30:27', '2026-07-16 07:00:27', '2026-07-16 07:00:27', 0, NULL),
-(84, 29, 'SKQ1.211019.001', 'Redmi Note 9 Pro Max', 'Redmi', 'Xiaomi', 'Redmi Note 9 Pro Max', '5.45', 'dfXEyGqrTOWqUpo4nHL736:APA91bHMwOyY4T6dC3ghHWd5DG0Z5ZlItBFrawr7PNxieQ-geIsLG49nX4tuKIUgTaBh6tTGwCQPcMiEUIoLNgXnFiwox1zmfDsw2AO7S5tDsIPmS0a0qrI', '12', 1, '2026-08-14 20:15:24', '2026-08-14 14:45:24', '2026-08-14 14:45:24', 0, NULL),
-(91, 47, 'AP3A.240905.015.A2_MOD1', 'V2312', 'vivo', 'vivo', 'V2312', '5.49', 'eZ_Y0ln-TZCCJcJM67aOjq:APA91bGe4E8e-VN6kaBNszGsf21OQes5SyPT8LGtlr__FFlweVug5ueAszPpaYd2byM9G3XrpHCrFGHpHJr2qediTyz2TV-1VtU_BKyOC53th-PGuR6kGck', '15', 1, '2026-08-25 10:49:37', '2026-08-25 05:19:37', '2026-08-25 05:19:37', 0, NULL),
-(103, 20, 'W1VCS36H.14-20-19-7', 'Moto 60 Fusion ', 'motorola', 'motorola', 'motorola edge 60 fusion', '11.15', 'e20x_E7IRNODFwkUVAyhuE:APA91bE2jOFbPBpFZd9xtU5b5NRUUzSIIiY8z6oD5ifkKDk6mPKOTfL3DuDIZs11eFNtpHRv8a5W7DVCEpXxCIeBP06Q0STpnTfhu_wJ98z7JhJhFzt_90U', '16', 1, '2026-08-28 02:24:42', '2026-08-27 20:54:42', '2026-08-27 20:54:42', 0, NULL),
-(104, 48, 'SP1A.210812.016', 'OPPO Reno4 Lite', 'OPPO', 'OPPO', 'CPH2125', '7.46', 'fETN02YvTQGNHkwcOaRO60:APA91bGMVCe656Wr8tFCYgfQb5ckAcdMV7dmnx_-xhhgw0hfdLI5FjVk_Z_4yjrXoauMTqVba_vWVS0-yzzETB5b153sq7_7CjDSH4cbgaZ5Pu1I58dMZ98', '12', 1, '2026-08-28 07:51:34', '2026-08-28 02:21:34', '2026-08-28 02:21:34', 0, NULL),
-(111, 51, 'AP3A.240905.015.A2', 'V2348', 'vivo', 'vivo', 'V2348', '7.13', 'dDmnevNmRR2AZk3WV0pdu8:APA91bFTbPgYAel6bT0UpVMu9XTQ1YfcB3OQwY6Vs0stY4LhlBi8LZn5RohOLwm-QGrGmOyEVt4HGsHE8e329cVtWr44sqJH0J63FaefgprFi6J2wbhoEzE', '15', 1, '2026-09-01 21:29:41', '2026-09-01 15:59:41', '2026-09-01 15:59:41', 0, NULL),
-(112, 50, 'AP3A.240905.015.A2_IN', 'V2202', 'vivo', 'vivo', 'V2202', '11.31', 'd855NnAYRnatxfx33GgDDw:APA91bEnUq1E7bVSpsSAshRNwGpB7yxt2Qr2MB8lfipGTanVrvi48yyaKjwO0lisVhlZM5Ir2_PTWlAGwX3NtEogs3f33V_GE6luxsEIFKBAOyvt-0j03Tc', '15', 0, '2026-09-01 22:01:58', '2026-09-01 16:31:58', '2026-09-05 18:20:46', 0, NULL),
-(113, 46, 'BP4A.251205.006', 'Nambirajan\'s M35', 'samsung', 'samsung', 'SM-M356B', '7.26', 'e4ET0u2eSsGwJZOktJ59lB:APA91bGxC_F_UzA0lwHv8BxbmHOng4fKWYQYaJGjBgzwZb5ddrU2TvZ9-Ow7v0nZRtveVDXeyKsUWufdyKky3fWb5BwP2r2jyUKlWAqRpETsgggXZydK-qU', '16', 1, '2026-09-02 13:49:05', '2026-09-02 08:19:05', '2026-09-02 08:19:05', 0, NULL),
-(114, 49, 'PKQ1.180904.001', 'Redmi Note 6 Pro', 'xiaomi', 'Xiaomi', 'Redmi Note 6 Pro', '5.61', 'enL5bbguRYilQlAYrOVfGj:APA91bGNvtsxsHtJbQyVRyjWZK5AVX10uCKqNyRXz3VIkD521ORY16z5KCpaFteg4Dw_RWiuhzY8M9g21qaYhdzqkjfJgpPI2cMlIyd6PZOeIw-kunIr7bw', '9', 1, '2026-09-03 16:43:27', '2026-09-03 11:13:27', '2026-09-03 11:13:27', 0, NULL),
-(116, 13, 'TP1A.220624.014', 'Raj safety', 'samsung', 'samsung', 'SM-G780F', '7.30', 'cCNQS_B7Q1WcXuZYcvhq0V:APA91bETWjTHEs15yac0tHiiAtQhTsjWo8lbAGIgYAKGdyTnx2fEYf_LRss98DaUacQQPIIvrlzLlQHfNMhBq8On2lh5ZkfyTbrRLJ1V9bFoUd10EkobBXI', '13', 1, '2026-09-05 18:53:55', '2026-09-05 13:23:55', '2026-09-05 13:23:55', 0, NULL),
-(117, 52, 'BP4A.251205.006', 'arun\'s A26', 'samsung', 'samsung', 'SM-A266B', '7.26', 'c5Rcwu2XRnmBrYyTB62fqa:APA91bErbsxuPay5r6o4mdKMOd1U4xvZ896G2-IyNPuTQancXAK0IVvjjHoHkgA_6drzuDuBuvxyVEoJIdsH-2SaptxSgq6yHz_GTvNieINfMNnOqF2ehmI', '16', 1, '2026-09-06 08:11:56', '2026-09-06 02:41:56', '2026-09-06 02:41:56', 0, NULL),
-(123, 2, 'W1VCS36H.14-20-19-7', 'Moto 60 Fusion ', 'motorola', 'motorola', 'motorola edge 60 fusion', '11.15', 'e-ZtEfUlQMaKA5lnuBXE4m:APA91bHdPy4NGYsSLHRNeI9E7XA3PaZFow7I9wVPNZpyCFdH4kwCppOI_ucBhsWv_xVWLqUxZMlqfiNykFp8_2j9_D5S56sRf38qEpIQaDCMiuAHoCl0jTM', '16', 1, '2026-09-08 18:22:47', '2026-09-08 12:52:47', '2026-09-08 12:52:47', 0, NULL);
+INSERT INTO `user_devices` (`id`, `user_id`, `device_id`, `device_name`, `brand`, `manufacturer`, `model`, `ram_size`, `fcm_token`, `android_version`, `platform`, `app_version`, `is_active`, `token_status`, `last_used_at`, `uninstalled_at`, `created_at`, `updated_at`, `is_deleted`, `deleted_at`) VALUES
+(24, 33, 'BP2A.250605.015', 'OPPO Reno12 Pro 5G', 'OPPO', 'OPPO', 'CPH2629', '11.19', 'cLVWIovYR8eTI9R3pPsYIm:APA91bEFHeUhrm0wQVrgUhTsujbEFX8_S9lq1vhGV5tPFdJfBujKqIMs2P1TXKm5dxdU3D_RFZsqAmPV4-1Wbn-cj5XH3s_wuBa1cbRwzZkydtNp0NgLKYw', '16', 'android', NULL, 1, 'active', '2026-03-13 22:41:47', NULL, '2026-03-13 17:11:47', '2026-07-06 19:25:38', 0, NULL),
+(25, 12, 'W1VC36H.14-20-19', 'motorola edge 60 fusion', 'motorola', 'motorola', 'motorola edge 60 fusion', '7.24', 'ez3QSBTWQBqU-q4WWTa3-p:APA91bEANPoTwKyy5PyW6-1TkQH7xAZfsPX2HvyCUTABjdzj8PzzDQPFl25k4amnxJ4I7_nCMd6Hap4mhuWi8GBVK09-1f19jWH1tEpT77u94_R4sLbj1yM', '16', 'android', NULL, 0, 'invalid', '2026-03-15 13:15:08', '2026-07-07 00:55:38', '2026-03-15 07:45:08', '2026-09-18 14:03:18', 0, NULL),
+(36, 31, 'BP2A.250605.031.A3', 'Parthiban\'s phone', 'samsung', 'samsung', 'SM-E066B', '5.38', 'e2VlKQHBRKmJ9u61Q9IfAC:APA91bHiaEOCVjNSUUqzGbpsWtC8ydV6k5WhJcX-14B4vpEsb2RvxdbeiKVov8j0aMM_zmmjaaWvQmIRoEIokHIDh4N8QMn4DY4-HXl8nKa1M6zcu-nUUw0', '16', 'android', NULL, 0, 'invalid', '2026-04-07 18:52:20', '2026-07-08 09:00:00', '2026-04-07 13:22:20', '2026-09-18 14:03:18', 0, NULL),
+(44, 16, 'UKQ1.230924.001', 'OnePlus Nord CE 3 Lite 5G', 'OnePlus', 'OnePlus', 'CPH2467', '7.21', 'c3KJsGnFSW--PcDGsAqQIu:APA91bGz6yfvSmGVqtzQUkK1z3aFJK0KIs8V0ijtG0z46RnADbO7ivN1w08ZokQXYIcCa9YCUQEXvo_nN2AwIuxuuhdVlEbDVhgWrsAtHefXG__Te3-h8fQ', '15', 'android', NULL, 0, 'invalid', '2026-05-09 17:13:00', '2026-07-07 00:55:38', '2026-05-09 11:43:00', '2026-09-18 14:03:18', 0, NULL),
+(46, 9, 'AP3A.240905.015.A2_V000L1', 'I2410', 'iQOO', 'vivo', 'I2410', '7.28', 'eT7btJH5S-eliQIpyUK0DM:APA91bES1IH8TJYXs7MpAiSL6e9Oa2ZQgs6f6F5K-TA1t7DPA60mu_EHSPXDcvi6aTitzIuUnokl27tmrL382WYl15cslCQUL_Aybjje0quwj0gMADpGMJU', '15', 'android', NULL, 0, 'invalid', '2026-05-30 23:37:29', '2026-08-07 21:24:01', '2026-05-30 18:07:29', '2026-09-18 14:03:18', 0, NULL),
+(47, 4, 'TP1A.220624.014', 'V2058', 'vivo', 'vivo', 'V2058', '7.56', 'ekG6jxm2RnCyoFlpkR1Qet:APA91bFyzx4U5Zak0zakHGXqZ1F2B0oImkzP87CRVaamW_UYK1ZrIpvc_tT57wzGaMKl8N7pdf7HGivtUfev_DtK2D9Px8wY5IBL0fBPL4fYGtL30sBQpG4', '13', 'android', NULL, 0, 'invalid', '2026-05-31 11:09:25', '2026-08-07 21:24:00', '2026-05-31 05:39:26', '2026-09-18 14:03:18', 0, NULL),
+(48, 11, 'TP1A.220624.014', 'V2109', 'vivo', 'vivo', 'V2109', '7.56', 'eFPGKiztS9mVk7GWvNbkWO:APA91bERQep7-m1MJYjtz4-hg_QlkjEJJSuDom0Gy1Kdw7S2iCNlI8ylhbLQvN3d6MpZ65wb1qPTKDae6YffOfBIdA_OI3rtua1TaMet0z2eIML3CffMoVE', '13', 'android', NULL, 1, 'active', '2026-05-31 11:55:33', NULL, '2026-05-31 06:25:33', '2026-07-06 19:25:38', 0, NULL),
+(51, 30, 'BP2A.250605.031.A3', 'V2403', 'vivo', 'vivo', 'V2403', '7.29', 'cekLFkf8R02AOISPV1_MBp:APA91bHyCnYPRSs9oJQqN_nUBITwCrQhICES2HIBqVmW6LIQfLzBr_4hp236Q8EwUCZj6QLHkLBw8wxUCi7EMFRK8iqJvzxPtiymR2ZaU6g5vZikPQ4MtSo', '16', 'android', NULL, 0, 'invalid', '2026-06-07 08:36:50', '2026-08-07 21:24:01', '2026-06-07 03:06:50', '2026-09-18 14:03:18', 0, NULL),
+(54, 7, 'BP2A.250605.031.A3_V000L1', 'V2575', 'vivo', 'vivo', 'V2575', '3.54', 'cdEEtG7uQhGpew8m9xWRn8:APA91bFxgwDkgMo8ny73rTmgCtvrx_joCbGkrzeUGMG-tE7euQHLk243-W2Dwx_gFMDkq70c5RyKaGbbozXnKZ8dCGF1mAFP9cX52qDgvPLcsAyh_bXXzk8', '16', 'android', NULL, 0, 'invalid', '2026-06-21 16:23:43', '2026-08-07 21:24:00', '2026-06-21 10:53:43', '2026-09-18 14:03:18', 0, NULL),
+(68, 45, 'UKQ1.230924.001', 'OPPO F23 5G', 'OPPO', 'OPPO', 'CPH2527', '7.21', 'dZhhVJkIS7GFbQysLN4Z7p:APA91bEvw9M7O2xd0l-DqUULtzNXBoqjfmnEOQOraKHluIxVPTqxKhLqbyynI47G0BemswStU_hkskeY7kj5p6sCIrgPoRw3NXF0gd6As_DBt5FOsYWEy68', '15', 'android', NULL, 1, 'active', '2026-07-16 12:30:27', NULL, '2026-07-16 07:00:27', '2026-07-16 07:00:27', 0, NULL),
+(84, 29, 'SKQ1.211019.001', 'Redmi Note 9 Pro Max', 'Redmi', 'Xiaomi', 'Redmi Note 9 Pro Max', '5.45', 'dfXEyGqrTOWqUpo4nHL736:APA91bHMwOyY4T6dC3ghHWd5DG0Z5ZlItBFrawr7PNxieQ-geIsLG49nX4tuKIUgTaBh6tTGwCQPcMiEUIoLNgXnFiwox1zmfDsw2AO7S5tDsIPmS0a0qrI', '12', 'android', NULL, 1, 'active', '2026-08-14 20:15:24', NULL, '2026-08-14 14:45:24', '2026-08-14 14:45:24', 0, NULL),
+(104, 48, 'SP1A.210812.016', 'OPPO Reno4 Lite', 'OPPO', 'OPPO', 'CPH2125', '7.46', 'fETN02YvTQGNHkwcOaRO60:APA91bGMVCe656Wr8tFCYgfQb5ckAcdMV7dmnx_-xhhgw0hfdLI5FjVk_Z_4yjrXoauMTqVba_vWVS0-yzzETB5b153sq7_7CjDSH4cbgaZ5Pu1I58dMZ98', '12', 'android', NULL, 0, 'invalid', '2026-08-28 07:51:34', '2026-09-16 22:03:46', '2026-08-28 02:21:34', '2026-09-18 14:03:18', 0, NULL),
+(111, 51, 'AP3A.240905.015.A2', 'V2348', 'vivo', 'vivo', 'V2348', '7.13', 'dDmnevNmRR2AZk3WV0pdu8:APA91bFTbPgYAel6bT0UpVMu9XTQ1YfcB3OQwY6Vs0stY4LhlBi8LZn5RohOLwm-QGrGmOyEVt4HGsHE8e329cVtWr44sqJH0J63FaefgprFi6J2wbhoEzE', '15', 'android', NULL, 0, 'invalid', '2026-09-01 21:29:41', '2026-09-16 22:03:46', '2026-09-01 15:59:41', '2026-09-18 14:03:18', 0, NULL),
+(112, 50, 'AP3A.240905.015.A2_IN', 'V2202', 'vivo', 'vivo', 'V2202', '11.31', 'd855NnAYRnatxfx33GgDDw:APA91bEnUq1E7bVSpsSAshRNwGpB7yxt2Qr2MB8lfipGTanVrvi48yyaKjwO0lisVhlZM5Ir2_PTWlAGwX3NtEogs3f33V_GE6luxsEIFKBAOyvt-0j03Tc', '15', 'android', NULL, 0, 'invalid', '2026-09-01 22:01:58', '2026-09-05 23:50:46', '2026-09-01 16:31:58', '2026-09-18 14:03:18', 0, NULL),
+(114, 49, 'PKQ1.180904.001', 'Redmi Note 6 Pro', 'xiaomi', 'Xiaomi', 'Redmi Note 6 Pro', '5.61', 'enL5bbguRYilQlAYrOVfGj:APA91bGNvtsxsHtJbQyVRyjWZK5AVX10uCKqNyRXz3VIkD521ORY16z5KCpaFteg4Dw_RWiuhzY8M9g21qaYhdzqkjfJgpPI2cMlIyd6PZOeIw-kunIr7bw', '9', 'android', NULL, 1, 'active', '2026-09-03 16:43:27', NULL, '2026-09-03 11:13:27', '2026-09-03 11:13:27', 0, NULL),
+(116, 13, 'TP1A.220624.014', 'Raj safety', 'samsung', 'samsung', 'SM-G780F', '7.30', 'cCNQS_B7Q1WcXuZYcvhq0V:APA91bETWjTHEs15yac0tHiiAtQhTsjWo8lbAGIgYAKGdyTnx2fEYf_LRss98DaUacQQPIIvrlzLlQHfNMhBq8On2lh5ZkfyTbrRLJ1V9bFoUd10EkobBXI', '13', 'android', '5.1.1', 1, 'active', '2026-09-20 08:04:28', NULL, '2026-09-05 13:23:55', '2026-09-20 02:34:28', 0, NULL),
+(117, 52, 'BP4A.251205.006', 'arun\'s A26', 'samsung', 'samsung', 'SM-A266B', '7.26', 'c5Rcwu2XRnmBrYyTB62fqa:APA91bErbsxuPay5r6o4mdKMOd1U4xvZ896G2-IyNPuTQancXAK0IVvjjHoHkgA_6drzuDuBuvxyVEoJIdsH-2SaptxSgq6yHz_GTvNieINfMNnOqF2ehmI', '16', 'android', NULL, 1, 'active', '2026-09-06 08:11:56', NULL, '2026-09-06 02:41:56', '2026-09-06 02:41:56', 0, NULL),
+(128, 47, 'AP3A.240905.015.A2_MOD1', 'V2312', 'vivo', 'vivo', 'V2312', '5.49', 'eZ_Y0ln-TZCCJcJM67aOjq:APA91bGe4E8e-VN6kaBNszGsf21OQes5SyPT8LGtlr__FFlweVug5ueAszPpaYd2byM9G3XrpHCrFGHpHJr2qediTyz2TV-1VtU_BKyOC53th-PGuR6kGck', '15', 'android', NULL, 1, 'active', '2026-09-11 11:06:32', NULL, '2026-09-11 05:36:32', '2026-09-11 05:36:32', 0, NULL),
+(129, 53, 'W1UUIS36H.110-42-3', 'motorola edge 50 fusion', 'motorola', 'motorola', 'motorola edge 50 fusion', '11.11', 'dMCou354R6in10V5ngvcR-:APA91bHsHRNS-Q3hW2Wrz_JZHTJtcMBKzADC_XH3RyRhbdIkta-w7p6hoS6usHe_K8dzxDJ5WrJPMfr_p2deVMvALNL3cCeZ1cEtiVZRu_ds_tET_N-u6DQ', '16', 'android', NULL, 0, 'invalid', '2026-09-13 12:14:48', '2026-09-16 22:03:47', '2026-09-13 06:44:48', '2026-09-18 14:03:18', 0, NULL),
+(131, 24, 'BP2A.250605.031.A3', 'V2355', 'vivo', 'vivo', 'V2355', '7.31', 'fEV8u366QuK_EFDpR6k45j:APA91bGsxyMKN2FqurnfcOrqKFF5nNB2CJs6I5xi76JnJyeUc9oKtbAAn33wnvixBo8uIcESMbC5m2Lapuhf_HTtDzdGF-ASdxDmhwXlYttGAwGrNImd9cs', '16', 'android', NULL, 1, 'active', '2026-09-14 20:15:29', NULL, '2026-09-14 14:45:29', '2026-09-14 14:45:29', 0, NULL),
+(132, 55, 'BP2A.250605.015', 'OPPO Reno15 5G', 'OPPO', 'OPPO', 'CPH2825', '7.09', 'doJRwHniR36PEmaj-Slpom:APA91bETpJCGKQgf2v1hbvizfgKxIsqy_MkBqkaftWipEq29NDbfVESb2Hg3U1b2OqF1YkQy7VKiom-Ei3oDh9-o5fNlU8hQkYwQQAmmljp4kxpxCs2pfCY', '16', 'android', NULL, 0, 'invalid', '2026-09-15 07:09:48', '2026-09-18 11:36:42', '2026-09-15 01:39:48', '2026-09-18 14:03:18', 0, NULL),
+(134, 46, 'BP4A.251205.006', 'Nambirajan\'s M35', 'samsung', 'samsung', 'SM-M356B', '7.26', 'e4ET0u2eSsGwJZOktJ59lB:APA91bGxC_F_UzA0lwHv8BxbmHOng4fKWYQYaJGjBgzwZb5ddrU2TvZ9-Ow7v0nZRtveVDXeyKsUWufdyKky3fWb5BwP2r2jyUKlWAqRpETsgggXZydK-qU', '16', 'android', NULL, 1, 'active', '2026-09-16 09:18:29', NULL, '2026-09-16 03:48:29', '2026-09-16 03:48:29', 0, NULL),
+(135, 56, 'CP2A.260705.006', 'Pixel 6a', 'google', 'Google', 'Pixel 6a', '5.46', 'ef0DYCbXTEOpm6vu8RBLRV:APA91bHbr3F5xMo56cVnf6Sg0EWV7hrI0cGqEnwQ7ITWNHwUJOITWWir1K-8rH3gH7Ow8X6DfFICDkJi1htQCXQVXl6-iNsuijWDsgtrMTcDclm2EvgYXiE', '17', 'android', NULL, 0, 'invalid', '2026-09-16 21:41:06', '2026-09-16 22:01:20', '2026-09-16 16:11:06', '2026-09-18 14:03:18', 0, NULL),
+(157, 54, 'AP3A.240617.008', 'OPPO A78', 'OPPO', 'OPPO', 'CPH2565', '7.41', 'eCA3AacOT4ySKzZQFb1I84:APA91bGrfQeuuP3gNTEMNB4gG_013qiYacEcxoJWreOdYQd2ioHPEX-qxBm2TnsFjhHLvmwKIBQh3kwbyAdNdWHnIqcUr9kG5w__HvVc2zDEfdZhCv2i3Gs', '15', 'android', NULL, 1, 'active', '2026-09-17 16:04:52', NULL, '2026-09-17 10:34:52', '2026-09-17 10:34:52', 0, NULL),
+(160, 8, 'SKQ1.211019.001', 'Redmi Note 9 Pro Max', 'Redmi', 'Xiaomi', 'Redmi Note 9 Pro Max', '7.40', 'faTzbLM2T8K5JNtfyzNY7-:APA91bF828WlPuDkOKNRZ43Scnk1Ulu2BQ5R0cSZfa6f_ugjdd1WF_tte_TenfF3-lRjPHbFPF4_3llswWbSnHecfi2YdgA17VPpak6AVMVAD-sxKZXa6kE', '12', 'android', NULL, 1, 'active', '2026-09-17 19:11:14', NULL, '2026-09-17 13:41:14', '2026-09-17 13:41:14', 0, NULL),
+(161, 59, 'BP2A.250605.015', 'koki', 'OPPO', 'OPPO', 'CPH2643', '7.36', 'd4uA9FlgR1-_g3774PsiaM:APA91bFWLj-xBpPEoD3KdJsBvX3GvXHq42G0rhf7pyXi4AWabm8ZGX7xZHhQAr7o01o3NzM8qXj8LufwYo3BBvzRpHZR1MLqSZVD7vvPYZDU5mgeM99uyBU', '16', 'android', NULL, 1, 'active', '2026-09-17 20:02:51', NULL, '2026-09-17 14:32:51', '2026-09-17 14:32:51', 0, NULL),
+(164, 19, 'BP2A.250605.031.A3_V000L1', 'V2428', 'vivo', 'vivo', 'V2428', '7.27', 'e2APuqYdQ0Cd6lOLJJr3-6:APA91bGWhFeSoboi02zU3yK4qz2CK4L3RqMGuBG9SMGNyFEavIW6Ed9xm4a2G8Ksd09Hm3LHNsD7CAwjwKiHybnkWiKw9uYp5Y5mTKjWc6-jy6AB3nswOJ8', '16', 'android', NULL, 1, 'active', '2026-09-18 20:07:26', NULL, '2026-09-18 14:37:26', '2026-09-18 14:37:26', 0, NULL),
+(165, 2, 'W1VCS36H.14-20-19-7', 'Moto 60 Fusion ', 'motorola', 'motorola', 'motorola edge 60 fusion', '11.15', 'fzUdGbtQQNCbPp7CHDbMtV:APA91bED0GVOPZTavWyDnVTx9aJW3PIe8XaAcdPBbP2WnbLKh6x6oMchDXc_-PmD8f8v6Khtiy_iGbYvdnZJmpiajLsnQOrvkSHDSkz9hbGV8Pocr8VC8a4', '16', 'android', '5.1.1', 1, 'active', '2026-09-20 22:00:15', NULL, '2026-09-18 15:23:59', '2026-09-20 16:30:15', 0, NULL),
+(166, 20, 'W1VCS36H.14-20-19-7', 'Moto 60 Fusion ', 'motorola', 'motorola', 'motorola edge 60 fusion', '11.15', 'fayeB0t_SBS8-G8dDNctNy:APA91bHOA1RaDVGQQpJiY10w4gVXsxwYoQM1Dy1bsulQjMx28h7xxMtDKOn7Xle9BUHpctKLFRVSkjTsEFuJxYkpNS9MMwMGtmc-MLNm57e8lj88DHk2ok8', '16', 'android', '5.1.1', 0, 'invalid', '2026-09-19 09:08:48', '2026-09-20 09:00:05', '2026-09-18 15:31:09', '2026-09-20 03:30:05', 0, NULL),
+(270, 61, 'BP2A.250605.015', 'OPPO F27 Pro+ 5G', 'OPPO', 'OPPO', 'CPH2643', '7.36', 'fUA1X2ugRtiq5FzJzyzBfW:APA91bE5JYpTpYs0oeZpADWT5XqwtVxhbcyBhCrATv5uYoxIu7r0vyxknK0C_4iWCs2nhLAWA8G3fjrqlhsBvhJtmgBi0Ep6_OGyLnph0l3_zoAkrVmw4s0', '16', 'android', '5.1.1', 1, 'active', '2026-09-20 15:15:24', NULL, '2026-09-20 09:45:12', '2026-09-20 09:45:24', 0, NULL);
 
 -- --------------------------------------------------------
 
@@ -2925,6 +3160,13 @@ CREATE TABLE `user_otps` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Dumping data for table `user_otps`
+--
+
+INSERT INTO `user_otps` (`id`, `user_id`, `code`, `type`, `expires_at`, `is_used`, `created_at`) VALUES
+(54, 2, '641904', 'FORGOT', '2026-09-21 02:20:14', 0, '2026-09-20 20:40:14');
+
 -- --------------------------------------------------------
 
 --
@@ -2950,7 +3192,7 @@ CREATE TABLE `user_profiles` (
 
 INSERT INTO `user_profiles` (`user_id`, `gender`, `date_of_birth`, `profile_image_url`, `address_line1`, `address_line2`, `city`, `state`, `country`, `postal_code`) VALUES
 (1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-(2, 'MALE', '1995-05-08', 'uploads/2/profile/profile-1787746210684-399123663.jpg', 'Muthu Raj Nagar', 'Murugabavanam', 'Dindigul', 'Tamil Nadu', 'India', '624001'),
+(2, 'MALE', '1995-05-16', 'uploads/2/profile/profile-1789577480448-351965268.jpg', 'Muthu Raj Nagar', 'Murugabavanam', 'Dindigul', 'Tamil Nadu', 'India', '624001'),
 (3, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
 (4, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
 (5, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
@@ -2961,14 +3203,14 @@ INSERT INTO `user_profiles` (`user_id`, `gender`, `date_of_birth`, `profile_imag
 (10, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
 (11, 'MALE', '1985-05-23', NULL, NULL, NULL, 'மதுரை', 'தமிழ்நாடு', NULL, NULL),
 (12, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-(13, 'MALE', '1994-05-22', 'uploads/13/profile/profile-1788593508150-415602198.jpg', NULL, NULL, 'Annavasal', 'TamilNadu', 'India', '622101'),
+(13, 'MALE', '1994-05-23', NULL, NULL, NULL, 'Annavasal', 'TamilNadu', 'India', '622101'),
 (14, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
 (15, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
 (16, 'MALE', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
 (17, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
 (18, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
 (19, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-(20, 'MALE', '2022-09-30', 'uploads/7f0b50a7-6d8e-467c-b7d1-44f26576da34/profile/profile-1772691335768-775096481.jpg', 'Muthuraj Nagar', 'Murugabhavanam', 'Dindigul', 'Tamil Nadu', 'India', '624001'),
+(20, 'MALE', '2022-10-01', NULL, 'Muthuraj Nagar', 'Murugabhavanam', 'Dindigul', 'Tamil Nadu', 'India', '624001'),
 (21, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
 (22, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
 (23, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
@@ -2989,7 +3231,13 @@ INSERT INTO `user_profiles` (`user_id`, `gender`, `date_of_birth`, `profile_imag
 (49, 'MALE', '1990-07-20', NULL, NULL, NULL, 'RATHINAPURI', 'Tamilnadu', NULL, NULL),
 (50, NULL, NULL, NULL, NULL, NULL, 'DINDIGUL', NULL, NULL, NULL),
 (51, NULL, NULL, NULL, NULL, NULL, 'THIRUPARTHUR', NULL, NULL, NULL),
-(52, NULL, NULL, NULL, NULL, NULL, 'THENI', NULL, NULL, NULL);
+(52, NULL, NULL, NULL, NULL, NULL, 'THENI', NULL, NULL, NULL),
+(53, NULL, NULL, NULL, NULL, NULL, 'Konganapuram', NULL, NULL, NULL),
+(54, NULL, NULL, NULL, NULL, NULL, 'MADURAI', NULL, NULL, NULL),
+(55, NULL, NULL, NULL, NULL, NULL, 'DHARMADURAI', NULL, NULL, NULL),
+(56, NULL, NULL, NULL, NULL, NULL, 'TRICHY', NULL, NULL, NULL),
+(59, 'MALE', '2000-11-16', NULL, NULL, NULL, 'MADURAI', NULL, NULL, NULL),
+(61, NULL, NULL, NULL, NULL, NULL, 'KRISHNAGIRI', NULL, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -3017,6 +3265,51 @@ CREATE TABLE `user_sessions` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
+-- Dumping data for table `user_sessions`
+--
+
+INSERT INTO `user_sessions` (`id`, `user_id`, `login_at`, `logout_at`) VALUES
+(1, 20, '2026-09-19 05:30:20', '2026-09-19 05:30:45'),
+(2, 20, '2026-09-19 05:30:45', '2026-09-19 05:30:48'),
+(3, 20, '2026-09-19 05:30:48', '2026-09-19 05:31:44'),
+(4, 20, '2026-09-19 05:31:44', '2026-09-19 05:31:53'),
+(5, 20, '2026-09-19 05:31:53', '2026-09-19 05:32:02'),
+(6, 20, '2026-09-19 05:32:02', '2026-09-19 05:32:09'),
+(7, 20, '2026-09-19 05:32:09', '2026-09-19 05:32:17'),
+(8, 20, '2026-09-19 05:32:17', '2026-09-19 05:32:19'),
+(9, 20, '2026-09-19 05:32:19', '2026-09-19 05:32:26'),
+(10, 20, '2026-09-19 05:32:26', '2026-09-19 05:32:33'),
+(11, 20, '2026-09-19 05:32:33', '2026-09-19 05:32:40'),
+(12, 20, '2026-09-19 05:32:40', '2026-09-19 05:35:46'),
+(13, 20, '2026-09-19 05:35:46', '2026-09-19 05:36:03'),
+(14, 20, '2026-09-19 05:36:03', '2026-09-19 05:36:44'),
+(15, 20, '2026-09-19 05:36:44', '2026-09-19 09:08:48'),
+(16, 20, '2026-09-19 09:08:48', '2026-09-21 00:32:12'),
+(18, 2, '2026-09-19 13:07:03', '2026-09-19 13:56:51'),
+(19, 2, '2026-09-19 13:56:51', '2026-09-19 16:04:16'),
+(20, 2, '2026-09-19 16:14:51', '2026-09-19 20:20:20'),
+(21, 2, '2026-09-19 20:22:24', '2026-09-20 02:38:23'),
+(22, 2, '2026-09-20 02:38:23', '2026-09-20 08:30:16'),
+(23, 13, '2026-09-20 07:06:13', NULL),
+(24, 2, '2026-09-20 08:30:16', '2026-09-20 12:07:17'),
+(25, 2, '2026-09-20 12:07:17', '2026-09-20 13:46:48'),
+(26, 2, '2026-09-20 13:54:20', '2026-09-20 14:23:28'),
+(27, 2, '2026-09-20 14:28:27', '2026-09-20 14:44:22'),
+(28, 2, '2026-09-20 14:53:44', '2026-09-20 22:13:34'),
+(29, 61, '2026-09-20 15:15:24', NULL),
+(30, 2, '2026-09-20 22:13:34', '2026-09-21 00:18:49'),
+(31, 2, '2026-09-21 00:18:50', '2026-09-21 00:22:10'),
+(32, 20, '2026-09-21 00:32:12', '2026-09-21 00:45:50'),
+(33, 20, '2026-09-21 00:45:50', '2026-09-21 00:49:53'),
+(34, 20, '2026-09-21 00:50:13', '2026-09-21 02:09:52'),
+(35, 20, '2026-09-21 02:24:31', '2026-09-21 02:24:33'),
+(36, 20, '2026-09-21 02:24:33', '2026-09-21 02:25:13'),
+(37, 20, '2026-09-21 02:25:13', '2026-09-21 02:33:40'),
+(38, 20, '2026-09-21 02:33:40', '2026-09-21 02:33:55'),
+(39, 20, '2026-09-21 02:33:55', '2026-09-21 02:34:15'),
+(40, 20, '2026-09-21 02:34:15', NULL);
+
+--
 -- Indexes for dumped tables
 --
 
@@ -3031,6 +3324,29 @@ ALTER TABLE `admins`
   ADD KEY `idx_admins_status` (`status`),
   ADD KEY `idx_admins_deleted` (`is_deleted`),
   ADD KEY `idx_admins_last_login` (`last_login_at`);
+
+--
+-- Indexes for table `app_alerts`
+--
+ALTER TABLE `app_alerts`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_app_alerts_active_created` (`is_active`,`is_deleted`,`created_at`),
+  ADD KEY `idx_app_alerts_window` (`starts_at`,`ends_at`);
+
+--
+-- Indexes for table `app_alert_user_states`
+--
+ALTER TABLE `app_alert_user_states`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uq_app_alert_user` (`alert_id`,`user_id`),
+  ADD KEY `idx_app_alert_user_status` (`user_id`,`status`,`remind_at`);
+
+--
+-- Indexes for table `app_runtime_config`
+--
+ALTER TABLE `app_runtime_config`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `fk_app_runtime_config_updated_by` (`updated_by`);
 
 --
 -- Indexes for table `default_functions`
@@ -3115,6 +3431,15 @@ ALTER TABLE `users`
   ADD KEY `idx_users_activity` (`last_activity_at`);
 
 --
+-- Indexes for table `user_audit_logs`
+--
+ALTER TABLE `user_audit_logs`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_ual_user_created` (`user_id`,`created_at`),
+  ADD KEY `idx_ual_action_created` (`action`,`created_at`),
+  ADD KEY `idx_ual_created` (`created_at`);
+
+--
 -- Indexes for table `user_credentials`
 --
 ALTER TABLE `user_credentials`
@@ -3130,7 +3455,8 @@ ALTER TABLE `user_devices`
   ADD UNIQUE KEY `uq_user_device` (`user_id`,`device_id`),
   ADD KEY `idx_user_devices_token` (`fcm_token`(64)),
   ADD KEY `idx_user_devices_user` (`user_id`),
-  ADD KEY `idx_ud_user_active_used` (`user_id`,`is_active`,`last_used_at` DESC);
+  ADD KEY `idx_ud_user_active_used` (`user_id`,`is_active`,`last_used_at` DESC),
+  ADD KEY `idx_ud_token_status` (`token_status`);
 
 --
 -- Indexes for table `user_mfa`
@@ -3180,6 +3506,18 @@ ALTER TABLE `admins`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
+-- AUTO_INCREMENT for table `app_alerts`
+--
+ALTER TABLE `app_alerts`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT for table `app_alert_user_states`
+--
+ALTER TABLE `app_alert_user_states`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
 -- AUTO_INCREMENT for table `default_functions`
 --
 ALTER TABLE `default_functions`
@@ -3189,49 +3527,55 @@ ALTER TABLE `default_functions`
 -- AUTO_INCREMENT for table `feedbacks`
 --
 ALTER TABLE `feedbacks`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
 
 --
 -- AUTO_INCREMENT for table `notifications`
 --
 ALTER TABLE `notifications`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=149;
 
 --
 -- AUTO_INCREMENT for table `persons`
 --
 ALTER TABLE `persons`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1274;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1314;
 
 --
 -- AUTO_INCREMENT for table `transactions`
 --
 ALTER TABLE `transactions`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1297;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1344;
 
 --
 -- AUTO_INCREMENT for table `transaction_functions`
 --
 ALTER TABLE `transaction_functions`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=30;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41;
 
 --
 -- AUTO_INCREMENT for table `upcoming_functions`
 --
 ALTER TABLE `upcoming_functions`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=53;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=62;
+
+--
+-- AUTO_INCREMENT for table `user_audit_logs`
+--
+ALTER TABLE `user_audit_logs`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=215;
 
 --
 -- AUTO_INCREMENT for table `user_devices`
 --
 ALTER TABLE `user_devices`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=124;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=281;
 
 --
 -- AUTO_INCREMENT for table `user_mfa`
@@ -3243,17 +3587,30 @@ ALTER TABLE `user_mfa`
 -- AUTO_INCREMENT for table `user_otps`
 --
 ALTER TABLE `user_otps`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=34;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=55;
 
 --
 -- AUTO_INCREMENT for table `user_sessions`
 --
 ALTER TABLE `user_sessions`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41;
 
 --
 -- Constraints for dumped tables
 --
+
+--
+-- Constraints for table `app_alert_user_states`
+--
+ALTER TABLE `app_alert_user_states`
+  ADD CONSTRAINT `fk_app_alert_state_alert` FOREIGN KEY (`alert_id`) REFERENCES `app_alerts` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_app_alert_state_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `app_runtime_config`
+--
+ALTER TABLE `app_runtime_config`
+  ADD CONSTRAINT `fk_app_runtime_config_updated_by` FOREIGN KEY (`updated_by`) REFERENCES `admins` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 --
 -- Constraints for table `feedbacks`
@@ -3281,6 +3638,12 @@ ALTER TABLE `transactions`
 --
 ALTER TABLE `upcoming_functions`
   ADD CONSTRAINT `fk_upcoming_functions_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `user_audit_logs`
+--
+ALTER TABLE `user_audit_logs`
+  ADD CONSTRAINT `fk_ual_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `user_credentials`

@@ -6,6 +6,7 @@ import {
   RefreshCw,
   Loader2,
   Search,
+  X,
   ChevronLeft,
   ChevronRight,
   Trash2,
@@ -213,22 +214,44 @@ export default function AuditLogs() {
 
         <div>
           <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="relative w-full sm:max-w-sm">
+            <form
+              className="flex w-full gap-2 sm:max-w-sm"
+              onSubmit={(event) => {
+                event.preventDefault();
+                setPage(1);
+                setSelectedIds(new Set());
+                setSubmittedSearch(search.trim());
+              }}
+            >
+              <div className="relative min-w-0 flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
+                placeholder="Search user name, email, action, summary..."
+                className="pr-9 pl-9"
+              />
+              {search && (
+                <button
+                  type="button"
+                  aria-label="Clear audit log search"
+                  className="audit-log-clear-button absolute right-2 top-1/2 -translate-y-1/2 rounded-md border border-current p-1 text-current opacity-60 transition-opacity hover:opacity-100 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                  onClick={() => {
+                    setSearch("");
                     setPage(1);
                     setSelectedIds(new Set());
-                    setSubmittedSearch(search.trim());
-                  }
-                }}
-                placeholder="Search user, action, summary..."
-                className="pl-9"
-              />
-            </div>
+                    setSubmittedSearch("");
+                  }}
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+              </div>
+              <Button type="submit" size="sm" className="h-10 shrink-0 gap-2">
+                <Search className="h-4 w-4" />
+                Search
+              </Button>
+            </form>
             <div className="flex flex-wrap items-center justify-end gap-2">
               {selectedCount > 0 && (
                 <>
