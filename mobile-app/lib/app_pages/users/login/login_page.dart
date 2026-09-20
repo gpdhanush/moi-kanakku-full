@@ -282,6 +282,40 @@ class _LoginPageState extends State<LoginPage>
                                         onPressed: _onLogin,
                                       ),
                                       const SizedBox(height: AppSpacing.md),
+                                      Row(
+                                        children: [
+                                          const Expanded(
+                                            child: Divider(
+                                              thickness: 1,
+                                              endIndent: 12,
+                                            ),
+                                          ),
+                                          Padding(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 12,
+                                            ),
+                                            child: Text(
+                                              'OR',
+                                              style: AppTypography.label
+                                                  .copyWith(
+                                                    color: Theme.of(context)
+                                                        .colorScheme
+                                                        .onSurfaceVariant,
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.w700,
+                                                    letterSpacing: 0.6,
+                                                  ),
+                                            ),
+                                          ),
+                                          const Expanded(
+                                            child: Divider(
+                                              thickness: 1,
+                                              indent: 12,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: AppSpacing.md),
                                       _GoogleLoginButton(
                                         isLoading: _isLoading,
                                         onPressed: () async {
@@ -444,10 +478,10 @@ class _GoogleLoginButton extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    Icons.g_mobiledata,
-                    size: 20,
-                    color: Theme.of(context).colorScheme.onSurface,
+                  Image.asset(
+                    'assets/svg/google-icon-logo-svgrepo-com.png',
+                    width: 20,
+                    height: 20,
                   ),
                   const SizedBox(width: 12),
                   Text(

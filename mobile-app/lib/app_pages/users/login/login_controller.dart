@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:moi/app_configs/index.dart';
 import 'package:moi/app_firebase/push_notification_service.dart';
@@ -85,7 +86,13 @@ class LoginController {
     FocusScope.of(context).unfocus();
 
     try {
-      final GoogleSignIn googleSignIn = GoogleSignIn(scopes: ['email']);
+      const googleServerClientId =
+          '825754651412-m9cnau0v63pqcbcc8a820ep42fmm57gp.apps.googleusercontent.com';
+      final GoogleSignIn googleSignIn = GoogleSignIn(
+        scopes: ['email'],
+        serverClientId: googleServerClientId,
+      );
+      await googleSignIn.signOut();
       final account = await googleSignIn.signIn();
       if (account == null) {
         return false;
@@ -118,6 +125,14 @@ class LoginController {
           response?['responseValue']?['message'] ??
           'Google sign-in failed. Please try again.';
       alertServices.errorToast(message);
+      return false;
+    } on PlatformException catch (error) {
+      if (error.code == 'sign_in_canceled' ||
+          error.code == 'sign_in_cancelled') {
+        return false;
+      }
+      debugPrint('Google login error: $error');
+      alertServices.errorToast('Google sign-in failed. Please try again.');
       return false;
     } catch (error) {
       debugPrint('Google login error: $error');

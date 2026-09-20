@@ -613,6 +613,20 @@ const User = {
         return this.create(payload);
     },
 
+    async syncGoogleProfile({ id, name, profileImageUrl }) {
+        const idBin = toBinaryUUID(id);
+        await db.query(
+            `UPDATE users SET full_name = COALESCE(?, full_name), updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+            [name || null, idBin]
+        );
+        if (profileImageUrl) {
+            await db.query(
+                `UPDATE user_profiles SET profile_image_url = COALESCE(?, profile_image_url) WHERE user_id = ?`,
+                [profileImageUrl, idBin]
+            );
+        }
+    },
+
     async findUsersWithOldPasswords(months = 3) {
         const [rows] = await db.query(
             `SELECT u.id, u.full_name, u.email, uc.password_changed_at,

@@ -156,6 +156,7 @@ exports.userController = {
       const normalizedEmail = String(payload.email).trim().toLowerCase();
       const googleId = String(payload.sub).trim();
       const normalizedName = String(payload.name || payload.email.split('@')[0]).trim();
+      const googlePicture = typeof payload.picture === 'string' ? payload.picture.trim() : null;
 
       let user = await User.findByGoogleId(googleId);
       if (!user) {
@@ -169,6 +170,11 @@ exports.userController = {
           googleId,
         });
         const created = await User.findById(createdUser.insertId || createdUser.id);
+          await User.syncGoogleProfile({
+            id: created.id,
+            name: normalizedName,
+            profileImageUrl: googlePicture,
+          });
         return res.status(200).json({
           responseType: 'S',
           responseValue: {
@@ -177,6 +183,7 @@ exports.userController = {
               id: created.id,
               name: created.full_name,
               email: created.email,
+              profileImageUrl: googlePicture,
               signupType: 'google',
               passwordSet: false,
               emailVerified: true,
@@ -190,6 +197,12 @@ exports.userController = {
         await User.linkGoogleAccount(user.id, googleId);
         user = await User.findById(user.id);
       }
+
+      await User.syncGoogleProfile({
+        id: user.id,
+        name: normalizedName,
+        profileImageUrl: googlePicture,
+      });
 
       const userID = user.id;
       tokenService.invalidatePreviousToken(userID);
@@ -205,6 +218,7 @@ exports.userController = {
             id: user.id,
             name: user.full_name,
             email: user.email,
+            profileImageUrl: googlePicture || user.profile_image_url || null,
             signupType: normalizeSignupType(user.signup_type || 'email'),
             passwordSet: Boolean(user.password_set),
             emailVerified: Boolean(user.email_verified ?? user.is_verified),

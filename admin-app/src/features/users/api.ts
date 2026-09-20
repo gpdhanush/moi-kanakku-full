@@ -30,6 +30,10 @@ export interface UserListItem {
   device_count?: number | null;
   platforms?: string[] | null;
   app_version?: string | null;
+  signup_type?: string | null;
+  google_linked?: boolean | number | null;
+  password_set?: boolean | number | null;
+  email_verified?: boolean | number | null;
 }
 
 export interface UserProfile {
@@ -86,6 +90,10 @@ export interface UserDetail {
   device_count?: number | null;
   platforms?: string[] | null;
   app_version?: string | null;
+  signup_type?: string | null;
+  google_linked?: boolean | number | null;
+  password_set?: boolean | number | null;
+  email_verified?: boolean | number | null;
 }
 
 function extractErrorMessage(data: MoiApiResponse<unknown>): string {

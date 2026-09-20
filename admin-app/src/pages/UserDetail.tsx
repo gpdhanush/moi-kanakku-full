@@ -731,6 +731,19 @@ export default function UserDetail() {
 
           <SectionCard title="Account" icon={<ShieldCheck className="h-4 w-4" />}>
             <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="Sign-in Provider" value={formatLabel(user?.signup_type)} />
+              <Field
+                label="Google Account Linked"
+                value={Boolean(user?.google_linked) ? "Yes" : "No"}
+              />
+              <Field
+                label="Application Password"
+                value={Boolean(user?.password_set) ? "Set" : "Not set"}
+              />
+              <Field
+                label="Email Verified"
+                value={Boolean(user?.email_verified) ? "Yes" : "No"}
+              />
               <Field label="Created At" value={formatDateTime(user?.create_date)} />
               <Field label="Updated At" value={formatDateTime(user?.update_date)} />
               <Field
