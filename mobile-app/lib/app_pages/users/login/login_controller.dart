@@ -117,6 +117,14 @@ class LoginController {
 
         await _persistAuthSession(userData);
         if (!context.mounted) return false;
+        if (userData['requiresPasswordSetup'] == true) {
+          Navigator.pushNamedAndRemoveUntil(
+            context,
+            'set-password',
+            (route) => false,
+          );
+          return true;
+        }
         Navigator.pushNamedAndRemoveUntil(context, 'home', (route) => false);
         return true;
       }

@@ -21,13 +21,14 @@ function toBooleanFlag(value) {
 }
 
 function buildAuthSummary(row = {}) {
-  const signupType = normalizeSignupType(
+  const storedSignupType = normalizeSignupType(
     row.signup_type ?? row.signupType ?? row.auth_source ?? row.authentication_method,
   );
+  const googleLinked = Boolean(row.google_id ?? row.googleId);
 
   return {
-    signupType,
-    googleLinked: Boolean(row.google_id ?? row.googleId),
+    signupType: googleLinked ? 'google' : storedSignupType,
+    googleLinked,
     passwordSet: toBooleanFlag(row.password_set ?? row.passwordSet ?? false),
     emailVerified: toBooleanFlag(row.email_verified ?? row.emailVerified ?? false),
   };

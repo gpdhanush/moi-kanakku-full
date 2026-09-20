@@ -192,7 +192,7 @@ const User = {
     async linkGoogleAccount(userId, googleId) {
         if (!userId || !googleId) return null;
         const [result] = await db.query(
-            `UPDATE users SET google_id = ?, signup_type = COALESCE(signup_type, 'email'), email_verified = 1, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+            `UPDATE users SET google_id = ?, signup_type = 'google', email_verified = 1, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
             [String(googleId).trim(), toBinaryUUID(userId)]
         );
         return result;
@@ -621,8 +621,10 @@ const User = {
         );
         if (profileImageUrl) {
             await db.query(
-                `UPDATE user_profiles SET profile_image_url = COALESCE(?, profile_image_url) WHERE user_id = ?`,
-                [profileImageUrl, idBin]
+                `INSERT INTO user_profiles (user_id, profile_image_url)
+                 VALUES (?, ?)
+                 ON DUPLICATE KEY UPDATE profile_image_url = VALUES(profile_image_url)`,
+                [idBin, profileImageUrl]
             );
         }
     },

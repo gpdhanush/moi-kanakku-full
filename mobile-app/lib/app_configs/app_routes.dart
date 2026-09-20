@@ -158,6 +158,8 @@ class AppRoute {
           page = const MainShellPage();
         case "login":
           page = const LoginPage();
+        case "set-password":
+          page = const SetPasswordPage();
         case "signup":
           page = const Signup();
         case "forgot_password":

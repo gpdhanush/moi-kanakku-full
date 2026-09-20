@@ -8,6 +8,7 @@ export 'permissions/permission_controller.dart';
 // LOGIN PAGES
 export 'users/login/login_page.dart';
 export 'users/login/login_controller.dart';
+export 'users/login/set_password_page.dart';
 // HOME PAGE
 export 'home_page/home_page.dart';
 export 'main_shell/main_shell_page.dart';
