@@ -281,6 +281,25 @@ class _LoginPageState extends State<LoginPage>
                                         isLoading: _isLoading,
                                         onPressed: _onLogin,
                                       ),
+                                      const SizedBox(height: AppSpacing.md),
+                                      _GoogleLoginButton(
+                                        isLoading: _isLoading,
+                                        onPressed: () async {
+                                          if (_isLoading) return;
+                                          setState(() => _isLoading = true);
+                                          try {
+                                            await _controller.submitGoogleLogin(
+                                              context,
+                                            );
+                                          } finally {
+                                            if (mounted) {
+                                              setState(
+                                                () => _isLoading = false,
+                                              );
+                                            }
+                                          }
+                                        },
+                                      ),
                                       const SizedBox(height: AppSpacing.xl),
                                       _CreateAccountRow(
                                         prefix: languageProvider.tr(
@@ -384,6 +403,62 @@ class _LoginPrimaryButton extends StatelessWidget {
                     fontWeight: FontWeight.w700,
                   ),
                 ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _GoogleLoginButton extends StatelessWidget {
+  final bool isLoading;
+  final VoidCallback onPressed;
+
+  const _GoogleLoginButton({required this.isLoading, required this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final borderColor = isDark
+        ? Theme.of(context).colorScheme.outline
+        : const Color(0xFFE2E8F0);
+    return Semantics(
+      button: true,
+      label: 'Continue with Google',
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(5),
+        child: InkWell(
+          onTap: isLoading ? null : onPressed,
+          borderRadius: BorderRadius.circular(5),
+          child: Ink(
+            height: 52,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(5),
+              color: Theme.of(context).colorScheme.surface,
+              border: Border.all(color: borderColor),
+            ),
+            child: Center(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.g_mobiledata,
+                    size: 20,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    'Continue with Google',
+                    style: AppTypography.label.copyWith(
+                      color: Theme.of(context).colorScheme.onSurface,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),

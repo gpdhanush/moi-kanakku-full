@@ -15,7 +15,10 @@ class UserServices {
     return await connection.postData(url, requestParams, useToken: false);
   }
 
-  Future<dynamic> sentOTP(dynamic requestParams, {bool showLoading = true}) async {
+  Future<dynamic> sentOTP(
+    dynamic requestParams, {
+    bool showLoading = true,
+  }) async {
     String url = '$appBaseUri/email/sendEmail';
     return await connection.postData(
       url,
@@ -25,7 +28,10 @@ class UserServices {
     );
   }
 
-  Future<dynamic> verifyOTP(dynamic requestParams, {bool showLoading = true}) async {
+  Future<dynamic> verifyOTP(
+    dynamic requestParams, {
+    bool showLoading = true,
+  }) async {
     String url = '$appBaseUri/email/verifyOtp';
     return await connection.postData(
       url,
@@ -137,6 +143,26 @@ class UserServices {
   Future<dynamic> removeProfileImage(dynamic requestParams) async {
     String url = '$appBaseUri/users/remove-profile-picture';
     return await connection.postData(url, requestParams, useToken: true);
+  }
+
+  Future<dynamic> googleLogin(dynamic requestParams) async {
+    String url = '$appBaseUri/auth/google';
+    return await connection.postData(
+      url,
+      requestParams,
+      useToken: false,
+      showLoading: true,
+    );
+  }
+
+  Future<dynamic> setPassword(dynamic requestParams) async {
+    String url = '$appBaseUri/users/set-password';
+    return await connection.postData(
+      url,
+      requestParams,
+      useToken: true,
+      showLoading: true,
+    );
   }
 
   Future<dynamic> logout(dynamic requestParams) async {

@@ -24,6 +24,7 @@ const mfaRoutes = require('./mfaRoutes');
 const sessionsRoutes = require('./sessions');
 
 router.use('/users', user);
+router.use('/auth', user);
 router.use('/sessions', sessionsRoutes);
 router.use("/default", defaults);
 router.use("/feedbacks", feedbacks);

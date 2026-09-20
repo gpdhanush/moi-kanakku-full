@@ -5,6 +5,7 @@ const MFA = require("../models/mfaModel");
 const SessionModel = require("../models/sessions");
 const bcrypt = require("bcryptjs");
 const crypto = require("crypto");
+const jwt = require("jsonwebtoken");
 const tokenService = require("../middlewares/tokenService");
 const { queuePushNotification } = require("./notificationController");
 const { NotificationType } = require("../models/notificationModels");
@@ -20,6 +21,15 @@ const {
 } = require("../helpers/deviceInstallStatus");
 const cache = require("../utils/cache");
 const { recordAuditLog } = require("../helpers/auditLog");
+const { OAuth2Client } = require('google-auth-library');
+const { buildAuthSummary, normalizeSignupType } = require('../helpers/authProvider');
+const { validatePassword } = require('../helpers/validators');
+
+const googleClient = new OAuth2Client(
+  process.env.GOOGLE_CLIENT_ID,
+  process.env.GOOGLE_CLIENT_SECRET,
+  process.env.GOOGLE_REDIRECT_URI,
+);
 
 function clearAdminUserListCache() {
   cache.delByPrefix("admin:all-user-lists");
@@ -60,6 +70,7 @@ const formatPublicUserDetails = (details) => ({
 const formatAdminUserListItem = (details) => {
   const devices = details.devices || (details.device ? [details.device] : []);
   const summary = summarizeDevices(devices);
+  const authSummary = buildAuthSummary(details);
   return {
     id: details.id,
     mobile: details.mobile,
@@ -74,12 +85,17 @@ const formatAdminUserListItem = (details) => {
     device_count: summary.device_count,
     platforms: summary.platforms,
     app_version: summary.app_version,
+    signup_type: authSummary.signupType,
+    google_linked: authSummary.googleLinked,
+    password_set: authSummary.passwordSet,
+    email_verified: authSummary.emailVerified,
   };
 };
 
 const formatAdminUserDetails = (details) => {
   const devices = details.devices || (details.device ? [details.device] : []);
   const summary = summarizeDevices(devices);
+  const authSummary = buildAuthSummary(details);
   return {
     id: details.id,
     name: details.full_name,
@@ -97,6 +113,10 @@ const formatAdminUserDetails = (details) => {
     referral_code: details.referral_code || null,
     is_verified: details.is_verified || 0,
     email_verified_at: details.email_verified_at || null,
+    signup_type: authSummary.signupType,
+    google_linked: authSummary.googleLinked,
+    password_set: authSummary.passwordSet,
+    email_verified: authSummary.emailVerified,
     app_status: summary.app_status,
     last_seen_at: summary.last_seen_at,
     device_count: summary.device_count,
@@ -106,6 +126,136 @@ const formatAdminUserDetails = (details) => {
 };
 
 exports.userController = {
+  googleLogin: async (req, res) => {
+    try {
+      const { idToken } = req.body || {};
+      if (!idToken || typeof idToken !== 'string') {
+        return res.status(400).json({
+          responseType: 'F',
+          responseValue: { message: 'Google ID token is required.' },
+        });
+      }
+
+      const ticket = await googleClient.verifyIdToken({
+        idToken,
+        audience: [
+          process.env.GOOGLE_CLIENT_ID,
+          process.env.GOOGLE_ANDROID_CLIENT_ID,
+          process.env.GOOGLE_IOS_CLIENT_ID,
+        ].filter(Boolean),
+      });
+
+      const payload = ticket.getPayload();
+      if (!payload || !payload.sub || !payload.email) {
+        return res.status(401).json({
+          responseType: 'F',
+          responseValue: { message: 'Invalid Google identity token.' },
+        });
+      }
+
+      const normalizedEmail = String(payload.email).trim().toLowerCase();
+      const googleId = String(payload.sub).trim();
+      const normalizedName = String(payload.name || payload.email.split('@')[0]).trim();
+
+      let user = await User.findByGoogleId(googleId);
+      if (!user) {
+        user = await User.findByEmail(normalizedEmail);
+      }
+
+      if (!user) {
+        const createdUser = await User.createGoogleUser({
+          name: normalizedName,
+          email: normalizedEmail,
+          googleId,
+        });
+        const created = await User.findById(createdUser.insertId || createdUser.id);
+        return res.status(200).json({
+          responseType: 'S',
+          responseValue: {
+            token: tokenService.generateToken(created.id),
+            user: {
+              id: created.id,
+              name: created.full_name,
+              email: created.email,
+              signupType: 'google',
+              passwordSet: false,
+              emailVerified: true,
+            },
+            requiresPasswordSetup: true,
+          },
+        });
+      }
+
+      if (user.google_id !== googleId && user.email && user.email.toLowerCase() === normalizedEmail) {
+        await User.linkGoogleAccount(user.id, googleId);
+        user = await User.findById(user.id);
+      }
+
+      const userID = user.id;
+      tokenService.invalidatePreviousToken(userID);
+      const jwtToken = tokenService.generateToken(userID);
+      await User.updateLastLogin(userID);
+      await SessionModel.createSession(userID).catch(() => {});
+
+      return res.status(200).json({
+        responseType: 'S',
+        responseValue: {
+          token: jwtToken,
+          user: {
+            id: user.id,
+            name: user.full_name,
+            email: user.email,
+            signupType: normalizeSignupType(user.signup_type || 'email'),
+            passwordSet: Boolean(user.password_set),
+            emailVerified: Boolean(user.email_verified ?? user.is_verified),
+          },
+          requiresPasswordSetup: !Boolean(user.password_set),
+        },
+      });
+    } catch (error) {
+      logger.error('Google login error:', error);
+      const message = error?.message || 'Google sign-in failed';
+      return res.status(401).json({
+        responseType: 'F',
+        responseValue: { message: message.includes('Token') || message.includes('ID token') ? 'Invalid or expired Google token.' : 'Google sign-in failed.' },
+      });
+    }
+  },
+
+  setPassword: async (req, res) => {
+    try {
+      const userId = req.user?.userId;
+      if (!userId) {
+        return res.status(401).json({ responseType: 'F', responseValue: { message: 'Authentication required.' } });
+      }
+
+      const { password } = req.body || {};
+      const validation = validatePassword(password);
+      if (!validation.isValid) {
+        return res.status(400).json({
+          responseType: 'F',
+          responseValue: { message: validation.errors[0] },
+        });
+      }
+
+      const user = await User.findById(userId);
+      if (!user) {
+        return res.status(404).json({ responseType: 'F', responseValue: { message: 'User not found.' } });
+      }
+
+      const hashed = await bcrypt.hash(password, 10);
+      await User.updatePassword({ id: user.id, password: hashed });
+      await User.setPasswordSet(user.id, true);
+      return res.status(200).json({
+        responseType: 'S',
+        responseValue: { message: 'Password created successfully' },
+      });
+    } catch (error) {
+      logger.error('Set password failed:', error);
+      return res.status(500).json({ responseType: 'F', responseValue: { message: 'Unable to set password.' } });
+    }
+  },
+
   /**
    * Authenticate user and issue JWT.
    * Body: { email, password }

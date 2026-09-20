@@ -10,6 +10,10 @@ const fs = require('fs');
 
 // User Authentication Routes
 router.post('/login', userController.login);
+router.post('/google-login', userController.googleLogin);
+router.post('/google', userController.googleLogin);
+router.post('/set-password', authenticateToken, userController.setPassword);
+router.post('/password/setup', authenticateToken, userController.setPassword);
 router.post("/logout", authenticateToken, userController.logout);
 
 router.post('/create', userController.create);

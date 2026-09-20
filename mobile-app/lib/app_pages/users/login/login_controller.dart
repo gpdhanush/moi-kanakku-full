@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:moi/app_configs/index.dart';
 import 'package:moi/app_firebase/push_notification_service.dart';
 import 'package:moi/app_services/user_services.dart';
@@ -34,15 +35,7 @@ class LoginController {
     };
     final response = await userServices.login(params);
     if (response != null && response['responseType'] == "S") {
-      await Future.wait([
-        secureStorage.save(
-          AppVariables.userInformation,
-          response['responseValue'],
-        ),
-        secureStorage.save(AppVariables.isLogin, true),
-        secureStorage.saveToken(response['responseValue']['token']),
-      ]);
-      unawaited(PushNotificationService.instance.syncTokenForCurrentUser(force: true));
+      await _persistAuthSession(response['responseValue']);
       if (!context.mounted) return false;
       Navigator.pushNamedAndRemoveUntil(context, "home", (route) => false);
       return true;
@@ -86,6 +79,72 @@ class LoginController {
       );
       return false;
     }
+  }
+
+  Future<bool> submitGoogleLogin(BuildContext context) async {
+    FocusScope.of(context).unfocus();
+
+    try {
+      final GoogleSignIn googleSignIn = GoogleSignIn(scopes: ['email']);
+      final account = await googleSignIn.signIn();
+      if (account == null) {
+        return false;
+      }
+
+      final auth = await account.authentication;
+      final idToken = auth.idToken;
+      if (idToken == null || idToken.isEmpty) {
+        alertServices.errorToast(
+          'Google sign-in could not produce a valid token.',
+        );
+        return false;
+      }
+
+      final response = await userServices.googleLogin({'idToken': idToken});
+      if (response != null && response['responseType'] == 'S') {
+        final userData = response['responseValue'];
+        if (userData == null) {
+          alertServices.errorToast('Unable to complete Google sign-in.');
+          return false;
+        }
+
+        await _persistAuthSession(userData);
+        if (!context.mounted) return false;
+        Navigator.pushNamedAndRemoveUntil(context, 'home', (route) => false);
+        return true;
+      }
+
+      final message =
+          response?['responseValue']?['message'] ??
+          'Google sign-in failed. Please try again.';
+      alertServices.errorToast(message);
+      return false;
+    } catch (error) {
+      debugPrint('Google login error: $error');
+      alertServices.errorToast('Google sign-in failed. Please try again.');
+      return false;
+    }
+  }
+
+  Future<void> _persistAuthSession(Map<String, dynamic> authData) async {
+    final token = authData['token']?.toString();
+    final user = authData['user'];
+    if (token != null && token.isNotEmpty) {
+      await Future.wait([
+        secureStorage.save(AppVariables.userInformation, user ?? authData),
+        secureStorage.save(AppVariables.isLogin, true),
+        secureStorage.saveToken(token),
+      ]);
+      unawaited(
+        PushNotificationService.instance.syncTokenForCurrentUser(force: true),
+      );
+      return;
+    }
+
+    await Future.wait([
+      secureStorage.save(AppVariables.userInformation, user ?? authData),
+      secureStorage.save(AppVariables.isLogin, true),
+    ]);
   }
 
   String? validateEmail(
