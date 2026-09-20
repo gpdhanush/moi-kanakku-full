@@ -228,10 +228,17 @@ exports.userController = {
       });
     } catch (error) {
       logger.error('Google login error:', error);
-      const message = error?.message || 'Google sign-in failed';
+      const message = String(error?.message || '');
+      const isAudienceError = /audience|recipient|client.?id/i.test(message);
       return res.status(401).json({
         responseType: 'F',
-        responseValue: { message: message.includes('Token') || message.includes('ID token') ? 'Invalid or expired Google token.' : 'Google sign-in failed.' },
+        responseValue: {
+          message: isAudienceError
+            ? 'Google OAuth client ID is not configured correctly on the server.'
+            : /token/i.test(message)
+              ? 'Invalid or expired Google token.'
+              : 'Google sign-in failed.',
+        },
       });
     }
   },
