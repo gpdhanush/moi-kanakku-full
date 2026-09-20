@@ -34,7 +34,7 @@ class UpcomingFunctionDetailsPage extends StatelessWidget {
                       .tr('upcomingFunctions.detailsTitle')
                       .toUpperCase()
                 : title,
-            subtitle: function.functionDate,
+            // subtitle: function.functionDate,
             onBack: () => Navigator.pop(context),
             accent: primary,
           ),
@@ -51,8 +51,6 @@ class UpcomingFunctionDetailsPage extends StatelessWidget {
               children: [
                 _HeroImage(
                   imageUrl: imageUrl,
-                  statusLabel: statusLabel,
-                  statusColor: statusColor,
                   onTap: () => _showFullImage(context, imageUrl),
                 ),
                 const SizedBox(height: AppSpacing.md),
@@ -172,16 +170,9 @@ class UpcomingFunctionDetailsPage extends StatelessWidget {
 
 class _HeroImage extends StatelessWidget {
   final String imageUrl;
-  final String statusLabel;
-  final Color statusColor;
   final VoidCallback onTap;
 
-  const _HeroImage({
-    required this.imageUrl,
-    required this.statusLabel,
-    required this.statusColor,
-    required this.onTap,
-  });
+  const _HeroImage({required this.imageUrl, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -211,28 +202,6 @@ class _HeroImage extends StatelessWidget {
                       ),
                     )
                   : Image.asset(AppImages.defaultImage, fit: BoxFit.cover),
-              Positioned(
-                top: 12,
-                left: 12,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 5,
-                  ),
-                  decoration: BoxDecoration(
-                    color: statusColor.withValues(alpha: 0.92),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    statusLabel,
-                    style: AppTypography.label.copyWith(
-                      color: Colors.white,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ),
               Positioned(
                 right: 10,
                 bottom: 10,
@@ -318,19 +287,20 @@ class _DetailsSection extends StatelessWidget {
             valueColor: null,
             maxLines: 2,
           ),
-          (
-            icon: HugeIcons.strokeRoundedCheckmarkCircle02,
-            label: statusLabel,
-            value: status.toUpperCase(),
-            valueColor: statusColor,
-            maxLines: 1,
-          ),
+
           (
             icon: HugeIcons.strokeRoundedLocation01,
             label: locationLabel,
             value: location.trim().isEmpty ? '—' : location.toUpperCase(),
             valueColor: null,
             maxLines: 2,
+          ),
+          (
+            icon: HugeIcons.strokeRoundedCheckmarkCircle02,
+            label: statusLabel,
+            value: status.toUpperCase(),
+            valueColor: statusColor,
+            maxLines: 1,
           ),
           if (hasNotes)
             (

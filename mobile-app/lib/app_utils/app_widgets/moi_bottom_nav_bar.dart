@@ -64,12 +64,7 @@ class MoiBottomNavBar extends StatelessWidget {
               child: DecoratedBox(
                 decoration: BoxDecoration(
                   color: barColor,
-                  border: Border(
-                    top: BorderSide(
-                      color: primary,
-                      width: 2,
-                    ),
-                  ),
+                  border: Border(top: BorderSide(color: primary, width: 2)),
                   boxShadow: [
                     BoxShadow(
                       color: AppColors.charcoal.withValues(alpha: 0.06),
@@ -171,10 +166,12 @@ class MoiBottomNavBar extends StatelessWidget {
                         ),
                       ],
                     ),
-                    child: const Center(
+                    child: Center(
                       child: HugeIcon(
                         icon: HugeIcons.strokeRoundedAdd01,
-                        color: Colors.white,
+                        color: Theme.of(context).brightness == Brightness.light
+                            ? Colors.white
+                            : Colors.black,
                         size: 26,
                         strokeWidth: 2.4,
                       ),

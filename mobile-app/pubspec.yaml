@@ -48,6 +48,8 @@ dependencies:
   tamil_pdf_shaper: ^1.0.4
   hugeicons: ^1.1.7
   custom_refresh_indicator: ^4.0.2
+  go_router: ^15.1.2
+  flutter_animate: ^4.1.0
 
 dev_dependencies:
   flutter_test:
@@ -67,12 +69,15 @@ flutter_launcher_icons:
 flutter:
   uses-material-design: true
   assets:
+    - assets/
     - assets/images/
     - assets/images/maintainence/
     - assets/images/splash/
+    - assets/images/home_page/
     - assets/logo/
     - assets/app-logo/
     - assets/translations/
+    - assets/images/notifications/
     # Needed for PDF rootBundle.load (also registered as NotoSansTamil below).
     - assets/fonts/NotoSansTamil-Regular.ttf
 
@@ -107,3 +112,16 @@ flutter:
     - family: BonheurRoyale
       fonts:
         - asset: assets/fonts/BonheurRoyale-Regular.ttf
+
+    - family: Fredoka
+      fonts:
+        - asset: assets/fonts/Fredoka/Fredoka-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Fredoka/Fredoka-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Fredoka/Fredoka-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Fredoka/Fredoka-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/Fredoka/Fredoka-Light.ttf
+          weight: 300

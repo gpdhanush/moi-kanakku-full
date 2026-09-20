@@ -108,25 +108,280 @@ function renderVerifyEmailPage({ success, title, message }) {
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light">
+  <meta name="supported-color-schemes" content="light">
   <title>${title}</title>
+
+  <style>
+    :root {
+      --bg: #f7f7f3;
+      --card: #ffffff;
+      --surface: #f1efe7;
+      --border: #e4e1d9;
+      --text: #171717;
+      --muted: #686868;
+      --subtle: #8a8882;
+      --button: #171717;
+      --button-hover: #303030;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      font-family: Arial, Helvetica, sans-serif;
+      color: var(--text);
+    }
+
+    table {
+      border-spacing: 0;
+    }
+
+    .email-wrapper {
+      width: 100%;
+      padding: 40px 16px;
+    }
+
+    .email-card {
+      width: 100%;
+      max-width: 560px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      overflow: hidden;
+      box-shadow: 0 8px 30px rgba(23, 23, 23, 0.06);
+    }
+
+    .brand-section {
+      padding: 28px 30px;
+      background: #ffffff;
+      border-bottom: 1px solid var(--border);
+      text-align: center;
+    }
+
+    .brand-mark {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 46px;
+      height: 46px;
+      overflow: hidden;
+      border-radius: 14px;
+      background: #ffffff;
+      box-shadow: 0 0 0 1px rgba(23, 23, 23, 0.05);
+      vertical-align: middle;
+    }
+
+    .brand-mark img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .brand-name {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-left: 10px;
+      vertical-align: middle;
+      height: 46px;
+    }
+
+    .brand-name img {
+      display: block;
+      width: 174px;
+      height: auto;
+      object-fit: contain;
+    }
+
+    .content {
+      padding: 32px 30px 30px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 8px 13px;
+      border-radius: 999px;
+      background: ${badgeBg};
+      color: ${headingColor};
+      font-size: 12px;
+      line-height: 16px;
+      font-weight: 700;
+    }
+
+    .title {
+      margin: 20px 0 12px;
+      color: var(--text);
+      font-size: 28px;
+      line-height: 36px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+
+    .message {
+      margin: 0;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 26px;
+    }
+
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 28px 0 24px;
+    }
+
+    .info-text {
+      margin: 0;
+      color: var(--subtle);
+      font-size: 13px;
+      line-height: 20px;
+    }
+
+    .button-wrapper {
+      margin-top: 28px;
+      text-align: center;
+    }
+
+    .close-button {
+      display: inline-block;
+      border: none;
+      padding: 13px 28px;
+      background: var(--button);
+      color: #ffffff !important;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 20px;
+      letter-spacing: 0.01em;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.2s ease;
+    }
+
+    .close-button:hover {
+      background: var(--button-hover);
+    }
+
+    .footer {
+      padding: 22px 30px 26px;
+      background: var(--surface);
+      text-align: center;
+    }
+
+    .footer-text {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 19px;
+    }
+
+    .footer-brand {
+      margin: 5px 0 0;
+      color: var(--text);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    @media only screen and (max-width: 600px) {
+      .email-wrapper {
+        padding: 24px 12px;
+      }
+
+      .email-card {
+        border-radius: 16px;
+      }
+
+      .brand-section {
+        padding: 22px;
+      }
+
+      .brand-name img {
+        width: 150px;
+      }
+
+      .content {
+        padding: 26px 22px;
+      }
+
+      .footer {
+        padding: 20px 22px 24px;
+      }
+
+      .title {
+        font-size: 24px;
+        line-height: 32px;
+      }
+
+      .message {
+        font-size: 15px;
+        line-height: 24px;
+      }
+
+      .close-button {
+        display: block;
+        width: auto;
+        padding: 13px 20px;
+      }
+    }
+  </style>
 </head>
-<body style="margin:0;padding:0;background:#f5f7fb;font-family:Arial,Helvetica,sans-serif;">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="padding:40px 16px;">
+
+<body>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
     <tr>
       <td align="center">
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#ffffff;border:1px solid #eaeaea;border-radius:12px;overflow:hidden;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" class="email-wrapper">
           <tr>
-            <td style="background:#2f3490;color:#ffffff;text-align:center;padding:22px;">
-              <h1 style="margin:0;font-size:22px;">Moi Kanakku</h1>
-            </td>
-          </tr>
-          <tr>
-            <td style="padding:32px 28px;text-align:center;">
-              <div style="display:inline-block;background:${badgeBg};color:${headingColor};padding:8px 14px;border-radius:999px;font-size:13px;font-weight:700;margin-bottom:16px;">
-                ${title}
-              </div>
-              <p style="margin:0;font-size:16px;line-height:1.6;color:#333;">${message}</p>
+            <td align="center">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" class="email-card">
+                <tr>
+                  <td class="brand-section">
+                    <span class="brand-mark">
+                      <img src="/assets/app-logo-light.png" alt="Moi Kanakku logo" />
+                    </span>
+                    <span class="brand-name">
+                      <img src="/assets/label-dark.png" alt="Moi Kanakku" />
+                    </span>
+                  </td>
+                </tr>
+
+                <tr>
+                  <td class="content">
+                    <div class="badge">${title}</div>
+                    <h1 class="title">${title}</h1>
+                    <p class="message">${message}</p>
+
+                    <div class="divider"></div>
+
+                    <p class="info-text">
+                      This message was sent automatically by Moi Kanakku.
+                      You can safely close this page after viewing this message.
+                    </p>
+
+                    <div class="button-wrapper">
+                      <button
+                        type="button"
+                        class="close-button"
+                        onclick="try { window.close(); } catch (e) {} ; setTimeout(function(){ if (window.opener) { try { window.close(); } catch (e) {} } else { alert('You can close this browser tab manually.'); } }, 150); return false;"
+                      >
+                        Close tab
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+
+                <tr>
+                  <td class="footer">
+                    <p class="footer-text">Thank you for using Moi Kanakku.</p>
+                    <p class="footer-brand">© Moi Kanakku</p>
+                  </td>
+                </tr>
+              </table>
             </td>
           </tr>
         </table>
@@ -140,7 +395,7 @@ function renderVerifyEmailPage({ success, title, message }) {
 function sendVerifyEmailPage(res, { success, title, message, status = 200 }) {
     res.status(status);
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    res.setHeader('Content-Security-Policy', "default-src 'none'; style-src 'unsafe-inline'");
+    res.setHeader('Content-Security-Policy', "default-src 'none'; img-src 'self' data:; style-src 'unsafe-inline'; script-src 'unsafe-inline';");
     return res.send(renderVerifyEmailPage({ success, title, message }));
 }
 

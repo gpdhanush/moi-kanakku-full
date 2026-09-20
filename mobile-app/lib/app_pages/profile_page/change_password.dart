@@ -72,7 +72,7 @@ class _ChangePasswordState extends State<ChangePassword> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: MoiFlowAppHeader(
-        title: languageProvider.tr('auth.changePassword').toUpperCase(),
+        title: languageProvider.tr('auth.changePassword').toTitleCase(),
         accent: primary,
         onBack: () => Navigator.pop(context),
       ),
@@ -183,50 +183,16 @@ class _ChangePasswordState extends State<ChangePassword> {
                 AppSpacing.page,
                 AppSpacing.md,
               ),
-              child: Material(
-                color: Colors.transparent,
-                borderRadius: BorderRadius.circular(14),
-                child: InkWell(
-                  onTap: () {
-                    if (_formKey.currentState!.validate()) {
-                      _formKey.currentState!.save();
-                      FocusScope.of(context).unfocus();
-                      changePassword();
-                    }
-                  },
-                  borderRadius: BorderRadius.circular(14),
-                  child: Ink(
-                    height: 52,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(14),
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          primary,
-                          AppColors.deepenAccent(primary, amount: 0.28),
-                        ],
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: primary.withValues(alpha: 0.28),
-                          blurRadius: 14,
-                          offset: const Offset(0, 6),
-                        ),
-                      ],
-                    ),
-                    child: Center(
-                      child: Text(
-                        languageProvider.tr('auth.changePassword'),
-                        style: AppTypography.label.copyWith(
-                          color: AppColors.charcoal,
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
+              child: AppButton(
+                title: languageProvider.tr('auth.changePassword'),
+                onPressed: () {
+                  if (_formKey.currentState!.validate()) {
+                    _formKey.currentState!.save();
+                    FocusScope.of(context).unfocus();
+                    changePassword();
+                  }
+                },
+                showIcon: false,
               ),
             ),
           ),

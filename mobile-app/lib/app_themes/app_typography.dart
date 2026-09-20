@@ -28,7 +28,7 @@ class AppTypography {
   }
 
   static TextStyle greeting = _style(
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: FontWeight.w700,
     color: AppColors.textPrimary,
     height: 1.2,
@@ -36,7 +36,7 @@ class AppTypography {
 
   /// Login / signup page title — matches auth hero copy style.
   static TextStyle authTitle = _style(
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: FontWeight.w700,
     color: AppColors.authTitle,
     height: 1.2,
@@ -53,7 +53,7 @@ class AppTypography {
 
   /// Hero image overlay headline (e.g. Every Function Matters).
   static TextStyle heroHeadline = _style(
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: FontWeight.w700,
     color: Colors.white,
     height: 1.2,
@@ -70,28 +70,28 @@ class AppTypography {
   );
 
   static TextStyle sectionTitle = _style(
-    fontSize: 17,
+    fontSize: 14,
     fontWeight: FontWeight.w700,
     color: AppColors.textPrimary,
     height: 1.25,
   );
 
   static TextStyle body = _style(
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: FontWeight.w500,
     color: AppColors.textSecondary,
     height: 1.35,
   );
 
   static TextStyle label = _style(
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: FontWeight.w600,
     color: AppColors.textSecondary,
     height: 1.3,
   );
 
   static TextStyle amountLarge = _style(
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: FontWeight.w700,
     color: AppColors.white,
     height: 1.1,

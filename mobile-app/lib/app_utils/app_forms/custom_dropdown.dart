@@ -169,6 +169,10 @@ class _CustomDropdownState extends State<CustomDropdown> {
               );
             }).toList();
 
+            final dropdownIconColor =
+                widget.iconColor ??
+                AppColors.textPrimary.withValues(alpha: 0.8);
+
             return DropdownMenu(
               width: constraints.maxWidth,
               expandedInsets: EdgeInsets.zero,
@@ -186,12 +190,12 @@ class _CustomDropdownState extends State<CustomDropdown> {
                   ? Padding(
                       padding: const EdgeInsets.only(left: 14, right: 8),
                       child: SizedBox(
-                        width: 14,
-                        height: 14,
+                        width: 20,
+                        height: 20,
                         child: HugeIcon(
                           icon: widget.prefixIcon!,
-                          color: widget.iconColor ?? theme.colorScheme.primary,
-                          size: 14,
+                          color: dropdownIconColor,
+                          size: 20,
                           strokeWidth: 1.5,
                         ),
                       ),
@@ -208,6 +212,10 @@ class _CustomDropdownState extends State<CustomDropdown> {
               ),
               decorationBuilder: (context, controller) {
                 // start with something similar to the default implementation
+                final dropdownIconColor =
+                    widget.iconColor ??
+                    AppColors.textPrimary.withValues(alpha: 0.8);
+
                 InputDecoration decoration = InputDecoration(
                   // labelText: title,
                   hintText: widget.title,
@@ -222,13 +230,12 @@ class _CustomDropdownState extends State<CustomDropdown> {
                       ? Padding(
                           padding: const EdgeInsets.only(left: 14, right: 8),
                           child: SizedBox(
-                            width: 14,
-                            height: 14,
+                            width: 20,
+                            height: 20,
                             child: HugeIcon(
                               icon: widget.prefixIcon!,
-                              color:
-                                  widget.iconColor ?? theme.colorScheme.primary,
-                              size: 14,
+                              color: dropdownIconColor,
+                              size: 20,
                               strokeWidth: 1.5,
                             ),
                           ),

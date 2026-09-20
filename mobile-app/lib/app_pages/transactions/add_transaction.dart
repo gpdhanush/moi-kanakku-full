@@ -312,7 +312,8 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
   Widget build(BuildContext context) {
     return Consumer<LanguageProvider>(
       builder: (context, languageProvider, _) {
-        final accent = _isReceived ? AppColors.moiReceived : AppColors.moiGiven;
+        final primary = Theme.of(context).colorScheme.primary;
+        final accent = _isReceived ? primary : AppColors.moiGiven;
         final title = widget.isEdit
             ? languageProvider.tr('transactions.updateTitle')
             : _isReceived
@@ -521,10 +522,7 @@ class _BottomSaveBar extends StatelessWidget {
             AppSpacing.page,
             12,
           ),
-          child: AppButton(
-            title: title,
-            onPressed: onPressed,
-          ),
+          child: AppButton(title: title, onPressed: onPressed),
         ),
       ),
     );

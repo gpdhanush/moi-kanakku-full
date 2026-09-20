@@ -252,15 +252,31 @@ class AppThemes {
   static ThemeData get lightTheme => _buildLightTheme();
   static ThemeData get darkTheme => _buildDarkTheme();
 
-  static ButtonStyle _primaryButtonStyle(MoiKanakkuColors c) {
+  static ButtonStyle _primaryButtonStyle(
+    MoiKanakkuColors c, {
+    bool isDark = false,
+  }) {
+    final isLightMode = !isDark;
+    final buttonRadius = isLightMode ? 5.0 : 12.0;
+    final buttonBackground = isLightMode
+        ? const Color(0xFF16A34A)
+        : AppColors.primary;
+    final buttonForeground = isLightMode ? AppColors.white : AppColors.charcoal;
+
     return ElevatedButton.styleFrom(
       textStyle: AppTextStyles.buttonStyle,
       elevation: 0,
-      foregroundColor: AppColors.charcoal,
-      backgroundColor: AppColors.primary,
-      disabledForegroundColor: c.textMuted,
-      disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.45),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      foregroundColor: buttonForeground,
+      backgroundColor: buttonBackground,
+      disabledForegroundColor: isLightMode
+          ? AppColors.white.withValues(alpha: 0.7)
+          : c.textMuted,
+      disabledBackgroundColor: isLightMode
+          ? buttonBackground.withValues(alpha: 0.45)
+          : AppColors.primary.withValues(alpha: 0.45),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(buttonRadius),
+      ),
     );
   }
 
@@ -321,12 +337,13 @@ class AppThemes {
         selectionHandleColor: c.primaryDark,
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
-        style: _primaryButtonStyle(c),
+        style: _primaryButtonStyle(c, isDark: false),
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          foregroundColor: AppColors.charcoal,
-          backgroundColor: AppColors.primary,
+          foregroundColor: AppColors.white,
+          backgroundColor: const Color(0xFF16A34A),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
         ),
       ),
       textButtonTheme: TextButtonThemeData(
@@ -334,9 +351,7 @@ class AppThemes {
           elevation: 0,
           foregroundColor: c.textPrimary,
           textStyle: AppTextStyles.textButtonStyle,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
@@ -344,6 +359,7 @@ class AppThemes {
           foregroundColor: c.textPrimary,
           backgroundColor: c.surfaceVariant,
           side: BorderSide(color: c.border),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
         ),
       ),
       floatingActionButtonTheme: FloatingActionButtonThemeData(
@@ -524,7 +540,7 @@ class AppThemes {
         selectionHandleColor: c.primaryLight,
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
-        style: _primaryButtonStyle(c),
+        style: _primaryButtonStyle(c, isDark: true),
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(

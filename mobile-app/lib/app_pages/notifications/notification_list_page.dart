@@ -64,8 +64,8 @@ class _NotificationListPageState extends State<NotificationListPage> {
     final localUnread = _notifications.where((n) => !n.isRead).length;
     final unreadCount = localUnread > 0 ? localUnread : _unreadCount;
     final title = unreadCount > 0
-        ? '${languageProvider.tr('notifications.title').toUpperCase()} ($unreadCount)'
-        : languageProvider.tr('notifications.title').toUpperCase();
+        ? '${languageProvider.tr('notifications.title').toTitleCase()} ($unreadCount)'
+        : languageProvider.tr('notifications.title').toTitleCase();
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -100,11 +100,77 @@ class _NotificationListPageState extends State<NotificationListPage> {
               slivers: [
                 SliverFillRemaining(
                   hasScrollBody: false,
-                  child: MoiEmptyState(
-                    title: languageProvider.tr('notifications.emptyTitle'),
-                    subtitle: languageProvider.tr('notifications.emptyMessage'),
-                    icon: HugeIcons.strokeRoundedNotification03,
-                    accentColor: primary,
+                  child: Center(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 28),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Image.asset(
+                            'assets/images/notifications/empty-state.png',
+                            width: 150,
+                            height: 100,
+                            fit: BoxFit.contain,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'No notifications',
+                            textAlign: TextAlign.center,
+                            style: AppTypography.greeting.copyWith(
+                              color: AppColors.textPrimary,
+                              fontSize: 28,
+                              fontWeight: FontWeight.w700,
+                              height: 1.08,
+                              letterSpacing: -0.9,
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            'New notifications will appear here.\nWe\'ll keep you updated on important activities.',
+                            textAlign: TextAlign.center,
+                            style: AppTypography.body.copyWith(
+                              color: AppColors.textSecondary,
+                              fontSize: 14,
+                              height: 1.45,
+                              fontFamily: 'Fredoka',
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
+                          const SizedBox(height: 18),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 18,
+                              vertical: 12,
+                            ),
+                            decoration: BoxDecoration(
+                              color: primary.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(18),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                HugeIcon(
+                                  icon: HugeIcons.strokeRoundedNotification03,
+                                  color: primary,
+                                  size: 18,
+                                  strokeWidth: 1.9,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'You\'re all caught up!',
+                                  style: AppTypography.label.copyWith(
+                                    color: primary,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               ],

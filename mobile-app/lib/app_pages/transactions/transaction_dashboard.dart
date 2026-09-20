@@ -290,16 +290,49 @@ class _TransactionDashboardState extends State<TransactionDashboard> {
           body: MoiRefreshIndicator(
             onRefresh: () => fetchPersonLists(reset: true, showLoading: false),
             child: _isLoading && persons.isEmpty
-                ? ListView(
-                    physics: const AlwaysScrollableScrollPhysics(
-                      parent: ClampingScrollPhysics(),
+                ? Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpacing.page,
+                      AppSpacing.md,
+                      AppSpacing.page,
+                      AppSpacing.xxl,
                     ),
-                    children: const [
-                      SizedBox(height: 180),
-                      Center(
-                        child: CircularProgressIndicator(strokeWidth: 2.5),
+                    child: ListView(
+                      physics: const AlwaysScrollableScrollPhysics(
+                        parent: ClampingScrollPhysics(),
                       ),
-                    ],
+                      children: [
+                        SearchWidget(
+                          controller: searchController,
+                          hintText: languageProvider.tr('transactions.search'),
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: AppSkeleton(
+                                width: double.infinity,
+                                height: 48,
+                                radius: 14,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: AppSkeleton(
+                                width: double.infinity,
+                                height: 48,
+                                radius: 14,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                        for (int i = 0; i < 5; i++) ...[
+                          if (i > 0) const SizedBox(height: AppSpacing.sm),
+                          const AppSkeletonListTile(showTrailing: true),
+                        ],
+                      ],
+                    ),
                   )
                 : _buildBody(languageProvider),
           ),
@@ -369,18 +402,22 @@ class _TransactionDashboardState extends State<TransactionDashboard> {
   }
 
   Widget _buildActionButtons(LanguageProvider languageProvider) {
-    const greenBg = Color(0xFF10B981);
+    final primary = Theme.of(context).colorScheme.primary;
 
     return Row(
       children: [
         Expanded(
           child: _QuickActionButton(
             label: languageProvider.tr('transactions.newInvest'),
-            icon: HugeIcons.strokeRoundedUserAdd01,
-            color: greenBg,
-            textColor: Colors.white,
-            iconColor: Colors.white,
-            iconBgColor: Colors.white.withValues(alpha: 0.22),
+            icon: null,
+            color: primary,
+            textColor: Theme.of(context).brightness == Brightness.dark
+                ? Colors.black
+                : Colors.white,
+            iconColor: Theme.of(context).brightness == Brightness.dark
+                ? Colors.black
+                : Colors.white,
+            iconBgColor: Colors.transparent,
             onTap: () async {
               final result = await Navigator.pushNamed(
                 context,
@@ -395,15 +432,11 @@ class _TransactionDashboardState extends State<TransactionDashboard> {
         Expanded(
           child: _QuickActionButton(
             label: languageProvider.tr('transactions.newReturn'),
-            icon: HugeIcons.strokeRoundedUserAdd01,
-            gradient: const LinearGradient(
-              colors: [Color(0xFFFBBF24), Color(0xFFF97316)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            textColor: AppColors.charcoal,
+            icon: null,
+            color: AppColors.moiGiven,
+            textColor: Colors.black,
             iconColor: Colors.white,
-            iconBgColor: Colors.white.withValues(alpha: 0.28),
+            iconBgColor: Colors.transparent,
             onTap: () async {
               final result = await Navigator.pushNamed(
                 context,
@@ -517,9 +550,8 @@ class _TransactionDashboardState extends State<TransactionDashboard> {
 
 class _QuickActionButton extends StatelessWidget {
   final String label;
-  final List<List<dynamic>> icon;
+  final List<List<dynamic>>? icon;
   final Color? color;
-  final Gradient? gradient;
   final Color textColor;
   final Color iconColor;
   final Color iconBgColor;
@@ -527,9 +559,8 @@ class _QuickActionButton extends StatelessWidget {
 
   const _QuickActionButton({
     required this.label,
-    required this.icon,
+    this.icon,
     this.color,
-    this.gradient,
     required this.textColor,
     required this.iconColor,
     required this.iconBgColor,
@@ -538,7 +569,9 @@ class _QuickActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final shadowColor = (color ?? const Color(0xFFF97316)).withValues(alpha: 0.26);
+    final shadowColor = (color ?? const Color(0xFFF97316)).withValues(
+      alpha: 0.26,
+    );
 
     return Material(
       color: Colors.transparent,
@@ -552,7 +585,6 @@ class _QuickActionButton extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(14),
             color: color,
-            gradient: gradient,
             boxShadow: [
               BoxShadow(
                 color: shadowColor,
@@ -561,39 +593,18 @@ class _QuickActionButton extends StatelessWidget {
               ),
             ],
           ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                width: 28,
-                height: 28,
-                decoration: BoxDecoration(
-                  color: iconBgColor,
-                  shape: BoxShape.circle,
-                ),
-                alignment: Alignment.center,
-                child: HugeIcon(
-                  icon: icon,
-                  color: iconColor,
-                  size: 15,
-                  strokeWidth: 2.0,
-                ),
+          child: Center(
+            child: Text(
+              label,
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppTypography.label.copyWith(
+                color: textColor,
+                fontSize: 12.5,
+                fontWeight: FontWeight.w700,
               ),
-              const SizedBox(width: 8),
-              Flexible(
-                child: Text(
-                  label,
-                  textAlign: TextAlign.center,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppTypography.label.copyWith(
-                    color: textColor,
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
         ),
       ),
@@ -628,12 +639,13 @@ class _PersonCard extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     final greenIconColor = isDark ? primary : const Color(0xFF059669);
-    final greenBgColor =
-        isDark ? primary.withValues(alpha: 0.15) : const Color(0xFFE8F6EB);
-    final deleteIconColor =
-        isDark ? colors.error : const Color(0xFFEF4444);
-    final deleteBgColor =
-        isDark ? colors.error.withValues(alpha: 0.15) : const Color(0xFFFEE2E2);
+    final greenBgColor = isDark
+        ? primary.withValues(alpha: 0.15)
+        : const Color(0xFFE8F6EB);
+    final deleteIconColor = isDark ? colors.error : const Color(0xFFEF4444);
+    final deleteBgColor = isDark
+        ? colors.error.withValues(alpha: 0.15)
+        : const Color(0xFFFEE2E2);
 
     return Material(
       color: colors.surface,

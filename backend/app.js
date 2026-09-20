@@ -119,6 +119,13 @@ app.use("/uploads", (req, res, next) => {
 });
 app.use("/uploads", express.static(uploadPath));
 
+// App branding assets used by email verification pages and public screens.
+app.use("/assets", (req, res, next) => {
+  res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
+  next();
+});
+app.use("/assets", express.static(path.join(__dirname, "assets")));
+
 /* =========================
    ROUTES
 ========================= */

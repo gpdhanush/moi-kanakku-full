@@ -32,7 +32,19 @@ class HomeGreetingHeader extends StatelessWidget {
         profileImagePath.startsWith('https://')) {
       return profileImagePath;
     }
-    return '$appImageUrl/${profileImagePath.replaceFirst(RegExp(r'^/+'), '')}';
+
+    final normalized = profileImagePath.replaceFirst(RegExp(r'^/+'), '');
+    if (appImageUrl.trim().isNotEmpty) {
+      return '$appImageUrl/$normalized';
+    }
+    if (bootstrapApiBaseUri.trim().endsWith('/apis')) {
+      final baseWithoutApis = bootstrapApiBaseUri.trim().replaceFirst(
+        RegExp(r'/apis$'),
+        '',
+      );
+      return '$baseWithoutApis/$normalized';
+    }
+    return '$bootstrapApiBaseUri/$normalized';
   }
 
   String _greetingPrefix(LanguageProvider languageProvider) {
@@ -109,8 +121,10 @@ class HomeGreetingHeader extends StatelessWidget {
                       const SizedBox(height: AppSpacing.xs),
                       Text(
                         displayName,
-                        style: AppTypography.greeting.copyWith(
+                        style: AppTypography.body.copyWith(
+                          fontFamily: 'Arimo',
                           fontSize: 22,
+                          fontWeight: FontWeight.w600,
                           letterSpacing: -0.4,
                           color: AppColors.textPrimary,
                         ),

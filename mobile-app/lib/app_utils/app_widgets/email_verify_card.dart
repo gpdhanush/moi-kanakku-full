@@ -180,7 +180,10 @@ class _EmailVerifyCardState extends State<EmailVerifyCard> {
                   onPressed: _sending ? null : _sendVerification,
                   style: FilledButton.styleFrom(
                     backgroundColor: colorScheme.primary,
-                    foregroundColor: colorScheme.onPrimary,
+                    foregroundColor:
+                        Theme.of(context).brightness == Brightness.dark
+                        ? colorScheme.onPrimary
+                        : AppColors.white,
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),

@@ -329,42 +329,57 @@ class _LoginPrimaryButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final primary = Theme.of(context).colorScheme.primary;
+    final buttonColor = primary;
+    final contentColor = isDark ? AppColors.charcoal : AppColors.white;
 
     return Semantics(
       button: true,
       label: title,
       child: Material(
         color: Colors.transparent,
-        borderRadius: BorderRadius.circular(AppRadius.md),
+        borderRadius: BorderRadius.circular(5),
         child: InkWell(
           onTap: isLoading ? null : onPressed,
-          borderRadius: BorderRadius.circular(AppRadius.md),
+          borderRadius: BorderRadius.circular(5),
           child: Ink(
-            height: 56,
+            height: 52,
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(AppRadius.md),
-              color: isLoading ? primary.withValues(alpha: 0.72) : primary,
-              boxShadow: [
-                BoxShadow(
-                  color: primary.withValues(alpha: 0.28),
-                  blurRadius: 14,
-                  offset: const Offset(0, 6),
-                ),
-              ],
+              borderRadius: BorderRadius.circular(5),
+              color: isLoading
+                  ? (isDark
+                        ? primary.withValues(alpha: 0.72)
+                        : buttonColor.withValues(alpha: 0.72))
+                  : buttonColor,
+              boxShadow: isDark
+                  ? [
+                      BoxShadow(
+                        color: primary.withValues(alpha: 0.28),
+                        blurRadius: 14,
+                        offset: const Offset(0, 6),
+                      ),
+                    ]
+                  : [
+                      BoxShadow(
+                        color: buttonColor.withValues(alpha: 0.18),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
             ),
             child: Center(
               child: AnimatedSwitcher(
                 duration: const Duration(milliseconds: 180),
                 child: isLoading
-                    ? const SizedBox(
-                        key: ValueKey('loading'),
+                    ? SizedBox(
+                        key: const ValueKey('loading'),
                         width: 22,
                         height: 22,
                         child: CircularProgressIndicator(
                           strokeWidth: 2.4,
                           valueColor: AlwaysStoppedAnimation<Color>(
-                            AppColors.charcoal,
+                            isDark ? AppColors.charcoal : AppColors.white,
                           ),
                         ),
                       )
@@ -372,7 +387,7 @@ class _LoginPrimaryButton extends StatelessWidget {
                         key: const ValueKey('label'),
                         title,
                         style: AppTypography.label.copyWith(
-                          color: AppColors.charcoal,
+                          color: contentColor,
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
                         ),

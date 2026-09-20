@@ -31,9 +31,10 @@ class AppButton extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final primaryColor = Theme.of(context).colorScheme.primary;
 
-    final List<List<dynamic>>? effectiveIcon = icon ??
-        (showIcon ? HugeIcons.strokeRoundedFloppyDisk : null);
+    final List<List<dynamic>>? effectiveIcon =
+        icon ?? (showIcon ? HugeIcons.strokeRoundedFloppyDisk : null);
 
+    final lightButtonColor = Theme.of(context).colorScheme.primary;
     final defaultGradient = isDark
         ? LinearGradient(
             colors: [
@@ -43,42 +44,50 @@ class AppButton extends StatelessWidget {
             begin: Alignment.centerLeft,
             end: Alignment.centerRight,
           )
-        : const LinearGradient(
-            colors: [
-              Color(0xFF22C55E),
-              Color(0xFF059669),
-            ],
-            begin: Alignment.centerLeft,
-            end: Alignment.centerRight,
-          );
+        : null;
 
+    final effectiveBackgroundColor =
+        color ?? (isDark ? null : lightButtonColor);
+    final effectiveGradient = color == null && isDark
+        ? gradient ?? defaultGradient
+        : gradient;
     final shadowColor = isDark
         ? primaryColor.withValues(alpha: 0.22)
-        : const Color(0xFF059669).withValues(alpha: 0.35);
+        : lightButtonColor.withValues(alpha: 0.18);
 
-    final contentColor = isDark ? AppColors.charcoal : Colors.white;
+    final contentColor = isDark ? AppColors.charcoal : AppColors.white;
+    final radius = isDark ? 24.0 : 5.0;
 
     return Container(
       width: width ?? double.infinity,
-      height: 50,
+      height: isDark ? 50 : 52,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        color: color,
-        gradient: color == null ? (gradient ?? defaultGradient) : gradient,
-        boxShadow: [
-          BoxShadow(
-            color: (color ?? shadowColor),
-            blurRadius: 12,
-            offset: const Offset(0, 5),
-            spreadRadius: 0,
-          ),
-        ],
+        borderRadius: BorderRadius.circular(radius),
+        color: effectiveBackgroundColor,
+        gradient: effectiveGradient,
+        boxShadow: isDark
+            ? [
+                BoxShadow(
+                  color: (color ?? shadowColor),
+                  blurRadius: 12,
+                  offset: const Offset(0, 5),
+                  spreadRadius: 0,
+                ),
+              ]
+            : [
+                BoxShadow(
+                  color: shadowColor,
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                  spreadRadius: 0,
+                ),
+              ],
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: isLoading ? null : onPressed,
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(radius),
           child: Container(
             alignment: Alignment.center,
             child: isLoading

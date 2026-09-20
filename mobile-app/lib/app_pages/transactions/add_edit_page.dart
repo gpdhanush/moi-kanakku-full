@@ -266,7 +266,8 @@ class _AddEditPageState extends State<AddEditPage> {
     return Consumer<LanguageProvider>(
       builder: (context, languageProvider, _) {
         final isReceived = _getTransactionType() != 'RETURN';
-        final accent = isReceived ? AppColors.moiReceived : AppColors.moiGiven;
+        final primary = Theme.of(context).colorScheme.primary;
+        final accent = isReceived ? primary : AppColors.moiGiven;
         final title = isReceived
             ? languageProvider.tr('transactions.newInvest')
             : languageProvider.tr('transactions.newReturn');
@@ -605,10 +606,7 @@ class _BottomSaveBar extends StatelessWidget {
             AppSpacing.page,
             12,
           ),
-          child: AppButton(
-            title: title,
-            onPressed: onPressed,
-          ),
+          child: AppButton(title: title, onPressed: onPressed),
         ),
       ),
     );

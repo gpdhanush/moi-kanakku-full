@@ -13,6 +13,7 @@ class UserProvider extends ChangeNotifier {
   List<dynamic> _userDetails = [];
   Map<String, dynamic> _deviceInfo = {};
   String? _jwtToken;
+
   /// Paths that 404'd this session — ignore if server still returns them.
   final Set<String> _rejectedProfileImagePaths = {};
 
@@ -72,8 +73,8 @@ class UserProvider extends ChangeNotifier {
   }) async {
     if (_userDetails.isEmpty) return;
     final user = Map<String, dynamic>.from(_userDetails[0] as Map);
-    final existing =
-        (user['profile_image_url'] ?? user['profile_image'])?.toString();
+    final existing = (user['profile_image_url'] ?? user['profile_image'])
+        ?.toString();
     final hadImage = existing?.trim().isNotEmpty ?? false;
     if (!hadImage && missingUrl == null) return;
 
@@ -130,7 +131,19 @@ class UserProvider extends ChangeNotifier {
     final key = pathOrUrl?.trim() ?? '';
     if (key.isEmpty) return null;
     if (key.startsWith('http://') || key.startsWith('https://')) return key;
-    return '$appImageUrl/${key.replaceFirst(RegExp(r'^/+'), '')}';
+
+    final normalized = key.replaceFirst(RegExp(r'^/+'), '');
+    if (appImageUrl.trim().isNotEmpty) {
+      return '$appImageUrl/$normalized';
+    }
+    if (bootstrapApiBaseUri.trim().endsWith('/apis')) {
+      final baseWithoutApis = bootstrapApiBaseUri.trim().replaceFirst(
+        RegExp(r'/apis$'),
+        '',
+      );
+      return '$baseWithoutApis/$normalized';
+    }
+    return '$bootstrapApiBaseUri/$normalized';
   }
 
   /// Set device info

@@ -70,14 +70,26 @@ class _ProfilePageState extends State<ProfilePage> {
   // Helper function to construct full image URL
   String _getFullImageUrl(String? imagePath) {
     if (imagePath == null || imagePath.isEmpty) return '';
-    // If it's already a full URL, return as is
-    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
-      return imagePath;
+    final trimmed = imagePath.trim();
+    if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+      return trimmed;
     }
-    // Otherwise prepend appImageUrl
-    // Remove leading slash if present to avoid double slashes
-    final path = imagePath.startsWith('/') ? imagePath : '/$imagePath';
-    return '$appImageUrl$path';
+
+    final normalized = trimmed.startsWith('/') ? trimmed.substring(1) : trimmed;
+
+    if (appImageUrl.trim().isNotEmpty) {
+      return '${appImageUrl.trim()}/$normalized';
+    }
+
+    if (bootstrapApiBaseUri.trim().endsWith('/apis')) {
+      final baseWithoutApis = bootstrapApiBaseUri.trim().replaceFirst(
+        RegExp(r'/apis$'),
+        '',
+      );
+      return '$baseWithoutApis/$normalized';
+    }
+
+    return '$bootstrapApiBaseUri/$normalized';
   }
 
   @override
@@ -297,7 +309,7 @@ class _ProfilePageState extends State<ProfilePage> {
         return Scaffold(
           backgroundColor: AppColors.background,
           appBar: MoiAppHeader(
-            title: languageProvider.tr('profile.title').toUpperCase(),
+            title: languageProvider.tr('profile.title').toTitleCase(),
             showBack: true,
             onBack: () => Navigator.pop(context),
           ),
@@ -320,13 +332,8 @@ class _ProfilePageState extends State<ProfilePage> {
                     EmailVerifyCard(email: _emailCtrl.text),
                   ],
                   const SizedBox(height: AppSpacing.md),
-                  Text(
-                    languageProvider.tr('profile.personalInformation'),
-                    style: AppTypography.label.copyWith(
-                      color: AppColors.textPrimary,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                    ),
+                  MoiInfoSectionLabel(
+                    title: languageProvider.tr('profile.personalInformation'),
                   ),
                   const SizedBox(height: AppSpacing.sm),
                   _buildPersonalInfoCard(
@@ -335,13 +342,8 @@ class _ProfilePageState extends State<ProfilePage> {
                     languageProvider,
                   ),
                   const SizedBox(height: AppSpacing.md),
-                  Text(
-                    languageProvider.tr('profile.address'),
-                    style: AppTypography.label.copyWith(
-                      color: AppColors.textPrimary,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                    ),
+                  MoiInfoSectionLabel(
+                    title: languageProvider.tr('profile.address'),
                   ),
                   const SizedBox(height: AppSpacing.sm),
                   _buildAddressInfoCard(
@@ -577,96 +579,76 @@ class _ProfilePageState extends State<ProfilePage> {
     ColorScheme colorScheme,
     LanguageProvider languageProvider,
   ) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: theme.brightness == Brightness.dark
-            ? AppColors.darkSurface
-            : Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: theme.brightness == Brightness.dark
-              ? AppColors.darkBorder
-              : AppColors.lightBorder,
-          width: 1,
-        ),
-        boxShadow: theme.brightness == Brightness.dark
-            ? [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.16),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ]
-            : AppShadows.soft,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Name input field
-          TextFormWidget(
-            title: languageProvider.tr('profile.name'),
-            controller: _nameCtrl,
-            required: true,
-            // prefixIcon: HugeIcons.strokeRoundedUser, // removed
-            validator: (value) => value?.isEmpty == true
-                ? languageProvider.tr('profile.enterValidName')
-                : null,
-          ),
-          const SizedBox(height: 16),
-          Row(
+    return MoiInfoCard(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: _buildGenderDropdown(
-                  theme,
-                  colorScheme,
-                  languageProvider,
-                ),
+              // Name input field
+              TextFormWidget(
+                title: languageProvider.tr('profile.name'),
+                controller: _nameCtrl,
+                required: true,
+                validator: (value) => value?.isEmpty == true
+                    ? languageProvider.tr('profile.enterValidName')
+                    : null,
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildDateOfBirthField(
-                  theme,
-                  colorScheme,
-                  languageProvider,
-                ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildGenderDropdown(
+                      theme,
+                      colorScheme,
+                      languageProvider,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildDateOfBirthField(
+                      theme,
+                      colorScheme,
+                      languageProvider,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              // Mobile number input field
+              TextFormWidget(
+                title: languageProvider.tr('profile.mobile'),
+                controller: _mobileCtrl,
+                required: false,
+                keyboardType: TextInputType.phone,
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(10),
+                ],
+                validator: (value) {
+                  return PhoneValidator.validatePhone(value, required: false);
+                },
+              ),
+              const SizedBox(height: 16),
+              // Email field (read-only) with verified badge before the label/value
+              TextFormWidget(
+                title: languageProvider.tr('profile.email'),
+                controller: _emailCtrl,
+                required: false,
+                readOnly: true,
+                enabled: false,
+                prefixIcon: isUserEmailVerified(_user)
+                    ? HugeIcons.strokeRoundedCheckmarkBadge01
+                    : HugeIcons.strokeRoundedMail01,
+                iconColor: isUserEmailVerified(_user)
+                    ? AppColors.moiReceived
+                    : AppColors.textSecondary,
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          // Mobile number input field
-          TextFormWidget(
-            title: languageProvider.tr('profile.mobile'),
-            controller: _mobileCtrl,
-            required: false,
-            // prefixIcon: HugeIcons.strokeRoundedCall, // removed
-            keyboardType: TextInputType.phone,
-            inputFormatters: [
-              FilteringTextInputFormatter.digitsOnly,
-              LengthLimitingTextInputFormatter(10),
-            ],
-            validator: (value) {
-              return PhoneValidator.validatePhone(value, required: false);
-            },
-          ),
-          const SizedBox(height: 16),
-          // Email field (read-only) with verified badge before the label/value
-          TextFormWidget(
-            title: languageProvider.tr('profile.email'),
-            controller: _emailCtrl,
-            required: false,
-            readOnly: true,
-            enabled: false,
-            prefixIcon: isUserEmailVerified(_user)
-                ? HugeIcons.strokeRoundedCheckmarkBadge01
-                : HugeIcons.strokeRoundedMail01,
-            iconColor: isUserEmailVerified(_user)
-                ? AppColors.moiReceived
-                : AppColors.textSecondary,
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -759,44 +741,10 @@ class _ProfilePageState extends State<ProfilePage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Material(
-          color: Colors.transparent,
-          borderRadius: BorderRadius.circular(14),
-          child: InkWell(
-            onTap: _updateDetails,
-            borderRadius: BorderRadius.circular(14),
-            child: Ink(
-              height: 52,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(14),
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    primary,
-                    AppColors.deepenAccent(primary, amount: 0.28),
-                  ],
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: primary.withValues(alpha: 0.28),
-                    blurRadius: 14,
-                    offset: const Offset(0, 6),
-                  ),
-                ],
-              ),
-              child: Center(
-                child: Text(
-                  languageProvider.tr('profile.updateProfile'),
-                  style: AppTypography.label.copyWith(
-                    color: Colors.black,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            ),
-          ),
+        AppButton(
+          title: languageProvider.tr('profile.updateProfile'),
+          onPressed: _updateDetails,
+          showIcon: false,
         ),
         const SizedBox(height: AppSpacing.lg),
         Text(
@@ -821,8 +769,10 @@ class _ProfilePageState extends State<ProfilePage> {
           icon: HugeIcons.strokeRoundedDelete02,
           title: languageProvider.tr('profile.deleteAccount'),
           subtitle: languageProvider.tr('profile.deleteAccountConfirmation'),
-          iconBg: AppColors.moiGivenSoft,
-          iconColor: AppColors.moiGiven,
+          iconBg: isDark
+              ? AppColors.darkError.withValues(alpha: 0.15)
+              : AppColors.lightError.withValues(alpha: 0.12),
+          iconColor: isDark ? AppColors.darkError : AppColors.lightError,
           isDestructive: true,
           onTap: () async {
             final confirm = await showMoiConfirmSheet(
@@ -896,7 +846,9 @@ class _ProfilePageState extends State<ProfilePage> {
                       title,
                       style: AppTypography.label.copyWith(
                         color: isDestructive
-                            ? AppColors.moiGiven
+                            ? (isDark
+                                  ? AppColors.darkError
+                                  : AppColors.lightError)
                             : isDark
                             ? AppColors.darkTextPrimary
                             : AppColors.textPrimary,
@@ -924,7 +876,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 strokeWidth: 1.9,
                 size: 16,
                 color: isDestructive
-                    ? AppColors.moiGiven.withValues(alpha: 0.55)
+                    ? (isDark ? AppColors.darkError : AppColors.lightError)
                     : isDark
                     ? AppColors.darkTextSecondary
                     : const Color(0xffA1A1AA),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:intl/intl.dart';
 import 'package:moi/app_configs/index.dart';
@@ -201,7 +202,7 @@ class _ViewFunctionDetailsState extends State<ViewFunctionDetails> {
           backgroundColor: AppColors.background,
           appBar: MoiAppHeader(
             title: functionName.toUpperCase(),
-            subtitle: functionDate,
+            // subtitle: functionDate,
             showBack: true,
             onBack: () => Navigator.pop(context),
           ),
@@ -219,21 +220,24 @@ class _ViewFunctionDetailsState extends State<ViewFunctionDetails> {
                 _HeroImage(imageUrl: _detailImageUrl, onTap: _showFullImage),
                 const SizedBox(height: AppSpacing.md),
                 _AmountCard(
-                  primary: primary,
-                  label: languageProvider.tr(
-                    'functionDetails.totalAmountReceived',
-                  ),
-                  amountText: '₹ ${_formatAmount(totalAmountReceived)}',
-                  words: _amountInWords(totalAmountReceived),
-                  isLoading: isLoadingAmount,
-                  onTap: () {
-                    Navigator.pushNamed(
-                      context,
-                      "function-transaction-list",
-                      arguments: widget.data[0],
-                    );
-                  },
-                ),
+                      primary: primary,
+                      label: languageProvider.tr(
+                        'functionDetails.totalAmountReceived',
+                      ),
+                      amountText: '₹ ${_formatAmount(totalAmountReceived)}',
+                      words: _amountInWords(totalAmountReceived),
+                      isLoading: isLoadingAmount,
+                      onTap: () {
+                        Navigator.pushNamed(
+                          context,
+                          "function-transaction-list",
+                          arguments: widget.data[0],
+                        );
+                      },
+                    )
+                    .animate()
+                    .fadeIn(duration: 420.ms)
+                    .slideY(begin: 0.08, end: 0, duration: 420.ms),
                 const SizedBox(height: AppSpacing.md),
                 _DetailsSection(
                   primary: primary,
@@ -265,47 +269,58 @@ class _ViewFunctionDetailsState extends State<ViewFunctionDetails> {
     final imageUrl = _detailImageUrl;
     showDialog<void>(
       context: context,
-      barrierColor: Colors.black.withValues(alpha: 0.92),
+      barrierColor: Colors.black.withValues(alpha: 0.9),
       builder: (dialogContext) {
         return Dialog(
           backgroundColor: Colors.transparent,
           insetPadding: EdgeInsets.zero,
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              Center(
-                child: InteractiveViewer(
-                  minScale: 0.8,
-                  maxScale: 4,
-                  child: imageUrl != null && imageUrl.isNotEmpty
-                      ? MoiNetworkImage(
-                          url: imageUrl,
-                          fit: BoxFit.contain,
-                          errorBuilder: (context, error, stackTrace) =>
-                              Image.asset(AppImages.defaultImage),
-                        )
-                      : Image.asset(AppImages.defaultImage),
-                ),
-              ),
-              Positioned(
-                top: MediaQuery.paddingOf(dialogContext).top + 8,
-                right: 16,
-                child: Material(
-                  color: Colors.white.withValues(alpha: 0.16),
-                  shape: const CircleBorder(),
-                  clipBehavior: Clip.antiAlias,
-                  child: IconButton(
-                    onPressed: () => Navigator.of(dialogContext).pop(),
-                    icon: const HugeIcon(
-                      icon: HugeIcons.strokeRoundedCancel01,
-                      color: Colors.white,
-                      size: 22,
-                      strokeWidth: 1.9,
+          child: Padding(
+            padding: EdgeInsets.only(
+              top: MediaQuery.paddingOf(dialogContext).top + 12,
+              left: 16,
+              right: 16,
+              bottom: 16,
+            ),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                Center(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(24),
+                    child: InteractiveViewer(
+                      minScale: 0.8,
+                      maxScale: 4,
+                      child: imageUrl != null && imageUrl.isNotEmpty
+                          ? MoiNetworkImage(
+                              url: imageUrl,
+                              fit: BoxFit.contain,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  Image.asset(AppImages.defaultImage),
+                            )
+                          : Image.asset(AppImages.defaultImage),
                     ),
                   ),
                 ),
-              ),
-            ],
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: Material(
+                    color: Colors.white.withValues(alpha: 0.16),
+                    shape: const CircleBorder(),
+                    clipBehavior: Clip.antiAlias,
+                    child: IconButton(
+                      onPressed: () => Navigator.of(dialogContext).pop(),
+                      icon: const HugeIcon(
+                        icon: HugeIcons.strokeRoundedCancel01,
+                        color: Colors.white,
+                        size: 22,
+                        strokeWidth: 1.9,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         );
       },
@@ -321,17 +336,24 @@ class _HeroImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Material(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(16),
+      color: isDark ? const Color(0xFF101B18) : Colors.white,
+      borderRadius: BorderRadius.circular(20),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
         child: Ink(
-          height: 200,
+          height: 220,
           width: double.infinity,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: isDark ? const Color(0xFF26352E) : AppColors.lightBorder,
+              width: 1,
+            ),
             boxShadow: AppShadows.soft,
           ),
           child: Stack(
@@ -347,20 +369,36 @@ class _HeroImage extends StatelessWidget {
                       ),
                     )
                   : Image.asset(AppImages.defaultImage, fit: BoxFit.cover),
-              Positioned(
-                right: 10,
-                bottom: 10,
-                child: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.45),
-                    borderRadius: BorderRadius.circular(10),
+              Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.transparent,
+                      Colors.black.withValues(alpha: 0.18),
+                    ],
                   ),
-                  child: const HugeIcon(
-                    icon: HugeIcons.strokeRoundedZoomInArea,
-                    color: Colors.white,
-                    size: 16,
-                    strokeWidth: 1.8,
+                ),
+              ),
+              Positioned(
+                right: 12,
+                bottom: 12,
+                child: Material(
+                  color: Colors.black.withValues(alpha: 0.42),
+                  shape: const CircleBorder(),
+                  clipBehavior: Clip.antiAlias,
+                  child: InkWell(
+                    onTap: onTap,
+                    child: const Padding(
+                      padding: EdgeInsets.all(10),
+                      child: HugeIcon(
+                        icon: HugeIcons.strokeRoundedZoomInArea,
+                        color: Colors.white,
+                        size: 18,
+                        strokeWidth: 1.8,
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -392,7 +430,8 @@ class _AmountCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final cardColor = AppColors.primaryDark;
+    final heroBg = isDark ? const Color(0xFF071B18) : const Color(0xFF0E6A5E);
+    final heroSoft = isDark ? const Color(0xFF0D312A) : const Color(0xFF145C4C);
 
     return SizedBox(
       width: double.infinity,
@@ -406,67 +445,99 @@ class _AmountCard extends StatelessWidget {
             width: double.infinity,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(18),
-              color: cardColor,
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [heroBg, heroSoft, const Color(0xFF0A4F45)],
+              ),
               boxShadow: [
                 BoxShadow(
-                  color: cardColor.withValues(alpha: isDark ? 0.22 : 0.32),
+                  color: heroBg.withValues(alpha: 0.32),
                   blurRadius: 20,
                   offset: const Offset(0, 10),
                 ),
                 BoxShadow(
-                  color: cardColor.withValues(alpha: 0.12),
+                  color: heroBg.withValues(alpha: 0.12),
                   blurRadius: 6,
                   offset: const Offset(0, 2),
                 ),
               ],
             ),
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    label,
-                    style: AppTypography.body.copyWith(
-                      color: Colors.black.withValues(alpha: 0.78),
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
+            child: Stack(
+              children: [
+                Positioned(
+                  right: -24,
+                  top: -20,
+                  child: Container(
+                    width: 110,
+                    height: 110,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white.withValues(alpha: 0.10),
                     ),
                   ),
-                  const SizedBox(height: 6),
-                  if (isLoading)
-                    const SizedBox(
-                      width: 24,
-                      height: 24,
-                      child: CircularProgressIndicator(
-                        color: Colors.black,
-                        strokeWidth: 2.4,
-                      ),
-                    )
-                  else
-                    Text(
-                      amountText,
-                      style: AppTypography.amountLarge.copyWith(
-                        color: Colors.black,
-                        fontSize: 30,
-                        letterSpacing: -0.7,
-                      ),
+                ),
+                Positioned(
+                  right: 30,
+                  bottom: -28,
+                  child: Container(
+                    width: 76,
+                    height: 76,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white.withValues(alpha: 0.08),
                     ),
-                  if (words.trim().isNotEmpty) ...[
-                    const SizedBox(height: 4),
-                    Text(
-                      words,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTypography.body.copyWith(
-                        color: Colors.black.withValues(alpha: 0.72),
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        label,
+                        style: AppTypography.body.copyWith(
+                          color: Colors.white.withValues(alpha: 0.82),
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
-                    ),
-                  ],
-                ],
-              ),
+                      const SizedBox(height: 6),
+                      if (isLoading)
+                        const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2.4,
+                          ),
+                        )
+                      else
+                        Text(
+                          amountText,
+                          style: AppTypography.amountLarge.copyWith(
+                            color: Colors.white,
+                            fontSize: 30,
+                            letterSpacing: -0.7,
+                          ),
+                        ),
+                      if (words.trim().isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          words,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTypography.body.copyWith(
+                            color: Colors.white.withValues(alpha: 0.72),
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
         ),
@@ -502,7 +573,6 @@ class _DetailsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final hasNotes = notes.isNotEmpty;
     final rows =
         <
@@ -538,125 +608,20 @@ class _DetailsSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          sectionTitle,
-          style: AppTypography.label.copyWith(
-            color: AppColors.textPrimary,
-            fontSize: 14,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
+        MoiInfoSectionLabel(title: sectionTitle),
         const SizedBox(height: AppSpacing.sm),
-        Container(
-          width: double.infinity,
-          decoration: BoxDecoration(
-            color: isDark ? AppColors.darkSurface : Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: isDark ? Border.all(color: AppColors.darkBorder) : null,
-            boxShadow: isDark ? null : AppShadows.soft,
-          ),
-          child: Column(
-            children: [
-              for (var i = 0; i < rows.length; i++)
-                _DetailTile(
-                  primary: primary,
-                  hugeIcon: rows[i].icon,
-                  label: rows[i].label,
-                  value: rows[i].value,
-                  maxLines: rows[i].maxLines,
-                  showDivider: i < rows.length - 1,
-                  isDark: isDark,
-                ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _DetailTile extends StatelessWidget {
-  final Color primary;
-  final List<List<dynamic>> hugeIcon;
-  final String label;
-  final String value;
-  final int maxLines;
-  final bool showDivider;
-  final bool isDark;
-
-  const _DetailTile({
-    required this.primary,
-    required this.hugeIcon,
-    required this.label,
-    required this.value,
-    this.maxLines = 2,
-    required this.showDivider,
-    required this.isDark,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                alignment: Alignment.center,
-                child: HugeIcon(
-                  icon: hugeIcon,
-                  color: primary,
-                  size: 17,
-                  strokeWidth: 1.8,
-                ),
+        MoiInfoCard(
+          children: [
+            for (var i = 0; i < rows.length; i++)
+              MoiInfoTile(
+                icon: rows[i].icon,
+                title: rows[i].label,
+                subtitle: rows[i].value,
+                showChevron: false,
+                showDivider: i < rows.length - 1,
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      label,
-                      style: AppTypography.body.copyWith(
-                        color: AppColors.textSecondary,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      value,
-                      maxLines: maxLines,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTypography.label.copyWith(
-                        color: AppColors.textPrimary,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.1,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
+          ],
         ),
-        if (showDivider)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14),
-            child: Divider(
-              height: 1,
-              color: isDark ? AppColors.darkBorder : const Color(0xffF4F4F5),
-            ),
-          ),
       ],
     );
   }

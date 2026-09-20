@@ -3,7 +3,7 @@ import 'package:hugeicons/hugeicons.dart';
 import 'package:moi/app_configs/index.dart';
 import 'package:moi/app_themes/index.dart';
 import 'package:moi/app_utils/app_providers/language_provider.dart';
-import 'package:moi/app_utils/app_widgets/moi_network_image.dart';
+import 'package:moi/app_utils/index.dart';
 import 'package:provider/provider.dart';
 
 /// Function-wise totals using the invoice-style list card design.
@@ -92,9 +92,43 @@ class HomeFunctionTotalsSection extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.sm),
         if (isLoading && summaries.isEmpty)
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: AppSpacing.lg),
-            child: Center(child: CircularProgressIndicator(strokeWidth: 2.5)),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+            child: Column(
+              children: [
+                for (int i = 0; i < 3; i++) ...[
+                  if (i > 0) const SizedBox(height: AppSpacing.sm),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.md,
+                      vertical: 14,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.of(context).surface,
+                      borderRadius: AppRadius.xlAll,
+                      border: Border.all(color: AppColors.of(context).border),
+                    ),
+                    child: Row(
+                      children: [
+                        AppSkeleton(width: 52, height: 52, radius: 16),
+                        const SizedBox(width: AppSpacing.sm),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              AppSkeleton(width: 120, height: 12, radius: 8),
+                              const SizedBox(height: 8),
+                              AppSkeleton(width: 160, height: 11, radius: 8),
+                            ],
+                          ),
+                        ),
+                        AppSkeleton(width: 72, height: 24, radius: 8),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
+            ),
           )
         else if (preview.isEmpty)
           Padding(
@@ -181,9 +215,7 @@ class _FunctionTotalCard extends StatelessWidget {
     final amountText = isPositive
         ? '₹ ${formatAmount(amount)}'
         : '-₹ ${formatAmount(amount.abs())}';
-    final subtitleParts = <String>[
-      if (date.isNotEmpty && date != '-') date,
-    ];
+    final subtitleParts = <String>[if (date.isNotEmpty && date != '-') date];
     final subtitle = subtitleParts.join(' • ');
 
     return Material(
@@ -205,11 +237,7 @@ class _FunctionTotalCard extends StatelessWidget {
           ),
           child: Row(
             children: [
-              _FunctionLeading(
-                imageUrl: imageUrl,
-                accent: accent,
-                soft: soft,
-              ),
+              _FunctionLeading(imageUrl: imageUrl, accent: accent, soft: soft),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: Column(

@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:intl/intl.dart';
 import 'package:moi/app_configs/index.dart';
@@ -30,8 +29,9 @@ class _FunctionTransactionListState extends State<FunctionTransactionList> {
   final AlertServices alertServices = AlertServices();
   static final NumberFormat _formatter = NumberFormat('#,##,##,000.00');
 
-  final PaginatedListState<Map<String, dynamic>> _paging =
-      PaginatedListState(pageSize: _pageSize);
+  final PaginatedListState<Map<String, dynamic>> _paging = PaginatedListState(
+    pageSize: _pageSize,
+  );
   final TextEditingController searchController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   Timer? _debounce;
@@ -139,10 +139,10 @@ class _FunctionTransactionListState extends State<FunctionTransactionList> {
 
       final functionName =
           widget.functionData['functionName']?.toString().replaceAll(
-                RegExp(r'[^a-zA-Z0-9]'),
-                '_',
-              ) ??
-              'Transactions';
+            RegExp(r'[^a-zA-Z0-9]'),
+            '_',
+          ) ??
+          'Transactions';
       final fileName = "Moi_${functionName}_Transactions.pdf";
 
       await ExportService.exportTransactionsToPdf(
@@ -256,15 +256,48 @@ class _FunctionTransactionListState extends State<FunctionTransactionList> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: _FunctionListHeader(
-        title: _functionName.toUpperCase(),
+      appBar: MoiAppHeader(
+        title: _functionName.toTitleCase(),
         subtitle: _functionDateSubtitle,
-        exportTooltip: languageProvider.tr('transactionList.exportPdf'),
+        showBack: true,
         onBack: () => Navigator.pop(context),
-        onExport: _exportFunctionTransactionsPdf,
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 10),
+            child: MoiAppHeader.circleButton(
+              tooltip: languageProvider.tr('transactionList.exportPdf'),
+              onTap: _exportFunctionTransactionsPdf,
+              backgroundColor: Colors.white.withValues(alpha: 0.14),
+              child: const HugeIcon(
+                icon: HugeIcons.strokeRoundedPdf02,
+                color: Colors.white,
+                size: 20,
+                strokeWidth: 1.9,
+              ),
+            ),
+          ),
+        ],
       ),
       body: _paging.isLoading && _paging.items.isEmpty
-          ? const Center(child: CircularProgressIndicator(strokeWidth: 2.5))
+          ? Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.page,
+                AppSpacing.md,
+                AppSpacing.page,
+                AppSpacing.xxl,
+              ),
+              child: ListView(
+                physics: const AlwaysScrollableScrollPhysics(
+                  parent: ClampingScrollPhysics(),
+                ),
+                children: [
+                  for (int i = 0; i < 6; i++) ...[
+                    if (i > 0) const SizedBox(height: AppSpacing.sm),
+                    const AppSkeletonListTile(showTrailing: true),
+                  ],
+                ],
+              ),
+            )
           : Column(
               children: [
                 Padding(
@@ -317,7 +350,8 @@ class _FunctionTransactionListState extends State<FunctionTransactionList> {
                               AppSpacing.page,
                               24,
                             ),
-                            itemCount: _paging.items.length +
+                            itemCount:
+                                _paging.items.length +
                                 (_paging.isLoadingMore || _paging.hasMore
                                     ? 1
                                     : 0),
@@ -327,35 +361,37 @@ class _FunctionTransactionListState extends State<FunctionTransactionList> {
                               if (index >= _paging.items.length) {
                                 return Padding(
                                   padding: const EdgeInsets.symmetric(
-                                    vertical: 16,
+                                    vertical: 8,
                                   ),
-                                  child: Center(
-                                    child: _paging.isLoadingMore
-                                        ? SizedBox(
-                                            width: 24,
-                                            height: 24,
-                                            child: CircularProgressIndicator(
-                                              strokeWidth: 2.5,
-                                              color: primary,
-                                            ),
-                                          )
-                                        : const SizedBox.shrink(),
-                                  ),
+                                  child: _paging.isLoadingMore
+                                      ? const Padding(
+                                          padding: EdgeInsets.symmetric(
+                                            vertical: 4,
+                                          ),
+                                          child: AppSkeletonListTile(
+                                            showAvatar: true,
+                                            showTrailing: true,
+                                          ),
+                                        )
+                                      : const SizedBox.shrink(),
                                 );
                               }
                               final tx = _paging.items[index];
                               final type =
                                   tx['type']?.toString().toUpperCase() ?? '';
                               final isInvest = type == 'INVEST';
-                              final amount = double.tryParse(
+                              final amount =
+                                  double.tryParse(
                                     tx['amount']?.toString() ?? '0',
                                   ) ??
                                   0.0;
-                              final first = tx['person']?['firstName']
+                              final first =
+                                  tx['person']?['firstName']
                                       ?.toString()
                                       .trim() ??
                                   '';
-                              final last = tx['person']?['lastName']
+                              final last =
+                                  tx['person']?['lastName']
                                       ?.toString()
                                       .trim() ??
                                   tx['person']?['secondName']
@@ -365,8 +401,9 @@ class _FunctionTransactionListState extends State<FunctionTransactionList> {
                               final personName = '$first $last'.trim();
                               final city =
                                   tx['person']?['city']?.toString().trim() ??
-                                      '';
-                              final location = tx['person']?['location']
+                                  '';
+                              final location =
+                                  tx['person']?['location']
                                       ?.toString()
                                       .trim() ??
                                   '';
@@ -374,6 +411,7 @@ class _FunctionTransactionListState extends State<FunctionTransactionList> {
 
                               return MoiInvoiceListTile.moiFlow(
                                 isReceived: isInvest,
+                                accent: Theme.of(context).colorScheme.primary,
                                 title: personName.isEmpty
                                     ? languageProvider.tr(
                                         'transactionList.unknown',
@@ -382,7 +420,7 @@ class _FunctionTransactionListState extends State<FunctionTransactionList> {
                                 subtitle: place.toUpperCase(),
                                 amount: '₹${_formatAmount(amount)}',
                                 onTap: () {
-                                  Navigator.pushNamed(
+                                  AppRoute.open(
                                     context,
                                     'transaction-detail-view',
                                     arguments: tx,
@@ -395,171 +433,6 @@ class _FunctionTransactionListState extends State<FunctionTransactionList> {
                 ),
               ],
             ),
-    );
-  }
-}
-
-class _FunctionListHeader extends StatelessWidget
-    implements PreferredSizeWidget {
-  final String title;
-  final String subtitle;
-  final String exportTooltip;
-  final VoidCallback onBack;
-  final VoidCallback onExport;
-
-  const _FunctionListHeader({
-    required this.title,
-    required this.subtitle,
-    required this.exportTooltip,
-    required this.onBack,
-    required this.onExport,
-  });
-
-  @override
-  Size get preferredSize => const Size.fromHeight(72);
-
-  @override
-  Widget build(BuildContext context) {
-    final primary = Theme.of(context).colorScheme.primary;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return AppBar(
-      toolbarHeight: preferredSize.height,
-      elevation: 0,
-      scrolledUnderElevation: 0,
-      surfaceTintColor: Colors.transparent,
-      backgroundColor: Colors.transparent,
-      centerTitle: true,
-      automaticallyImplyLeading: false,
-      titleSpacing: 0,
-      systemOverlayStyle: SystemUiOverlayStyle.light.copyWith(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
-        statusBarBrightness: Brightness.dark,
-        systemNavigationBarColor: isDark ? Colors.black : Colors.white,
-        systemNavigationBarIconBrightness:
-            isDark ? Brightness.light : Brightness.dark,
-      ),
-      flexibleSpace: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              primary,
-              AppColors.deepenAccent(primary, amount: 0.35),
-            ],
-          ),
-          borderRadius: const BorderRadius.only(
-            bottomLeft: Radius.circular(22),
-            bottomRight: Radius.circular(22),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: primary.withValues(alpha: 0.28),
-              blurRadius: 16,
-              offset: const Offset(0, 6),
-            ),
-          ],
-        ),
-      ),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(22),
-          bottomRight: Radius.circular(22),
-        ),
-      ),
-      leadingWidth: 54,
-      leading: Padding(
-        padding: const EdgeInsets.only(left: 10),
-        child: Center(
-          child: Material(
-            color: Colors.transparent,
-            shape: const CircleBorder(),
-            clipBehavior: Clip.antiAlias,
-            child: InkWell(
-              onTap: onBack,
-              customBorder: const CircleBorder(),
-              child: SizedBox(
-                width: 42,
-                height: 42,
-                child: Center(
-                  child: HugeIcon(
-                    icon: HugeIcons.strokeRoundedArrowLeft01,
-                    color: Theme.of(context).colorScheme.primary,
-                    size: 22,
-                    strokeWidth: 1.9,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-      title: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            title,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            textAlign: TextAlign.center,
-            style: AppTypography.sectionTitle.copyWith(
-              color: Colors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              letterSpacing: -0.2,
-              height: 1.15,
-            ),
-          ),
-          if (subtitle.isNotEmpty) ...[
-            const SizedBox(height: 2),
-            Text(
-              subtitle,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
-              style: AppTypography.body.copyWith(
-                color: Colors.white.withValues(alpha: 0.82),
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                height: 1.1,
-              ),
-            ),
-          ],
-        ],
-      ),
-      actions: [
-        Padding(
-          padding: const EdgeInsets.only(right: 10),
-          child: Center(
-            child: Tooltip(
-              message: exportTooltip,
-              child: Material(
-                color: Colors.white.withValues(alpha: 0.14),
-                shape: const CircleBorder(),
-                clipBehavior: Clip.antiAlias,
-                child: InkWell(
-                  onTap: onExport,
-                  customBorder: const CircleBorder(),
-                  child: const SizedBox(
-                    width: 42,
-                    height: 42,
-                    child: Center(
-                      child: HugeIcon(
-                        icon: HugeIcons.strokeRoundedPdf02,
-                        color: Colors.white,
-                        size: 20,
-                        strokeWidth: 1.9,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ],
     );
   }
 }

@@ -24,7 +24,13 @@ class MorePage extends StatelessWidget {
       builder: (context, languageProvider, _) {
         return Scaffold(
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-          appBar: MoiAppHeader(title: languageProvider.tr('nav.more')),
+          appBar: MoiAppHeader(
+            title: languageProvider.tr('nav.more'),
+            titleFontSize: 12,
+            height: 56,
+            accent: AppColors.primary,
+            showBack: false,
+          ),
           body: SingleChildScrollView(
             physics: const ClampingScrollPhysics(),
             padding: EdgeInsets.fromLTRB(
@@ -36,13 +42,13 @@ class MorePage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _MoreSectionLabel(
+                MoiInfoSectionLabel(
                   title: languageProvider.tr('more.sectionGeneral'),
                 ),
                 const SizedBox(height: AppSpacing.sm),
-                _MoreCard(
+                MoiInfoCard(
                   children: [
-                    _MoreRow(
+                    MoiInfoTile(
                       icon: HugeIcons.strokeRoundedCalendar01,
                       title: languageProvider.tr('menu.upcomingFunctions'),
                       subtitle: languageProvider.tr('more.upcomingHint'),
@@ -51,19 +57,19 @@ class MorePage extends StatelessWidget {
                         'upcoming-function-list',
                       ),
                     ),
-                    _MoreRow(
+                    MoiInfoTile(
                       icon: HugeIcons.strokeRoundedComment01,
                       title: languageProvider.tr('nav.feedbacks'),
                       subtitle: languageProvider.tr('more.feedbacksHint'),
                       onTap: () => Navigator.pushNamed(context, 'feedbacks'),
                     ),
-                    _MoreRow(
+                    MoiInfoTile(
                       icon: HugeIcons.strokeRoundedUserCircle02,
                       title: languageProvider.tr('menu.profile'),
                       subtitle: languageProvider.tr('more.profileHint'),
                       onTap: () => Navigator.pushNamed(context, 'profile'),
                     ),
-                    _MoreRow(
+                    MoiInfoTile(
                       icon: HugeIcons.strokeRoundedPdf02,
                       title: languageProvider.tr('more.export'),
                       subtitle: languageProvider.tr('more.exportHint'),
@@ -244,151 +250,5 @@ class MorePage extends StatelessWidget {
 
     if (!context.mounted) return;
     Navigator.pushNamedAndRemoveUntil(context, 'login', (route) => false);
-  }
-}
-
-class _MoreSectionLabel extends StatelessWidget {
-  final String title;
-
-  const _MoreSectionLabel({required this.title});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 4, bottom: 2),
-      child: Text(
-        title.toUpperCase(),
-        style: AppTypography.label.copyWith(
-          color: AppColors.textPrimary,
-          fontSize: 13,
-          fontWeight: FontWeight.w800,
-          letterSpacing: 0.5,
-        ),
-      ),
-    );
-  }
-}
-
-class _MoreCard extends StatelessWidget {
-  final List<Widget> children;
-
-  const _MoreCard({required this.children});
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = AppColors.of(context);
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: colors.border.withValues(alpha: 0.7)),
-        boxShadow: AppShadows.soft,
-      ),
-      child: Column(children: children),
-    );
-  }
-}
-
-class _MoreRow extends StatelessWidget {
-  final List<List<dynamic>> icon;
-  final String title;
-  final String subtitle;
-  final VoidCallback? onTap;
-  final bool showDivider;
-
-  const _MoreRow({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    this.onTap,
-    this.showDivider = true,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final colorScheme = Theme.of(context).colorScheme;
-    final colors = AppColors.of(context);
-
-    final iconColor = isDark ? colorScheme.primary : const Color(0xFF059669);
-    final iconBg = isDark
-        ? colorScheme.primary.withValues(alpha: 0.1)
-        : const Color(0xFFE8F6EB);
-
-    return Column(
-      children: [
-        Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: onTap,
-            borderRadius: BorderRadius.circular(18),
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(14, 13, 12, 13),
-              child: Row(
-                children: [
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: iconBg,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    alignment: Alignment.center,
-                    child: HugeIcon(
-                      icon: icon,
-                      color: iconColor,
-                      size: 18,
-                      strokeWidth: 1.8,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          title,
-                          style: AppTypography.label.copyWith(
-                            color: colors.textPrimary,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          subtitle,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppTypography.body.copyWith(
-                            color: colors.textSecondary,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  HugeIcon(
-                    icon: HugeIcons.strokeRoundedArrowRight01,
-                    strokeWidth: 1.9,
-                    size: 16,
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-        if (showDivider)
-          Divider(
-            height: 1,
-            thickness: 1,
-            indent: 66,
-            endIndent: 14,
-            color: colorScheme.outlineVariant.withValues(alpha: 0.5),
-          ),
-      ],
-    );
   }
 }

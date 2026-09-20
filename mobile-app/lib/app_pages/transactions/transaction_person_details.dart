@@ -177,14 +177,9 @@ class _TransactionPersonDetailsState extends State<TransactionPersonDetails> {
                   children: [
                     _buildActionButtons(languageProvider),
                     const SizedBox(height: AppSpacing.sm),
-                    Text(
-                      languageProvider
-                          .tr('transactions.transactionsSection')
-                          .toUpperCase(),
-                      style: AppTypography.label.copyWith(
-                        color: AppColors.textPrimary,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
+                    MoiInfoSectionLabel(
+                      title: languageProvider.tr(
+                        'transactions.transactionsSection',
                       ),
                     ),
                     const SizedBox(height: AppSpacing.sm),
@@ -202,12 +197,17 @@ class _TransactionPersonDetailsState extends State<TransactionPersonDetails> {
   }
 
   Widget _buildActionButtons(LanguageProvider languageProvider) {
+    final primary = Theme.of(context).colorScheme.primary;
+
     return Row(
       children: [
         Expanded(
           child: _QuickActionButton(
             label: languageProvider.tr('moi.moiIn'),
-            color: AppColors.moiReceived,
+            color: primary,
+            textColor: Theme.of(context).brightness == Brightness.dark
+                ? Colors.black
+                : Colors.white,
             onTap: () async {
               final result = await Navigator.pushNamed(
                 context,
@@ -225,6 +225,7 @@ class _TransactionPersonDetailsState extends State<TransactionPersonDetails> {
           child: _QuickActionButton(
             label: languageProvider.tr('moi.moiOut'),
             color: AppColors.moiGiven,
+            textColor: Colors.black,
             onTap: () async {
               final result = await Navigator.pushNamed(
                 context,
@@ -319,6 +320,7 @@ class _TransactionPersonDetailsState extends State<TransactionPersonDetails> {
 
           return MoiInvoiceListTile.moiFlow(
             isReceived: isInvest,
+            accent: Theme.of(context).colorScheme.primary,
             title: functionName.toString().toUpperCase(),
             subtitle: subtitleParts.join(' • '),
             amount: amount != null && amount.toString().isNotEmpty
@@ -470,11 +472,13 @@ class _TransactionPersonDetailsState extends State<TransactionPersonDetails> {
 class _QuickActionButton extends StatelessWidget {
   final String label;
   final Color color;
+  final Color textColor;
   final VoidCallback onTap;
 
   const _QuickActionButton({
     required this.label,
     required this.color,
+    required this.textColor,
     required this.onTap,
   });
 
@@ -509,7 +513,7 @@ class _QuickActionButton extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: AppTypography.label.copyWith(
-                    color: Colors.black,
+                    color: textColor,
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
                   ),

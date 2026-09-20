@@ -221,8 +221,32 @@ class _FeedbacksState extends State<Feedbacks> {
   Widget _buildPreviousList(LanguageProvider languageProvider, Color primary) {
     if (_isLoading) {
       return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 48),
-        child: Center(child: CircularProgressIndicator(color: primary)),
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: Column(
+          children: [
+            for (int i = 0; i < 3; i++) ...[
+              if (i > 0) const SizedBox(height: AppSpacing.sm),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppColors.of(context).surface,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppColors.of(context).border),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    AppSkeleton(width: 160, height: 12, radius: 8),
+                    const SizedBox(height: 12),
+                    AppSkeleton(width: double.infinity, height: 62, radius: 12),
+                    const SizedBox(height: 12),
+                    AppSkeleton(width: 110, height: 11, radius: 8),
+                  ],
+                ),
+              ),
+            ],
+          ],
+        ),
       );
     }
 
@@ -713,4 +737,3 @@ class _FeedbackCard extends StatelessWidget {
     );
   }
 }
-

@@ -23,7 +23,7 @@ class _ContactUsState extends State<ContactUs> {
         return Scaffold(
           backgroundColor: AppColors.background,
           appBar: MoiAppHeader(
-            title: languageProvider.tr('menu.contactUs').toUpperCase(),
+            title: languageProvider.tr('menu.contactUs').toTitleCase(),
             showBack: true,
             onBack: () => Navigator.pop(context),
           ),
@@ -38,16 +38,16 @@ class _ContactUsState extends State<ContactUs> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  languageProvider.tr('contacts.title'),
-                  style: AppTypography.label.copyWith(
-                    color: Theme.of(context).brightness == Brightness.dark
-                        ? AppColors.darkTextPrimary
-                        : AppColors.textPrimary,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
+                // Text(
+                //   languageProvider.tr('contacts.title'),
+                //   style: AppTypography.label.copyWith(
+                //     color: Theme.of(context).brightness == Brightness.dark
+                //         ? AppColors.darkTextPrimary
+                //         : AppColors.textPrimary,
+                //     fontSize: 14,
+                //     fontWeight: FontWeight.w700,
+                //   ),
+                // ),
                 const SizedBox(height: AppSpacing.sm),
                 _ContactTile(
                   primary: primary,
@@ -250,9 +250,13 @@ class _WorkingHoursCard extends StatelessWidget {
     final cardBg = isDark ? AppColors.darkSurface : Colors.white;
     final pillBg = isDark ? const Color(0xFF162E21) : const Color(0xFFE8F7EC);
     final primaryGreen = const Color(0xFF16A34A);
-    final darkGreen = isDark ? const Color(0xFF4ADE80) : const Color(0xFF087443);
+    final darkGreen = isDark
+        ? const Color(0xFF4ADE80)
+        : const Color(0xFF087443);
     final titleColor = isDark ? Colors.white : const Color(0xFF102A2A);
-    final hoursColor = isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569);
+    final hoursColor = isDark
+        ? const Color(0xFF94A3B8)
+        : const Color(0xFF475569);
 
     return Container(
       width: double.infinity,
@@ -319,7 +323,7 @@ class _WorkingHoursCard extends StatelessWidget {
                   days,
                   textAlign: TextAlign.center,
                   style: AppTypography.body.copyWith(
-                    color: primaryGreen,
+                    color: primary,
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
                   ),

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:hugeicons/hugeicons.dart';
 import 'package:moi/app_themes/index.dart';
 import 'package:moi/app_utils/app_providers/language_provider.dart';
 import 'package:provider/provider.dart';
@@ -30,9 +29,15 @@ class HomeMoiOverviewCard extends StatelessWidget {
     final languageProvider = context.watch<LanguageProvider>();
     final colors = AppColors.of(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final heroBg = isDark ? colors.surfaceElevated : AppColors.charcoal;
-    final heroFg = isDark ? colors.textPrimary : AppColors.white;
-    final heroMuted = heroFg.withValues(alpha: 0.78);
+    final heroBg = isDark ? const Color(0xFF071B18) : const Color(0xFF0E6A5E);
+    final heroFg = isDark ? const Color(0xFFB8FFE8) : AppColors.white;
+    final heroMuted = isDark
+        ? const Color(0xFF7EE8C7)
+        : heroFg.withValues(alpha: 0.78);
+    const receivedAccent = Color(0xFF0E8A63);
+    const receivedSoft = Color(0xFFEAF7F0);
+    const givenAccent = Color(0xFFE38B3D);
+    const givenSoft = Color(0xFFF8E6D6);
 
     return Semantics(
       label:
@@ -51,18 +56,9 @@ class HomeMoiOverviewCard extends StatelessWidget {
                 decoration: BoxDecoration(
                   borderRadius: AppRadius.xlAll,
                   color: heroBg,
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.charcoal.withValues(alpha: 0.18),
-                      blurRadius: 20,
-                      offset: const Offset(0, 10),
-                    ),
-                    BoxShadow(
-                      color: AppColors.charcoal.withValues(alpha: 0.08),
-                      blurRadius: 6,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
+                  border: isDark
+                      ? Border.all(color: const Color(0xFF4AF2B6), width: 1.4)
+                      : null,
                 ),
                 child: Stack(
                   children: [
@@ -79,15 +75,13 @@ class HomeMoiOverviewCard extends StatelessWidget {
                       ),
                     ),
                     Positioned(
-                      right: 40,
-                      bottom: -36,
-                      child: Container(
-                        width: 90,
-                        height: 90,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: colors.primaryLight.withValues(alpha: 0.12),
-                        ),
+                      right: 8,
+                      bottom: -4,
+                      child: Image.asset(
+                        'assets/images/home_page/purse.png',
+                        width: 150,
+                        height: 140,
+                        fit: BoxFit.contain,
                       ),
                     ),
                     Padding(
@@ -103,15 +97,18 @@ class HomeMoiOverviewCard extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(height: 4),
-                          Text(
-                            '₹ ${formatAmount(netBalance.abs())}',
-                            style: AppTypography.amountLarge.copyWith(
-                              color: heroFg,
-                              fontSize: 34,
-                              letterSpacing: -0.8,
+                          ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 260),
+                            child: Text(
+                              '₹ ${formatAmount(netBalance.abs())}',
+                              style: AppTypography.amountLarge.copyWith(
+                                color: heroFg,
+                                fontSize: 34,
+                                letterSpacing: -0.8,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
                           ),
                           const SizedBox(height: AppSpacing.md),
                           Container(
@@ -131,21 +128,6 @@ class HomeMoiOverviewCard extends StatelessWidget {
                                   ),
                                 ),
                               ),
-                              Container(
-                                width: 32,
-                                height: 32,
-                                decoration: BoxDecoration(
-                                  color: colors.primaryLight,
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                alignment: Alignment.center,
-                                child: HugeIcon(
-                                  icon: HugeIcons.strokeRoundedArrowRight01,
-                                  color: colors.onPrimary,
-                                  size: 16,
-                                  strokeWidth: 1.8,
-                                ),
-                              ),
                             ],
                           ),
                         ],
@@ -163,9 +145,9 @@ class HomeMoiOverviewCard extends StatelessWidget {
                 child: _FlowMetricTile(
                   title: languageProvider.tr('moi.moiIn'),
                   amount: '₹ ${formatAmount(receivedAmount)}',
-                  accent: colors.moiReceived,
-                  softTop: colors.moiReceivedSoft,
-                  softBottom: colors.surface,
+                  accent: receivedAccent,
+                  softTop: receivedSoft,
+                  softBottom: receivedSoft,
                   onTap: onReceivedTap,
                 ),
               ),
@@ -174,9 +156,9 @@ class HomeMoiOverviewCard extends StatelessWidget {
                 child: _FlowMetricTile(
                   title: languageProvider.tr('moi.moiOut'),
                   amount: '₹ ${formatAmount(givenAmount)}',
-                  accent: colors.moiGiven,
-                  softTop: colors.moiGivenSoft,
-                  softBottom: colors.surface,
+                  accent: givenAccent,
+                  softTop: givenSoft,
+                  softBottom: givenSoft,
                   onTap: onGivenTap,
                 ),
               ),
@@ -207,6 +189,8 @@ class _FlowMetricTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Material(
       color: Colors.transparent,
       borderRadius: AppRadius.lgAll,
@@ -219,16 +203,36 @@ class _FlowMetricTile extends StatelessWidget {
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [softTop, softBottom],
+              colors: isDark
+                  ? [const Color(0xFF0A1215), const Color(0xFF0A1215)]
+                  : [softTop, softBottom],
             ),
-            border: Border.all(color: accent.withValues(alpha: 0.2)),
-            boxShadow: [
-              BoxShadow(
-                color: accent.withValues(alpha: 0.12),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
+            border: Border.all(
+              color: isDark
+                  ? accent.withValues(alpha: 0.8)
+                  : accent.withValues(alpha: 0.2),
+              width: isDark ? 1.5 : 1.0,
+            ),
+            boxShadow: isDark
+                ? [
+                    BoxShadow(
+                      color: accent.withValues(alpha: 0.22),
+                      blurRadius: 12,
+                      offset: const Offset(0, 0),
+                    ),
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.26),
+                      blurRadius: 10,
+                      offset: const Offset(0, 5),
+                    ),
+                  ]
+                : [
+                    BoxShadow(
+                      color: accent.withValues(alpha: 0.12),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
           ),
           child: Container(
             constraints: const BoxConstraints(minHeight: 88),

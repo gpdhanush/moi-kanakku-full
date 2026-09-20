@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:intl/intl.dart';
 import 'package:moi/app_configs/app_logs.dart';
@@ -75,9 +76,6 @@ class _TransactionDetailViewPageState extends State<TransactionDetailViewPage> {
     final isCustom = _isCustom(widget.transaction['isCustom']);
     final customFunction = _clean(widget.transaction['customFunction']);
     final accent = isInvest ? AppColors.moiReceived : AppColors.moiGiven;
-    final typeLabel = languageProvider.tr(
-      isInvest ? 'moi.moiIn' : 'moi.moiOut',
-    );
 
     final person = widget.transaction['person'] is Map
         ? Map<String, dynamic>.from(widget.transaction['person'] as Map)
@@ -96,9 +94,10 @@ class _TransactionDetailViewPageState extends State<TransactionDetailViewPage> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: _DetailsAppHeader(
+      appBar: MoiAppHeader(
         title: headerTitle,
-        onBack: () => Navigator.pop(context),
+        showBack: true,
+        onBack: () => Navigator.maybePop(context),
       ),
       body: Column(
         children: [
@@ -117,10 +116,15 @@ class _TransactionDetailViewPageState extends State<TransactionDetailViewPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _AmountHeaderCard(
-                      accent: accent,
-                      amountText: '₹ $amount',
-                      functionLabel: isCustom ? customFunction : functionName,
-                    ),
+                          accent: accent,
+                          amountText: '₹ $amount',
+                          functionLabel: isCustom
+                              ? customFunction
+                              : functionName,
+                        )
+                        .animate()
+                        .fadeIn(duration: 460.ms)
+                        .slideY(begin: 0.08, end: 0, duration: 460.ms),
                     const SizedBox(height: AppSpacing.md),
                     _DetailsSection(
                       primary: primary,
@@ -129,24 +133,6 @@ class _TransactionDetailViewPageState extends State<TransactionDetailViewPage> {
                       ),
                       rows: [
                         (
-                          icon: isInvest
-                              ? HugeIcons.strokeRoundedMoneyReceive01
-                              : HugeIcons.strokeRoundedMoneySend01,
-                          label: languageProvider.tr('moi.moiType'),
-                          value: typeLabel.toUpperCase(),
-                          maxLines: 1,
-                          valueColor: accent,
-                        ),
-                        (
-                          icon: HugeIcons.strokeRoundedCalendar01,
-                          label: languageProvider.tr('transactions.date'),
-                          value: transactionDate.isEmpty
-                              ? '—'
-                              : transactionDate.toUpperCase(),
-                          maxLines: 2,
-                          valueColor: null,
-                        ),
-                        (
                           icon: HugeIcons.strokeRoundedWedding,
                           label: languageProvider.tr(
                             'transactions.functionName',
@@ -154,6 +140,15 @@ class _TransactionDetailViewPageState extends State<TransactionDetailViewPage> {
                           value: functionName.isEmpty
                               ? '—'
                               : functionName.toUpperCase(),
+                          maxLines: 2,
+                          valueColor: null,
+                        ),
+                        (
+                          icon: HugeIcons.strokeRoundedCalendar01,
+                          label: languageProvider.tr('transactions.date'),
+                          value: transactionDate.isEmpty
+                              ? '—'
+                              : transactionDate.toUpperCase(),
                           maxLines: 2,
                           valueColor: null,
                         ),
@@ -336,145 +331,6 @@ class _TransactionDetailViewPageState extends State<TransactionDetailViewPage> {
   }
 }
 
-class _DetailsAppHeader extends StatelessWidget implements PreferredSizeWidget {
-  final String title;
-  final VoidCallback onBack;
-
-  const _DetailsAppHeader({required this.title, required this.onBack});
-
-  @override
-  Size get preferredSize => const Size.fromHeight(72);
-
-  @override
-  Widget build(BuildContext context) {
-    final primary = Theme.of(context).colorScheme.primary;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final headerTextColor = isDark ? AppColors.charcoal : Colors.white;
-    final headerIconColor = isDark ? AppColors.charcoal : Colors.white;
-
-    return AppBar(
-      toolbarHeight: preferredSize.height,
-      elevation: 0,
-      scrolledUnderElevation: 0,
-      surfaceTintColor: Colors.transparent,
-      backgroundColor: Colors.transparent,
-      centerTitle: true,
-      automaticallyImplyLeading: false,
-      titleSpacing: 0,
-      systemOverlayStyle:
-          (isDark ? SystemUiOverlayStyle.dark : SystemUiOverlayStyle.light)
-              .copyWith(
-                statusBarColor: Colors.transparent,
-                statusBarIconBrightness: isDark
-                    ? Brightness.dark
-                    : Brightness.light,
-                statusBarBrightness: isDark
-                    ? Brightness.light
-                    : Brightness.dark,
-                systemNavigationBarColor: isDark ? Colors.black : Colors.white,
-                systemNavigationBarIconBrightness: isDark
-                    ? Brightness.dark
-                    : Brightness.light,
-              ),
-      flexibleSpace: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [primary, AppColors.deepenAccent(primary, amount: 0.35)],
-          ),
-          borderRadius: const BorderRadius.only(
-            bottomLeft: Radius.circular(22),
-            bottomRight: Radius.circular(22),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: primary.withValues(alpha: 0.28),
-              blurRadius: 16,
-              offset: const Offset(0, 6),
-            ),
-          ],
-        ),
-        child: Stack(
-          children: [
-            Positioned(
-              top: -28,
-              right: -18,
-              child: Container(
-                width: 100,
-                height: 100,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withValues(alpha: 0.08),
-                ),
-              ),
-            ),
-            Positioned(
-              bottom: -36,
-              left: 48,
-              child: Container(
-                width: 90,
-                height: 90,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withValues(alpha: 0.06),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(22),
-          bottomRight: Radius.circular(22),
-        ),
-      ),
-      leadingWidth: 54,
-      leading: Padding(
-        padding: const EdgeInsets.only(left: 10),
-        child: Center(
-          child: Material(
-            color: Colors.transparent,
-            shape: const CircleBorder(),
-            clipBehavior: Clip.antiAlias,
-            child: InkWell(
-              onTap: onBack,
-              customBorder: const CircleBorder(),
-              child: SizedBox(
-                width: 42,
-                height: 42,
-                child: Center(
-                  child: HugeIcon(
-                    icon: HugeIcons.strokeRoundedArrowLeft01,
-                    color: Theme.of(context).colorScheme.primary,
-                    size: 22,
-                    strokeWidth: 1.9,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-      title: Text(
-        title,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        textAlign: TextAlign.center,
-        style: AppTypography.sectionTitle.copyWith(
-          color: headerTextColor,
-          fontSize: 16,
-          fontWeight: FontWeight.w700,
-          letterSpacing: -0.2,
-          height: 1.15,
-        ),
-      ),
-      actions: const [SizedBox(width: 54)],
-    );
-  }
-}
-
 class _AmountHeaderCard extends StatelessWidget {
   final Color accent;
   final String amountText;
@@ -488,8 +344,9 @@ class _AmountHeaderCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final deep = AppColors.deepenAccent(accent, amount: 0.18);
-    final soft = Color.lerp(accent, Colors.white, 0.22)!;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final heroBg = isDark ? const Color(0xFF071B18) : const Color(0xFF0E6A5E);
+    final heroSoft = isDark ? const Color(0xFF0D312A) : const Color(0xFF145C4C);
 
     return Container(
       width: double.infinity,
@@ -498,16 +355,16 @@ class _AmountHeaderCard extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [accent, soft, deep],
+          colors: [heroBg, heroSoft, const Color(0xFF0A4F45)],
         ),
         boxShadow: [
           BoxShadow(
-            color: accent.withValues(alpha: 0.32),
+            color: heroBg.withValues(alpha: 0.32),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
           BoxShadow(
-            color: accent.withValues(alpha: 0.12),
+            color: heroBg.withValues(alpha: 0.12),
             blurRadius: 6,
             offset: const Offset(0, 2),
           ),

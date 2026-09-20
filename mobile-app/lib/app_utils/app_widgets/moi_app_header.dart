@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:moi/app_themes/index.dart';
+import 'package:moi/app_utils/index.dart';
 
 /// Reusable app header for Home, Function, Overview, Feedbacks, More
 /// and other flow screens. Pass different params for each page variation.
@@ -27,7 +28,7 @@ class MoiAppHeader extends StatelessWidget implements PreferredSizeWidget {
     this.onBack,
     this.actions,
     this.height = 72,
-    this.titleFontSize = 16,
+    this.titleFontSize = 18,
     this.accent,
   });
 
@@ -132,9 +133,13 @@ class MoiAppHeader extends StatelessWidget implements PreferredSizeWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final hasSubtitle = subtitle != null && subtitle!.trim().isNotEmpty;
     final titleColor = isDark ? colors.textPrimary : const Color(0xFF102A2A);
-    final subtitleColor = isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+    final subtitleColor = isDark
+        ? const Color(0xFF94A3B8)
+        : const Color(0xFF64748B);
     final bgColor = isDark ? const Color(0xFF0F1A1A) : const Color(0xFFF8FAF5);
-    final borderColor = isDark ? const Color(0xFF1E2D2D) : const Color(0xFFE2E8E5);
+    final borderColor = isDark
+        ? const Color(0xFF1E2D2D)
+        : const Color(0xFFE2E8E5);
 
     return AppBar(
       toolbarHeight: preferredSize.height,
@@ -161,9 +166,7 @@ class MoiAppHeader extends StatelessWidget implements PreferredSizeWidget {
             bottomLeft: Radius.circular(20),
             bottomRight: Radius.circular(20),
           ),
-          border: Border(
-            bottom: BorderSide(color: borderColor),
-          ),
+          border: Border(bottom: BorderSide(color: borderColor)),
         ),
         child: Stack(
           children: [
@@ -176,7 +179,9 @@ class MoiAppHeader extends StatelessWidget implements PreferredSizeWidget {
                 height: 120,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: const Color(0xFF16A34A).withValues(alpha: isDark ? 0.08 : 0.05),
+                  color: const Color(
+                    0xFF16A34A,
+                  ).withValues(alpha: isDark ? 0.08 : 0.05),
                 ),
               ),
             ),
@@ -236,13 +241,14 @@ class MoiAppHeader extends StatelessWidget implements PreferredSizeWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      title,
+                      title.toTitleCase(),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       textAlign: TextAlign.center,
-                      style: AppTypography.sectionTitle.copyWith(
+                      style: TextStyle(
+                        fontFamily: 'Fredoka',
                         color: titleColor,
-                        fontSize: 22,
+                        fontSize: 20,
                         fontWeight: FontWeight.w600,
                         letterSpacing: -0.3,
                         height: 1.15,
@@ -263,13 +269,14 @@ class MoiAppHeader extends StatelessWidget implements PreferredSizeWidget {
                   ],
                 )
               : Text(
-                  title,
+                  title.toTitleCase(),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   textAlign: TextAlign.center,
-                  style: AppTypography.sectionTitle.copyWith(
+                  style: TextStyle(
+                    fontFamily: 'Fredoka',
                     color: titleColor,
-                    fontSize: titleFontSize >= 20 ? titleFontSize : 22,
+                    fontSize: titleFontSize >= 18 ? titleFontSize : 18,
                     fontWeight: FontWeight.w600,
                     letterSpacing: -0.3,
                     height: 1.1,
@@ -319,7 +326,9 @@ class MoiBannerHeader extends StatelessWidget implements PreferredSizeWidget {
     final subtitleColor = isDark
         ? const Color(0xFF94A3B8)
         : const Color(0xFF64748B);
-    final borderColor = isDark ? const Color(0xFF1E2D2D) : const Color(0xFFE2E8E5);
+    final borderColor = isDark
+        ? const Color(0xFF1E2D2D)
+        : const Color(0xFFE2E8E5);
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle(
@@ -331,9 +340,7 @@ class MoiBannerHeader extends StatelessWidget implements PreferredSizeWidget {
         height: totalHeight,
         decoration: BoxDecoration(
           color: bgColor,
-          border: Border(
-            bottom: BorderSide(color: borderColor),
-          ),
+          border: Border(bottom: BorderSide(color: borderColor)),
         ),
         child: Stack(
           children: [
@@ -346,7 +353,9 @@ class MoiBannerHeader extends StatelessWidget implements PreferredSizeWidget {
                 height: 130,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: const Color(0xFF16A34A).withValues(alpha: isDark ? 0.08 : 0.05),
+                  color: const Color(
+                    0xFF16A34A,
+                  ).withValues(alpha: isDark ? 0.08 : 0.05),
                 ),
               ),
             ),
@@ -405,7 +414,9 @@ class MoiBannerHeader extends StatelessWidget implements PreferredSizeWidget {
                             title,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            textAlign: showBack ? TextAlign.left : TextAlign.center,
+                            textAlign: showBack
+                                ? TextAlign.left
+                                : TextAlign.center,
                             style: AppTypography.sectionTitle.copyWith(
                               color: titleColor,
                               fontSize: 22,
@@ -413,13 +424,16 @@ class MoiBannerHeader extends StatelessWidget implements PreferredSizeWidget {
                               letterSpacing: -0.3,
                             ),
                           ),
-                          if (subtitle != null && subtitle!.trim().isNotEmpty) ...[
+                          if (subtitle != null &&
+                              subtitle!.trim().isNotEmpty) ...[
                             const SizedBox(height: 3),
                             Text(
                               subtitle!,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              textAlign: showBack ? TextAlign.left : TextAlign.center,
+                              textAlign: showBack
+                                  ? TextAlign.left
+                                  : TextAlign.center,
                               style: AppTypography.body.copyWith(
                                 color: subtitleColor,
                                 fontSize: 12.5,
@@ -458,7 +472,9 @@ class MoiBannerHeader extends StatelessWidget implements PreferredSizeWidget {
             height: 54,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: const Color(0xFF16A34A).withValues(alpha: isDark ? 0.15 : 0.08),
+              color: const Color(
+                0xFF16A34A,
+              ).withValues(alpha: isDark ? 0.15 : 0.08),
             ),
           ),
           // Top right foliage leaf 1
@@ -470,7 +486,9 @@ class MoiBannerHeader extends StatelessWidget implements PreferredSizeWidget {
               child: Icon(
                 Icons.eco_rounded,
                 size: 26,
-                color: isDark ? const Color(0xFF4ADE80) : const Color(0xFF16A34A),
+                color: isDark
+                    ? const Color(0xFF4ADE80)
+                    : const Color(0xFF16A34A),
               ),
             ),
           ),
@@ -483,7 +501,9 @@ class MoiBannerHeader extends StatelessWidget implements PreferredSizeWidget {
               child: Icon(
                 Icons.eco_rounded,
                 size: 20,
-                color: isDark ? const Color(0xFF22C55E) : const Color(0xFF087443),
+                color: isDark
+                    ? const Color(0xFF22C55E)
+                    : const Color(0xFF087443),
               ),
             ),
           ),
@@ -497,7 +517,9 @@ class MoiBannerHeader extends StatelessWidget implements PreferredSizeWidget {
                 color: isDark ? const Color(0xFF1E293B) : Colors.white,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8E5),
+                  color: isDark
+                      ? const Color(0xFF334155)
+                      : const Color(0xFFE2E8E5),
                   width: 1.2,
                 ),
                 boxShadow: [
@@ -553,4 +575,3 @@ class MoiBannerHeader extends StatelessWidget implements PreferredSizeWidget {
     );
   }
 }
-

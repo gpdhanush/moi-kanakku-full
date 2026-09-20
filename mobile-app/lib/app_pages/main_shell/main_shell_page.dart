@@ -77,13 +77,13 @@ class _MainShellPageState extends State<MainShellPage> {
 
     await showMoiActionSheet(
       context: context,
-      title: languageProvider.tr('moi.addMoi'),
+      title: '',
       titleColor: primary,
       actions: [
         ActionSheetItem(
           hugeIcon: HugeIcons.strokeRoundedArrowDownLeft01,
           title: languageProvider.tr('transactions.newInvest'),
-          color: AppColors.moiReceived,
+          color: primary,
           onPressed: (sheetContext) async {
             Navigator.pop(sheetContext);
             await _openAddMoiForm('INVEST');
@@ -92,7 +92,7 @@ class _MainShellPageState extends State<MainShellPage> {
         ActionSheetItem(
           hugeIcon: HugeIcons.strokeRoundedArrowUpRight01,
           title: languageProvider.tr('transactions.newReturn'),
-          color: AppColors.moiGiven,
+          color: const Color(0xFFF2B84B),
           onPressed: (sheetContext) async {
             Navigator.pop(sheetContext);
             await _openAddMoiForm('RETURN');

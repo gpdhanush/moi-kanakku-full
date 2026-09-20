@@ -4,6 +4,7 @@ import 'package:hugeicons/hugeicons.dart';
 import 'package:moi/app_pages/settings_page/settings_menus_panel.dart';
 import 'package:moi/app_themes/index.dart';
 import 'package:moi/app_utils/app_providers/language_provider.dart';
+import 'package:moi/app_utils/index.dart';
 import 'package:provider/provider.dart';
 
 class Settings extends StatelessWidget {
@@ -16,7 +17,7 @@ class Settings extends StatelessWidget {
         return Scaffold(
           backgroundColor: AppColors.background,
           appBar: _SettingsAppHeader(
-            title: languageProvider.tr('settings.title').toUpperCase(),
+            title: languageProvider.tr('settings.title').toTitleCase(),
             onBack: () => Navigator.pop(context),
           ),
           body: SingleChildScrollView(
@@ -48,7 +49,8 @@ class Settings extends StatelessWidget {
   }
 }
 
-class _SettingsAppHeader extends StatelessWidget implements PreferredSizeWidget {
+class _SettingsAppHeader extends StatelessWidget
+    implements PreferredSizeWidget {
   final String title;
   final VoidCallback onBack;
 
@@ -76,18 +78,16 @@ class _SettingsAppHeader extends StatelessWidget implements PreferredSizeWidget 
         statusBarIconBrightness: Brightness.light,
         statusBarBrightness: Brightness.dark,
         systemNavigationBarColor: isDark ? Colors.black : Colors.white,
-        systemNavigationBarIconBrightness:
-            isDark ? Brightness.light : Brightness.dark,
+        systemNavigationBarIconBrightness: isDark
+            ? Brightness.light
+            : Brightness.dark,
       ),
       flexibleSpace: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              primary,
-              AppColors.deepenAccent(primary, amount: 0.35),
-            ],
+            colors: [primary, AppColors.deepenAccent(primary, amount: 0.35)],
           ),
           borderRadius: const BorderRadius.only(
             bottomLeft: Radius.circular(22),

@@ -71,7 +71,7 @@ class _SettingsMenusPanelState extends State<SettingsMenusPanel> {
 
         final aboutChildren = <Widget>[
           if (widget.onContactUs != null)
-            _MenuRow(
+            MoiInfoTile(
               icon: HugeIcons.strokeRoundedContact,
               title: languageProvider.tr('menu.contactUs'),
               subtitle:
@@ -80,7 +80,7 @@ class _SettingsMenusPanelState extends State<SettingsMenusPanel> {
               onTap: widget.onContactUs,
             ),
           if (widget.onRateUs != null)
-            _MenuRow(
+            MoiInfoTile(
               icon: HugeIcons.strokeRoundedStar,
               title: languageProvider.tr('menu.rateUs'),
               subtitle:
@@ -88,13 +88,13 @@ class _SettingsMenusPanelState extends State<SettingsMenusPanel> {
                   languageProvider.tr('settings.rateApp'),
               onTap: widget.onRateUs,
             ),
-          // _MenuRow(
+          // MoiInfoTile(
           //   icon: HugeIcons.strokeRoundedSmartPhone01,
           //   title: languageProvider.tr('settings.appName'),
           //   subtitle: appName.toUpperCase(),
           //   showChevron: false,
           // ),
-          _MenuRow(
+          MoiInfoTile(
             icon: HugeIcons.strokeRoundedInformationCircle,
             title: languageProvider.tr('settings.appVersion'),
             subtitle: languageProvider.tr('settings.aboutHint'),
@@ -103,7 +103,7 @@ class _SettingsMenusPanelState extends State<SettingsMenusPanel> {
             showDivider: widget.onLogout != null,
           ),
           if (widget.onLogout != null)
-            _MenuRow(
+            MoiInfoTile(
               icon: HugeIcons.strokeRoundedLogout01,
               title: languageProvider.tr('menu.logout'),
               subtitle:
@@ -118,11 +118,13 @@ class _SettingsMenusPanelState extends State<SettingsMenusPanel> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _SectionLabel(title: languageProvider.tr('settings.security')),
+            MoiInfoSectionLabel(
+              title: languageProvider.tr('settings.security'),
+            ),
             const SizedBox(height: AppSpacing.sm),
-            _MenuCard(
+            MoiInfoCard(
               children: [
-                _MenuRow(
+                MoiInfoTile(
                   icon: HugeIcons.strokeRoundedFingerPrint,
                   title: languageProvider.tr('settings.appLock'),
                   subtitle: languageProvider.tr('settings.appLockHint'),
@@ -143,25 +145,27 @@ class _SettingsMenusPanelState extends State<SettingsMenusPanel> {
               ],
             ),
             const SizedBox(height: AppSpacing.lg),
-            _SectionLabel(title: languageProvider.tr('settings.preferences')),
+            MoiInfoSectionLabel(
+              title: languageProvider.tr('settings.preferences'),
+            ),
             const SizedBox(height: AppSpacing.sm),
-            _MenuCard(
+            MoiInfoCard(
               children: [
-                _MenuRow(
+                MoiInfoTile(
                   icon: HugeIcons.strokeRoundedLanguageCircle,
                   title: languageProvider.tr('settings.language'),
                   subtitle: languageProvider.tr('settings.languageHint'),
                   trailingLabel: languageLabel,
                   onTap: () => _showLanguagePicker(languageProvider),
                 ),
-                _MenuRow(
+                MoiInfoTile(
                   icon: HugeIcons.strokeRoundedMic01,
                   title: languageProvider.tr('settings.voiceLanguage'),
                   subtitle: languageProvider.tr('settings.voiceLanguageHint'),
                   trailingLabel: voiceLabel,
                   onTap: () => _showVoiceLanguagePicker(languageProvider),
                 ),
-                _MenuRow(
+                MoiInfoTile(
                   icon: HugeIcons.strokeRoundedMoon02,
                   title: languageProvider.tr('settings.darkMode'),
                   subtitle: languageProvider.tr('settings.darkModeHint'),
@@ -206,9 +210,11 @@ class _SettingsMenusPanelState extends State<SettingsMenusPanel> {
               ],
             ),
             const SizedBox(height: AppSpacing.lg),
-            _SectionLabel(title: languageProvider.tr('settings.aboutApp')),
+            MoiInfoSectionLabel(
+              title: languageProvider.tr('settings.aboutApp'),
+            ),
             const SizedBox(height: AppSpacing.sm),
-            _MenuCard(children: aboutChildren),
+            MoiInfoCard(children: aboutChildren),
           ],
         );
       },
@@ -408,188 +414,6 @@ class _SettingsMenusPanelState extends State<SettingsMenusPanel> {
   //     },
   //   );
   // }
-}
-
-class _SectionLabel extends StatelessWidget {
-  final String title;
-
-  const _SectionLabel({required this.title});
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = AppColors.of(context);
-    return Padding(
-      padding: const EdgeInsets.only(left: 4, bottom: 2),
-      child: Text(
-        title.toUpperCase(),
-        style: AppTypography.label.copyWith(
-          color: colors.textPrimary,
-          fontSize: 13,
-          fontWeight: FontWeight.w800,
-          letterSpacing: 0.5,
-        ),
-      ),
-    );
-  }
-}
-
-class _MenuCard extends StatelessWidget {
-  final List<Widget> children;
-
-  const _MenuCard({required this.children});
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = AppColors.of(context);
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: colors.border.withValues(alpha: 0.7)),
-        boxShadow: AppShadows.soft,
-      ),
-      child: Column(children: children),
-    );
-  }
-}
-
-class _MenuRow extends StatelessWidget {
-  final List<List<dynamic>> icon;
-  final String title;
-  final String subtitle;
-  final Widget? trailing;
-  final String? trailingLabel;
-  final VoidCallback? onTap;
-  final bool showChevron;
-  final bool showDivider;
-  final bool isDestructive;
-
-  const _MenuRow({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    this.trailing,
-    this.trailingLabel,
-    this.onTap,
-    this.showChevron = true,
-    this.showDivider = true,
-    this.isDestructive = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final colors = AppColors.of(context);
-    final colorScheme = Theme.of(context).colorScheme;
-
-    final iconColor = isDestructive
-        ? (isDark ? colorScheme.error : const Color(0xFFEF4444))
-        : (isDark ? colorScheme.primary : const Color(0xFF059669));
-
-    final iconBg = isDestructive
-        ? (isDark
-            ? colorScheme.error.withValues(alpha: 0.1)
-            : const Color(0xFFFEE2E2))
-        : (isDark
-            ? colorScheme.primary.withValues(alpha: 0.1)
-            : const Color(0xFFE8F6EB));
-
-    final titleColor = isDestructive
-        ? (isDark ? colorScheme.error : const Color(0xFFEF4444))
-        : colors.textPrimary;
-
-    return Column(
-      children: [
-        Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: onTap,
-            borderRadius: BorderRadius.circular(18),
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(14, 13, 12, 13),
-              child: Row(
-                children: [
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: iconBg,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    alignment: Alignment.center,
-                    child: HugeIcon(
-                      icon: icon,
-                      color: iconColor,
-                      size: 18,
-                      strokeWidth: 1.8,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          title,
-                          style: AppTypography.label.copyWith(
-                            color: titleColor,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          subtitle,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppTypography.body.copyWith(
-                            color: colors.textSecondary,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  if (trailing != null)
-                    trailing!
-                  else ...[
-                    if (trailingLabel != null)
-                      Text(
-                        trailingLabel!,
-                        style: AppTypography.body.copyWith(
-                          color: colors.textSecondary,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    if (showChevron) ...[
-                      const SizedBox(width: 4),
-                      HugeIcon(
-                        icon: HugeIcons.strokeRoundedArrowRight01,
-                        strokeWidth: 1.9,
-                        size: 16,
-                        color: colorScheme.onSurfaceVariant,
-                      ),
-                    ],
-                  ],
-                ],
-              ),
-            ),
-          ),
-        ),
-        if (showDivider)
-          Divider(
-            height: 1,
-            thickness: 1,
-            indent: 66,
-            endIndent: 14,
-            color: colorScheme.outlineVariant.withValues(alpha: 0.5),
-          ),
-      ],
-    );
-  }
 }
 
 typedef _PickerOption = ({String value, String label});

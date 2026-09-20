@@ -200,23 +200,15 @@ class _VerifyForgotOtpState extends State<VerifyForgotOtp> {
           Positioned(
             top: media.padding.top + 8,
             left: 8,
-            child: Material(
-              color: Colors.white.withValues(alpha: 0.14),
-              shape: const CircleBorder(),
-              clipBehavior: Clip.antiAlias,
-              child: InkWell(
-                onTap: () => Navigator.pop(context),
-                customBorder: const CircleBorder(),
-                child: const SizedBox(
-                  width: 42,
-                  height: 42,
-                  child: HugeIcon(
-                    icon: HugeIcons.strokeRoundedArrowLeft01,
-                    size: 18,
-                    color: Colors.white,
-                    strokeWidth: 1.8,
-                  ),
-                ),
+            child: IconButton(
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 42, minHeight: 42),
+              onPressed: () => Navigator.pop(context),
+              icon: const HugeIcon(
+                icon: HugeIcons.strokeRoundedArrowLeft01,
+                size: 22,
+                color: Colors.white,
+                strokeWidth: 1.9,
               ),
             ),
           ),

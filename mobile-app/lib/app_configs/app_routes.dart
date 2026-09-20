@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:moi/app_models/index.dart';
 import 'package:moi/app_pages/upcoming_functions/models/upcoming_function_model.dart';
 import 'package:moi/app_pages/index.dart';
@@ -7,6 +8,97 @@ import 'package:moi/app_utils/app_widgets/auth_guard.dart';
 import 'package:provider/provider.dart';
 
 class AppRoute {
+  static final GoRouter router = GoRouter(
+    initialLocation: '/splash',
+    routes: [
+      GoRoute(
+        path: '/splash',
+        name: 'splash',
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: const SplashScreen(),
+          transitionsBuilder: _slideTransition,
+        ),
+      ),
+      GoRoute(
+        path: '/home',
+        name: 'home',
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: const MainShellPage(),
+          transitionsBuilder: _slideTransition,
+        ),
+      ),
+      GoRoute(
+        path: '/function-transaction-list',
+        name: 'function-transaction-list',
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: FunctionTransactionList(
+            functionData: state.extra ?? const <String, dynamic>{},
+          ),
+          transitionsBuilder: _slideTransition,
+        ),
+      ),
+      GoRoute(
+        path: '/transaction-detail-view',
+        name: 'transaction-detail-view',
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: TransactionDetailViewPage(
+            transaction: state.extra as Map<String, dynamic>,
+          ),
+          transitionsBuilder: _slideTransition,
+        ),
+      ),
+      GoRoute(
+        path: '/view-functions-list',
+        name: 'view-functions-list',
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: ViewFunctionDetails(data: state.extra as List),
+          transitionsBuilder: _slideTransition,
+        ),
+      ),
+    ],
+  );
+
+  static Widget _slideTransition(
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) {
+    final curved = CurvedAnimation(
+      parent: animation,
+      curve: Curves.easeOutCubic,
+      reverseCurve: Curves.easeInCubic,
+    );
+
+    return SlideTransition(
+      position: Tween<Offset>(
+        begin: const Offset(1, 0),
+        end: Offset.zero,
+      ).animate(curved),
+      child: FadeTransition(
+        opacity: CurvedAnimation(parent: animation, curve: Curves.easeInOut),
+        child: child,
+      ),
+    );
+  }
+
+  static Future<T?> open<T>(
+    BuildContext context,
+    String routeName, {
+    Object? arguments,
+  }) {
+    final goRouter = GoRouter.maybeOf(context);
+    if (goRouter != null) {
+      return goRouter.pushNamed<T>(routeName, extra: arguments);
+    }
+    return Navigator.pushNamed<T>(context, routeName, arguments: arguments);
+  }
+
   static const Set<String> _protectedRoutes = {
     'home',
     'profile',

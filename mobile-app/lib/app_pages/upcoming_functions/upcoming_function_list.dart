@@ -143,13 +143,29 @@ class _UpcomingFunctionListState extends State<UpcomingFunctionList> {
             backgroundColor: AppColors.background,
             appBar: MoiFlowAppHeader(
               title:
-                  '${languageProvider.tr('upcomingFunctions.title').toUpperCase()} (${upcomingFunctionList.length})',
+                  '${languageProvider.tr('upcomingFunctions.title').toTitleCase()} (${upcomingFunctionList.length})',
               onBack: _goBack,
               accent: primary,
             ),
             body: isLoading && upcomingFunctionList.isEmpty
-                ? const Center(
-                    child: CircularProgressIndicator(strokeWidth: 2.5),
+                ? Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpacing.page,
+                      AppSpacing.md,
+                      AppSpacing.page,
+                      AppSpacing.xxl,
+                    ),
+                    child: ListView(
+                      physics: const AlwaysScrollableScrollPhysics(
+                        parent: ClampingScrollPhysics(),
+                      ),
+                      children: [
+                        for (int i = 0; i < 5; i++) ...[
+                          if (i > 0) const SizedBox(height: AppSpacing.sm),
+                          const AppSkeletonListTile(showTrailing: true),
+                        ],
+                      ],
+                    ),
                   )
                 : upcomingFunctionList.isEmpty
                 ? _EmptyUpcomingState(

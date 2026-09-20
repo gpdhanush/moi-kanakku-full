@@ -377,6 +377,7 @@ class _AllTransactionsPageState extends State<AllTransactionsPage> {
 
           return MoiInvoiceListTile.moiFlow(
             isReceived: isInvest,
+            accent: Theme.of(context).colorScheme.primary,
             title: personName.isEmpty
                 ? languageProvider.tr('common.noData')
                 : personName,

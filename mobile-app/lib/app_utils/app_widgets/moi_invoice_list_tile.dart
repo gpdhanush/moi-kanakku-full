@@ -33,20 +33,20 @@ class MoiInvoiceListTile extends StatelessWidget {
     required String subtitle,
     required String amount,
     required bool isReceived,
+    required Color? accent,
     VoidCallback? onTap,
   }) {
-    final accent = isReceived ? AppColors.moiReceived : AppColors.moiGiven;
+    final resolvedAccent = accent ?? AppColors.primary;
     return MoiInvoiceListTile(
       key: key,
       title: title,
       subtitle: subtitle,
       amount: amount,
       onTap: onTap,
-      // Same leading icon as Overview; only the accent color differs.
       icon: HugeIcons.strokeRoundedUser,
-      iconColor: accent,
-      iconBackground: accent.withValues(alpha: 0.1),
-      amountColor: accent,
+      iconColor: resolvedAccent,
+      iconBackground: resolvedAccent.withValues(alpha: 0.1),
+      amountColor: resolvedAccent,
     );
   }
 
