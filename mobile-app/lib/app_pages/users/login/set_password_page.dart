@@ -119,6 +119,11 @@ class _SetPasswordPageState extends State<SetPasswordPage> {
                     suffixIconOnPressed: () {
                       setState(() => _showPassword = !_showPassword);
                     },
+                    onChanged: (_) {
+                      if (_confirmController.text.isNotEmpty) {
+                        _formKey.currentState?.validate();
+                      }
+                    },
                     validator: (value) =>
                         _validatePassword(value, languageProvider),
                   ),
@@ -141,6 +146,7 @@ class _SetPasswordPageState extends State<SetPasswordPage> {
                         () => _showConfirmPassword = !_showConfirmPassword,
                       );
                     },
+                    onChanged: (_) => _formKey.currentState?.validate(),
                     validator: (value) {
                       if (value != _passwordController.text) {
                         return languageProvider.tr('auth.passwordsDoNotMatch');

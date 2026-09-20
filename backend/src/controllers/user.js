@@ -88,7 +88,7 @@ const formatAdminUserListItem = (details) => {
     signup_type: authSummary.signupType,
     google_linked: authSummary.googleLinked,
     password_set: authSummary.passwordSet,
-    email_verified: authSummary.emailVerified,
+    is_verified: authSummary.emailVerified,
   };
 };
 
@@ -116,7 +116,7 @@ const formatAdminUserDetails = (details) => {
     signup_type: authSummary.signupType,
     google_linked: authSummary.googleLinked,
     password_set: authSummary.passwordSet,
-    email_verified: authSummary.emailVerified,
+    is_verified: authSummary.emailVerified,
     app_status: summary.app_status,
     last_seen_at: summary.last_seen_at,
     device_count: summary.device_count,
@@ -221,7 +221,7 @@ exports.userController = {
             profileImageUrl: googlePicture || user.profile_image_url || null,
             signupType: normalizeSignupType(user.signup_type || 'email'),
             passwordSet: Boolean(user.password_set),
-            emailVerified: Boolean(user.email_verified ?? user.is_verified),
+            emailVerified: Boolean(user.is_verified),
           },
           requiresPasswordSetup: !Boolean(user.password_set),
         },

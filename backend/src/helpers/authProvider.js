@@ -30,7 +30,7 @@ function buildAuthSummary(row = {}) {
     signupType: googleLinked ? 'google' : storedSignupType,
     googleLinked,
     passwordSet: toBooleanFlag(row.password_set ?? row.passwordSet ?? false),
-    emailVerified: toBooleanFlag(row.email_verified ?? row.emailVerified ?? false),
+    emailVerified: toBooleanFlag(row.is_verified ?? row.isVerified ?? false),
   };
 }
 

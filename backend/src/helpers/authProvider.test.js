@@ -15,7 +15,7 @@ test('buildAuthSummary exposes required provider metadata', () => {
     signup_type: 'google',
     google_id: 'sub-123',
     password_set: 0,
-    email_verified: 1,
+    is_verified: 1,
   });
 
   assert.deepEqual(summary, {

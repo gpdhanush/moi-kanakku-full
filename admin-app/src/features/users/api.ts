@@ -33,7 +33,7 @@ export interface UserListItem {
   signup_type?: string | null;
   google_linked?: boolean | number | null;
   password_set?: boolean | number | null;
-  email_verified?: boolean | number | null;
+  is_verified?: boolean | number | null;
 }
 
 export interface UserProfile {
@@ -93,7 +93,7 @@ export interface UserDetail {
   signup_type?: string | null;
   google_linked?: boolean | number | null;
   password_set?: boolean | number | null;
-  email_verified?: boolean | number | null;
+  is_verified?: boolean | number | null;
 }
 
 function extractErrorMessage(data: MoiApiResponse<unknown>): string {

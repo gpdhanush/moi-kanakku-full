@@ -63,7 +63,7 @@ const User = {
         const [rows] = await db.query(
             `SELECT u.id, u.full_name, u.email, u.mobile, u.referral_code, u.status,
                     u.is_verified, u.email_verified_at, u.last_activity_at, u.is_deleted, u.deleted_at,
-                    u.created_at, u.updated_at, u.signup_type, u.google_id, u.password_set, u.email_verified,
+                    u.created_at, u.updated_at, u.signup_type, u.google_id, u.password_set,
                     uc.password_hash, uc.password_changed_at,
                     COALESCE(up.profile_image_url, NULL) AS profile_image_url,
                     (SELECT ud.fcm_token FROM user_devices ud WHERE ud.user_id = u.id AND ud.is_active = 1 ORDER BY ud.last_used_at DESC LIMIT 1) AS fcm_token
@@ -86,7 +86,7 @@ const User = {
         const [rows] = await db.query(
             `SELECT u.id, u.full_name, u.email, u.mobile, u.referral_code, u.status,
                     u.is_verified, u.email_verified_at, u.last_activity_at, u.is_deleted, u.deleted_at,
-                    u.created_at, u.updated_at, u.signup_type, u.google_id, u.password_set, u.email_verified,
+                    u.created_at, u.updated_at, u.signup_type, u.google_id, u.password_set,
                     uc.password_hash, uc.password_changed_at,
                     COALESCE(up.profile_image_url, NULL) AS profile_image_url
              FROM users u
@@ -104,7 +104,7 @@ const User = {
         const [rows] = await db.query(
             `SELECT u.id, u.full_name, u.email, u.mobile, u.referral_code, u.status,
                     u.is_verified, u.email_verified_at, u.last_activity_at, u.is_deleted, u.deleted_at,
-                    u.created_at, u.updated_at, u.signup_type, u.google_id, u.password_set, u.email_verified,
+                    u.created_at, u.updated_at, u.signup_type, u.google_id, u.password_set,
                     uc.password_hash, uc.password_changed_at,
                     up.profile_image_url,
                     up.gender,
@@ -160,7 +160,7 @@ const User = {
 
     async findByMobile(mobile) {
         const [rows] = await db.query(
-            `SELECT u.id, u.full_name, u.email, u.mobile, u.referral_code, u.signup_type, u.google_id, u.password_set, u.email_verified, uc.password_hash,
+            `SELECT u.id, u.full_name, u.email, u.mobile, u.referral_code, u.signup_type, u.google_id, u.password_set, uc.password_hash,
                     (SELECT ud.fcm_token FROM user_devices ud WHERE ud.user_id = u.id AND ud.is_active = 1 ORDER BY ud.last_used_at DESC LIMIT 1) AS fcm_token
              FROM users u
              INNER JOIN user_credentials uc ON uc.user_id = u.id
@@ -177,7 +177,7 @@ const User = {
         const [rows] = await db.query(
             `SELECT u.id, u.full_name, u.email, u.mobile, u.referral_code, u.status,
                     u.is_verified, u.email_verified_at, u.last_activity_at, u.is_deleted, u.deleted_at,
-                    u.created_at, u.updated_at, u.signup_type, u.google_id, u.password_set, u.email_verified,
+                    u.created_at, u.updated_at, u.signup_type, u.google_id, u.password_set,
                     uc.password_hash, uc.password_changed_at,
                     COALESCE(up.profile_image_url, NULL) AS profile_image_url
              FROM users u
@@ -192,7 +192,7 @@ const User = {
     async linkGoogleAccount(userId, googleId) {
         if (!userId || !googleId) return null;
         const [result] = await db.query(
-            `UPDATE users SET google_id = ?, signup_type = 'google', email_verified = 1, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+            `UPDATE users SET google_id = ?, signup_type = 'google', is_verified = 1, email_verified_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
             [String(googleId).trim(), toBinaryUUID(userId)]
         );
         return result;
@@ -316,7 +316,7 @@ const User = {
             signup_type,
             google_id,
             password_set,
-            email_verified,
+            is_verified,
         } = payload;
         const now = new Date();
         const idMode = await getDbIdMode(db);
@@ -337,21 +337,21 @@ const User = {
 
         const signupType = normalizeSignupType(signup_type || 'email');
         const hasPasswordSet = password_set != null ? Boolean(password_set) : Boolean(password && String(password).trim() !== '');
-        const emailVerifiedValue = email_verified != null ? Boolean(email_verified) : false;
+        const isVerifiedValue = is_verified != null ? Boolean(is_verified) : false;
 
         if (idMode === 'uuid') {
             userId = payload.id || generateUUID();
             userIdForFk = toBinaryUUID(userId);
             await db.query(
-                `INSERT INTO users (id, full_name, email, mobile, referral_code, status, signup_type, google_id, password_set, email_verified, created_at, updated_at)
-                 VALUES (?, ?, ?, ?, ?, 'ACTIVE', ?, ?, ?, ?, ?, ?)`,
-                [userIdForFk, name, email, mobile || null, referralCode, signupType, google_id || null, hasPasswordSet ? 1 : 0, emailVerifiedValue ? 1 : 0, now, now]
+                `INSERT INTO users (id, full_name, email, mobile, referral_code, status, signup_type, google_id, password_set, is_verified, email_verified_at, created_at, updated_at)
+                 VALUES (?, ?, ?, ?, ?, 'ACTIVE', ?, ?, ?, ?, ?, ?, ?)`,
+                [userIdForFk, name, email, mobile || null, referralCode, signupType, google_id || null, hasPasswordSet ? 1 : 0, isVerifiedValue ? 1 : 0, isVerifiedValue ? now : null, now, now]
             );
         } else {
             const [userResult] = await db.query(
-                `INSERT INTO users (full_name, email, mobile, referral_code, status, signup_type, google_id, password_set, email_verified, created_at, updated_at)
-                 VALUES (?, ?, ?, ?, 'ACTIVE', ?, ?, ?, ?, ?, ?)`,
-                [name, email, mobile || null, referralCode, signupType, google_id || null, hasPasswordSet ? 1 : 0, emailVerifiedValue ? 1 : 0, now, now]
+                `INSERT INTO users (full_name, email, mobile, referral_code, status, signup_type, google_id, password_set, is_verified, email_verified_at, created_at, updated_at)
+                 VALUES (?, ?, ?, ?, 'ACTIVE', ?, ?, ?, ?, ?, ?, ?)`,
+                [name, email, mobile || null, referralCode, signupType, google_id || null, hasPasswordSet ? 1 : 0, isVerifiedValue ? 1 : 0, isVerifiedValue ? now : null, now, now]
             );
             userId = userResult.insertId;
             userIdForFk = userId;
@@ -608,7 +608,7 @@ const User = {
             signup_type: 'google',
             google_id: googleId,
             password_set: false,
-            email_verified: true,
+            is_verified: true,
         };
         return this.create(payload);
     },
@@ -1232,7 +1232,6 @@ function mapUserRow(r, includeSensitive = true) {
         signup_type: normalizeSignupType(r.signup_type || r.signupType || 'email'),
         google_id: r.google_id || r.googleId || null,
         password_set: r.password_set != null ? Boolean(r.password_set) : false,
-        email_verified: r.email_verified != null ? Boolean(r.email_verified) : Boolean(r.is_verified),
         status: r.status,
         is_verified: r.is_verified || 0,
         email_verified_at: r.email_verified_at || null,

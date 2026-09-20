@@ -742,7 +742,7 @@ export default function UserDetail() {
               />
               <Field
                 label="Email Verified"
-                value={Boolean(user?.email_verified) ? "Yes" : "No"}
+                value={Boolean(user?.is_verified) ? "Yes" : "No"}
               />
               <Field label="Created At" value={formatDateTime(user?.create_date)} />
               <Field label="Updated At" value={formatDateTime(user?.update_date)} />

@@ -4,8 +4,7 @@
 ALTER TABLE `users`
   ADD COLUMN IF NOT EXISTS `signup_type` ENUM('email', 'google', 'mobile_app', 'admin') NOT NULL DEFAULT 'email' AFTER `status`,
   ADD COLUMN IF NOT EXISTS `google_id` VARCHAR(255) NULL DEFAULT NULL AFTER `signup_type`,
-  ADD COLUMN IF NOT EXISTS `password_set` TINYINT(1) NOT NULL DEFAULT 0 AFTER `google_id`,
-  ADD COLUMN IF NOT EXISTS `email_verified` TINYINT(1) NOT NULL DEFAULT 0 AFTER `password_set`;
+  ADD COLUMN IF NOT EXISTS `password_set` TINYINT(1) NOT NULL DEFAULT 0 AFTER `google_id`;
 
 -- Backfill existing users to preserve current behavior and avoid breaking legacy email accounts.
 UPDATE `users` u
@@ -18,7 +17,7 @@ END,
       WHEN uc.password_hash IS NOT NULL AND TRIM(uc.password_hash) <> '' THEN 1
       ELSE 0
     END,
-    u.email_verified = CASE
+    u.is_verified = CASE
       WHEN u.is_verified = 1 OR u.email_verified_at IS NOT NULL THEN 1
       ELSE 0
     END;
