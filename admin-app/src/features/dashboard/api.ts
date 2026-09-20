@@ -28,6 +28,13 @@ export interface DashboardAnalytics {
     city: string | null;
     lastLogin: string | null;
   }[];
+  recentSignups: {
+    id: string | null;
+    name: string;
+    email: string | null;
+    city: string | null;
+    createdAt: string | null;
+  }[];
   cityBreakdown: { city: string; count: number }[];
 }
 

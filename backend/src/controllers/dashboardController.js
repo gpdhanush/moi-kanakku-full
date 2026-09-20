@@ -6,7 +6,9 @@ const { fromBinaryUUID } = require('../helpers/uuid');
 function getAnalyticsMonth(value) {
     const current = new Date();
     const fallback = `${current.getFullYear()}-${String(current.getMonth() + 1).padStart(2, '0')}`;
-    return /^\d{4}-(0[1-9]|1[0-2])$/.test(String(value || '')) ? String(value) : fallback;
+    const requestedMonth = String(value || '');
+    if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(requestedMonth)) return fallback;
+    return requestedMonth > fallback ? fallback : requestedMonth;
 }
 
 function getPreviousMonth(month) {
@@ -313,13 +315,13 @@ exports.controller = {
         try {
             const month = getAnalyticsMonth(req.query.month);
             const previousMonth = getPreviousMonth(month);
-            const cacheKey = `dashboard:analytics:${month}`;
+            const cacheKey = `dashboard:analytics:v2:${month}`;
             const cachedAnalytics = cache.get(cacheKey);
             if (cachedAnalytics) {
                 return res.status(200).json(cachedAnalytics);
             }
 
-            const [monthUsersResult, previousMonthUsersResult, todayUsersResult, dailySignupsResult, recentLoginsResult, cityBreakdownResult] = await Promise.all([
+            const [monthUsersResult, previousMonthUsersResult, todayUsersResult, dailySignupsResult, recentLoginsResult, recentSignupsResult, cityBreakdownResult] = await Promise.all([
                 db.query(`SELECT COUNT(*) AS count FROM users
                           WHERE (is_deleted = 0 OR is_deleted IS NULL)
                             AND created_at >= ?
@@ -345,6 +347,12 @@ exports.controller = {
                           WHERE (u.is_deleted = 0 OR u.is_deleted IS NULL)
                             AND u.last_activity_at IS NOT NULL
                           ORDER BY u.last_activity_at DESC
+                          LIMIT 8`),
+                db.query(`SELECT u.id, u.full_name, u.email, u.created_at, up.city
+                          FROM users u
+                          LEFT JOIN user_profiles up ON up.user_id = u.id
+                          WHERE (u.is_deleted = 0 OR u.is_deleted IS NULL)
+                          ORDER BY u.created_at DESC
                           LIMIT 8`),
                 db.query(`SELECT COALESCE(NULLIF(TRIM(up.city), ''), 'Unknown') AS city, COUNT(*) AS count
                           FROM users u
@@ -380,6 +388,13 @@ exports.controller = {
                     email: row.email || null,
                     city: row.city || null,
                     lastLogin: row.last_activity_at,
+                })),
+                recentSignups: recentSignupsResult[0].map((row) => ({
+                    id: fromBinaryUUID(row.id),
+                    name: row.full_name || 'Unnamed user',
+                    email: row.email || null,
+                    city: row.city || null,
+                    createdAt: row.created_at,
                 })),
                 cityBreakdown: cityBreakdownResult[0].map((row) => ({
                     city: row.city,
