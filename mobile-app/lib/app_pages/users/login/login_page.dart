@@ -373,29 +373,17 @@ class _LoginPrimaryButton extends StatelessWidget {
                     ],
             ),
             child: Center(
-              child: AnimatedSwitcher(
+              child: AnimatedOpacity(
                 duration: const Duration(milliseconds: 180),
-                child: isLoading
-                    ? SizedBox(
-                        key: const ValueKey('loading'),
-                        width: 22,
-                        height: 22,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2.4,
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            isDark ? AppColors.charcoal : AppColors.white,
-                          ),
-                        ),
-                      )
-                    : Text(
-                        key: const ValueKey('label'),
-                        title,
-                        style: AppTypography.label.copyWith(
-                          color: contentColor,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
+                opacity: isLoading ? 0.9 : 1,
+                child: Text(
+                  title,
+                  style: AppTypography.label.copyWith(
+                    color: contentColor,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
               ),
             ),
           ),

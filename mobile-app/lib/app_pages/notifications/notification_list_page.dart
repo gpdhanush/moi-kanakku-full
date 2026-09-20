@@ -129,20 +129,21 @@ class _NotificationListPageState extends State<NotificationListPage> {
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
                           Image.asset(
-                            'assets/images/notifications/empty-state.png',
+                            'assets/images/empty-state/empty-state.png',
                             width: 150,
                             height: 100,
                             fit: BoxFit.contain,
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            'No notifications',
+                            'No    notifications',
                             textAlign: TextAlign.center,
                             style: AppTypography.greeting.copyWith(
                               color: AppColors.textPrimary,
-                              fontSize: 28,
+                              fontSize: 16,
                               fontWeight: FontWeight.w700,
                               height: 1.08,
+                              fontFamily: 'EduQLDHand',
                               letterSpacing: -0.9,
                             ),
                           ),
@@ -152,9 +153,9 @@ class _NotificationListPageState extends State<NotificationListPage> {
                             textAlign: TextAlign.center,
                             style: AppTypography.body.copyWith(
                               color: AppColors.textSecondary,
-                              fontSize: 14,
+                              fontSize: 18,
+                              fontFamily: "Caveat",
                               height: 1.45,
-                              fontFamily: 'Fredoka',
                               fontWeight: FontWeight.w400,
                             ),
                           ),
@@ -183,6 +184,7 @@ class _NotificationListPageState extends State<NotificationListPage> {
                                   style: AppTypography.label.copyWith(
                                     color: primary,
                                     fontSize: 12,
+                                    fontFamily: "Fredoka",
                                     fontWeight: FontWeight.w700,
                                   ),
                                 ),

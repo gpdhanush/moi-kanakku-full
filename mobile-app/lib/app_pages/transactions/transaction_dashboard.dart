@@ -467,9 +467,7 @@ class _TransactionDashboardState extends State<TransactionDashboard> {
           subtitle: isSearching
               ? languageProvider.tr('functions.tryAdjustSearch')
               : languageProvider.tr('transactions.emptyHint'),
-          icon: isSearching
-              ? HugeIcons.strokeRoundedSearchRemove
-              : HugeIcons.strokeRoundedUser,
+          imagePath: 'assets/images/empty-state/person-empty.png',
           accentColor: primary,
         ),
       );

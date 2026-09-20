@@ -263,7 +263,7 @@ class _FeedbacksState extends State<Feedbacks> {
         child: MoiEmptyState(
           title: languageProvider.tr('feedback.empty'),
           subtitle: languageProvider.tr('feedback.emptyHint'),
-          icon: HugeIcons.strokeRoundedComment01,
+          imagePath: 'assets/images/empty-state/feedback.png',
           accentColor: primary,
         ),
       );

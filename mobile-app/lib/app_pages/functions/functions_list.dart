@@ -372,124 +372,15 @@ class _NoFunctionsState extends StatefulWidget {
   State<_NoFunctionsState> createState() => _NoFunctionsStateState();
 }
 
-class _NoFunctionsStateState extends State<_NoFunctionsState>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-  late final Animation<double> _fade;
-  late final Animation<Offset> _slide;
-  late final Animation<double> _scale;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 650),
-    );
-    _fade = CurvedAnimation(parent: _controller, curve: Curves.easeOut);
-    _slide = Tween<Offset>(
-      begin: const Offset(0, 0.08),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
-    _scale = Tween<double>(
-      begin: 0.92,
-      end: 1,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutBack));
-    _controller.forward();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
+class _NoFunctionsStateState extends State<_NoFunctionsState> {
   @override
   Widget build(BuildContext context) {
-    final reduceMotion = MediaQuery.disableAnimationsOf(context);
-
-    Widget content = Center(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            ScaleTransition(
-              scale: reduceMotion ? const AlwaysStoppedAnimation(1) : _scale,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  Container(
-                    width: 120,
-                    height: 120,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: widget.primary.withValues(alpha: 0.06),
-                    ),
-                  ),
-                  Container(
-                    width: 88,
-                    height: 88,
-                    decoration: BoxDecoration(
-                      color: AppColors.of(context).surface,
-                      borderRadius: BorderRadius.circular(24),
-                      border: Border.all(color: AppColors.of(context).border),
-                      boxShadow: [
-                        BoxShadow(
-                          color: widget.primary.withValues(alpha: 0.12),
-                          blurRadius: 20,
-                          offset: const Offset(0, 8),
-                        ),
-                        BoxShadow(
-                          color: AppColors.charcoal.withValues(alpha: 0.04),
-                          blurRadius: 4,
-                          offset: const Offset(0, 1),
-                        ),
-                      ],
-                    ),
-                    alignment: Alignment.center,
-                    child: HugeIcon(
-                      icon: HugeIcons.strokeRoundedWedding,
-                      color: widget.primary,
-                      size: 34,
-                      strokeWidth: 1.7,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 22),
-            Text(
-              widget.title,
-              textAlign: TextAlign.center,
-              style: AppTypography.sectionTitle.copyWith(
-                color: AppColors.of(context).textPrimary,
-                fontSize: 14,
-                fontWeight: FontWeight.w700,
-                letterSpacing: -0.1,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              widget.subtitle,
-              textAlign: TextAlign.center,
-              style: AppTypography.body.copyWith(
-                color: AppColors.of(context).textSecondary,
-                fontSize: 14,
-                height: 1.45,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-
-    if (reduceMotion) return content;
-
-    return FadeTransition(
-      opacity: _fade,
-      child: SlideTransition(position: _slide, child: content),
+    return MoiEmptyState(
+      title: widget.title,
+      subtitle: widget.subtitle,
+      imagePath: 'assets/images/empty-state/function-empty.png',
+      accentColor: widget.primary,
+      imageSize: 100,
     );
   }
 }
@@ -509,96 +400,15 @@ class _EmptySearchState extends StatefulWidget {
   State<_EmptySearchState> createState() => _EmptySearchStateState();
 }
 
-class _EmptySearchStateState extends State<_EmptySearchState>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-  late final Animation<double> _fade;
-  late final Animation<double> _scale;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 500),
-    );
-    _fade = CurvedAnimation(parent: _controller, curve: Curves.easeOut);
-    _scale = Tween<double>(
-      begin: 0.9,
-      end: 1,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutBack));
-    _controller.forward();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
+class _EmptySearchStateState extends State<_EmptySearchState> {
   @override
   Widget build(BuildContext context) {
-    final reduceMotion = MediaQuery.disableAnimationsOf(context);
-
-    Widget content = Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 28),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Container(
-              width: 88,
-              height: 88,
-              decoration: BoxDecoration(
-                color: AppColors.of(context).surface,
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: AppColors.of(context).border),
-                boxShadow: [
-                  BoxShadow(
-                    color: widget.primary.withValues(alpha: 0.1),
-                    blurRadius: 16,
-                    offset: const Offset(0, 6),
-                  ),
-                ],
-              ),
-              alignment: Alignment.center,
-              child: HugeIcon(
-                icon: HugeIcons.strokeRoundedSearchRemove,
-                color: widget.primary.withValues(alpha: 0.8),
-                size: 30,
-                strokeWidth: 1.8,
-              ),
-            ),
-            const SizedBox(height: 18),
-            Text(
-              widget.title,
-              textAlign: TextAlign.center,
-              style: AppTypography.sectionTitle.copyWith(
-                color: AppColors.of(context).textPrimary,
-                fontSize: 14,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              widget.subtitle,
-              textAlign: TextAlign.center,
-              style: AppTypography.body.copyWith(
-                color: AppColors.of(context).textSecondary,
-                fontSize: 13,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-
-    if (reduceMotion) return content;
-
-    return FadeTransition(
-      opacity: _fade,
-      child: ScaleTransition(scale: _scale, child: content),
+    return MoiEmptyState(
+      title: widget.title,
+      subtitle: widget.subtitle,
+      imagePath: 'assets/images/empty-state/function-empty.png',
+      accentColor: widget.primary,
+      imageSize: 80,
     );
   }
 }

@@ -893,62 +893,11 @@ class _EmptyUpcomingState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.page),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            MoiEmptyState(
-              title: title,
-              subtitle: subtitle,
-              icon: HugeIcons.strokeRoundedCalendar03,
-              accentColor: primary,
-            ),
-            const SizedBox(height: AppSpacing.md),
-            Material(
-              color: Colors.transparent,
-              borderRadius: BorderRadius.circular(14),
-              child: InkWell(
-                onTap: onAdd,
-                borderRadius: BorderRadius.circular(14),
-                child: Ink(
-                  height: 48,
-                  width: 200,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(14),
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        primary,
-                        AppColors.deepenAccent(primary, amount: 0.28),
-                      ],
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: primary.withValues(alpha: 0.28),
-                        blurRadius: 14,
-                        offset: const Offset(0, 6),
-                      ),
-                    ],
-                  ),
-                  child: Center(
-                    child: Text(
-                      actionLabel,
-                      style: AppTypography.label.copyWith(
-                        color: Colors.white,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
+    return MoiEmptyState(
+      title: title,
+      subtitle: subtitle,
+      imagePath: 'assets/images/empty-state/upcomming-function-empty.png',
+      accentColor: primary,
     );
   }
 }

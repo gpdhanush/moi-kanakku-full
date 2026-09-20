@@ -2,19 +2,23 @@ import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:moi/app_themes/index.dart';
 
-/// Modern empty / no-results state used across search and list screens.
+/// Reusable empty / no-results state used across multiple screens.
 class MoiEmptyState extends StatefulWidget {
   final String title;
   final String? subtitle;
-  final List<List<dynamic>> icon;
+  final dynamic icon;
+  final String? imagePath;
   final Color? accentColor;
+  final double imageSize;
 
   const MoiEmptyState({
     super.key,
     required this.title,
     this.subtitle,
-    this.icon = HugeIcons.strokeRoundedSearchRemove,
+    this.icon,
+    this.imagePath = 'assets/images/empty-state/function-empty.png',
     this.accentColor,
+    this.imageSize = 110,
   });
 
   @override
@@ -48,9 +52,58 @@ class _MoiEmptyStateState extends State<MoiEmptyState>
     super.dispose();
   }
 
+  Widget _buildGraphic(BuildContext context) {
+    final primary = widget.accentColor ?? Theme.of(context).colorScheme.primary;
+    final bgSize = widget.imageSize + 28;
+
+    if (widget.imagePath != null && widget.imagePath!.trim().isNotEmpty) {
+      return Stack(
+        alignment: Alignment.center,
+        children: [
+          Container(
+            width: bgSize,
+            height: bgSize,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: primary.withValues(alpha: 0.06),
+            ),
+          ),
+          Image.asset(
+            widget.imagePath!,
+            width: widget.imageSize,
+            height: widget.imageSize,
+            fit: BoxFit.contain,
+          ),
+        ],
+      );
+    }
+
+    if (widget.icon is Widget) {
+      return widget.icon as Widget;
+    }
+
+    if (widget.icon is IconData) {
+      return Icon(
+        widget.icon as IconData,
+        size: widget.imageSize * 0.7,
+        color: primary.withValues(alpha: 0.85),
+      );
+    }
+
+    if (widget.icon is List) {
+      return HugeIcon(
+        icon: widget.icon,
+        color: primary.withValues(alpha: 0.85),
+        size: widget.imageSize * 0.7,
+        strokeWidth: 1.8,
+      );
+    }
+
+    return const SizedBox.shrink();
+  }
+
   @override
   Widget build(BuildContext context) {
-    final primary = widget.accentColor ?? Theme.of(context).colorScheme.primary;
     final colors = AppColors.of(context);
     final reduceMotion = MediaQuery.disableAnimationsOf(context);
 
@@ -62,12 +115,7 @@ class _MoiEmptyStateState extends State<MoiEmptyState>
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              HugeIcon(
-                icon: widget.icon,
-                color: primary.withValues(alpha: 0.85),
-                size: 30,
-                strokeWidth: 1.8,
-              ),
+              _buildGraphic(context),
               const SizedBox(height: 18),
               Text(
                 widget.title,
@@ -75,7 +123,9 @@ class _MoiEmptyStateState extends State<MoiEmptyState>
                 style: AppTypography.sectionTitle.copyWith(
                   color: colors.textPrimary,
                   fontSize: 16,
+                  fontFamily: 'EduQLDHand',
                   fontWeight: FontWeight.w700,
+                  letterSpacing: -0.4,
                 ),
               ),
               if (widget.subtitle != null && widget.subtitle!.isNotEmpty) ...[
@@ -85,7 +135,9 @@ class _MoiEmptyStateState extends State<MoiEmptyState>
                   textAlign: TextAlign.center,
                   style: AppTypography.body.copyWith(
                     color: colors.textSecondary,
-                    fontSize: 13,
+                    fontSize: 18,
+                    fontFamily: 'Caveat',
+                    height: 1.35,
                   ),
                 ),
               ],

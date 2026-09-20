@@ -65,13 +65,6 @@ class MoiBottomNavBar extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: barColor,
                   border: Border(top: BorderSide(color: primary, width: 2)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.charcoal.withValues(alpha: 0.06),
-                      blurRadius: 10,
-                      offset: const Offset(0, -2),
-                    ),
-                  ],
                 ),
                 child: Padding(
                   padding: EdgeInsets.only(bottom: bottomInset),
@@ -158,13 +151,7 @@ class MoiBottomNavBar extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: primary,
                       shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: primary.withValues(alpha: 0.38),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
+                      boxShadow: const [],
                     ),
                     child: Center(
                       child: HugeIcon(
@@ -206,49 +193,66 @@ class _MoiBottomNavTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = selected ? active : inactive;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final activeDotColor = isDark
+        ? const Color(0xFFB9F863)
+        : Theme.of(context).colorScheme.primary;
 
     return InkWell(
       onTap: onTap,
-      splashColor: active.withValues(alpha: 0.08),
-      highlightColor: active.withValues(alpha: 0.04),
+      splashColor: Colors.transparent,
+      highlightColor: Colors.transparent,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           AnimatedContainer(
             duration: const Duration(milliseconds: 180),
             curve: Curves.easeOutCubic,
-            width: 48,
-            height: 30,
+            width: selected ? 72 : 40,
+            height: selected ? 34 : 28,
             alignment: Alignment.center,
             decoration: BoxDecoration(
               color: selected ? indicator : Colors.transparent,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(selected ? 18 : 12),
+              boxShadow: const [],
             ),
             child: HugeIcon(
               icon: item.icon,
-              color: color,
-              size: 22,
-              strokeWidth: selected ? 2.0 : 1.7,
+              color: selected ? active : inactive,
+              size: selected ? 22 : 20,
+              strokeWidth: selected ? 2.0 : 1.8,
             ),
           ),
-          const SizedBox(height: 4),
-          AnimatedDefaultTextStyle(
-            duration: const Duration(milliseconds: 180),
-            curve: Curves.easeOutCubic,
-            style: AppTypography.label.copyWith(
-              color: color,
-              fontSize: 10.5,
-              fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-              letterSpacing: -0.1,
-              height: 1.1,
+          const SizedBox(height: 6),
+          if (!selected)
+            AnimatedDefaultTextStyle(
+              duration: const Duration(milliseconds: 180),
+              curve: Curves.easeOutCubic,
+              style: AppTypography.label.copyWith(
+                color: color,
+                fontSize: 10.5,
+                fontWeight: FontWeight.w500,
+                letterSpacing: -0.1,
+                height: 1.1,
+              ),
+              child: Text(
+                item.label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+              ),
+            )
+          else
+            SizedBox(
+              width: 8,
+              height: 8,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: activeDotColor,
+                  shape: BoxShape.circle,
+                ),
+              ),
             ),
-            child: Text(
-              item.label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
-            ),
-          ),
         ],
       ),
     );
