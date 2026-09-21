@@ -1,6 +1,9 @@
 {
   "auth": {
     "accountDeactivated": "Your account has been deactivated. Please contact the admin.",
+    "accountBlockedTitle": "Account blocked",
+    "accountBlockedMessage": "Your account is blocked. Please contact the admin for help.",
+    "contactAdminWhatsApp": "Contact admin on WhatsApp",
     "accountRestored": "Account restored successfully",
     "alreadyHaveAccount": "Already have an account?",
     "backToLogin": "Back to Login",

@@ -20,6 +20,7 @@ import {
   Loader2,
   UserCheck,
   UserX,
+  ShieldBan,
   Send,
   Trash2,
   ChevronDown,
@@ -281,6 +282,7 @@ export default function UserDetail() {
 
   const isActive = (user?.status || "").toUpperCase() === "ACTIVE";
   const isDeleted = (user?.status || "").toUpperCase() === "DELETED";
+  const isBlocked = (user?.status || "").toUpperCase() === "BLOCKED";
   const isVerified = Boolean(Number(user?.is_verified));
   const deviceRows: UserDevice[] =
     user?.devices && user.devices.length > 0
@@ -575,6 +577,18 @@ export default function UserDetail() {
                 )}
                 {isActive ? "Deactivate" : "Activate"}
               </Button>
+              {!isDeleted && !isBlocked && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-9 gap-2 border-amber-500/50 text-amber-700 hover:bg-amber-500/10"
+                  onClick={() => statusMutation.mutate("BLOCKED")}
+                  disabled={statusMutation.isPending || deleteMutation.isPending}
+                >
+                  <ShieldBan className="h-4 w-4" />
+                  Block
+                </Button>
+              )}
             </div>
           )}
         </div>

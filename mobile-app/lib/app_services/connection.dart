@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:async' show unawaited;
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:moi/app_configs/api_startup_config.dart';
 import 'package:moi/app_configs/api_certificate_pinning.dart';
 import 'package:moi/app_configs/dio_certificate_pinning.dart';
@@ -10,6 +11,7 @@ import 'package:moi/app_storages/secure_storages.dart';
 import 'package:moi/app_utils/app_global/alert_services.dart';
 import 'package:moi/app_utils/app_providers/language_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class Connection {
   final SecureStorageService secureStorage = SecureStorageService();
@@ -21,6 +23,7 @@ class Connection {
   /// Prevents duplicate "session expired" toasts / login redirects when many
   /// in-flight requests fail with 401 at once (timeout or backend restart).
   bool _isHandlingUnauthorized = false;
+  bool _isShowingBlockedDialog = false;
   late final Dio _dio;
 
   /// Shared singleton used by all *Services to avoid multiple Dio clients.
@@ -70,6 +73,7 @@ class Connection {
           return handler.next(options);
         },
         onResponse: (response, handler) {
+          _handleBlockedResponse(response.data);
           serviceLogs(
             response.requestOptions.path,
             method: response.requestOptions.method,
@@ -124,6 +128,68 @@ class Connection {
   String _tr(String key, String fallback) {
     final context = navigatorKey.currentState?.overlay?.context;
     return context?.read<LanguageProvider>().tr(key) ?? fallback;
+  }
+
+  void _handleBlockedResponse(dynamic data) {
+    if (data is! Map || data['responseValue'] is! Map) return;
+    final responseValue = Map<String, dynamic>.from(data['responseValue']);
+    if (responseValue['account_status']?.toString().toUpperCase() !=
+        'BLOCKED') {
+      return;
+    }
+
+    final context = navigatorKey.currentState?.overlay?.context;
+    if (context == null || _isShowingBlockedDialog) return;
+    _isShowingBlockedDialog = true;
+    unawaited(
+      showDialog<void>(
+        context: context,
+        barrierDismissible: false,
+        builder: (dialogContext) {
+          final colors = Theme.of(dialogContext).colorScheme;
+          return AlertDialog(
+            icon: HugeIcon(
+              icon: HugeIcons.strokeRoundedShield01,
+              color: colors.error,
+              size: 32,
+            ),
+            title: Text(_tr('auth.accountBlockedTitle', 'Account blocked')),
+            content: Text(
+              _tr(
+                'auth.accountBlockedMessage',
+                'Your account is blocked. Please contact the admin for help.',
+              ),
+              textAlign: TextAlign.center,
+            ),
+            actions: [
+              FilledButton.icon(
+                icon: HugeIcon(
+                  icon: HugeIcons.strokeRoundedWhatsapp,
+                  color: colors.onPrimary,
+                  size: 18,
+                ),
+                label: Text(
+                  _tr('auth.contactAdminWhatsApp', 'Contact admin on WhatsApp'),
+                ),
+                onPressed: () async {
+                  final message = Uri.encodeComponent(
+                    _tr('contacts.whatsappMessage', 'Hi, I need some help'),
+                  );
+                  final uri = Uri.parse(
+                    'whatsapp://send?phone=+917845456609&text=$message',
+                  );
+                  await launchUrl(uri, mode: LaunchMode.externalApplication);
+                },
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(),
+                child: Text(_tr('common.close', 'Close')),
+              ),
+            ],
+          );
+        },
+      ).whenComplete(() => _isShowingBlockedDialog = false),
+    );
   }
 
   Future<String?> _getCachedToken() async {

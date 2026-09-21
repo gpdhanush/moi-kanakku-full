@@ -2,7 +2,7 @@ require('dotenv').config();
 const User = require('../models/user');
 const logger = require('../config/logger');
 const { validateUuid, validateUuidList, sendUuidError } = require('../helpers/idParams');
-const { isInactiveStatus, sendInactiveError } = require('../helpers/accountStatus');
+const { isBlockedStatus, isInactiveStatus, sendBlockedError, sendInactiveError } = require('../helpers/accountStatus');
 const jwt = require('jsonwebtoken');
 const {
     formatEmailFrom,
@@ -581,6 +581,9 @@ exports.controller = {
                 if (!user) return res.status(404).json({ responseType: "F", responseValue: { message: 'Invalid email ID!' } });
                 if (isInactiveStatus(user.status)) {
                     return sendInactiveError(res);
+                }
+                if (isBlockedStatus(user.status)) {
+                    return sendBlockedError(res);
                 }
 
                 // Create forgot OTP using unified method

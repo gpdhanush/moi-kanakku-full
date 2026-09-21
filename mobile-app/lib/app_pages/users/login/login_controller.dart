@@ -66,6 +66,10 @@ class LoginController {
       return false;
     } else if (response != null &&
         response['responseType'] == "F" &&
+        response['responseValue']?['account_status'] == "BLOCKED") {
+      return false;
+    } else if (response != null &&
+        response['responseType'] == "F" &&
         response['responseValue'] != null &&
         response['responseValue']['message'] != null) {
       // Show error message to user
@@ -138,6 +142,12 @@ class LoginController {
           'restore_account_send_otp',
           arguments: account.email,
         );
+        return false;
+      }
+
+      if (response != null &&
+          response['responseType'] == 'F' &&
+          response['responseValue']?['account_status'] == 'BLOCKED') {
         return false;
       }
 

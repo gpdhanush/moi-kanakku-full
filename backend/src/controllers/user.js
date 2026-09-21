@@ -14,7 +14,7 @@ const path = require("path");
 const fs = require("fs");
 const logger = require("../config/logger");
 const { validateUuid, sendUuidError } = require("../helpers/idParams");
-const { isInactiveStatus, sendInactiveError } = require("../helpers/accountStatus");
+const { isBlockedStatus, isInactiveStatus, sendBlockedError, sendInactiveError } = require("../helpers/accountStatus");
 const {
   summarizeDevices,
   toAdminDevice,
@@ -338,6 +338,18 @@ exports.userController = {
 
       if (isInactiveStatus(user.status)) {
         return sendInactiveError(res);
+      }
+
+      if (isBlockedStatus(user.status)) {
+        return sendBlockedError(res);
+      }
+
+      if (isBlockedStatus(user.status)) {
+        return sendBlockedError(res);
+      }
+
+      if (isBlockedStatus(user.status)) {
+        return sendBlockedError(res);
       }
 
       // CHECK IF ACCOUNT IS BLOCKED (BEFORE PASSWORD VERIFICATION)
@@ -1720,7 +1732,7 @@ exports.userController = {
 
   /**
    * ADMIN: activate or deactivate an app user.
-   * Body: { userId, status } where status is ACTIVE or INACTIVE
+  * Body: { userId, status } where status is ACTIVE, INACTIVE, or BLOCKED
    */
   adminUpdateUserStatus: async (req, res) => {
     const userId = req.body?.userId || req.body?.id || req.params?.id;
@@ -1730,10 +1742,10 @@ exports.userController = {
     if (!idCheck.ok) return sendUuidError(res, idCheck.message);
 
     const normalized = String(status || "").toUpperCase();
-    if (!["ACTIVE", "INACTIVE"].includes(normalized)) {
+    if (!["ACTIVE", "INACTIVE", "BLOCKED"].includes(normalized)) {
       return res.status(400).json({
         responseType: "F",
-        responseValue: { message: "status must be ACTIVE or INACTIVE." },
+        responseValue: { message: "status must be ACTIVE, INACTIVE, or BLOCKED." },
       });
     }
 
@@ -1754,7 +1766,7 @@ exports.userController = {
         });
       }
 
-      if (normalized === "INACTIVE") {
+      if (normalized !== "ACTIVE") {
         try {
           tokenService.removeToken(userId);
         } catch (tokenErr) {
@@ -1775,7 +1787,9 @@ exports.userController = {
           message:
             normalized === "INACTIVE"
               ? "User deactivated. They cannot log in or reset password until reactivated."
-              : "User activated. They can log in from the mobile app.",
+              : normalized === "BLOCKED"
+                ? "User blocked. They cannot access the mobile app until unblocked."
+                : "User activated. They can log in from the mobile app.",
           userId: String(userId),
           status: normalized,
         },

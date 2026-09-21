@@ -152,7 +152,7 @@ export const usersApi = {
 
   updateStatus: async (
     userId: string,
-    status: "ACTIVE" | "INACTIVE"
+    status: "ACTIVE" | "INACTIVE" | "BLOCKED"
   ): Promise<{ message?: string; userId?: string; status?: string }> => {
     const response = await apiClient.post<
       MoiApiResponse<{ message?: string; userId?: string; status?: string }>

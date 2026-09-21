@@ -489,8 +489,8 @@ const User = {
 
     async updateStatus(userId, status) {
         const normalized = String(status || '').toUpperCase();
-        if (!['ACTIVE', 'INACTIVE'].includes(normalized)) {
-            const error = new Error('Invalid status. Allowed values: ACTIVE, INACTIVE.');
+        if (!['ACTIVE', 'INACTIVE', 'BLOCKED'].includes(normalized)) {
+            const error = new Error('Invalid status. Allowed values: ACTIVE, INACTIVE, BLOCKED.');
             error.code = 'INVALID_STATUS';
             throw error;
         }
