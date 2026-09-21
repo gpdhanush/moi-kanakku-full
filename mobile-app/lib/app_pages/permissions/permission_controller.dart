@@ -11,6 +11,7 @@ class PermissionInfo {
   final String nameKey;
   final String descriptionKey;
   final List<List<dynamic>> icon;
+  final String? imageAsset;
   final Permission permission;
 
   PermissionInfo({
@@ -18,6 +19,7 @@ class PermissionInfo {
     required this.nameKey,
     required this.descriptionKey,
     required this.icon,
+    this.imageAsset,
     required this.permission,
   });
 }
@@ -41,6 +43,7 @@ class PermissionController extends ChangeNotifier {
         nameKey: 'permissions.items.notifications.name',
         descriptionKey: 'permissions.items.notifications.description',
         icon: HugeIcons.strokeRoundedNotification01,
+        imageAsset: 'assets/images/permission/notification.png',
         permission: Permission.notification,
       ),
       PermissionInfo(
@@ -48,6 +51,7 @@ class PermissionController extends ChangeNotifier {
         nameKey: 'permissions.items.camera.name',
         descriptionKey: 'permissions.items.camera.description',
         icon: HugeIcons.strokeRoundedCamera01,
+        imageAsset: 'assets/images/permission/camera.png',
         permission: Permission.camera,
       ),
       PermissionInfo(
@@ -55,6 +59,7 @@ class PermissionController extends ChangeNotifier {
         nameKey: 'permissions.items.microphone.name',
         descriptionKey: 'permissions.items.microphone.description',
         icon: HugeIcons.strokeRoundedMic01,
+        imageAsset: 'assets/images/permission/mic.png',
         permission: Permission.microphone,
       ),
     ];

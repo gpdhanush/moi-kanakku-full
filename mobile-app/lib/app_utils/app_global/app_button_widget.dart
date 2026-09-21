@@ -55,7 +55,7 @@ class AppButton extends StatelessWidget {
         ? primaryColor.withValues(alpha: 0.22)
         : lightButtonColor.withValues(alpha: 0.18);
 
-    final contentColor = isDark ? AppColors.charcoal : AppColors.white;
+    final contentColor = AppColors.white;
     const radius = 5.0;
 
     return Container(

@@ -4,6 +4,7 @@ import 'package:hugeicons/hugeicons.dart';
 import 'package:moi/app_configs/index.dart';
 import 'package:moi/app_storages/secure_storages.dart';
 import 'package:moi/app_themes/index.dart';
+import 'package:moi/app_utils/index.dart';
 import 'package:moi/app_utils/app_providers/language_provider.dart';
 import 'package:provider/provider.dart';
 
@@ -61,10 +62,7 @@ class _PermissionPageState extends State<PermissionPage> {
       return Scaffold(
         backgroundColor: AppColors.background,
         body: Center(
-          child: CircularProgressIndicator(
-            strokeWidth: 2.4,
-            color: primary,
-          ),
+          child: CircularProgressIndicator(strokeWidth: 2.4, color: primary),
         ),
       );
     }
@@ -104,9 +102,7 @@ class _PermissionPageState extends State<PermissionPage> {
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
                               _PermissionIntro(
-                                title: languageProvider.tr(
-                                  'permissions.title',
-                                ),
+                                title: languageProvider.tr('permissions.title'),
                                 subtitle: languageProvider.tr(
                                   'permissions.subtitle',
                                 ),
@@ -115,9 +111,7 @@ class _PermissionPageState extends State<PermissionPage> {
                               Row(
                                 children: [
                                   Text(
-                                    languageProvider.tr(
-                                      'permissions.section',
-                                    ),
+                                    languageProvider.tr('permissions.section'),
                                     style: AppTypography.label.copyWith(
                                       color: AppColors.textSecondary,
                                       fontSize: 12,
@@ -151,6 +145,7 @@ class _PermissionPageState extends State<PermissionPage> {
                                 _PermissionList(
                                   controller: controller,
                                   languageProvider: languageProvider,
+                                  primary: primary,
                                 ),
                             ],
                           ),
@@ -178,10 +173,7 @@ class _PermissionIntro extends StatelessWidget {
   final String title;
   final String subtitle;
 
-  const _PermissionIntro({
-    required this.title,
-    required this.subtitle,
-  });
+  const _PermissionIntro({required this.title, required this.subtitle});
 
   @override
   Widget build(BuildContext context) {
@@ -197,10 +189,7 @@ class _PermissionIntro extends StatelessWidget {
             border: Border.all(color: AppColors.borderSubtle),
             boxShadow: AppShadows.card,
           ),
-          child: Image.asset(
-            AppImages.appLogoImage,
-            fit: BoxFit.contain,
-          ),
+          child: Image.asset(AppImages.appLogoImage, fit: BoxFit.contain),
         ),
         const SizedBox(height: AppSpacing.lg),
         Text(
@@ -222,18 +211,13 @@ class _PermissionIntro extends StatelessWidget {
 class _PermissionList extends StatelessWidget {
   final PermissionController controller;
   final LanguageProvider languageProvider;
+  final Color primary;
 
   const _PermissionList({
     required this.controller,
     required this.languageProvider,
+    required this.primary,
   });
-
-  static final List<(Color bg, Color fg)> _accents = [
-    (AppColors.primarySoft, AppColors.primary),
-    (AppColors.accentVioletSoft, AppColors.accentViolet),
-    (AppColors.lightMoiGivenSoft, AppColors.lightMoiGiven),
-    (AppColors.lightMoiReceivedSoft, AppColors.moiReceived),
-  ];
 
   @override
   Widget build(BuildContext context) {
@@ -241,12 +225,9 @@ class _PermissionList extends StatelessWidget {
       children: controller.permissions.asMap().entries.map((entry) {
         final index = entry.key;
         final permission = entry.value;
-        final isGranted =
-            controller.grantedPermissions.contains(permission.id);
-        final isPermanentlyDenied =
-            controller.permanentlyDeniedPermissions.contains(permission.id);
-        final accent = _accents[index % _accents.length];
-
+        final isGranted = controller.grantedPermissions.contains(permission.id);
+        final isPermanentlyDenied = controller.permanentlyDeniedPermissions
+            .contains(permission.id);
         return Padding(
           padding: EdgeInsets.only(
             bottom: index == controller.permissions.length - 1
@@ -255,12 +236,13 @@ class _PermissionList extends StatelessWidget {
           ),
           child: _PermissionCard(
             permission: permission,
+            imageAsset: permission.imageAsset,
             name: languageProvider.tr(permission.nameKey),
             description: languageProvider.tr(permission.descriptionKey),
             isGranted: isGranted,
             isPermanentlyDenied: isPermanentlyDenied,
-            iconBg: accent.$1,
-            iconColor: accent.$2,
+            iconBg: primary.withValues(alpha: 0.1),
+            iconColor: primary,
             allowLabel: languageProvider.tr('permissions.allowOne'),
             allowedLabel: languageProvider.tr('permissions.allowed'),
             settingsLabel: languageProvider.tr('permissions.openSettings'),
@@ -274,6 +256,7 @@ class _PermissionList extends StatelessWidget {
 
 class _PermissionCard extends StatelessWidget {
   final PermissionInfo permission;
+  final String? imageAsset;
   final String name;
   final String description;
   final bool isGranted;
@@ -287,6 +270,7 @@ class _PermissionCard extends StatelessWidget {
 
   const _PermissionCard({
     required this.permission,
+    required this.imageAsset,
     required this.name,
     required this.description,
     required this.isGranted,
@@ -301,6 +285,8 @@ class _PermissionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -309,12 +295,14 @@ class _PermissionCard extends StatelessWidget {
         child: Ink(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: isGranted ? AppColors.moiReceivedSoft : AppColors.white,
+            color: isGranted
+                ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.08)
+                : AppColors.white,
             borderRadius: AppRadius.mdAll,
             border: Border.all(
               color: isGranted
-                  ? AppColors.moiReceived.withValues(alpha: 0.28)
-                  : AppColors.borderSubtle,
+                  ? primary.withValues(alpha: 0.4)
+                  : primary.withValues(alpha: 0.28),
             ),
             boxShadow: isGranted ? null : AppShadows.soft,
           ),
@@ -324,20 +312,26 @@ class _PermissionCard extends StatelessWidget {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: isGranted
-                      ? AppColors.moiReceived.withValues(alpha: 0.12)
-                      : iconBg,
+                  color: isGranted ? primary.withValues(alpha: 0.12) : iconBg,
                   borderRadius: BorderRadius.circular(AppRadius.sm),
                 ),
                 alignment: Alignment.center,
-                child: HugeIcon(
-                  icon: isGranted
-                      ? HugeIcons.strokeRoundedCheckmarkCircle02
-                      : permission.icon,
-                  size: 20,
-                  color: isGranted ? AppColors.moiReceived : iconColor,
-                  strokeWidth: 1.8,
-                ),
+                child: imageAsset != null
+                    ? Image.asset(
+                        imageAsset!,
+                        width: 38,
+                        height: 38,
+                        fit: BoxFit.contain,
+                        semanticLabel: name,
+                      )
+                    : HugeIcon(
+                        icon: isGranted
+                            ? HugeIcons.strokeRoundedCheckmarkCircle02
+                            : permission.icon,
+                        size: isGranted ? 24 : 20,
+                        color: isGranted ? primary : iconColor,
+                        strokeWidth: 1.8,
+                      ),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -404,21 +398,21 @@ class _StatusChip extends StatelessWidget {
 
     if (isGranted) {
       return _ChipShell(
-        background: AppColors.moiReceived.withValues(alpha: 0.12),
+        background: primary.withValues(alpha: 0.12),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const HugeIcon(
+            HugeIcon(
               icon: HugeIcons.strokeRoundedTick02,
               size: 13,
-              color: AppColors.moiReceived,
+              color: primary,
               strokeWidth: 1.8,
             ),
             const SizedBox(width: 4),
             Text(
               allowedLabel,
               style: AppTypography.chip.copyWith(
-                color: AppColors.moiReceived,
+                color: primary,
                 fontSize: 11.5,
               ),
             ),
@@ -463,10 +457,7 @@ class _StatusChip extends StatelessWidget {
         border: primary.withValues(alpha: 0.35),
         child: Text(
           allowLabel,
-          style: AppTypography.chip.copyWith(
-            color: primary,
-            fontSize: 12,
-          ),
+          style: AppTypography.chip.copyWith(color: primary, fontSize: 12),
         ),
       ),
     );
@@ -513,8 +504,7 @@ class _PermissionBottomBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final busy =
-        controller.isRequesting || controller.isLoadingPermissions;
+    final busy = controller.isRequesting || controller.isLoadingPermissions;
     final title = allGranted
         ? languageProvider.tr('permissions.continue')
         : languageProvider.tr('permissions.allow');
@@ -529,9 +519,7 @@ class _PermissionBottomBar extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: AppColors.white,
-        border: Border(
-          top: BorderSide(color: AppColors.borderSubtle),
-        ),
+        border: Border(top: BorderSide(color: AppColors.borderSubtle)),
         boxShadow: [
           BoxShadow(
             color: const Color(0xff09090B).withValues(alpha: 0.04),
@@ -546,65 +534,12 @@ class _PermissionBottomBar extends StatelessWidget {
           Semantics(
             button: true,
             label: title,
-            child: Material(
-              color: Colors.transparent,
-              borderRadius: BorderRadius.circular(AppRadius.md),
-              child: InkWell(
-                onTap: busy ? null : () => controller.requestAllPermissions(),
-                borderRadius: BorderRadius.circular(AppRadius.md),
-                child: Ink(
-                  height: 56,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(AppRadius.md),
-                    color: busy
-                        ? primary.withValues(alpha: 0.72)
-                        : (allGranted ? AppColors.moiReceived : primary),
-                    boxShadow: [
-                      BoxShadow(
-                        color: (allGranted ? AppColors.moiReceived : primary)
-                            .withValues(alpha: 0.28),
-                        blurRadius: 14,
-                        offset: const Offset(0, 6),
-                      ),
-                    ],
-                  ),
-                  child: Center(
-                    child: busy
-                        ? const SizedBox(
-                            width: 22,
-                            height: 22,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2.4,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                Colors.white,
-                              ),
-                            ),
-                          )
-                        : Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                title,
-                                style: AppTypography.label.copyWith(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              HugeIcon(
-                                icon: allGranted
-                                    ? HugeIcons.strokeRoundedArrowRight01
-                                    : HugeIcons.strokeRoundedTick02,
-                                size: 18,
-                                color: Colors.white,
-                                strokeWidth: 1.8,
-                              ),
-                            ],
-                          ),
-                  ),
-                ),
-              ),
+            child: AppButton(
+              title: title,
+              onPressed: () => controller.requestAllPermissions(),
+              isLoading: busy,
+              color: primary,
+              showIcon: false,
             ),
           ),
           if (!busy)

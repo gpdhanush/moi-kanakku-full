@@ -57,6 +57,7 @@ class ImagePickerBottomSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
+    final isLightMode = colorScheme.brightness == Brightness.light;
     final options = <Widget>[];
 
     if (showDelete) {
@@ -127,14 +128,18 @@ class ImagePickerBottomSheet extends StatelessWidget {
                   width: 32,
                   height: 32,
                   decoration: BoxDecoration(
-                    color: colorScheme.primary,
+                    color: isLightMode
+                        ? colorScheme.primary.withValues(alpha: 0.12)
+                        : colorScheme.primary,
                     borderRadius: BorderRadius.circular(5),
                   ),
                   alignment: Alignment.center,
                   child: HugeIcon(
                     icon: HugeIcons.strokeRoundedImageAdd01,
                     size: 20,
-                    color: colorScheme.onPrimary,
+                    color: isLightMode
+                        ? colorScheme.primary
+                        : colorScheme.onPrimary,
                     strokeWidth: 1.8,
                   ),
                 ),
@@ -178,11 +183,17 @@ class ImagePickerBottomSheet extends StatelessWidget {
     required VoidCallback onTap,
   }) {
     final colorScheme = Theme.of(context).colorScheme;
+    final isLightMode = colorScheme.brightness == Brightness.light;
+    final optionSurface = isLightMode
+        ? color.withValues(alpha: 0.08)
+        : color.withValues(alpha: 0.07);
+    final iconBackground = isLightMode ? color.withValues(alpha: 0.12) : color;
+    final iconColor = isLightMode ? color : colorScheme.onPrimary;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: Material(
-        color: color.withValues(alpha: 0.07),
+        color: optionSurface,
         borderRadius: BorderRadius.circular(5),
         child: InkWell(
           onTap: onTap,
@@ -195,13 +206,13 @@ class ImagePickerBottomSheet extends StatelessWidget {
                   width: 32,
                   height: 32,
                   decoration: BoxDecoration(
-                    color: color,
+                    color: iconBackground,
                     borderRadius: BorderRadius.circular(5),
                   ),
                   alignment: Alignment.center,
                   child: HugeIcon(
                     icon: icon,
-                    color: colorScheme.onPrimary,
+                    color: iconColor,
                     size: 20,
                     strokeWidth: 1.8,
                   ),

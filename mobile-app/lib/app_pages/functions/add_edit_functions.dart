@@ -601,6 +601,19 @@ class _AddEditFunctionsState extends State<AddEditFunctions> {
             toolbarWidgetColor: Colors.white,
             initAspectRatio: CropAspectRatioPreset.ratio16x9,
             lockAspectRatio: false,
+            aspectRatioPresets: const [
+              CropAspectRatioPreset.square,
+              CropAspectRatioPreset.ratio16x9,
+              CropAspectRatioPreset.ratio4x3,
+              CropAspectRatioPreset.original,
+            ],
+          ),
+          IOSUiSettings(
+            title: Provider.of<LanguageProvider>(
+              context,
+              listen: false,
+            ).tr('functions.cropImage'),
+            aspectRatioLockEnabled: false,
           ),
         ],
       );

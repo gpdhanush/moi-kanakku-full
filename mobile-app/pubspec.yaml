@@ -2,7 +2,7 @@ name: moi
 description: "Moi Kanakku - Tamil Accounting App"
 publish_to: "none"
 
-version: 5.2.2+55 # ANDROID PLAY STORE VERSION
+version: 5.2.3+56 # ANDROID PLAY STORE VERSION
 
 environment:
   sdk: ^3.8.0
@@ -75,6 +75,7 @@ flutter:
     - assets/images/maintainence/
     - assets/images/splash/
     - assets/images/home_page/
+    - assets/images/permission/
     - assets/logo/
     - assets/app-logo/
     - assets/svg/

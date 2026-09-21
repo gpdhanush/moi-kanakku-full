@@ -462,14 +462,7 @@ class _DetailsSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          sectionTitle,
-          style: AppTypography.label.copyWith(
-            color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
-            fontSize: 14,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
+        MoiInfoSectionLabel(title: sectionTitle),
         const SizedBox(height: AppSpacing.sm),
         Container(
           width: double.infinity,

@@ -158,13 +158,8 @@ class _FeedbacksState extends State<Feedbacks> {
                 children: [
                   _buildComposerCard(languageProvider, primary),
                   const SizedBox(height: AppSpacing.lg),
-                  Text(
-                    languageProvider.tr('feedback.previousFeedback'),
-                    style: AppTypography.label.copyWith(
-                      color: AppColors.textPrimary,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                    ),
+                  MoiInfoSectionLabel(
+                    title: languageProvider.tr('feedback.previousFeedback'),
                   ),
                   const SizedBox(height: AppSpacing.sm),
                   _buildPreviousList(languageProvider, primary),
@@ -413,6 +408,7 @@ class _FeedbackCard extends StatelessWidget {
                 '',
           ).toTitleCase()
         : '';
+    final cardColors = AppColors.of(context);
 
     final statusLabel = isClosed
         ? languageProvider.tr('feedback.closed')
@@ -433,13 +429,13 @@ class _FeedbackCard extends StatelessWidget {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: AppColors.of(context).surface,
-        borderRadius: BorderRadius.circular(16),
+        color: cardColors.surface,
+        borderRadius: BorderRadius.circular(18),
         boxShadow: AppShadows.soft,
         border: Border.all(
           color: hasReply
               ? const Color(0xFF2E7D32).withValues(alpha: 0.18)
-              : AppColors.of(context).border,
+              : cardColors.border.withValues(alpha: 0.72),
         ),
       ),
       child: Column(
