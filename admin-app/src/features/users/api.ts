@@ -163,6 +163,15 @@ export const usersApi = {
     return assertSuccess(response.data);
   },
 
+  restore: async (
+    userId: string
+  ): Promise<{ message?: string; userId?: string; status?: string }> => {
+    const response = await apiClient.post<
+      MoiApiResponse<{ message?: string; userId?: string; status?: string }>
+    >("/users/admin/restore", { userId: String(userId) });
+    return assertSuccess(response.data);
+  },
+
   deleteUser: async (
     userId: string,
     mode: "soft" | "permanent"

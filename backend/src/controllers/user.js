@@ -290,7 +290,7 @@ exports.userController = {
       if (!user) {
         // Check if user exists but is deleted
         const deletedUser = await User.findByEmailIncludingDeleted(email);
-        if (deletedUser && deletedUser.is_deleted) {
+        if (deletedUser && (deletedUser.is_deleted || String(deletedUser.status).toUpperCase() === 'DELETED')) {
           return res.status(403).json({
             responseType: "F",
             responseValue: {
@@ -305,6 +305,16 @@ exports.userController = {
         return res.status(404).json({
           responseType: "F",
           responseValue: { message: "தவறான மின்னஞ்சல் ஐடி!" },
+        });
+      }
+
+      if (String(user.status).toUpperCase() === 'DELETED') {
+        return res.status(403).json({
+          responseType: "F",
+          responseValue: {
+            message: "உங்கள் கணக்கு நீக்கப்பட்டுவிட்டது. மீட்டமைக்க OTP பெறவும்.",
+            account_status: "DELETED",
+          },
         });
       }
 
@@ -1754,6 +1764,49 @@ exports.userController = {
       });
     } catch (error) {
       logger.error("adminUpdateUserStatus failure", error);
+      return res.status(500).json({
+        responseType: "F",
+        responseValue: { message: error.toString() },
+      });
+    }
+  },
+
+  /**
+   * ADMIN: restore a soft-deleted user account.
+   */
+  adminRestoreUser: async (req, res) => {
+    const userId = req.body?.userId || req.body?.id || req.params?.id;
+    const idCheck = validateUuid(userId, "userId");
+    if (!idCheck.ok) return sendUuidError(res, idCheck.message);
+
+    try {
+      const user = await User.findByIdIncludingDeleted(userId);
+      if (!user) {
+        return res.status(404).json({
+          responseType: "F",
+          responseValue: { message: userError },
+        });
+      }
+      if (!user.is_deleted && String(user.status).toUpperCase() !== "DELETED") {
+        return res.status(400).json({
+          responseType: "F",
+          responseValue: { message: "User account is not deleted." },
+        });
+      }
+
+      await User.restoreUser(userId);
+      tokenService.removeToken(userId);
+      clearAdminUserListCache();
+      return res.status(200).json({
+        responseType: "S",
+        responseValue: {
+          message: "User account restored. They can log in from the mobile app.",
+          userId: String(userId),
+          status: "ACTIVE",
+        },
+      });
+    } catch (error) {
+      logger.error("adminRestoreUser failure", error);
       return res.status(500).json({
         responseType: "F",
         responseValue: { message: error.toString() },

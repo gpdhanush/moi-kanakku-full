@@ -40,6 +40,7 @@ router.post("/admin/update-password", authenticateAdminToken, userController.adm
 router.get("/admin/all-user-lists", authenticateAdminToken, userController.adminAllUserLists);
 router.get("/admin/all-user-lists/:id", authenticateAdminToken, userController.adminUserDetails);
 router.post("/admin/update-status", authenticateAdminToken, userController.adminUpdateUserStatus);
+router.post("/admin/restore", authenticateAdminToken, userController.adminRestoreUser);
 router.post("/admin/delete", authenticateAdminToken, userController.adminDeleteUser);
 
 // Profile Picture Routes

@@ -320,7 +320,9 @@ export default function UserDetail() {
 
   const statusMutation = useMutation({
     mutationFn: (status: "ACTIVE" | "INACTIVE") =>
-      usersApi.updateStatus(userId, status),
+      status === "ACTIVE" && String(user?.status).toUpperCase() === "DELETED"
+        ? usersApi.restore(userId)
+        : usersApi.updateStatus(userId, status),
     onSuccess: (result, status) => {
       toast({
         title: status === "INACTIVE" ? "User deactivated" : "User activated",

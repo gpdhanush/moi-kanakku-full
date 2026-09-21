@@ -992,8 +992,9 @@ const User = {
     async getPublicDetails(userId) {
         const idBin = toBinaryUUID(userId);
         const [uRows] = await db.query(
-            `SELECT id, full_name, email, mobile, referral_code, status, is_verified, email_verified_at, last_activity_at, created_at, updated_at
-             FROM users WHERE id = ? AND (is_deleted = 0 OR is_deleted IS NULL)`,
+                `SELECT id, full_name, email, mobile, referral_code, status, is_verified, email_verified_at,
+                    signup_type, google_id, password_set, last_activity_at, created_at, updated_at
+                 FROM users WHERE id = ?`,
             [idBin]
         );
         const u = uRows[0];
@@ -1036,6 +1037,9 @@ const User = {
             referral_code: u.referral_code || null,
             status: u.status,
             is_verified: u.is_verified || 0,
+            signup_type: u.signup_type || 'email',
+            google_id: u.google_id || null,
+            password_set: u.password_set != null ? Boolean(u.password_set) : false,
             email_verified_at: u.email_verified_at || null,
             last_activity_at: u.last_activity_at,
             created_at: u.created_at,
@@ -1065,8 +1069,7 @@ const User = {
         let total = null;
         if (limit != null) {
             const [countRows] = await db.query(
-                `SELECT COUNT(*) AS total FROM users u
-                 WHERE (u.is_deleted = 0 OR u.is_deleted IS NULL)`
+                `SELECT COUNT(*) AS total FROM users u`
             );
             total = Number(countRows[0]?.total || 0);
         }
@@ -1074,12 +1077,12 @@ const User = {
         let userQuery = `
              SELECT 
                 u.id, u.full_name, u.email, u.mobile, u.referral_code, u.status, 
-                u.is_verified, u.email_verified_at, u.last_activity_at, u.created_at, u.updated_at,
+                u.is_verified, u.email_verified_at, u.signup_type, u.google_id, u.password_set,
+                u.last_activity_at, u.created_at, u.updated_at,
                 up.gender, up.date_of_birth, up.address_line1, up.address_line2, 
                 up.city, up.state, up.country, up.postal_code, up.profile_image_url
              FROM users u
              LEFT JOIN user_profiles up ON up.user_id = u.id
-             WHERE (u.is_deleted = 0 OR u.is_deleted IS NULL)
              ORDER BY u.created_at DESC`;
         const userParams = [];
         if (limit != null) {
@@ -1098,8 +1101,7 @@ const User = {
                         last_used_at, uninstalled_at, created_at, brand, model, manufacturer,
                         android_version, ram_size, platform, app_version
                  FROM user_devices
-                 WHERE (is_deleted = 0 OR is_deleted IS NULL)
-                   AND user_id IN (${placeholders})
+                                 WHERE user_id IN (${placeholders})
                  ORDER BY last_used_at DESC, updated_at DESC`,
                 userIds.map((id) => toBinaryUUID(id))
             );
@@ -1126,6 +1128,9 @@ const User = {
             referral_code: r.referral_code || null,
             status: r.status,
             is_verified: r.is_verified || 0,
+            signup_type: r.signup_type || 'email',
+            google_id: r.google_id || null,
+            password_set: r.password_set != null ? Boolean(r.password_set) : false,
             email_verified_at: r.email_verified_at || null,
             last_activity_at: r.last_activity_at,
             created_at: r.created_at,
