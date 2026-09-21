@@ -75,12 +75,25 @@ class _LoginPageState extends State<LoginPage>
     final media = MediaQuery.of(context);
     final primary = Theme.of(context).colorScheme.primary;
     final screenHeight = media.size.height;
+    final screenWidth = media.size.width;
     final keyboardOpen = media.viewInsets.bottom > 0;
-    final heroHeight = (screenHeight * (keyboardOpen ? 0.18 : 0.32)).clamp(
-      keyboardOpen ? 120.0 : 200.0,
-      keyboardOpen ? 160.0 : 300.0,
-    );
-    final fadeOverlap = keyboardOpen ? 36.0 : 72.0;
+    final compactLayout = screenHeight < 700 || screenWidth < 360;
+    final heroHeight = keyboardOpen
+        ? (screenHeight * 0.12).clamp(72.0, 110.0)
+        : compactLayout
+        ? (screenHeight * 0.20).clamp(120.0, 155.0)
+        : (screenHeight * 0.28).clamp(170.0, 280.0);
+    final fadeOverlap = keyboardOpen
+        ? 28.0
+        : compactLayout
+        ? 40.0
+        : 64.0;
+    final formTopSpacing = keyboardOpen
+        ? 16.0
+        : compactLayout
+        ? 20.0
+        : fadeOverlap * 0.42;
+    final sectionSpacing = compactLayout ? AppSpacing.sm : AppSpacing.md;
 
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
@@ -134,9 +147,9 @@ class _LoginPageState extends State<LoginPage>
                                 physics: const BouncingScrollPhysics(),
                                 padding: EdgeInsets.fromLTRB(
                                   AppSpacing.page,
-                                  fadeOverlap * 0.42,
+                                  formTopSpacing,
                                   AppSpacing.page,
-                                  AppSpacing.md,
+                                  sectionSpacing,
                                 ),
                                 child: Form(
                                   key: _formKey,
@@ -171,7 +184,11 @@ class _LoginPageState extends State<LoginPage>
                                               fontSize: 14,
                                             ),
                                       ),
-                                      const SizedBox(height: AppSpacing.lg),
+                                      SizedBox(
+                                        height: compactLayout
+                                            ? AppSpacing.md
+                                            : AppSpacing.lg,
+                                      ),
                                       TextFormWidget(
                                         title: languageProvider.tr(
                                           'login.email',
@@ -205,7 +222,7 @@ class _LoginPageState extends State<LoginPage>
                                           _passwordFocus.requestFocus();
                                         },
                                       ),
-                                      const SizedBox(height: AppSpacing.md),
+                                      SizedBox(height: sectionSpacing),
                                       TextFormWidget(
                                         title: languageProvider.tr(
                                           'login.password',
@@ -273,7 +290,11 @@ class _LoginPageState extends State<LoginPage>
                                           ),
                                         ),
                                       ),
-                                      const SizedBox(height: AppSpacing.sm),
+                                      SizedBox(
+                                        height: compactLayout
+                                            ? AppSpacing.xs
+                                            : AppSpacing.sm,
+                                      ),
                                       _LoginPrimaryButton(
                                         title: languageProvider.tr(
                                           'login.loginNow',
@@ -281,7 +302,7 @@ class _LoginPageState extends State<LoginPage>
                                         isLoading: _isLoading,
                                         onPressed: _onLogin,
                                       ),
-                                      const SizedBox(height: AppSpacing.md),
+                                      SizedBox(height: sectionSpacing),
                                       Row(
                                         children: [
                                           const Expanded(
@@ -315,7 +336,7 @@ class _LoginPageState extends State<LoginPage>
                                           ),
                                         ],
                                       ),
-                                      const SizedBox(height: AppSpacing.md),
+                                      SizedBox(height: sectionSpacing),
                                       _GoogleLoginButton(
                                         isLoading: _isLoading,
                                         onPressed: () async {
@@ -334,7 +355,11 @@ class _LoginPageState extends State<LoginPage>
                                           }
                                         },
                                       ),
-                                      const SizedBox(height: AppSpacing.xl),
+                                      SizedBox(
+                                        height: compactLayout
+                                            ? AppSpacing.md
+                                            : AppSpacing.xl,
+                                      ),
                                       _CreateAccountRow(
                                         prefix: languageProvider.tr(
                                           'login.noAccount',
@@ -356,7 +381,7 @@ class _LoginPageState extends State<LoginPage>
                                 ),
                               ),
                             ),
-                            if (!keyboardOpen)
+                            if (!keyboardOpen && !compactLayout)
                               _LoginWavesPattern(primary: primary),
                           ],
                         ),
