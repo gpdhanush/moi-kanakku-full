@@ -1,6 +1,11 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
-import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQueries,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import {
   ArrowLeft,
   User,
@@ -25,6 +30,7 @@ import {
   Trash2,
   ChevronDown,
   ScrollText,
+  Download,
 } from "lucide-react";
 import { StatCard, StatCardSkeleton } from "@/components/ui/stat-card";
 import { Button } from "@/components/ui/button";
@@ -73,7 +79,10 @@ import {
   transactionFunctionsApi,
   type TransactionFunctionItem,
 } from "@/features/transaction-functions/api";
-import { transactionsApi, type TransactionItem } from "@/features/transactions/api";
+import {
+  transactionsApi,
+  type TransactionItem,
+} from "@/features/transactions/api";
 import {
   upcomingFunctionsApi,
   type UpcomingFunctionItem,
@@ -100,6 +109,7 @@ import {
   resolveImageUrl,
 } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
+import { exportUserDetailsToPDF } from "@/utils/userDetailsPdf";
 
 const EMAIL_TYPES: { value: BulkEmailType; label: string }[] = [
   { value: "notification", label: "Notification" },
@@ -116,13 +126,7 @@ const NOTIFICATION_TYPES: { value: BulkNotificationType; label: string }[] = [
   { value: "general", label: "general" },
 ];
 
-function Field({
-  label,
-  value,
-}: {
-  label: string;
-  value: string;
-}) {
+function Field({ label, value }: { label: string; value: string }) {
   return (
     <div className="min-w-0 space-y-1">
       <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
@@ -175,6 +179,7 @@ export default function UserDetail() {
   const [notificationBody, setNotificationBody] = useState("");
   const [notificationType, setNotificationType] =
     useState<BulkNotificationType>("general");
+  const [isExporting, setIsExporting] = useState(false);
 
   const userQuery = useQuery({
     queryKey: ["admin", "users", userId],
@@ -212,8 +217,12 @@ export default function UserDetail() {
     ],
   });
 
-  const [personsQuery, functionsQuery, transactionsQuery, upcomingFunctionsQuery] =
-    relatedQueries;
+  const [
+    personsQuery,
+    functionsQuery,
+    transactionsQuery,
+    upcomingFunctionsQuery,
+  ] = relatedQueries;
 
   const notificationsQuery = useQuery({
     queryKey: [
@@ -277,7 +286,7 @@ export default function UserDetail() {
         .join("")
         .slice(0, 2)
         .toUpperCase(),
-    [user?.name]
+    [user?.name],
   );
 
   const isActive = (user?.status || "").toUpperCase() === "ACTIVE";
@@ -291,7 +300,7 @@ export default function UserDetail() {
         ? [user.device]
         : [];
   const profileImage = resolveImageUrl(
-    user?.profile?.profile_image_url || null
+    user?.profile?.profile_image_url || null,
   );
 
   const personsCount =
@@ -304,6 +313,19 @@ export default function UserDetail() {
     upcomingFunctionsQuery.data?.count ??
     upcomingFunctionsQuery.data?.data.length ??
     0;
+
+  const exportDataLoading =
+    userQuery.isLoading ||
+    personsQuery.isLoading ||
+    functionsQuery.isLoading ||
+    transactionsQuery.isLoading ||
+    upcomingFunctionsQuery.isLoading;
+  const exportDataError =
+    userQuery.isError ||
+    personsQuery.isError ||
+    functionsQuery.isError ||
+    transactionsQuery.isError ||
+    upcomingFunctionsQuery.isError;
 
   const locationLabel =
     [user?.profile?.city, user?.profile?.state].filter(Boolean).join(", ") ||
@@ -352,7 +374,10 @@ export default function UserDetail() {
       usersApi.deleteUser(userId, mode),
     onSuccess: (result, mode) => {
       toast({
-        title: mode === "permanent" ? "User permanently deleted" : "User soft deleted",
+        title:
+          mode === "permanent"
+            ? "User permanently deleted"
+            : "User soft deleted",
         description:
           result.message ||
           (mode === "permanent"
@@ -434,8 +459,7 @@ export default function UserDetail() {
       toast({
         title: "Notification sent",
         description:
-          result.message ||
-          `Notification sent to ${user?.name || "user"}.`,
+          result.message || `Notification sent to ${user?.name || "user"}.`,
       });
       setNotificationOpen(false);
       resetNotificationForm();
@@ -474,6 +498,48 @@ export default function UserDetail() {
       return;
     }
     notificationMutation.mutate();
+  };
+
+  const handleExportUserDetails = (watermark: boolean) => {
+    if (!user || exportDataLoading || exportDataError) {
+      toast({
+        title: "Export unavailable",
+        description: exportDataError
+          ? "Wait for all user details to load successfully before exporting."
+          : "User details are still loading. Please try again shortly.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setIsExporting(true);
+      exportUserDetailsToPDF(
+        {
+          user,
+          persons: personsQuery.data?.data ?? [],
+          functions: functionsQuery.data?.data ?? [],
+          transactions: transactionsQuery.data?.data ?? [],
+          upcomingFunctions: upcomingFunctionsQuery.data?.data ?? [],
+        },
+        { watermark },
+      );
+      toast({
+        title: "Export ready",
+        description: `The printable PDF report ${watermark ? "with" : "without"} watermark opened in a new window.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Export failed",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Unable to create the PDF report.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   if (!userId) {
@@ -533,6 +599,43 @@ export default function UserDetail() {
                     size="sm"
                     variant="outline"
                     className="h-9 gap-2"
+                    disabled={
+                      isExporting || exportDataLoading || exportDataError
+                    }
+                    title={
+                      exportDataError
+                        ? "Export is unavailable because some details failed to load"
+                        : undefined
+                    }
+                  >
+                    <Download className="h-4 w-4" />
+                    {isExporting ? "Preparing PDF..." : "Export PDF"}
+                    <ChevronDown className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuItem
+                    className="gap-2"
+                    onSelect={() => handleExportUserDetails(true)}
+                  >
+                    <Download className="h-4 w-4" />
+                    PDF with watermark
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="gap-2"
+                    onSelect={() => handleExportUserDetails(false)}
+                  >
+                    <Download className="h-4 w-4" />
+                    PDF without watermark
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-9 gap-2"
                     disabled={deleteMutation.isPending}
                   >
                     <Trash2 className="h-4 w-4" />
@@ -565,7 +668,7 @@ export default function UserDetail() {
                 variant={isActive ? "destructive" : "default"}
                 className={cn(
                   "h-9 gap-2",
-                  !isActive && "bg-emerald-600 hover:bg-emerald-700"
+                  !isActive && "bg-emerald-600 hover:bg-emerald-700",
                 )}
                 onClick={() => setStatusDialogOpen(true)}
                 disabled={statusMutation.isPending || deleteMutation.isPending}
@@ -583,7 +686,9 @@ export default function UserDetail() {
                   variant="outline"
                   className="h-9 gap-2 border-amber-500/50 text-amber-700 hover:bg-amber-500/10"
                   onClick={() => statusMutation.mutate("BLOCKED")}
-                  disabled={statusMutation.isPending || deleteMutation.isPending}
+                  disabled={
+                    statusMutation.isPending || deleteMutation.isPending
+                  }
                 >
                   <ShieldBan className="h-4 w-4" />
                   Block
@@ -595,7 +700,8 @@ export default function UserDetail() {
 
         {userQuery.isError && (
           <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
-            {(userQuery.error as Error)?.message || "Failed to load user details."}
+            {(userQuery.error as Error)?.message ||
+              "Failed to load user details."}
           </div>
         )}
 
@@ -630,7 +736,7 @@ export default function UserDetail() {
                         ? "bg-emerald-500/15 text-emerald-700"
                         : isDeleted
                           ? "bg-amber-500/15 text-amber-700"
-                          : "bg-rose-500/15 text-rose-700"
+                          : "bg-rose-500/15 text-rose-700",
                     )}
                   >
                     {formatLabel(user?.status) || "Unknown"}
@@ -638,7 +744,7 @@ export default function UserDetail() {
                   <Badge
                     className={cn(
                       "border-transparent",
-                      appStatusClassName(user?.app_status)
+                      appStatusClassName(user?.app_status),
                     )}
                   >
                     App: {formatAppStatus(user?.app_status)}
@@ -648,7 +754,7 @@ export default function UserDetail() {
                       "border-transparent",
                       isVerified
                         ? "bg-primary/10 text-primary"
-                        : "bg-amber-500/15 text-amber-700"
+                        : "bg-amber-500/15 text-amber-700",
                     )}
                   >
                     {isVerified ? "Verified" : "Unverified"}
@@ -658,11 +764,15 @@ export default function UserDetail() {
                 <div className="mt-3 grid gap-2 text-sm text-muted-foreground sm:grid-cols-2 xl:grid-cols-3">
                   <div className="flex items-center gap-2">
                     <Mail className="h-4 w-4 shrink-0 text-primary" />
-                    <span className="truncate">{displayValue(user?.email)}</span>
+                    <span className="truncate">
+                      {displayValue(user?.email)}
+                    </span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Phone className="h-4 w-4 shrink-0 text-primary" />
-                    <span className="truncate">{displayValue(user?.mobile)}</span>
+                    <span className="truncate">
+                      {displayValue(user?.mobile)}
+                    </span>
                   </div>
                   <div className="flex items-center gap-2">
                     <MapPin className="h-4 w-4 shrink-0 text-primary" />
@@ -734,12 +844,18 @@ export default function UserDetail() {
         </div>
 
         <div className="grid min-w-0 gap-4 lg:grid-cols-2">
-          <SectionCard title="Personal Information" icon={<User className="h-4 w-4" />}>
+          <SectionCard
+            title="Personal Information"
+            icon={<User className="h-4 w-4" />}
+          >
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label="Full Name" value={displayValue(user?.name)} />
               <Field label="Email" value={displayValue(user?.email)} />
               <Field label="Mobile" value={displayValue(user?.mobile)} />
-              <Field label="Gender" value={displayValue(user?.profile?.gender)} />
+              <Field
+                label="Gender"
+                value={displayValue(user?.profile?.gender)}
+              />
               <Field
                 label="Date of Birth"
                 value={formatDateOnly(user?.profile?.date_of_birth)}
@@ -748,28 +864,43 @@ export default function UserDetail() {
             </div>
           </SectionCard>
 
-          <SectionCard title="Account" icon={<ShieldCheck className="h-4 w-4" />}>
+          <SectionCard
+            title="Account"
+            icon={<ShieldCheck className="h-4 w-4" />}
+          >
             <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="Sign-in Provider" value={formatLabel(user?.signup_type)} />
+              <Field
+                label="Sign-in Provider"
+                value={formatLabel(user?.signup_type)}
+              />
               <Field
                 label="Google Account Linked"
-                value={Boolean(user?.google_linked) ? "Yes" : "No"}
+                value={user?.google_linked ? "Yes" : "No"}
               />
               <Field
                 label="Application Password"
-                value={Boolean(user?.password_set) ? "Set" : "Not set"}
+                value={user?.password_set ? "Set" : "Not set"}
               />
               <Field
                 label="Email Verified"
-                value={Boolean(user?.is_verified) ? "Yes" : "No"}
+                value={user?.is_verified ? "Yes" : "No"}
               />
-              <Field label="Created At" value={formatDateTime(user?.create_date)} />
-              <Field label="Updated At" value={formatDateTime(user?.update_date)} />
+              <Field
+                label="Created At"
+                value={formatDateTime(user?.create_date)}
+              />
+              <Field
+                label="Updated At"
+                value={formatDateTime(user?.update_date)}
+              />
               <Field
                 label="Email Verified At"
                 value={formatDateTime(user?.email_verified_at)}
               />
-              <Field label="Referrer ID" value={displayValue(user?.referrer_id)} />
+              <Field
+                label="Referrer ID"
+                value={displayValue(user?.referrer_id)}
+              />
               <Field
                 label="Referred Count"
                 value={displayValue(user?.referred_count ?? 0)}
@@ -808,8 +939,8 @@ export default function UserDetail() {
         <SectionCard title="Devices" icon={<Smartphone className="h-4 w-4" />}>
           {deviceRows.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              No device record yet. App status is Unknown until this user
-              opens the updated app.
+              No device record yet. App status is Unknown until this user opens
+              the updated app.
             </p>
           ) : (
             <div className="space-y-4">
@@ -825,7 +956,7 @@ export default function UserDetail() {
                     <Badge
                       className={cn(
                         "border-transparent",
-                        appStatusClassName(row.install_status)
+                        appStatusClassName(row.install_status),
                       )}
                     >
                       {formatAppStatus(row.install_status, { device: true })}
@@ -840,7 +971,9 @@ export default function UserDetail() {
                     />
                     <Field
                       label="Android Version"
-                      value={displayValue(row.android_version || row.androidVersion)}
+                      value={displayValue(
+                        row.android_version || row.androidVersion,
+                      )}
                     />
                     <Field label="RAM" value={displayValue(row.ram_size)} />
                     <Field
@@ -867,24 +1000,22 @@ export default function UserDetail() {
                 </div>
               ))}
               <p className="text-xs text-muted-foreground">
-                Likely Uninstalled means FCM reported this token as invalid.
-                It is not a guaranteed uninstall time.
+                Likely Uninstalled means FCM reported this token as invalid. It
+                is not a guaranteed uninstall time.
               </p>
             </div>
           )}
         </SectionCard>
 
-        <SectionCard title="Recent Activity" icon={<ScrollText className="h-4 w-4" />}>
+        <SectionCard
+          title="Recent Activity"
+          icon={<ScrollText className="h-4 w-4" />}
+        >
           <div className="mb-3 flex items-center justify-between gap-2">
             <p className="text-sm text-muted-foreground">
               Latest mobile write actions for this user
             </p>
-            <Button
-              asChild
-              size="sm"
-              variant="outline"
-              className="h-8"
-            >
+            <Button asChild size="sm" variant="outline" className="h-8">
               <Link to={`/audit-logs?userId=${encodeURIComponent(userId)}`}>
                 View all
               </Link>
@@ -1090,7 +1221,7 @@ export default function UserDetail() {
                     "border-transparent",
                     (row.type || "").toUpperCase() === "RETURN"
                       ? "bg-amber-500/15 text-amber-700"
-                      : "bg-emerald-500/15 text-emerald-700"
+                      : "bg-emerald-500/15 text-emerald-700",
                   )}
                 >
                   {formatLabel(row.type)}
@@ -1181,7 +1312,7 @@ export default function UserDetail() {
                       ? "bg-emerald-500/15 text-emerald-700"
                       : String(row.status || "").toUpperCase() === "COMPLETED"
                         ? "bg-sky-500/15 text-sky-700"
-                        : "bg-rose-500/15 text-rose-700"
+                        : "bg-rose-500/15 text-rose-700",
                   )}
                 >
                   {formatLabel(row.status)}
@@ -1254,7 +1385,7 @@ export default function UserDetail() {
                     "border-transparent",
                     row.isRead
                       ? "bg-emerald-500/15 text-emerald-700"
-                      : "bg-amber-500/15 text-amber-700"
+                      : "bg-amber-500/15 text-amber-700",
                   )}
                 >
                   {row.isRead ? "Read" : "Unread"}
@@ -1272,10 +1403,7 @@ export default function UserDetail() {
         />
       </div>
 
-      <AlertDialog
-        open={verifyEmailOpen}
-        onOpenChange={setVerifyEmailOpen}
-      >
+      <AlertDialog open={verifyEmailOpen} onOpenChange={setVerifyEmailOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Send verification email?</AlertDialogTitle>
