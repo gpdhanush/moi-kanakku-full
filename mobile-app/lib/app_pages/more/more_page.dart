@@ -27,7 +27,7 @@ class MorePage extends StatelessWidget {
           appBar: MoiAppHeader(
             title: languageProvider.tr('nav.more'),
             titleFontSize: 12,
-            height: 50,
+            height: AppConstants.appHeaderHeight,
             accent: AppColors.primary,
             showBack: false,
           ),

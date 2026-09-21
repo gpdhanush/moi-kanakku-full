@@ -410,7 +410,7 @@ class _MoiFlowHeader extends StatelessWidget implements PreferredSizeWidget {
   });
 
   @override
-  Size get preferredSize => const Size.fromHeight(72);
+  Size get preferredSize => const Size.fromHeight(AppConstants.appHeaderHeight);
 
   @override
   Widget build(BuildContext context) {

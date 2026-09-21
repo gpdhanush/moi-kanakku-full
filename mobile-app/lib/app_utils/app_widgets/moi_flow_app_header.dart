@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:moi/app_configs/index.dart';
 import 'package:moi/app_utils/app_widgets/moi_app_header.dart';
 
 /// Shared modern app bar for Moi Received / Given flow screens.
@@ -22,7 +23,11 @@ class MoiFlowAppHeader extends StatelessWidget implements PreferredSizeWidget {
   @override
   Size get preferredSize {
     final hasSubtitle = subtitle != null && subtitle!.trim().isNotEmpty;
-    return Size.fromHeight(hasSubtitle ? 84 : 72);
+    return Size.fromHeight(
+      hasSubtitle
+          ? AppConstants.appHeaderHeight + 12
+          : AppConstants.appHeaderHeight,
+    );
   }
 
   @override

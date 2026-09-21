@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hugeicons/hugeicons.dart';
+import 'package:moi/app_configs/index.dart';
 import 'package:moi/app_themes/index.dart';
 import 'package:moi/app_utils/index.dart';
 
@@ -27,7 +28,7 @@ class MoiAppHeader extends StatelessWidget implements PreferredSizeWidget {
     this.showBack = false,
     this.onBack,
     this.actions,
-    this.height = 72,
+    this.height = AppConstants.appHeaderHeight,
     this.titleFontSize = 18,
     this.accent,
   });

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:moi/app_configs/index.dart';
 import 'package:moi/app_themes/index.dart';
 
 class AppBarWidget extends StatelessWidget implements PreferredSizeWidget {
@@ -9,7 +10,7 @@ class AppBarWidget extends StatelessWidget implements PreferredSizeWidget {
   const AppBarWidget({super.key, required this.title, required this.action});
 
   @override
-  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+  Size get preferredSize => const Size.fromHeight(AppConstants.appHeaderHeight);
 
   @override
   Widget build(BuildContext context) {
@@ -48,7 +49,7 @@ class AppBarWidget extends StatelessWidget implements PreferredSizeWidget {
             ],
       iconTheme: IconThemeData(color: colors.textPrimary, size: 24),
       leadingWidth: 56,
-      toolbarHeight: kToolbarHeight,
+      toolbarHeight: AppConstants.appHeaderHeight,
       flexibleSpace: Container(
         decoration: BoxDecoration(
           color: colors.background,
@@ -67,8 +68,9 @@ class AppBarWidget extends StatelessWidget implements PreferredSizeWidget {
         statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
         systemStatusBarContrastEnforced: false,
         systemNavigationBarColor: colors.surface,
-        systemNavigationBarIconBrightness:
-            isDark ? Brightness.light : Brightness.dark,
+        systemNavigationBarIconBrightness: isDark
+            ? Brightness.light
+            : Brightness.dark,
       ),
     );
   }

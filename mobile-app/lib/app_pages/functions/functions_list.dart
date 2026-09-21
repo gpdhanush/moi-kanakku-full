@@ -127,7 +127,7 @@ class _FunctionsListState extends State<FunctionsList> {
             title: languageProvider.tr('functions.title'),
             showBack: !widget.embeddedInShell,
             onBack: _goHome,
-            height: 72,
+            height: AppConstants.appHeaderHeight,
             titleFontSize: 18,
           ),
           body: MoiRefreshIndicator(

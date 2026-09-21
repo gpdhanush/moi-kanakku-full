@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hugeicons/hugeicons.dart';
+import 'package:moi/app_configs/index.dart';
 import 'package:moi/app_pages/settings_page/settings_menus_panel.dart';
 import 'package:moi/app_themes/index.dart';
 import 'package:moi/app_utils/app_providers/language_provider.dart';
@@ -57,7 +58,7 @@ class _SettingsAppHeader extends StatelessWidget
   const _SettingsAppHeader({required this.title, required this.onBack});
 
   @override
-  Size get preferredSize => const Size.fromHeight(72);
+  Size get preferredSize => const Size.fromHeight(AppConstants.appHeaderHeight);
 
   @override
   Widget build(BuildContext context) {

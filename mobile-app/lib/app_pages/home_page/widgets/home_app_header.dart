@@ -18,7 +18,7 @@ class HomeAppHeader extends StatelessWidget implements PreferredSizeWidget {
   });
 
   @override
-  Size get preferredSize => const Size.fromHeight(72);
+  Size get preferredSize => const Size.fromHeight(AppConstants.appHeaderHeight);
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +35,7 @@ class HomeAppHeader extends StatelessWidget implements PreferredSizeWidget {
             : AppImages.splashLabelDark;
 
         return MoiAppHeader(
-          height: 72,
+          height: AppConstants.appHeaderHeight,
           titleWidget: Image.asset(
             headerLabelAsset,
             width: labelWidth,
