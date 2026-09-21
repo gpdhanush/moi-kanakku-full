@@ -220,6 +220,8 @@ exports.userController = {
         profileImageUrl: googlePicture,
       });
 
+      const refreshedUser = await User.findById(user.id);
+
       const userID = user.id;
       tokenService.invalidatePreviousToken(userID);
       const jwtToken = tokenService.generateToken(userID);
@@ -234,7 +236,7 @@ exports.userController = {
             id: user.id,
             name: user.full_name,
             email: user.email,
-            profileImageUrl: googlePicture || user.profile_image_url || null,
+            profileImageUrl: refreshedUser?.profile_image_url || null,
             signupType: normalizeSignupType(user.signup_type || 'email'),
             passwordSet: Boolean(user.password_set),
             emailVerified: Boolean(user.is_verified),

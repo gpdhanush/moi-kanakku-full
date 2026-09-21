@@ -572,21 +572,23 @@ const User = {
                 );
             }
 
-            // Update user_profiles table
+            // Update or create the profile row so Google-created accounts can save details.
             if (gender || date_of_birth || address_line1 || address_line2 || city || state || country || postal_code) {
                 await db.query(
-                    `UPDATE user_profiles SET 
-                        gender = COALESCE(?, gender),
-                        date_of_birth = COALESCE(?, date_of_birth),
-                        address_line1 = COALESCE(?, address_line1),
-                        address_line2 = COALESCE(?, address_line2),
-                        city = COALESCE(?, city),
-                        state = COALESCE(?, state),
-                        country = COALESCE(?, country),
-                        postal_code = COALESCE(?, postal_code)
-                    WHERE user_id = ?`,
-                    [gender || null, dobFormatted || null, address_line1 || null, address_line2 || null,
-                     city || null, state || null, country || null, postal_code || null, idBin]
+                    `INSERT INTO user_profiles
+                        (user_id, gender, date_of_birth, address_line1, address_line2, city, state, country, postal_code)
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                     ON DUPLICATE KEY UPDATE
+                        gender = COALESCE(VALUES(gender), gender),
+                        date_of_birth = COALESCE(VALUES(date_of_birth), date_of_birth),
+                        address_line1 = COALESCE(VALUES(address_line1), address_line1),
+                        address_line2 = COALESCE(VALUES(address_line2), address_line2),
+                        city = COALESCE(VALUES(city), city),
+                        state = COALESCE(VALUES(state), state),
+                        country = COALESCE(VALUES(country), country),
+                        postal_code = COALESCE(VALUES(postal_code), postal_code)`,
+                    [idBin, gender || null, dobFormatted || null, address_line1 || null, address_line2 || null,
+                     city || null, state || null, country || null, postal_code || null]
                 );
             }
 
@@ -639,8 +641,13 @@ const User = {
         if (profileImageUrl) {
             await db.query(
                 `INSERT INTO user_profiles (user_id, profile_image_url)
-                 VALUES (?, ?)
-                 ON DUPLICATE KEY UPDATE profile_image_url = VALUES(profile_image_url)`,
+                                 VALUES (?, ?)
+                                 ON DUPLICATE KEY UPDATE profile_image_url =
+                                     CASE
+                                         WHEN profile_image_url IS NULL OR TRIM(profile_image_url) = ''
+                                         THEN VALUES(profile_image_url)
+                                         ELSE profile_image_url
+                                     END`,
                 [idBin, profileImageUrl]
             );
         }

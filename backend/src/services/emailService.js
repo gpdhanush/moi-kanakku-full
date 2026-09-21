@@ -12,6 +12,24 @@ function escapeHtml(text = '') {
     }[m]));
 }
 
+function htmlToText(html = '') {
+    return String(html)
+        .replace(/<style[\s\S]*?<\/style>/gi, '')
+        .replace(/<script[\s\S]*?<\/script>/gi, '')
+        .replace(/<br\s*\/?>/gi, '\n')
+        .replace(/<\/(p|div|h[1-6]|li|tr)>/gi, '\n')
+        .replace(/<[^>]+>/g, '')
+        .replace(/&nbsp;/gi, ' ')
+        .replace(/&amp;/gi, '&')
+        .replace(/&lt;/gi, '<')
+        .replace(/&gt;/gi, '>')
+        .replace(/&quot;/gi, '"')
+        .replace(/&#039;/gi, "'")
+        .replace(/[ \t]+\n/g, '\n')
+        .replace(/\n{3,}/g, '\n\n')
+        .trim();
+}
+
 /**
  * Extract display name and optional reply-to from EMAIL_FROM.
  */
@@ -69,8 +87,8 @@ function buildMailOptions({ to, subject, html, from, text }) {
         to,
         subject,
         html,
+        text: text || htmlToText(html),
     };
-    if (text) mailOptions.text = text;
     const replyTo = getReplyToEmail();
     if (replyTo) mailOptions.replyTo = replyTo;
     return mailOptions;

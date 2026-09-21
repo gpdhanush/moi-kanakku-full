@@ -928,9 +928,9 @@ exports.controller = {
             const db = require('../config/database');
             const { toBinaryUUID } = require('../helpers/uuid');
 
-            // Verify user exists
+            // Admins can inspect retained notifications for soft-deleted users.
             const [users] = await db.query(
-                `SELECT id FROM users WHERE id = ? AND (is_deleted = 0 OR is_deleted IS NULL)`,
+                `SELECT id FROM users WHERE id = ?`,
                 [toBinaryUUID(userId)]
             );
 
