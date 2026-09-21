@@ -1,8 +1,8 @@
 name: moi
-description: "A new Flutter project."
+description: "Moi Kanakku - Tamil Accounting App"
 publish_to: "none"
 
-version: 5.2.1+55 # ANDROID PLAY STORE VERSION
+version: 5.2.2+55 # ANDROID PLAY STORE VERSION
 
 environment:
   sdk: ^3.8.0
