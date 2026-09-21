@@ -563,6 +563,7 @@ export default function UsersMaster() {
                     const isActive =
                       (user.status || "ACTIVE").toUpperCase() === "ACTIVE";
                     const accountStatus = (user.status || "ACTIVE").toUpperCase();
+                    const isBlocked = accountStatus === "BLOCKED";
                     return (
                       <TableRow
                         key={id}
@@ -623,11 +624,15 @@ export default function UsersMaster() {
                                 ? "bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/20"
                                 : accountStatus === "DELETED"
                                   ? "bg-amber-500/15 text-amber-700 hover:bg-amber-500/20"
+                                  : isBlocked
+                                    ? "bg-orange-500/15 text-orange-700 hover:bg-orange-500/20"
                                   : "bg-rose-500/15 text-rose-700 hover:bg-rose-500/20"
                             )}
                           >
                             {accountStatus === "DELETED"
                               ? "Deleted"
+                              : isBlocked
+                                ? "Blocked"
                               : isActive
                                 ? "Active"
                                 : "Inactive"}

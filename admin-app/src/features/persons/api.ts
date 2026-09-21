@@ -39,7 +39,8 @@ function extractErrorMessage(data: MoiApiResponse<unknown>): string {
 export const personsApi = {
   listByUser: async (userId: string): Promise<PersonListResult> => {
     const response = await apiClient.get<MoiApiResponse<PersonItem[]>>(
-      `/persons/admin/${userId}`
+      `/persons/admin/${userId}`,
+      { skipErrorHandler: true }
     );
     const data = response.data;
     if (data.responseType !== 'S') {

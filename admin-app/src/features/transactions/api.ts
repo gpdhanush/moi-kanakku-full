@@ -80,7 +80,8 @@ async function fetchPage(
       ...(userId ? { userId } : {}),
       page,
       limit,
-    }
+      },
+      { skipErrorHandler: true }
   );
   return response.data;
 }

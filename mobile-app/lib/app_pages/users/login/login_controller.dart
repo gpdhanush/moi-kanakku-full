@@ -124,7 +124,7 @@ class LoginController {
         if (userData['requiresPasswordSetup'] == true) {
           Navigator.pushNamedAndRemoveUntil(
             context,
-            'set-password',
+            'google-profile-setup',
             (route) => false,
           );
           return true;

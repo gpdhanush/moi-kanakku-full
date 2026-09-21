@@ -145,7 +145,8 @@ export const usersApi = {
 
   getById: async (userId: string): Promise<UserDetail> => {
     const response = await apiClient.get<MoiApiResponse<UserDetail>>(
-      `/users/admin/all-user-lists/${userId}`
+      `/users/admin/all-user-lists/${userId}`,
+      { skipErrorHandler: true }
     );
     return assertSuccess(response.data);
   },

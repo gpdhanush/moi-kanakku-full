@@ -102,7 +102,7 @@ export const auditLogsApi = {
 
     const response = await apiClient.get<MoiApiResponse<AuditLogListResult>>(
       '/admin/audit-logs',
-      { params }
+      { params, skipErrorHandler: true }
     );
     return assertSuccess(response.data);
   },

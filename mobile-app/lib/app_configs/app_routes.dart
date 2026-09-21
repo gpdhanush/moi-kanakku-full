@@ -160,6 +160,8 @@ class AppRoute {
           page = const LoginPage();
         case "set-password":
           page = const SetPasswordPage();
+        case "google-profile-setup":
+          page = const GoogleProfileSetupPage();
         case "signup":
           page = const Signup();
         case "forgot_password":

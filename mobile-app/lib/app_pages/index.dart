@@ -35,6 +35,7 @@ export 'users/forgot_password/forgot_password.dart';
 export 'users/forgot_password/verify_forgot_otp.dart';
 export 'users/restore_account/restore_account_send_otp.dart';
 export 'users/restore_account/restore_account_verify_otp.dart';
+export 'users/login/google_profile_setup_page.dart';
 export './profile_page/profile_page.dart';
 export './profile_page/change_password.dart';
 export './functions/functions_list.dart';
