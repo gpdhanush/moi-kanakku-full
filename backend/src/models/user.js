@@ -189,6 +189,23 @@ const User = {
         return rows[0] ? mapUserRow(rows[0]) : null;
     },
 
+    async findByGoogleIdIncludingDeleted(googleId) {
+        if (!googleId) return null;
+        const [rows] = await db.query(
+            `SELECT u.id, u.full_name, u.email, u.mobile, u.referral_code, u.status,
+                    u.is_verified, u.email_verified_at, u.last_activity_at, u.is_deleted, u.deleted_at,
+                    u.created_at, u.updated_at, u.signup_type, u.google_id, u.password_set,
+                    uc.password_hash, uc.password_changed_at,
+                    COALESCE(up.profile_image_url, NULL) AS profile_image_url
+             FROM users u
+             LEFT JOIN user_credentials uc ON uc.user_id = u.id
+             LEFT JOIN user_profiles up ON up.user_id = u.id
+             WHERE u.google_id = ?`,
+            [String(googleId).trim()]
+        );
+        return rows[0] ? mapUserRow(rows[0]) : null;
+    },
+
     async linkGoogleAccount(userId, googleId) {
         if (!userId || !googleId) return null;
         const [result] = await db.query(

@@ -164,6 +164,22 @@ exports.userController = {
       }
 
       if (!user) {
+        const deletedUser =
+          (await User.findByGoogleIdIncludingDeleted(googleId)) ||
+          (await User.findByEmailIncludingDeleted(normalizedEmail));
+        if (deletedUser && (deletedUser.is_deleted || String(deletedUser.status).toUpperCase() === 'DELETED')) {
+          return res.status(403).json({
+            responseType: 'F',
+            responseValue: {
+              message: 'Your account has been deleted. Restore it to continue.',
+              deleted_at: deletedUser.deleted_at,
+              account_status: 'DELETED',
+            },
+          });
+        }
+      }
+
+      if (!user) {
         const createdUser = await User.createGoogleUser({
           name: normalizedName,
           email: normalizedEmail,

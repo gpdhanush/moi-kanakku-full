@@ -129,6 +129,18 @@ class LoginController {
         return true;
       }
 
+      if (response != null &&
+          response['responseType'] == 'F' &&
+          response['responseValue']?['account_status'] == 'DELETED') {
+        if (!context.mounted) return false;
+        Navigator.pushNamed(
+          context,
+          'restore_account_send_otp',
+          arguments: account.email,
+        );
+        return false;
+      }
+
       final message =
           response?['responseValue']?['message'] ??
           'Google sign-in failed. Please try again.';

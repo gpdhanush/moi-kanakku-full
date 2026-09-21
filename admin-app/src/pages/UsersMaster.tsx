@@ -562,6 +562,7 @@ export default function UsersMaster() {
                       .toUpperCase();
                     const isActive =
                       (user.status || "ACTIVE").toUpperCase() === "ACTIVE";
+                    const accountStatus = (user.status || "ACTIVE").toUpperCase();
                     return (
                       <TableRow
                         key={id}
@@ -620,10 +621,16 @@ export default function UsersMaster() {
                               "border-transparent",
                               isActive
                                 ? "bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/20"
-                                : "bg-rose-500/15 text-rose-700 hover:bg-rose-500/20"
+                                : accountStatus === "DELETED"
+                                  ? "bg-amber-500/15 text-amber-700 hover:bg-amber-500/20"
+                                  : "bg-rose-500/15 text-rose-700 hover:bg-rose-500/20"
                             )}
                           >
-                            {isActive ? "Active" : "Inactive"}
+                            {accountStatus === "DELETED"
+                              ? "Deleted"
+                              : isActive
+                                ? "Active"
+                                : "Inactive"}
                           </Badge>
                         </TableCell>
                       </TableRow>

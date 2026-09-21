@@ -280,6 +280,7 @@ export default function UserDetail() {
   );
 
   const isActive = (user?.status || "").toUpperCase() === "ACTIVE";
+  const isDeleted = (user?.status || "").toUpperCase() === "DELETED";
   const isVerified = Boolean(Number(user?.is_verified));
   const deviceRows: UserDevice[] =
     user?.devices && user.devices.length > 0
@@ -613,7 +614,9 @@ export default function UserDetail() {
                       "border-transparent",
                       isActive
                         ? "bg-emerald-500/15 text-emerald-700"
-                        : "bg-rose-500/15 text-rose-700"
+                        : isDeleted
+                          ? "bg-amber-500/15 text-amber-700"
+                          : "bg-rose-500/15 text-rose-700"
                     )}
                   >
                     {formatLabel(user?.status) || "Unknown"}
