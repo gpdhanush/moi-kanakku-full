@@ -327,7 +327,7 @@ class _TransactionDashboardState extends State<TransactionDashboard> {
                           ],
                         ),
                         const SizedBox(height: AppSpacing.md),
-                        for (int i = 0; i < 5; i++) ...[
+                        for (int i = 0; i < 12; i++) ...[
                           if (i > 0) const SizedBox(height: AppSpacing.sm),
                           const AppSkeletonListTile(showTrailing: true),
                         ],

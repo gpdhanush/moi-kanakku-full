@@ -79,49 +79,61 @@ class MoiAppHeader extends StatelessWidget implements PreferredSizeWidget {
         child: Builder(
           builder: (context) {
             final iconColor = AppColors.of(context).textPrimary;
-            return circleButton(
-              tooltip: tooltip,
-              onTap: onTap,
-              child: Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  HugeIcon(
-                    icon: HugeIcons.strokeRoundedNotification01,
-                    color: iconColor,
-                    size: 22,
-                    strokeWidth: 1.9,
-                  ),
-                  if (unreadCount > 0)
-                    Positioned(
-                      right: -5,
-                      top: -5,
-                      child: Container(
-                        constraints: const BoxConstraints(minWidth: 16),
-                        height: 16,
-                        padding: const EdgeInsets.symmetric(horizontal: 3.5),
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                          color: const Color(0xffFF4D4F),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: badgeBorderColor,
-                            width: 1.5,
-                          ),
+            final button = Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: onTap,
+                customBorder: const CircleBorder(),
+                child: SizedBox(
+                  width: 42,
+                  height: 42,
+                  child: Center(
+                    child: Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        HugeIcon(
+                          icon: HugeIcons.strokeRoundedNotification01,
+                          color: iconColor,
+                          size: 22,
+                          strokeWidth: 1.9,
                         ),
-                        child: Text(
-                          unreadCount > 99 ? '99+' : '$unreadCount',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 9,
-                            fontWeight: FontWeight.w700,
-                            height: 1,
+                        if (unreadCount > 0)
+                          Positioned(
+                            right: -5,
+                            top: -5,
+                            child: Container(
+                              constraints: const BoxConstraints(minWidth: 16),
+                              height: 16,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 3.5,
+                              ),
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                color: const Color(0xffFF4D4F),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: badgeBorderColor,
+                                  width: 1.5,
+                                ),
+                              ),
+                              child: Text(
+                                unreadCount > 99 ? '99+' : '$unreadCount',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.w700,
+                                  height: 1,
+                                ),
+                              ),
+                            ),
                           ),
-                        ),
-                      ),
+                      ],
                     ),
-                ],
+                  ),
+                ),
               ),
             );
+            return Tooltip(message: tooltip, child: button);
           },
         ),
       ),

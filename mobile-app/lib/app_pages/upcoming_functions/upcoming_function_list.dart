@@ -161,7 +161,7 @@ class _UpcomingFunctionListState extends State<UpcomingFunctionList> {
                         parent: ClampingScrollPhysics(),
                       ),
                       children: [
-                        for (int i = 0; i < 5; i++) ...[
+                        for (int i = 0; i < 12; i++) ...[
                           if (i > 0) const SizedBox(height: AppSpacing.sm),
                           const AppSkeletonListTile(showTrailing: true),
                         ],

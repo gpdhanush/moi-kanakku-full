@@ -18,7 +18,7 @@ const {
 function buildBulkEmailHtml(safeName, body) {
   return getBrandedEmailContent({
     title: 'Moi Kanakku Notification',
-    body: `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-spacing:0;"><tr><td style="padding:0;"><span style="display:inline-block;padding:8px 14px;background-color:#f1efe7;color:#171717;border-radius:999px;font-size:12px;line-height:16px;font-weight:700;letter-spacing:0.03em;">NOTIFICATION</span><h1 style="margin:20px 0 12px;color:#171717;font-size:32px;line-height:42px;">Moi Kanakku notification</h1><p style="margin:0 0 10px;color:#171717;font-size:17px;line-height:27px;">Hi <strong>${safeName}</strong>,</p><div style="margin:0;color:#686868;font-size:16px;line-height:27px;">${body}</div></td></tr></table>`,
+    body: `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-spacing:0;"><tr><td style="padding:0;"><p style="margin:0 0 10px;color:#171717;font-size:17px;line-height:27px;">Hi <strong>${safeName}</strong>,</p><div style="margin:0;color:#686868;font-size:16px;line-height:27px;">${body}</div></td></tr></table>`,
   });
 }
 

@@ -100,7 +100,7 @@ class HomeFunctionTotalsSection extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
             child: Column(
               children: [
-                for (int i = 0; i < 3; i++) ...[
+                for (int i = 0; i < 12; i++) ...[
                   if (i > 0) const SizedBox(height: AppSpacing.sm),
                   Container(
                     padding: const EdgeInsets.symmetric(

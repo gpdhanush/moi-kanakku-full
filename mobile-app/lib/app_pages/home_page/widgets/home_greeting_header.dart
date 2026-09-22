@@ -70,7 +70,12 @@ class HomeGreetingHeader extends StatelessWidget {
         final displayName = (userName == null || userName.isEmpty)
             ? 'User'
             : userName;
-        final lastLogin = user?['last_login']?.toString() ?? '';
+        final lastLogin =
+            (user?['last_login'] ??
+                    user?['lastLogin'] ??
+                    user?['last_activity_at'])
+                ?.toString() ??
+            '';
         final profileImageUrl = _resolveProfileImageUrl(user);
         final gender = user?['gender']?.toString();
 

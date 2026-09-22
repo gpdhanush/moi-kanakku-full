@@ -144,7 +144,7 @@ class _FunctionsListState extends State<FunctionsList> {
                       AppSpacing.xxl,
                     ),
                     children: [
-                      for (int i = 0; i < 5; i++) ...[
+                      for (int i = 0; i < 12; i++) ...[
                         if (i > 0) const SizedBox(height: AppSpacing.sm),
                         const AppSkeletonListTile(),
                       ],

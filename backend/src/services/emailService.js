@@ -1,4 +1,5 @@
 require('dotenv').config();
+const path = require('path');
 const nodemailer = require('nodemailer');
 const logger = require('../config/logger');
 
@@ -88,6 +89,18 @@ function buildMailOptions({ to, subject, html, from, text }) {
         subject,
         html,
         text: text || htmlToText(html),
+        attachments: [
+            {
+                filename: 'app-logo-light.png',
+                path: path.join(__dirname, '../../assets/app-logo-light.png'),
+                cid: 'moi-app-logo',
+            },
+            {
+                filename: 'label-dark.png',
+                path: path.join(__dirname, '../../assets/label-dark.png'),
+                cid: 'moi-label-dark',
+            },
+        ],
     };
     const replyTo = getReplyToEmail();
     if (replyTo) mailOptions.replyTo = replyTo;
@@ -377,11 +390,9 @@ function getLegacyEmailVerificationContent({ name, verifyLink, expiresInHours = 
 }
 
 function getEmailAssetUrl(assetName) {
-    const baseUrl = (
-        process.env.EMAIL_ASSET_BASE_URL ||
-        'https://moi-kanakku-api.prasowlabs.in'
-    ).replace(/\/$/, '');
-    return `${baseUrl}/assets/${assetName}`;
+    return assetName === 'app-logo-light.png'
+        ? 'cid:moi-app-logo'
+        : 'cid:moi-label-dark';
 }
 
 function getBrandedEmailContent({ title, body, logoUrl, labelUrl }) {
@@ -440,7 +451,7 @@ async function sendFeedbackConfirmationEmail(toEmail, userName) {
         const safeName = escapeHtml(userName || 'User');
         const html = getBrandedEmailContent({
             title: 'Feedback Submitted',
-            body: `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-spacing:0;"><tr><td style="padding:0;"><h1 style="margin:0 0 12px;color:#171717;font-size:32px;line-height:42px;">Feedback submitted</h1><p style="margin:0 0 10px;color:#171717;font-size:17px;line-height:27px;">Hi <strong>${safeName}</strong>,</p><p style="margin:0;color:#686868;font-size:16px;line-height:27px;">Your feedback has been successfully submitted. We will review it shortly.</p><div style="margin:32px 0 18px;padding:22px;background:#f1efe7;border:1px solid #e4e1d9;border-radius:16px;color:#686868;font-size:15px;line-height:25px;"><strong style="color:#171717;">Help us grow!</strong><br>If you like Moi Kanakku, please share it with your friends and family. Your support helps us improve the app for everyone.</div></td></tr></table>`,
+            body: `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-spacing:0;"><tr><td style="padding:0;"><p style="margin:0 0 10px;color:#171717;font-size:17px;line-height:27px;">Hi <strong>${safeName}</strong>,</p><p style="margin:0;color:#686868;font-size:16px;line-height:27px;">Your feedback has been successfully submitted. We will review it shortly.</p><div style="margin:32px 0 18px;padding:22px;background:#f1efe7;border:1px solid #e4e1d9;border-radius:16px;color:#686868;font-size:15px;line-height:25px;"><strong style="color:#171717;">Help us grow!</strong><br>If you like Moi Kanakku, please share it with your friends and family. Your support helps us improve the app for everyone.</div></td></tr></table>`,
         });
         await sendEmail({ from: formatEmailFrom('Admin - Moi Kanakku Team'), to: toEmail, subject: 'Feedback Submission - Moi Kanakku', html });
     } catch (err) {
@@ -455,7 +466,7 @@ async function sendFeedbackReplyEmail(toEmail, userName, replyText) {
         const safeReply = escapeHtml(replyText || '').replace(/\n/g, '<br>');
         const html = getBrandedEmailContent({
             title: 'Feedback Response',
-            body: `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-spacing:0;"><tr><td style="padding:0;"><h1 style="margin:0 0 12px;color:#171717;font-size:32px;line-height:42px;">We responded to your feedback</h1><p style="margin:0 0 10px;color:#171717;font-size:17px;line-height:27px;">Hi <strong>${safeName}</strong>,</p><p style="margin:0 0 18px;color:#686868;font-size:16px;line-height:27px;">A response has been provided for your feedback.</p><div style="padding:22px;background:#f1efe7;border:1px solid #e4e1d9;border-radius:16px;color:#686868;font-size:15px;line-height:25px;">${safeReply}</div></td></tr></table>`,
+            body: `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-spacing:0;"><tr><td style="padding:0;"><p style="margin:0 0 10px;color:#171717;font-size:17px;line-height:27px;">Hi <strong>${safeName}</strong>,</p><p style="margin:0 0 18px;color:#686868;font-size:16px;line-height:27px;">A response has been provided for your feedback.</p><div style="padding:22px;background:#f1efe7;border:1px solid #e4e1d9;border-radius:16px;color:#686868;font-size:15px;line-height:25px;">${safeReply}</div></td></tr></table>`,
         });
         await sendEmail({ from: formatEmailFrom('Admin - Moi Kanakku Team'), to: toEmail, subject: 'Response to your feedback - Moi Kanakku', html });
     } catch (err) {
@@ -472,7 +483,7 @@ function getAdminRegistrationEmailContent(userData) {
     const rows = Object.entries(labels).map(([key, label]) => `<tr><td style="padding:8px 0;color:#686868;"><strong style="color:#171717;">${label}:</strong> ${escapeHtml(userData[key] || 'N/A')}</td></tr>`).join('');
     return getBrandedEmailContent({
         title: 'New User Registration',
-        body: `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-spacing:0;"><tr><td style="padding:0;"><h1 style="margin:0 0 12px;color:#171717;font-size:32px;line-height:42px;">New user registered</h1><p style="margin:0 0 18px;color:#686868;font-size:16px;line-height:27px;">A new user has registered on Moi Kanakku.</p><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-spacing:0;padding:12px 22px;background:#f1efe7;border:1px solid #e4e1d9;border-radius:16px;font-size:15px;line-height:22px;">${rows}</table></td></tr></table>`,
+        body: `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-spacing:0;"><tr><td style="padding:0;"><p style="margin:0 0 18px;color:#171717;font-size:17px;line-height:27px;">Hi Admin,</p><p style="margin:0 0 18px;color:#686868;font-size:16px;line-height:27px;">A new user has registered on Moi Kanakku.</p><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-spacing:0;padding:12px 22px;background:#f1efe7;border:1px solid #e4e1d9;border-radius:16px;font-size:15px;line-height:22px;">${rows}</table></td></tr></table>`,
     });
 }
 
@@ -481,7 +492,6 @@ function getWelcomeEmailContent(name) {
     return getBrandedEmailContent({
         title: 'Welcome to Moi Kanakku',
         body: `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-spacing:0;">
-            <tr><td style="padding:0;"><h1 style="margin:0 0 12px;color:#171717;font-size:32px;line-height:42px;font-weight:700;">Welcome to Moi Kanakku</h1></td></tr>
             <tr><td style="padding:0;"><p style="margin:0 0 10px;color:#171717;font-size:17px;line-height:27px;">Hi <strong>${safeName}</strong>,</p></td></tr>
             <tr><td style="padding:0;"><p style="margin:0;color:#686868;font-size:16px;line-height:27px;">We are pleased to welcome you to Moi Kanakku. Our platform helps you manage events, relations, and gift records in a simple and organized way.</p></td></tr>
             <tr><td style="padding:0;"><div style="margin:32px 0 18px;padding:22px;background-color:#f1efe7;border:1px solid #e4e1d9;border-radius:16px;color:#686868;font-size:15px;line-height:25px;"><strong style="color:#171717;">Getting started with Moi Kanakku:</strong><br>Create and manage events, maintain relations and guest details, track gifts, and export your records anytime.</div></td></tr>
@@ -497,7 +507,6 @@ function getEmailVerificationContent({ name, verifyLink, expiresInHours = 24 }) 
     return getBrandedEmailContent({
         title: 'Verify your email',
         body: `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-spacing:0;">
-            <tr><td style="padding:0;"><h1 style="margin:0 0 12px;color:#171717;font-size:32px;line-height:42px;font-weight:700;">Verify your email</h1></td></tr>
             <tr><td style="padding:0;"><p style="margin:0 0 10px;color:#171717;font-size:17px;line-height:27px;">Hi <strong>${safeName}</strong>,</p></td></tr>
             <tr><td style="padding:0;"><p style="margin:0;color:#686868;font-size:16px;line-height:27px;">Please confirm this email address for your Moi Kanakku account by clicking the button below.</p></td></tr>
             <tr><td align="center" style="padding:32px 0 18px;"><a href="${safeLink}" style="display:inline-block;padding:14px 28px;background-color:#171717;color:#ffffff;text-decoration:none;border-radius:8px;font-size:16px;font-weight:700;">Verify Email</a></td></tr>
@@ -522,8 +531,8 @@ function getOtpEmailContent({
     securityMessage = 'If you did not request this code, you can safely ignore this email.',
     automaticMessage = 'This message was sent automatically by Moi Kanakku.',
     thanksMessage = 'Thank you for using Moi Kanakku.',
-    logoUrl = '/assets/app-logo-light.png',
-    labelUrl = '/assets/label-dark.png',
+    logoUrl,
+    labelUrl,
     copyrightYear = new Date().getFullYear(),
 }) {
         const safeName = escapeHtml(name || 'User');
@@ -534,8 +543,12 @@ function getOtpEmailContent({
         const safeSecurityMessage = escapeHtml(securityMessage);
         const safeAutomaticMessage = escapeHtml(automaticMessage);
         const safeThanksMessage = escapeHtml(thanksMessage);
-        const safeLogoUrl = escapeHtml(logoUrl);
-        const safeLabelUrl = escapeHtml(labelUrl);
+        const safeLogoUrl = escapeHtml(
+            logoUrl || getEmailAssetUrl('app-logo-light.png'),
+        );
+        const safeLabelUrl = escapeHtml(
+            labelUrl || getEmailAssetUrl('label-dark.png'),
+        );
         const safeCopyrightYear = escapeHtml(copyrightYear);
         const minutes = Number(expiresInMinutes) || 10;
 
@@ -570,7 +583,6 @@ function getOtpEmailContent({
                     <tr>
                         <td style="width:100%;padding:45px 60px 50px;background-color:#ffffff;">
                             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-spacing:0;">
-                                <tr><td style="padding:0;"><h1 style="margin:0 0 12px;padding:0;color:#171717;font-size:32px;line-height:42px;font-weight:700;letter-spacing:-0.6px;">${safeTitle}</h1></td></tr>
                                 <tr><td style="padding:0;"><p style="margin:0 0 10px;padding:0;color:#171717;font-size:17px;line-height:27px;">Hi <strong>${safeName}</strong>,</p></td></tr>
                                 <tr><td style="padding:0;"><p style="margin:0;padding:0;color:#686868;font-size:16px;line-height:27px;">${safeMessage}</p></td></tr>
                                 <tr>

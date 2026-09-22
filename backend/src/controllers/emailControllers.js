@@ -21,6 +21,10 @@ const userError = 'User not found!';
 const EMAIL_VERIFY_TYPE = 'email_verify';
 const EMAIL_VERIFY_EXPIRES = process.env.EMAIL_VERIFY_EXPIRES || '24h';
 const EMAIL_VERIFY_HOURS = Number(process.env.EMAIL_VERIFY_HOURS) || 24;
+const EMAIL_ASSET_BASE_URL = (
+    process.env.EMAIL_ASSET_BASE_URL ||
+    'https://moi-api.floatwalktiruppur.in'
+).replace(/\/$/, '');
 
 function clearAdminUserListCache() {
     cache.delByPrefix('admin:all-user-lists');
@@ -343,10 +347,10 @@ function renderVerifyEmailPage({ success, title, message }) {
                 <tr>
                   <td class="brand-section">
                     <span class="brand-mark">
-                      <img src="/assets/app-logo-light.png" alt="Moi Kanakku logo" />
+                      <img src="${EMAIL_ASSET_BASE_URL}/assets/app-logo-light.png" alt="Moi Kanakku logo" />
                     </span>
                     <span class="brand-name">
-                      <img src="/assets/label-dark.png" alt="Moi Kanakku" />
+                      <img src="${EMAIL_ASSET_BASE_URL}/assets/label-dark.png" alt="Moi Kanakku" />
                     </span>
                   </td>
                 </tr>

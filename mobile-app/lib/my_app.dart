@@ -81,6 +81,8 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
                     theme: themeProvider.getThemeForLanguage(
                       languageProvider.currentLanguage,
                     ),
+                    themeAnimationDuration: const Duration(milliseconds: 350),
+                    themeAnimationCurve: Curves.easeInOut,
                     locale: Locale(languageProvider.currentLanguage),
                     title: appName,
                     debugShowCheckedModeBanner: false,

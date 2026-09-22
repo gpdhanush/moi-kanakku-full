@@ -226,7 +226,7 @@ class _FeedbacksState extends State<Feedbacks> {
         padding: const EdgeInsets.symmetric(vertical: 12),
         child: Column(
           children: [
-            for (int i = 0; i < 3; i++) ...[
+            for (int i = 0; i < 12; i++) ...[
               if (i > 0) const SizedBox(height: AppSpacing.sm),
               Container(
                 padding: const EdgeInsets.all(16),
@@ -618,13 +618,11 @@ class _FeedbackCard extends StatelessWidget {
                           borderRadius: BorderRadius.circular(10),
                         ),
                         alignment: Alignment.center,
-                        child: HugeIcon(
-                          icon: HugeIcons.strokeRoundedUserGroup,
-                          color: Theme.of(context).brightness == Brightness.dark
-                              ? AppColors.darkSuccess
-                              : const Color(0xFF2E7D32),
-                          size: 16,
-                          strokeWidth: 1.8,
+                        child: Image.asset(
+                          'assets/images/admin.png',
+                          width: 30,
+                          height: 30,
+                          fit: BoxFit.contain,
                         ),
                       ),
                       const SizedBox(width: 10),

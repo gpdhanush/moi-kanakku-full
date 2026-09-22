@@ -103,7 +103,7 @@ class _NotificationListPageState extends State<NotificationListPage> {
                 physics: const AlwaysScrollableScrollPhysics(
                   parent: BouncingScrollPhysics(),
                 ),
-                itemCount: 6,
+                itemCount: 12,
                 separatorBuilder: (_, _) =>
                     const SizedBox(height: AppSpacing.sm),
                 itemBuilder: (context, index) {
