@@ -110,3 +110,4 @@ coverage/
 play_store_files/moi-master-f2f9415b77b0.json
 # Widget Preview related
 .widget_preview/
+android/app/google-services.json
