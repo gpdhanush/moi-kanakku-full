@@ -256,12 +256,26 @@ class _NotificationListPageState extends State<NotificationListPage> {
 
     return Dismissible(
       key: Key(notification.id),
-      direction: DismissDirection.endToStart,
+      direction: DismissDirection.horizontal,
       background: Container(
+        alignment: Alignment.centerLeft,
+        padding: const EdgeInsets.only(left: 20),
+        decoration: BoxDecoration(
+          color: primary,
+          borderRadius: AppRadius.mdAll,
+        ),
+        child: const HugeIcon(
+          icon: HugeIcons.strokeRoundedTick02,
+          color: Colors.white,
+          size: 24,
+          strokeWidth: 1.9,
+        ),
+      ),
+      secondaryBackground: Container(
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 20),
         decoration: BoxDecoration(
-          color: AppColors.moiGiven,
+          color: Theme.of(context).colorScheme.error,
           borderRadius: AppRadius.mdAll,
         ),
         child: const HugeIcon(
@@ -272,6 +286,11 @@ class _NotificationListPageState extends State<NotificationListPage> {
         ),
       ),
       confirmDismiss: (direction) async {
+        if (direction == DismissDirection.startToEnd) {
+          await _markAsRead(notification);
+          return false;
+        }
+
         final confirmed = await showMoiConfirmSheet(
           context: context,
           title: languageProvider.tr('notifications.deleteTitle'),
@@ -817,12 +836,12 @@ class _NotificationCard extends StatelessWidget {
         child: Ink(
           padding: const EdgeInsets.fromLTRB(14, 14, 8, 14),
           decoration: BoxDecoration(
-            color: isUnread ? accent.withValues(alpha: 0.10) : colors.surface,
+            color: colors.surface,
             borderRadius: AppRadius.mdAll,
-            border: Border.all(
-              color: isUnread ? accent.withValues(alpha: 0.28) : colors.border,
-            ),
-            boxShadow: AppShadows.soft,
+            border: isUnread
+                ? Border.all(color: accent.withValues(alpha: 0.38), width: 2)
+                : null,
+            boxShadow: [],
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
@@ -864,17 +883,6 @@ class _NotificationCard extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        if (isUnread) ...[
-                          const SizedBox(width: 8),
-                          Container(
-                            width: 8,
-                            height: 8,
-                            decoration: BoxDecoration(
-                              color: accent,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                        ],
                       ],
                     ),
                     if (notification.body.trim().isNotEmpty) ...[

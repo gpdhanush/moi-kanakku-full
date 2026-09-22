@@ -202,8 +202,12 @@ class SpeechInputService {
   void _handleError(SpeechRecognitionError error) {
     debugPrint('SpeechInputService error: ${error.errorMsg}');
     // Permanent no-match / timeout should not force stale text into the field.
-    final ignorable = error.errorMsg.contains('error_no_match') ||
-        error.errorMsg.contains('error_speech_timeout');
+    final normalizedError = error.errorMsg.toLowerCase();
+    final ignorable =
+        normalizedError.contains('error_no_match') ||
+        normalizedError.contains('error_speech_timeout') ||
+        normalizedError.contains('no match') ||
+        normalizedError.contains('no speech');
     if (!ignorable && _lastWords.isNotEmpty) {
       _commitFinalIfNeeded();
     } else {
@@ -261,9 +265,7 @@ class SpeechInputService {
       final id = _normalize(loc.localeId);
       final name = loc.name.toLowerCase();
       if (_isLatinScriptLocale(id, name)) return false;
-      return id == lang ||
-          id.startsWith('${lang}_') ||
-          id.startsWith('$lang-');
+      return id == lang || id.startsWith('${lang}_') || id.startsWith('$lang-');
     }).toList();
 
     if (nativeMatches.isNotEmpty) {

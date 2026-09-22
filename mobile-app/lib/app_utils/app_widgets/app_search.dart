@@ -3,6 +3,7 @@ import 'package:hugeicons/hugeicons.dart';
 import 'package:moi/app_themes/index.dart';
 import 'package:moi/app_utils/app_global/speech_input_service.dart';
 import 'package:moi/app_utils/app_providers/language_provider.dart';
+import 'package:moi/app_utils/app_widgets/voice_listening_indicator.dart';
 import 'package:provider/provider.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 
@@ -197,15 +198,12 @@ class _SearchWidgetState extends State<SearchWidget> {
                   onPressed: _toggleListening,
                   tooltip: _isListening ? 'Stop' : 'Voice search',
                   icon: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 200),
-                    child: HugeIcon(
+                    duration: const Duration(milliseconds: 220),
+                    child: VoiceListeningIndicator(
                       key: ValueKey(_isListening),
-                      icon: _isListening
-                          ? HugeIcons.strokeRoundedMic02
-                          : HugeIcons.strokeRoundedMic01,
-                      color: _isListening ? AppColors.moiGiven : primary,
+                      active: _isListening,
+                      color: primary,
                       size: 18,
-                      strokeWidth: 1.9,
                     ),
                   ),
                 ),

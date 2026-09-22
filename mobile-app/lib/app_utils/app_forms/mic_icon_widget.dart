@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:hugeicons/hugeicons.dart';
 import 'package:moi/app_utils/app_global/speech_input_service.dart';
 import 'package:moi/app_utils/app_providers/language_provider.dart';
+import 'package:moi/app_utils/app_widgets/voice_listening_indicator.dart';
 import 'package:provider/provider.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 
@@ -52,15 +52,12 @@ class _MicIconWidgetState extends State<MicIconWidget> {
         padding: EdgeInsets.zero,
         visualDensity: VisualDensity.adaptivePlatformDensity,
         icon: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 200),
-          child: HugeIcon(
+          duration: const Duration(milliseconds: 220),
+          child: VoiceListeningIndicator(
             key: ValueKey(_isListening),
-            icon: _isListening
-                ? HugeIcons.strokeRoundedMic01
-                : HugeIcons.strokeRoundedMic02,
+            active: _isListening,
+            color: colorScheme.primary,
             size: 14,
-            color: _isListening ? Colors.redAccent : colorScheme.primary,
-            strokeWidth: 1.5,
           ),
         ),
         onPressed: () {
@@ -121,6 +118,13 @@ class _MicIconWidgetState extends State<MicIconWidget> {
         if (!mounted || _isDisposed) return;
         setState(() => _isListening = false);
         debugPrint('Mic speech error: $message');
+        final normalizedMessage = message.toLowerCase();
+        if (normalizedMessage.contains('error_no_match') ||
+            normalizedMessage.contains('error_speech_timeout') ||
+            normalizedMessage.contains('no match') ||
+            normalizedMessage.contains('no speech')) {
+          return;
+        }
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

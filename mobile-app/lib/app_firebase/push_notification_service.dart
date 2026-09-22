@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:moi/app_configs/app_logs.dart';
 import 'package:moi/app_configs/app_variables.dart';
@@ -26,22 +27,22 @@ class PushNotificationService {
 
   static final PushNotificationService instance = PushNotificationService._();
 
-  /// White-on-transparent silhouette from [moi_kanakku_monochrome.png].
-  static const String androidSmallIcon = '@drawable/ic_stat_moi_kanakku';
-
-  /// Full-color app logo from [moi_kanakku.png] shown as the large icon.
-  static const String androidLargeIcon = '@drawable/ic_notification_logo';
+  /// Current white-on-transparent notification mark.
+  static const String androidNotificationIcon =
+      '@drawable/ic_notification_logo';
+  static const String androidLargeIconAsset =
+      'assets/app-logo/app-logo-light.png';
 
   static const String channelId = 'high_importance_channel';
   static const String channelName = 'High Importance Notifications';
   static const AndroidNotificationChannel _androidChannel =
       AndroidNotificationChannel(
-    channelId,
-    channelName,
-    description: 'Important alerts such as feedback replies',
-    importance: Importance.high,
-    enableVibration: true,
-  );
+        channelId,
+        channelName,
+        description: 'Important alerts such as feedback replies',
+        importance: Importance.high,
+        enableVibration: true,
+      );
 
   final FlutterLocalNotificationsPlugin _localNotifications =
       FlutterLocalNotificationsPlugin();
@@ -57,7 +58,7 @@ class PushNotificationService {
     if (_initialized) return;
 
     const initSettings = InitializationSettings(
-      android: AndroidInitializationSettings(androidSmallIcon),
+      android: AndroidInitializationSettings(androidNotificationIcon),
     );
     await _localNotifications.initialize(settings: initSettings);
 
@@ -73,20 +74,22 @@ class PushNotificationService {
       badge: true,
       sound: true,
     );
-    await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
-      alert: true,
-      badge: true,
-      sound: true,
+    await FirebaseMessaging.instance
+        .setForegroundNotificationPresentationOptions(
+          alert: true,
+          badge: true,
+          sound: true,
+        );
+
+    _foregroundSubscription ??= FirebaseMessaging.onMessage.listen(
+      _handleForegroundMessage,
     );
 
-    _foregroundSubscription ??=
-        FirebaseMessaging.onMessage.listen(_handleForegroundMessage);
-
-    _tokenRefreshSubscription ??=
-        FirebaseMessaging.instance.onTokenRefresh.listen((token) async {
-      await _secureStorage.saveNotificationToken(token);
-      await _syncTokenWithBackend(force: true);
-    });
+    _tokenRefreshSubscription ??= FirebaseMessaging.instance.onTokenRefresh
+        .listen((token) async {
+          await _secureStorage.saveNotificationToken(token);
+          await _syncTokenWithBackend(force: true);
+        });
 
     FirebaseMessaging.onMessageOpenedApp.listen(_logOpenedMessage);
     final initialMessage = await FirebaseMessaging.instance.getInitialMessage();
@@ -123,21 +126,18 @@ class PushNotificationService {
       await _secureStorage.saveNotificationToken(token);
       final device = await DeviceService.getDeviceInfo();
       _userServices ??= UserServices();
-      await _userServices!.updateUserNotificationToken(
-        {
-          'token': token,
-          'device_id': device.device_id,
-          'device_name': device.device_name,
-          'brand': device.brand,
-          'model': device.model,
-          'manufacturer': device.manufacturer,
-          'android_version': device.android_version,
-          'ram_size': device.ram_size,
-          'platform': device.platform,
-          'app_version': device.app_version,
-        },
-        showLoading: false,
-      );
+      await _userServices!.updateUserNotificationToken({
+        'token': token,
+        'device_id': device.device_id,
+        'device_name': device.device_name,
+        'brand': device.brand,
+        'model': device.model,
+        'manufacturer': device.manufacturer,
+        'android_version': device.android_version,
+        'ram_size': device.ram_size,
+        'platform': device.platform,
+        'app_version': device.app_version,
+      }, showLoading: false);
       _lastHeartbeatAt = DateTime.now();
     } catch (e) {
       debugPrint('Error syncing device heartbeat');
@@ -166,18 +166,24 @@ class PushNotificationService {
 
     final plugin = FlutterLocalNotificationsPlugin();
     const initSettings = InitializationSettings(
-      android: AndroidInitializationSettings(androidSmallIcon),
+      android: AndroidInitializationSettings(androidNotificationIcon),
     );
     await plugin.initialize(settings: initSettings);
 
-    final androidPlugin = plugin.resolvePlatformSpecificImplementation<
-        AndroidFlutterLocalNotificationsPlugin>();
+    final androidPlugin = plugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
     await androidPlugin?.createNotificationChannel(_androidChannel);
 
     final notificationId =
         message.messageId?.hashCode ?? DateTime.now().millisecondsSinceEpoch;
     final resolvedTitle = title ?? 'Moi Kanakku';
     final resolvedBody = body ?? '';
+    final largeIconData = await rootBundle.load(androidLargeIconAsset);
+    final largeIcon = ByteArrayAndroidBitmap(
+      largeIconData.buffer.asUint8List(),
+    );
 
     await plugin.show(
       id: notificationId,
@@ -190,8 +196,8 @@ class PushNotificationService {
           channelDescription: 'Important alerts such as feedback replies',
           importance: Importance.high,
           priority: Priority.high,
-          icon: androidSmallIcon,
-          largeIcon: const DrawableResourceAndroidBitmap(androidLargeIcon),
+          icon: androidNotificationIcon,
+          largeIcon: largeIcon,
           color: AppColors.logoGreen,
           styleInformation: BigTextStyleInformation(
             resolvedBody,

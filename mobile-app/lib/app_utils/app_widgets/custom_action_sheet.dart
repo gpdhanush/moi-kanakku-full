@@ -233,8 +233,8 @@ class _MoiActionSheetTile extends StatelessWidget {
         : (item.color ?? primary);
     final soft = item.isDestructive
         ? (isDark
-            ? const Color(0xFFEF4444).withValues(alpha: 0.18)
-            : const Color(0xFFFEE2E2))
+              ? const Color(0xFFEF4444).withValues(alpha: 0.18)
+              : const Color(0xFFFEE2E2))
         : isDark
         ? accent.withValues(alpha: 0.18)
         : accent.withValues(alpha: 0.1);
@@ -341,8 +341,8 @@ Future<bool?> showMoiConfirmSheet({
       final isDark = Theme.of(sheetContext).brightness == Brightness.dark;
       final soft = isDestructive
           ? (isDark
-              ? const Color(0xFFEF4444).withValues(alpha: 0.18)
-              : const Color(0xFFFEE2E2))
+                ? const Color(0xFFEF4444).withValues(alpha: 0.18)
+                : const Color(0xFFFEE2E2))
           : primary.withValues(alpha: 0.1);
 
       return Padding(
@@ -495,7 +495,11 @@ Future<bool?> showMoiConfirmSheet({
                                   confirmLabel,
                                   textAlign: TextAlign.center,
                                   style: AppTypography.label.copyWith(
-                                    color: Colors.white,
+                                    color: isDestructive
+                                        ? Colors.white
+                                        : isDark
+                                        ? AppColors.charcoal
+                                        : Colors.white,
                                     fontSize: 14,
                                     fontWeight: FontWeight.w700,
                                   ),

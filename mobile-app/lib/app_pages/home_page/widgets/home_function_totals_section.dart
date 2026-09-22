@@ -109,8 +109,9 @@ class HomeFunctionTotalsSection extends StatelessWidget {
                     ),
                     decoration: BoxDecoration(
                       color: AppColors.of(context).surface,
-                      borderRadius: AppRadius.xlAll,
+                      borderRadius: BorderRadius.circular(AppRadius.card),
                       border: Border.all(color: AppColors.of(context).border),
+                      boxShadow: [],
                     ),
                     child: Row(
                       children: [
@@ -187,20 +188,20 @@ class _FunctionTotalCard extends StatelessWidget {
 
     return Material(
       color: AppColors.surface,
-      borderRadius: AppRadius.xlAll,
+      borderRadius: BorderRadius.circular(AppRadius.card),
       child: InkWell(
         onTap: onTap,
-        borderRadius: AppRadius.xlAll,
+        borderRadius: BorderRadius.circular(AppRadius.card),
         child: Ink(
           padding: const EdgeInsets.symmetric(
             horizontal: AppSpacing.md,
             vertical: 14,
           ),
           decoration: BoxDecoration(
-            borderRadius: AppRadius.xlAll,
+            borderRadius: BorderRadius.circular(AppRadius.card),
             color: AppColors.surface,
             border: Border.all(color: AppColors.borderSubtle),
-            boxShadow: AppShadows.soft,
+            boxShadow: [],
           ),
           child: Row(
             children: [

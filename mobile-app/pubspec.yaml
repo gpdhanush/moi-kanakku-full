@@ -80,7 +80,6 @@ flutter:
     - assets/images/splash/
     - assets/images/home_page/
     - assets/images/permission/
-    - assets/logo/
     - assets/app-logo/
     - assets/svg/
     - assets/translations/
