@@ -566,10 +566,10 @@ class _OverviewSearchDelegate extends SliverPersistentHeaderDelegate {
   const _OverviewSearchDelegate({required this.child});
 
   @override
-  double get minExtent => 72;
+  double get minExtent => 80;
 
   @override
-  double get maxExtent => 72;
+  double get maxExtent => 80;
 
   @override
   Widget build(

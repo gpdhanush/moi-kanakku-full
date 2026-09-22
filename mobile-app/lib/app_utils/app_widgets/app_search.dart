@@ -24,7 +24,8 @@ class SearchWidget extends StatefulWidget {
   State<SearchWidget> createState() => _SearchWidgetState();
 }
 
-class _SearchWidgetState extends State<SearchWidget> {
+class _SearchWidgetState extends State<SearchWidget>
+    with WidgetsBindingObserver {
   final Object _sessionId = Object();
   final SpeechInputService _speech = SpeechInputService.instance;
   final FocusNode _focusNode = FocusNode();
@@ -32,10 +33,12 @@ class _SearchWidgetState extends State<SearchWidget> {
   bool _isListening = false;
   bool _isInitialized = false;
   bool _isFocused = false;
+  bool _keyboardWasVisible = false;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _initializeSpeech();
     widget.controller?.addListener(_onTextChanged);
     _focusNode.addListener(_onFocusChanged);
@@ -43,6 +46,7 @@ class _SearchWidgetState extends State<SearchWidget> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     widget.controller?.removeListener(_onTextChanged);
     _focusNode.removeListener(_onFocusChanged);
     _focusNode.dispose();
@@ -56,6 +60,26 @@ class _SearchWidgetState extends State<SearchWidget> {
 
   void _onTextChanged() {
     if (mounted) setState(() {});
+  }
+
+  @override
+  void didChangeMetrics() {
+    if (!mounted) return;
+
+    final views = WidgetsBinding.instance.platformDispatcher.views;
+    if (views.isEmpty) return;
+
+    final keyboardVisible = views.first.viewInsets.bottom > 0;
+    if (keyboardVisible) {
+      _keyboardWasVisible = true;
+    } else if (_keyboardWasVisible) {
+      _keyboardWasVisible = false;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && _focusNode.hasFocus) {
+          _focusNode.unfocus();
+        }
+      });
+    }
   }
 
   Future<void> _initializeSpeech() async {
@@ -131,17 +155,20 @@ class _SearchWidgetState extends State<SearchWidget> {
     final colors = AppColors.of(context);
     final hasText = widget.controller?.text.isNotEmpty ?? false;
     final extraTrailing = widget.trailing?.toList() ?? const <Widget>[];
+    const searchBorder = OutlineInputBorder(
+      borderRadius: BorderRadius.all(Radius.circular(5)),
+      borderSide: BorderSide.none,
+    );
 
     return Container(
       height: 56,
       decoration: BoxDecoration(
         color: colors.surface,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(5),
         border: Border.all(
           color: _isFocused ? primary : colors.border,
           width: _isFocused ? 1.5 : 1,
         ),
-        boxShadow: AppShadows.soft,
       ),
       alignment: Alignment.center,
       child: TextField(
@@ -162,7 +189,10 @@ class _SearchWidgetState extends State<SearchWidget> {
             fontSize: 14,
             fontWeight: FontWeight.w500,
           ),
-          border: InputBorder.none,
+          border: searchBorder,
+          enabledBorder: searchBorder,
+          focusedBorder: searchBorder,
+          errorBorder: searchBorder,
           isDense: true,
           contentPadding: const EdgeInsets.symmetric(horizontal: 4),
           prefixIcon: Padding(
