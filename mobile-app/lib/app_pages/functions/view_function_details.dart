@@ -267,60 +267,72 @@ class _ViewFunctionDetailsState extends State<ViewFunctionDetails> {
 
   void _showFullImage() {
     final imageUrl = _detailImageUrl;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     showDialog<void>(
       context: context,
-      barrierColor: Colors.black.withValues(alpha: 0.9),
+      barrierColor: Colors.black.withValues(alpha: 0.92),
       builder: (dialogContext) {
-        return Dialog(
+        return Dialog.fullscreen(
           backgroundColor: Colors.transparent,
-          insetPadding: EdgeInsets.zero,
-          child: Padding(
-            padding: EdgeInsets.only(
-              top: MediaQuery.paddingOf(dialogContext).top + 12,
-              left: 16,
-              right: 16,
-              bottom: 16,
-            ),
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                Center(
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(24),
-                    child: InteractiveViewer(
-                      minScale: 0.8,
-                      maxScale: 4,
-                      child: imageUrl != null && imageUrl.isNotEmpty
-                          ? MoiNetworkImage(
-                              url: imageUrl,
-                              fit: BoxFit.contain,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  Image.asset(AppImages.defaultImage),
-                            )
-                          : Image.asset(AppImages.defaultImage),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              Center(
+                child: InteractiveViewer(
+                  constrained: true,
+                  boundaryMargin: EdgeInsets.zero,
+                  minScale: 1,
+                  maxScale: 5,
+                  child: imageUrl != null && imageUrl.isNotEmpty
+                      ? MoiNetworkImage(
+                          url: imageUrl,
+                          fit: BoxFit.contain,
+                          memCacheWidth:
+                              (MediaQuery.sizeOf(dialogContext).width *
+                                      MediaQuery.devicePixelRatioOf(
+                                        dialogContext,
+                                      ))
+                                  .round(),
+                          memCacheHeight:
+                              (MediaQuery.sizeOf(dialogContext).height *
+                                      MediaQuery.devicePixelRatioOf(
+                                        dialogContext,
+                                      ))
+                                  .round(),
+                          errorBuilder: (context, error, stackTrace) =>
+                              Image.asset(
+                                AppImages.defaultImage,
+                                fit: BoxFit.contain,
+                              ),
+                        )
+                      : Image.asset(
+                          AppImages.defaultImage,
+                          fit: BoxFit.contain,
+                        ),
+                ),
+              ),
+              Positioned(
+                top: MediaQuery.paddingOf(dialogContext).top + 12,
+                right: 16,
+                child: Material(
+                  color: (isDark ? AppColors.darkSurface : Colors.black)
+                      .withValues(alpha: 0.72),
+                  shape: const CircleBorder(),
+                  clipBehavior: Clip.antiAlias,
+                  child: IconButton(
+                    tooltip: 'Close image',
+                    onPressed: () => Navigator.of(dialogContext).pop(),
+                    icon: const HugeIcon(
+                      icon: HugeIcons.strokeRoundedCancel01,
+                      color: Colors.white,
+                      size: 22,
+                      strokeWidth: 1.9,
                     ),
                   ),
                 ),
-                Positioned(
-                  top: 8,
-                  right: 8,
-                  child: Material(
-                    color: Colors.white.withValues(alpha: 0.16),
-                    shape: const CircleBorder(),
-                    clipBehavior: Clip.antiAlias,
-                    child: IconButton(
-                      onPressed: () => Navigator.of(dialogContext).pop(),
-                      icon: const HugeIcon(
-                        icon: HugeIcons.strokeRoundedCancel01,
-                        color: Colors.white,
-                        size: 22,
-                        strokeWidth: 1.9,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         );
       },
@@ -342,68 +354,72 @@ class _HeroImage extends StatelessWidget {
       color: isDark ? const Color(0xFF101B18) : Colors.white,
       borderRadius: BorderRadius.circular(20),
       clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
-        child: Ink(
-          height: 220,
-          width: double.infinity,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: isDark ? const Color(0xFF26352E) : AppColors.lightBorder,
-              width: 1,
-            ),
-            boxShadow: AppShadows.soft,
+      child: Ink(
+        height: 220,
+        width: double.infinity,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isDark ? const Color(0xFF26352E) : AppColors.lightBorder,
+            width: 1,
           ),
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              imageUrl != null && imageUrl!.isNotEmpty
-                  ? MoiNetworkImage(
-                      url: imageUrl!,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => Image.asset(
-                        AppImages.defaultImage,
-                        fit: BoxFit.cover,
-                      ),
-                    )
-                  : Image.asset(AppImages.defaultImage, fit: BoxFit.cover),
-              Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Colors.transparent,
-                      Colors.black.withValues(alpha: 0.18),
-                    ],
-                  ),
+          boxShadow: AppShadows.soft,
+        ),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            GestureDetector(
+              onTap: onTap,
+              child: InteractiveViewer(
+                constrained: true,
+                boundaryMargin: EdgeInsets.zero,
+                clipBehavior: Clip.hardEdge,
+                minScale: 1,
+                maxScale: 4,
+                child: SizedBox.expand(
+                  child: imageUrl != null && imageUrl!.isNotEmpty
+                      ? MoiNetworkImage(
+                          url: imageUrl!,
+                          fit: BoxFit.contain,
+                          width: double.infinity,
+                          height: double.infinity,
+                          memCacheWidth:
+                              (MediaQuery.sizeOf(context).width *
+                                      MediaQuery.devicePixelRatioOf(context))
+                                  .round(),
+                          errorBuilder: (context, error, stackTrace) =>
+                              Image.asset(
+                                AppImages.defaultImage,
+                                fit: BoxFit.contain,
+                              ),
+                        )
+                      : Image.asset(
+                          AppImages.defaultImage,
+                          fit: BoxFit.contain,
+                        ),
                 ),
               ),
-              Positioned(
-                right: 12,
-                bottom: 12,
+            ),
+            Positioned(
+              right: 12,
+              bottom: 12,
+              child: IgnorePointer(
                 child: Material(
-                  color: Colors.black.withValues(alpha: 0.42),
+                  color: Colors.black.withValues(alpha: 0.48),
                   shape: const CircleBorder(),
-                  clipBehavior: Clip.antiAlias,
-                  child: InkWell(
-                    onTap: onTap,
-                    child: const Padding(
-                      padding: EdgeInsets.all(10),
-                      child: HugeIcon(
-                        icon: HugeIcons.strokeRoundedZoomInArea,
-                        color: Colors.white,
-                        size: 18,
-                        strokeWidth: 1.8,
-                      ),
+                  child: const Padding(
+                    padding: EdgeInsets.all(10),
+                    child: HugeIcon(
+                      icon: HugeIcons.strokeRoundedZoomInArea,
+                      color: Colors.white,
+                      size: 18,
+                      strokeWidth: 1.8,
                     ),
                   ),
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -431,114 +447,94 @@ class _AmountCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final heroBg = isDark ? const Color(0xFF071B18) : const Color(0xFF0E6A5E);
-    final heroSoft = isDark ? const Color(0xFF0D312A) : const Color(0xFF145C4C);
+    final heroFg = isDark ? const Color(0xFFB8FFE8) : AppColors.white;
+    final heroMuted = isDark
+        ? const Color(0xFF7EE8C7)
+        : heroFg.withValues(alpha: 0.78);
 
-    return SizedBox(
-      width: double.infinity,
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(18),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(18),
-          child: Ink(
-            width: double.infinity,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(18),
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [heroBg, heroSoft, const Color(0xFF0A4F45)],
+    return Material(
+      color: Colors.transparent,
+      borderRadius: AppRadius.xlAll,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: AppRadius.xlAll,
+        child: Ink(
+          decoration: BoxDecoration(
+            borderRadius: AppRadius.xlAll,
+            color: heroBg,
+            border: isDark
+                ? Border.all(color: const Color(0xFF4AF2B6), width: 1.4)
+                : null,
+          ),
+          child: Stack(
+            children: [
+              Positioned(
+                right: -28,
+                top: -24,
+                child: Container(
+                  width: 120,
+                  height: 120,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: AppColors.accentSoft.withValues(alpha: 0.18),
+                  ),
+                ),
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: heroBg.withValues(alpha: 0.32),
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
-                ),
-                BoxShadow(
-                  color: heroBg.withValues(alpha: 0.12),
-                  blurRadius: 6,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Stack(
-              children: [
-                Positioned(
-                  right: -24,
-                  top: -20,
-                  child: Container(
-                    width: 110,
-                    height: 110,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.white.withValues(alpha: 0.10),
+              Padding(
+                padding: const EdgeInsets.all(AppSpacing.lg),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label,
+                      style: AppTypography.body.copyWith(
+                        color: heroMuted,
+                        fontSize: 13,
+                      ),
                     ),
-                  ),
-                ),
-                Positioned(
-                  right: 30,
-                  bottom: -28,
-                  child: Container(
-                    width: 76,
-                    height: 76,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.white.withValues(alpha: 0.08),
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
+                    const SizedBox(height: 4),
+                    if (isLoading)
+                      SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(
+                          color: heroFg,
+                          strokeWidth: 2.4,
+                        ),
+                      )
+                    else
                       Text(
-                        label,
+                        amountText,
+                        style: AppTypography.amountLarge.copyWith(
+                          color: heroFg,
+                          fontSize: 34,
+                          letterSpacing: -0.8,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    if (words.trim().isNotEmpty) ...[
+                      const SizedBox(height: AppSpacing.md),
+                      Container(
+                        height: 1,
+                        color: heroFg.withValues(alpha: 0.18),
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      Text(
+                        words,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                         style: AppTypography.body.copyWith(
-                          color: Colors.white.withValues(alpha: 0.82),
+                          color: heroFg,
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
-                      const SizedBox(height: 6),
-                      if (isLoading)
-                        const SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2.4,
-                          ),
-                        )
-                      else
-                        Text(
-                          amountText,
-                          style: AppTypography.amountLarge.copyWith(
-                            color: Colors.white,
-                            fontSize: 30,
-                            letterSpacing: -0.7,
-                          ),
-                        ),
-                      if (words.trim().isNotEmpty) ...[
-                        const SizedBox(height: 4),
-                        Text(
-                          words,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppTypography.body.copyWith(
-                            color: Colors.white.withValues(alpha: 0.72),
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
                     ],
-                  ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

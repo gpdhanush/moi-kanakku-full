@@ -12,10 +12,14 @@ const {
   buildMailOptions,
   normalizeEmailAddress,
   escapeHtml,
+  getBrandedEmailContent,
 } = require('../services/emailService');
 
 function buildBulkEmailHtml(safeName, body) {
-  return `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Moi Kanakku</title></head><body style="margin:0;padding:0;background-color:#f5f7fb;font-family:Arial,Helvetica,sans-serif;"><div style="display:none;font-size:1px;color:#f5f7fb;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;">Moi Kanakku notification</div><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="padding:30px 10px;"><tr><td align="center"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:620px;background:#ffffff;border:1px solid #eaeaea;border-radius:8px;overflow:hidden;"><tr><td style="background:#2f3490;color:#ffffff;text-align:center;padding:20px;"><h2 style="margin:0;font-size:22px;">Moi Kanakku</h2><p style="margin:5px 0 0;font-size:13px;color:#dcdcff;">Manage events, relations & gifts easily</p></td></tr><tr><td style="padding:30px;color:#333333;line-height:1.6;"><p style="margin:0 0 15px;font-size:16px;">Hi <strong>${safeName}</strong>,</p><div style="margin:20px 0;font-size:15px;color:#555;">${body}</div></td></tr><tr><td style="border-top:1px solid #f1f1f1;padding:20px;font-size:14px;color:#666;">Regards,<br><strong style="color:#2f3490;">Moi Kanakku Team</strong></td></tr></table><p style="max-width:620px;margin:20px auto 0;text-align:center;font-size:12px;color:#9ca3af;">© 2026 Moi Kanakku. All rights reserved.<br>If you received this email by mistake, please ignore it.</p></td></tr></table></body></html>`;
+  return getBrandedEmailContent({
+    title: 'Moi Kanakku Notification',
+    body: `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-spacing:0;"><tr><td style="padding:0;"><span style="display:inline-block;padding:8px 14px;background-color:#f1efe7;color:#171717;border-radius:999px;font-size:12px;line-height:16px;font-weight:700;letter-spacing:0.03em;">NOTIFICATION</span><h1 style="margin:20px 0 12px;color:#171717;font-size:32px;line-height:42px;">Moi Kanakku notification</h1><p style="margin:0 0 10px;color:#171717;font-size:17px;line-height:27px;">Hi <strong>${safeName}</strong>,</p><div style="margin:0;color:#686868;font-size:16px;line-height:27px;">${body}</div></td></tr></table>`,
+  });
 }
 
 async function runBulkEmailJob(payload, jobId) {

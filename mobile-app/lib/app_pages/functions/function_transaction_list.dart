@@ -42,11 +42,11 @@ class _FunctionTransactionListState extends State<FunctionTransactionList> {
     return name.isEmpty ? '—' : name;
   }
 
-  String get _functionDateSubtitle {
-    final raw = widget.functionData['functionDate']?.toString();
-    final formatted = formatFunctionDateWithDay(raw);
-    return formatted.isEmpty ? '' : formatted.toUpperCase();
-  }
+  // String get _functionDateSubtitle {
+  //   final raw = widget.functionData['functionDate']?.toString();
+  //   final formatted = formatFunctionDateWithDay(raw);
+  //   return formatted.isEmpty ? '' : formatted.toUpperCase();
+  // }
 
   @override
   void initState() {
@@ -258,7 +258,7 @@ class _FunctionTransactionListState extends State<FunctionTransactionList> {
       backgroundColor: AppColors.background,
       appBar: MoiAppHeader(
         title: _functionName.toTitleCase(),
-        subtitle: _functionDateSubtitle,
+        // subtitle: _functionDateSubtitle,
         showBack: true,
         onBack: () => Navigator.pop(context),
         actions: [

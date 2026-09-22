@@ -41,6 +41,8 @@ const {
   queueEmail,
   getWelcomeEmailContent,
   getAdminRegistrationEmailContent,
+  getBrandedEmailContent,
+  escapeHtml,
   formatEmailFrom,
 } = require("../services/emailService");
 
@@ -186,11 +188,12 @@ exports.userController = {
           googleId,
         });
         const created = await User.findById(createdUser.insertId || createdUser.id);
-          await User.syncGoogleProfile({
-            id: created.id,
-            name: normalizedName,
-            profileImageUrl: googlePicture,
-          });
+        await User.syncGoogleProfile({
+          id: created.id,
+          name: normalizedName,
+          profileImageUrl: googlePicture,
+        });
+        await User.updateLastLogin(created.id);
         return res.status(200).json({
           responseType: 'S',
           responseValue: {
@@ -200,6 +203,7 @@ exports.userController = {
               name: created.full_name,
               email: created.email,
               profileImageUrl: googlePicture,
+              last_login: new Date().toISOString(),
               signupType: 'google',
               passwordSet: false,
               emailVerified: true,
@@ -237,6 +241,7 @@ exports.userController = {
             name: user.full_name,
             email: user.email,
             profileImageUrl: refreshedUser?.profile_image_url || null,
+            last_login: new Date().toISOString(),
             signupType: normalizeSignupType(user.signup_type || 'email'),
             passwordSet: Boolean(user.password_set),
             emailVerified: Boolean(user.is_verified),
@@ -2220,7 +2225,11 @@ exports.userController = {
 
       const baseUrl = process.env.ADMIN_RESET_URL || process.env.FRONTEND_URL || 'https://moi-kanakku-api.prasowlabs.in/admin/reset-password';
       const resetLink = baseUrl.includes('?') ? `${baseUrl}&token=${token}` : `${baseUrl}?token=${token}`;
-      const html = `<!DOCTYPE html>
+      const html = getBrandedEmailContent({
+        title: 'Admin Password Reset',
+        body: `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-spacing:0;"><tr><td style="padding:0;"><span style="display:inline-block;padding:8px 14px;background-color:#f1efe7;color:#171717;border-radius:999px;font-size:12px;line-height:16px;font-weight:700;letter-spacing:0.03em;">PASSWORD RESET</span><h1 style="margin:20px 0 12px;color:#171717;font-size:32px;line-height:42px;">Reset your password</h1><p style="margin:0 0 10px;color:#171717;font-size:17px;line-height:27px;">Hi <strong>${escapeHtml(admin.full_name || '')}</strong>,</p><p style="margin:0;color:#686868;font-size:16px;line-height:27px;">You requested a password reset for your administrator account. Please use the button below to choose a new password.</p><p style="text-align:center;margin:32px 0 18px;"><a href="${escapeHtml(resetLink)}" style="display:inline-block;padding:14px 28px;background-color:#171717;color:#ffffff;text-decoration:none;border-radius:8px;font-size:16px;font-weight:700;">Reset Password</a></p><p style="text-align:center;margin:0;color:#686868;font-size:14px;line-height:21px;">This link will expire in <strong style="color:#171717;">one hour</strong>.</p><div style="height:1px;background-color:#e4e1d9;margin:32px 0 26px;"></div><p style="margin:0;color:#8a8882;font-size:13px;line-height:21px;">If you did not request this password reset, you can safely ignore this email.</p></td></tr></table>`,
+      });
+      /* const html = `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="UTF-8">
@@ -2278,7 +2287,7 @@ exports.userController = {
     </tr>
   </table>
 </body>
-</html>`;
+</html>`; */
 
       queueEmail(
         {

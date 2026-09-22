@@ -347,16 +347,26 @@ class _AmountHeaderCard extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final heroBg = isDark ? const Color(0xFF071B18) : const Color(0xFF0E6A5E);
     final heroSoft = isDark ? const Color(0xFF0D312A) : const Color(0xFF145C4C);
+    final heroFg = isDark ? const Color(0xFFB8FFE8) : Colors.white;
+    final heroMuted = isDark
+        ? const Color(0xFF7EE8C7)
+        : heroFg.withValues(alpha: 0.72);
 
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(18),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [heroBg, heroSoft, const Color(0xFF0A4F45)],
-        ),
+        color: isDark ? heroBg : null,
+        gradient: isDark
+            ? null
+            : LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [heroBg, heroSoft, const Color(0xFF0A4F45)],
+              ),
+        border: isDark
+            ? Border.all(color: const Color(0xFF4AF2B6), width: 1.4)
+            : null,
         boxShadow: [
           BoxShadow(
             color: heroBg.withValues(alpha: 0.32),
@@ -407,7 +417,7 @@ class _AmountHeaderCard extends StatelessWidget {
                     amountText,
                     textAlign: TextAlign.center,
                     style: AppTypography.amountLarge.copyWith(
-                      color: Colors.white,
+                      color: heroFg,
                       fontSize: 30,
                       letterSpacing: -0.7,
                     ),
@@ -420,7 +430,7 @@ class _AmountHeaderCard extends StatelessWidget {
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: AppTypography.body.copyWith(
-                        color: Colors.white.withValues(alpha: 0.72),
+                        color: heroMuted,
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                       ),
@@ -612,7 +622,9 @@ class _ExportButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final primary = Theme.of(context).colorScheme.primary;
+    final contentColor = isDark ? AppColors.charcoal : Colors.white;
 
     return Material(
       color: Colors.transparent,
@@ -639,20 +651,20 @@ class _ExportButton extends StatelessWidget {
           ),
           child: Center(
             child: isLoading
-                ? const SizedBox(
+                ? SizedBox(
                     width: 22,
                     height: 22,
                     child: CircularProgressIndicator(
-                      color: Colors.white,
+                      color: contentColor,
                       strokeWidth: 2.4,
                     ),
                   )
                 : Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const HugeIcon(
+                      HugeIcon(
                         icon: HugeIcons.strokeRoundedPdf02,
-                        color: Colors.white,
+                        color: contentColor,
                         size: 18,
                         strokeWidth: 1.9,
                       ),
@@ -660,7 +672,7 @@ class _ExportButton extends StatelessWidget {
                       Text(
                         title,
                         style: AppTypography.label.copyWith(
-                          color: Colors.white,
+                          color: contentColor,
                           fontSize: 15,
                           fontWeight: FontWeight.w700,
                         ),

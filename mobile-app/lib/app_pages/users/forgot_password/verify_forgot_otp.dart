@@ -10,6 +10,7 @@ import 'package:moi/app_utils/index.dart';
 import 'package:moi/app_utils/app_providers/language_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:hugeicons/hugeicons.dart';
+import 'package:pinput/pinput.dart';
 
 class VerifyForgotOtp extends StatefulWidget {
   final String email;
@@ -82,32 +83,49 @@ class _VerifyForgotOtpState extends State<VerifyForgotOtp> {
                       const SizedBox(height: 24),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 15),
-                        child: TextFormWidget(
-                          title: languageProvider.tr('auth.otp'),
-                          prefixIcon: HugeIcons.strokeRoundedLockPassword,
-                          required: true,
-                          controller: otpCtrl,
-                          maxLength: 6,
-                          keyboardType: TextInputType.phone,
-                          textInputAction: TextInputAction.done,
-                          autovalidateMode: AutovalidateMode.disabled,
-                          onChanged: (value) {
-                            if (value.length == 6) {
-                              FocusScope.of(context).unfocus();
-                            }
-                          },
-                          inputFormatters: [
-                            FilteringTextInputFormatter.allow(RegExp(r'\d')),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '${languageProvider.tr('auth.otp')} *',
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: theme.colorScheme.onSurface,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            Pinput(
+                              controller: otpCtrl,
+                              length: 6,
+                              keyboardType: TextInputType.number,
+                              inputFormatters: [
+                                FilteringTextInputFormatter.digitsOnly,
+                              ],
+                              autofocus: false,
+                              defaultPinTheme: _pinTheme(theme),
+                              focusedPinTheme: _pinTheme(theme, focused: true),
+                              submittedPinTheme: _pinTheme(
+                                theme,
+                                submitted: true,
+                              ),
+                              errorPinTheme: _pinTheme(theme, error: true),
+                              onCompleted: (_) =>
+                                  FocusScope.of(context).unfocus(),
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return languageProvider.tr(
+                                    'auth.otpRequired',
+                                  );
+                                }
+                                if (value.length != 6) {
+                                  return languageProvider.tr(
+                                    'auth.otpSixDigits',
+                                  );
+                                }
+                                return null;
+                              },
+                            ),
                           ],
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return languageProvider.tr('auth.otpRequired');
-                            }
-                            if (value.length != 6) {
-                              return languageProvider.tr('auth.otpSixDigits');
-                            }
-                            return null;
-                          },
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -125,6 +143,9 @@ class _VerifyForgotOtpState extends State<VerifyForgotOtp> {
                         child: AppButton(
                           title: languageProvider.tr('auth.verify'),
                           showIcon: false,
+                          textColor: theme.brightness == Brightness.dark
+                              ? AppColors.charcoal
+                              : null,
                           onPressed: () {
                             if (_formKey.currentState!.validate()) {
                               _formKey.currentState!.save();
@@ -144,6 +165,37 @@ class _VerifyForgotOtpState extends State<VerifyForgotOtp> {
             if (!isKeyboardOpen) _BottomPattern(color: primary),
           ],
         ),
+      ),
+    );
+  }
+
+  PinTheme _pinTheme(
+    ThemeData theme, {
+    bool focused = false,
+    bool submitted = false,
+    bool error = false,
+  }) {
+    final isDark = theme.brightness == Brightness.dark;
+    final borderColor = error
+        ? theme.colorScheme.error
+        : focused || submitted
+        ? theme.colorScheme.primary
+        : isDark
+        ? AppColors.darkBorder
+        : AppColors.lightBorder;
+
+    return PinTheme(
+      width: 48,
+      height: 56,
+      textStyle: TextStyle(
+        color: theme.colorScheme.onSurface,
+        fontSize: 22,
+        fontWeight: FontWeight.w700,
+      ),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkSurface : Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: borderColor, width: focused ? 1.8 : 1),
       ),
     );
   }
@@ -419,9 +471,20 @@ class _VerifyForgotOtpState extends State<VerifyForgotOtp> {
           },
           (r) => false,
         );
+      } else {
+        otpCtrl.clear();
+        final message = response?['responseValue']?['message']?.toString();
+        alertServices.errorToast(
+          message?.isNotEmpty == true
+              ? message!
+              : context.read<LanguageProvider>().tr('common.tryAgain'),
+        );
       }
     } catch (_) {
-      // Loader cleared in finally.
+      otpCtrl.clear();
+      alertServices.errorToast(
+        context.read<LanguageProvider>().tr('common.tryAgain'),
+      );
     } finally {
       await alertServices.hideLoading();
     }

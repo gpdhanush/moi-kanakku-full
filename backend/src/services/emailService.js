@@ -3,7 +3,7 @@ const nodemailer = require('nodemailer');
 const logger = require('../config/logger');
 
 function escapeHtml(text = '') {
-    return text.replace(/[&<>"']/g, (m) => ({
+    return String(text ?? '').replace(/[&<>"']/g, (m) => ({
         "&": "&amp;",
         "<": "&lt;",
         ">": "&gt;",
@@ -175,7 +175,7 @@ verifyEmailTransport();
 /**
  * Send email when user submits feedback (confirmation to user)
  */
-async function sendFeedbackConfirmationEmail(toEmail, userName) {
+async function getLegacyFeedbackConfirmationEmail(toEmail, userName) {
     if (!toEmail) return;
     try {
         const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Feedback Submitted</title></head><body style="margin:0;padding:0;background:#f3f4f6;font-family:Arial,Helvetica,sans-serif;"><table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 10px;"><tr><td align="center"><table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:#ffffff;border-radius:8px;border:1px solid #e5e7eb;box-shadow:0 4px 10px rgba(0,0,0,0.05);"><tr><td style="border-bottom:1px solid #e5e7eb;padding:20px 24px;"><h1 style="margin:0;font-size:20px;font-weight:600;color:#1e3a8a;"> Moi Kanakku </h1></td></tr><tr><td style="padding:24px;color:#374151;line-height:1.6;font-size:15px;"><p style="margin:0 0 15px;"> Hi <strong style="color:#111827;">${userName || "User"}</strong>, </p><p style="margin:0 0 15px;"> Your feedback has been successfully submitted. We will review it shortly. </p><p style="margin:0 0 15px;"> 🙏 <strong>Thanks for using the Moi Kanakku app!</strong><br> Your feedback helps us improve the app for everyone. </p><div style="background:#eff6ff;border:1px solid #dbeafe;border-radius:6px;padding:16px;margin-top:20px;"><p style="margin:0 0 8px;font-weight:600;color:#1e3a8a;"> 🎉 Help us grow! </p><p style="margin:0 0 8px;font-size:14px;color:#374151;"> If you like Moi Kanakku, please share it with your friends and family. Your support helps more people manage their accounts easily. </p><p style="margin:0;font-size:14px;color:#374151;"> Stay tuned for upcoming features and promotions in the app! </p></div><p style="margin-top:25px;font-size:14px;color:#4b5563;"> Regards,<br><strong style="color:#1e3a8a;">Moi Kanakku Team</strong></p></td></tr><tr><td style="border-top:1px solid #e5e7eb;text-align:center;padding:15px;font-size:12px;color:#6b7280;"> © 2026 Moi Kanakku. All rights reserved. </td></tr></table></td></tr></table></body></html>`;
@@ -193,7 +193,7 @@ async function sendFeedbackConfirmationEmail(toEmail, userName) {
 /**
  * Send email when admin replies to feedback (reply content to user)
  */
-async function sendFeedbackReplyEmail(toEmail, userName, replyText) {
+async function getLegacyFeedbackReplyEmail(toEmail, userName, replyText) {
     if (!toEmail) return;
     try {
         const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head><body style="margin:0;padding:0;background:#f5f7fb;font-family:Helvetica,Arial,sans-serif;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="padding:30px 10px;"><tr><td align="center"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:620px;background:#ffffff;border:1px solid #e5e7eb;border-radius:8px;"><tr><td style="padding:20px;border-bottom:1px solid #eee;"><a href="#" style="font-size:20px;color:#00466a;text-decoration:none;font-weight:600;"> Moi Kanakku </a></td></tr><tr><td style="padding:25px;color:#333;line-height:1.7;"><p style="font-size:16px;margin:0 0 15px 0;"> Hi <strong style="color:#2c2c54;">${userName || "User"}</strong>, </p><p style="margin:0 0 15px 0;"> A response has been provided for your feedback. </p><div style="background:#f5f5f5;padding:15px;border-radius:6px;margin:15px 0;font-size:14px;"> ${escapeHtml(replyText).replace(/\n/g, "<br/>")} </div><p style="margin-top:15px;"> 🙏 <strong>Thanks for using Moi Kanakku!</strong> Your feedback helps us improve the app experience. </p><div style="background:#eef4ff;border:1px solid #dbe7ff;padding:15px;border-radius:6px;margin-top:20px;font-size:14px;"><strong>🚀 Share Moi Kanakku</strong><br> If you like our app, please share it with your friends and family. More features and promotions are coming soon! </div><p style="margin-top:25px;font-size:14px;color:#666;"> Regards,<br><strong>Moi Kanakku Team</strong></p></td></tr><tr><td style="border-top:1px solid #eee;padding:15px;text-align:center;font-size:12px;color:#999;"> © 2026 Moi Kanakku. All rights reserved. </td></tr></table></td></tr></table></body></html>`;
@@ -306,7 +306,7 @@ function queueFeedbackReplyEmail(toEmail, userName, replyText) {
  * @param {string} name - User's name
  * @returns {string} HTML email content
  */
-function getWelcomeEmailContent(name) {
+function getLegacyWelcomeEmailContent(name) {
     return `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head><body style="margin:0;padding:0;background:#f5f7fb;font-family:Helvetica,Arial,sans-serif;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="padding:30px 10px;"><tr><td align="center"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:620px;background:#ffffff;border:1px solid #e5e7eb;border-radius:8px;"><tr><td style="padding:20px;border-bottom:1px solid #eee;"><a href="#" style="font-size:20px;color:#00466a;text-decoration:none;font-weight:600;"> Moi Kanakku </a></td></tr><tr><td style="padding:25px;color:#333;line-height:1.7;"><p style="font-size:16px;margin:0 0 15px 0;"> Hi <strong style="color:#2c2c54;">${name}</strong>, </p><p style="margin:0 0 15px 0;"> We are pleased to welcome you to Moi Kanakku. Our platform helps you manage events, relations, and gift records in a simple and organized way. </p><div style="background:#f5f5f5;padding:15px;border-radius:6px;margin:15px 0;font-size:14px;"><p style="margin:0 0 10px;font-weight:600;color:#2c2c54;">Getting started with Moi Kanakku:</p><ul style="padding-left:18px;margin:0;"><li style="margin-bottom:8px;">Create and manage special events.</li><li style="margin-bottom:8px;">Maintain relations and guest details.</li><li style="margin-bottom:8px;">Track gifts received in cash or kind.</li><li>Export your records anytime in Excel format.</li></ul></div><p style="margin-top:15px;"> 🙏 Thank you for choosing Moi Kanakku. We are committed to helping you manage your records easily and efficiently. </p><div style="background:#eef4ff;border:1px solid #dbe7ff;padding:15px;border-radius:6px;margin-top:20px;font-size:14px;"><strong>🚀 Share Moi Kanakku</strong><br> If you find Moi Kanakku useful, please consider sharing it with your friends and family. More features and improvements will be available soon! </div><p style="margin-top:25px;font-size:14px;color:#666;"> Best regards,<br><strong>Moi Kanakku Team</strong></p></td></tr><tr><td style="border-top:1px solid #eee;padding:15px;text-align:center;font-size:12px;color:#999;"> © 2026 Moi Kanakku. All rights reserved. </td></tr></table></td></tr></table></body></html>`;
 }
 
@@ -315,7 +315,7 @@ function getWelcomeEmailContent(name) {
  * @param {{ name?: string, verifyLink: string, expiresInHours?: number }} options
  * @returns {string} HTML email content
  */
-function getEmailVerificationContent({ name, verifyLink, expiresInHours = 24 }) {
+function getLegacyEmailVerificationContent({ name, verifyLink, expiresInHours = 24 }) {
     const safeName = escapeHtml(name || 'User');
     const safeLink = escapeHtml(verifyLink || '#');
     const hours = Number(expiresInHours) || 24;
@@ -376,12 +376,238 @@ function getEmailVerificationContent({ name, verifyLink, expiresInHours = 24 }) 
 </html>`;
 }
 
+function getBrandedEmailContent({ title, body, logoUrl = '/assets/app-logo-light.png', labelUrl = '/assets/label-dark.png' }) {
+    const safeTitle = escapeHtml(title || 'Moi Kanakku');
+    const safeLogoUrl = escapeHtml(logoUrl);
+    const safeLabelUrl = escapeHtml(labelUrl);
+    const copyrightYear = new Date().getFullYear();
+
+    return `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+    <meta name="supported-color-schemes" content="light">
+    <title>${safeTitle}</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f7f7f3;font-family:Arial,Helvetica,sans-serif;color:#171717;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-spacing:0;background-color:#f7f7f3;">
+        <tr><td align="center" style="width:100%;padding:40px 20px;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:900px;background-color:#ffffff;border:1px solid #e4e1d9;border-radius:22px;overflow:hidden;border-spacing:0;">
+                <tr><td align="center" style="width:100%;padding:30px 40px;background-color:#ffffff;border-bottom:1px solid #e4e1d9;">
+                    <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;border-spacing:0;"><tr>
+                        <td valign="middle" style="padding:0;vertical-align:middle;"><img src="${safeLogoUrl}" width="46" height="46" alt="Moi Kanakku" style="display:block;width:46px;height:46px;object-fit:contain;border:0;"></td>
+                        <td valign="middle" style="padding-left:10px;vertical-align:middle;"><img src="${safeLabelUrl}" width="174" alt="Moi Kanakku" style="display:block;width:174px;height:auto;border:0;"></td>
+                    </tr></table>
+                </td></tr>
+                <tr><td style="width:100%;padding:45px 60px 50px;background-color:#ffffff;">${body}</td></tr>
+                <tr><td align="center" style="width:100%;padding:28px 40px 32px;background-color:#f1efe7;">
+                    <p style="margin:0;color:#686868;font-size:12px;line-height:19px;">This message was sent automatically by Moi Kanakku.</p>
+                    <p style="margin:6px 0 0;color:#171717;font-size:12px;line-height:19px;font-weight:700;">Thank you for using Moi Kanakku.</p>
+                    <p style="margin:6px 0 0;color:#8a8882;font-size:11px;line-height:18px;">© ${copyrightYear} Moi Kanakku. All rights reserved.</p>
+                </td></tr>
+            </table>
+        </td></tr>
+    </table>
+    <style>
+        @media only screen and (max-width: 600px) {
+            body { background-color:#f7f7f3 !important; }
+            td[style*="padding:45px 60px 50px"] { padding:30px 22px 34px !important; }
+            td[style*="padding:30px 40px"] { padding:22px !important; }
+            h1 { font-size:26px !important; line-height:34px !important; }
+        }
+    </style>
+</body>
+</html>`;
+}
+
+async function sendFeedbackConfirmationEmail(toEmail, userName) {
+    if (!toEmail) return;
+    try {
+        const safeName = escapeHtml(userName || 'User');
+        const html = getBrandedEmailContent({
+            title: 'Feedback Submitted',
+            body: `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-spacing:0;"><tr><td style="padding:0;"><span style="display:inline-block;padding:8px 14px;background-color:#f1efe7;color:#171717;border-radius:999px;font-size:12px;line-height:16px;font-weight:700;letter-spacing:0.03em;">FEEDBACK</span><h1 style="margin:20px 0 12px;color:#171717;font-size:32px;line-height:42px;">Feedback submitted</h1><p style="margin:0 0 10px;color:#171717;font-size:17px;line-height:27px;">Hi <strong>${safeName}</strong>,</p><p style="margin:0;color:#686868;font-size:16px;line-height:27px;">Your feedback has been successfully submitted. We will review it shortly.</p><div style="margin:32px 0 18px;padding:22px;background:#f1efe7;border:1px solid #e4e1d9;border-radius:16px;color:#686868;font-size:15px;line-height:25px;"><strong style="color:#171717;">Help us grow!</strong><br>If you like Moi Kanakku, please share it with your friends and family. Your support helps us improve the app for everyone.</div></td></tr></table>`,
+        });
+        await sendEmail({ from: formatEmailFrom('Admin - Moi Kanakku Team'), to: toEmail, subject: 'Feedback Submission - Moi Kanakku', html });
+    } catch (err) {
+        logger.error('Error sending feedback confirmation email', err);
+    }
+}
+
+async function sendFeedbackReplyEmail(toEmail, userName, replyText) {
+    if (!toEmail) return;
+    try {
+        const safeName = escapeHtml(userName || 'User');
+        const safeReply = escapeHtml(replyText || '').replace(/\n/g, '<br>');
+        const html = getBrandedEmailContent({
+            title: 'Feedback Response',
+            body: `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-spacing:0;"><tr><td style="padding:0;"><span style="display:inline-block;padding:8px 14px;background-color:#f1efe7;color:#171717;border-radius:999px;font-size:12px;line-height:16px;font-weight:700;letter-spacing:0.03em;">FEEDBACK RESPONSE</span><h1 style="margin:20px 0 12px;color:#171717;font-size:32px;line-height:42px;">We responded to your feedback</h1><p style="margin:0 0 10px;color:#171717;font-size:17px;line-height:27px;">Hi <strong>${safeName}</strong>,</p><p style="margin:0 0 18px;color:#686868;font-size:16px;line-height:27px;">A response has been provided for your feedback.</p><div style="padding:22px;background:#f1efe7;border:1px solid #e4e1d9;border-radius:16px;color:#686868;font-size:15px;line-height:25px;">${safeReply}</div></td></tr></table>`,
+        });
+        await sendEmail({ from: formatEmailFrom('Admin - Moi Kanakku Team'), to: toEmail, subject: 'Response to your feedback - Moi Kanakku', html });
+    } catch (err) {
+        logger.error('Error sending feedback reply email', err);
+    }
+}
+
+function getAdminRegistrationEmailContent(userData) {
+    const labels = {
+        userId: 'User ID', name: 'Name', email: 'Email', mobile: 'Mobile', city: 'City',
+        referred_by: 'Referred By', brand: 'Brand', model: 'Model', device_name: 'Device Name',
+        normalizedAndroidVersion: 'Android Version', registrationTime: 'Registration Time',
+    };
+    const rows = Object.entries(labels).map(([key, label]) => `<tr><td style="padding:8px 0;color:#686868;"><strong style="color:#171717;">${label}:</strong> ${escapeHtml(userData[key] || 'N/A')}</td></tr>`).join('');
+    return getBrandedEmailContent({
+        title: 'New User Registration',
+        body: `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-spacing:0;"><tr><td style="padding:0;"><span style="display:inline-block;padding:8px 14px;background-color:#f1efe7;color:#171717;border-radius:999px;font-size:12px;line-height:16px;font-weight:700;letter-spacing:0.03em;">ADMIN NOTIFICATION</span><h1 style="margin:20px 0 12px;color:#171717;font-size:32px;line-height:42px;">New user registered</h1><p style="margin:0 0 18px;color:#686868;font-size:16px;line-height:27px;">A new user has registered on Moi Kanakku.</p><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-spacing:0;padding:12px 22px;background:#f1efe7;border:1px solid #e4e1d9;border-radius:16px;font-size:15px;line-height:22px;">${rows}</table></td></tr></table>`,
+    });
+}
+
+function getWelcomeEmailContent(name) {
+    const safeName = escapeHtml(name || 'User');
+    return getBrandedEmailContent({
+        title: 'Welcome to Moi Kanakku',
+        body: `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-spacing:0;">
+            <tr><td style="padding:0;"><span style="display:inline-block;padding:8px 14px;background-color:#f1efe7;color:#171717;border-radius:999px;font-size:12px;line-height:16px;font-weight:700;letter-spacing:0.03em;">WELCOME</span></td></tr>
+            <tr><td style="padding:0;"><h1 style="margin:20px 0 12px;color:#171717;font-size:32px;line-height:42px;font-weight:700;">Welcome to Moi Kanakku</h1></td></tr>
+            <tr><td style="padding:0;"><p style="margin:0 0 10px;color:#171717;font-size:17px;line-height:27px;">Hi <strong>${safeName}</strong>,</p></td></tr>
+            <tr><td style="padding:0;"><p style="margin:0;color:#686868;font-size:16px;line-height:27px;">We are pleased to welcome you to Moi Kanakku. Our platform helps you manage events, relations, and gift records in a simple and organized way.</p></td></tr>
+            <tr><td style="padding:0;"><div style="margin:32px 0 18px;padding:22px;background-color:#f1efe7;border:1px solid #e4e1d9;border-radius:16px;color:#686868;font-size:15px;line-height:25px;"><strong style="color:#171717;">Getting started with Moi Kanakku:</strong><br>Create and manage events, maintain relations and guest details, track gifts, and export your records anytime.</div></td></tr>
+            <tr><td style="padding:0;"><p style="margin:0;color:#8a8882;font-size:13px;line-height:21px;">Thank you for choosing Moi Kanakku. We are committed to helping you manage your records easily and efficiently.</p></td></tr>
+        </table>`,
+    });
+}
+
+function getEmailVerificationContent({ name, verifyLink, expiresInHours = 24 }) {
+    const safeName = escapeHtml(name || 'User');
+    const safeLink = escapeHtml(verifyLink || '#');
+    const hours = Number(expiresInHours) || 24;
+    return getBrandedEmailContent({
+        title: 'Verify your email',
+        body: `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-spacing:0;">
+            <tr><td style="padding:0;"><span style="display:inline-block;padding:8px 14px;background-color:#f1efe7;color:#171717;border-radius:999px;font-size:12px;line-height:16px;font-weight:700;letter-spacing:0.03em;">EMAIL VERIFICATION</span></td></tr>
+            <tr><td style="padding:0;"><h1 style="margin:20px 0 12px;color:#171717;font-size:32px;line-height:42px;font-weight:700;">Verify your email</h1></td></tr>
+            <tr><td style="padding:0;"><p style="margin:0 0 10px;color:#171717;font-size:17px;line-height:27px;">Hi <strong>${safeName}</strong>,</p></td></tr>
+            <tr><td style="padding:0;"><p style="margin:0;color:#686868;font-size:16px;line-height:27px;">Please confirm this email address for your Moi Kanakku account by clicking the button below.</p></td></tr>
+            <tr><td align="center" style="padding:32px 0 18px;"><a href="${safeLink}" style="display:inline-block;padding:14px 28px;background-color:#171717;color:#ffffff;text-decoration:none;border-radius:8px;font-size:16px;font-weight:700;">Verify Email</a></td></tr>
+            <tr><td align="center" style="padding:0;"><p style="margin:0;color:#686868;font-size:14px;line-height:21px;">This link will expire in <strong style="color:#171717;">${hours} hour${hours === 1 ? '' : 's'}</strong>.</p></td></tr>
+            <tr><td style="padding:0;"><div style="height:1px;background-color:#e4e1d9;margin:32px 0 26px;"></div><p style="margin:0;color:#8a8882;font-size:13px;line-height:21px;word-break:break-all;">If the button does not work, copy and paste this link into your browser:<br><a href="${safeLink}" style="color:#171717;">${safeLink}</a><br><br>If you did not expect this email, you can safely ignore it.</p></td></tr>
+        </table>`,
+    });
+}
+
+/**
+ * Generate the shared OTP email template.
+ * @param {{ name?: string, otp: string, title: string, message: string, expiresAt?: string, expiresInMinutes?: number }} options
+ * @returns {string} HTML email content
+ */
+function getOtpEmailContent({
+        name,
+        otp,
+        title,
+        message,
+        expiresAt = '',
+        expiresInMinutes = 10,
+    securityMessage = 'If you did not request this code, you can safely ignore this email.',
+    automaticMessage = 'This message was sent automatically by Moi Kanakku.',
+    thanksMessage = 'Thank you for using Moi Kanakku.',
+    logoUrl = '/assets/app-logo-light.png',
+    labelUrl = '/assets/label-dark.png',
+    copyrightYear = new Date().getFullYear(),
+}) {
+        const safeName = escapeHtml(name || 'User');
+        const safeOtp = escapeHtml(otp || '');
+        const safeTitle = escapeHtml(title || 'Email Verification');
+        const safeMessage = escapeHtml(message || 'Use the verification code below to continue.');
+        const safeExpiresAt = escapeHtml(expiresAt || '');
+        const safeSecurityMessage = escapeHtml(securityMessage);
+        const safeAutomaticMessage = escapeHtml(automaticMessage);
+        const safeThanksMessage = escapeHtml(thanksMessage);
+        const safeLogoUrl = escapeHtml(logoUrl);
+        const safeLabelUrl = escapeHtml(labelUrl);
+        const safeCopyrightYear = escapeHtml(copyrightYear);
+        const minutes = Number(expiresInMinutes) || 10;
+
+        return `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+    <meta name="supported-color-schemes" content="light">
+    <title>${safeTitle}</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f7f7f3;font-family:Arial,Helvetica,sans-serif;color:#171717;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-spacing:0;background-color:#f7f7f3;">
+        <tr>
+            <td align="center" style="width:100%;padding:40px 20px;">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:900px;background-color:#ffffff;border:1px solid #e4e1d9;border-radius:22px;overflow:hidden;border-spacing:0;">
+                    <tr>
+                        <td align="center" style="width:100%;padding:30px 40px;background-color:#ffffff;border-bottom:1px solid #e4e1d9;">
+                            <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;border-spacing:0;">
+                                <tr>
+                                    <td valign="middle" style="padding:0;vertical-align:middle;">
+                                        <img src="${safeLogoUrl}" width="46" height="46" alt="Moi Kanakku" style="display:block;width:46px;height:46px;object-fit:contain;border:0;">
+                                    </td>
+                                    <td valign="middle" style="padding-left:10px;vertical-align:middle;">
+                                        <img src="${safeLabelUrl}" width="174" alt="Moi Kanakku" style="display:block;width:174px;height:auto;border:0;">
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="width:100%;padding:45px 60px 50px;background-color:#ffffff;">
+                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-spacing:0;">
+                                <tr><td style="padding:0;"><span style="display:inline-block;padding:8px 14px;background-color:#f1efe7;color:#171717;border-radius:999px;font-size:12px;line-height:16px;font-weight:700;letter-spacing:0.03em;">${safeTitle}</span></td></tr>
+                                <tr><td style="padding:0;"><h1 style="margin:20px 0 12px;padding:0;color:#171717;font-size:32px;line-height:42px;font-weight:700;letter-spacing:-0.6px;">${safeTitle}</h1></td></tr>
+                                <tr><td style="padding:0;"><p style="margin:0 0 10px;padding:0;color:#171717;font-size:17px;line-height:27px;">Hi <strong>${safeName}</strong>,</p></td></tr>
+                                <tr><td style="padding:0;"><p style="margin:0;padding:0;color:#686868;font-size:16px;line-height:27px;">${safeMessage}</p></td></tr>
+                                <tr>
+                                    <td style="padding:0;">
+                                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;margin:32px 0 18px;border-spacing:0;">
+                                            <tr><td align="center" style="padding:30px 20px;background-color:#f1efe7;border:1px solid #e4e1d9;border-radius:16px;"><div style="color:#171717;font-size:36px;line-height:44px;font-weight:700;letter-spacing:10px;font-family:Arial,Helvetica,sans-serif;">${safeOtp}</div></td></tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                                <tr><td align="center" style="padding:0;"><p style="margin:0;color:#686868;font-size:14px;line-height:21px;">This verification code will expire in <strong style="color:#171717;">${minutes} minutes</strong>.</p></td></tr>
+                                ${safeExpiresAt ? `<tr><td align="center" style="padding:0;"><p style="margin:6px 0 0;color:#8a8882;font-size:13px;line-height:20px;">Expires at: <strong style="color:#686868;">${safeExpiresAt}</strong></p></td></tr>` : ''}
+                                <tr><td style="padding:0;"><div style="height:1px;background-color:#e4e1d9;margin:32px 0 26px;"></div></td></tr>
+                                <tr><td style="padding:0;"><p style="margin:0;padding:0;color:#8a8882;font-size:13px;line-height:21px;">${safeSecurityMessage}</p></td></tr>
+                            </table>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td align="center" style="width:100%;padding:28px 40px 32px;background-color:#f1efe7;">
+                            <p style="margin:0;padding:0;color:#686868;font-size:12px;line-height:19px;">${safeAutomaticMessage}</p>
+                            <p style="margin:6px 0 0;padding:0;color:#171717;font-size:12px;line-height:19px;font-weight:700;">${safeThanksMessage}</p>
+                            <p style="margin:6px 0 0;padding:0;color:#8a8882;font-size:11px;line-height:18px;">© ${safeCopyrightYear} Moi Kanakku. All rights reserved.</p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+    <style>
+        @media only screen and (max-width: 600px) {
+            body { background-color:#f7f7f3 !important; }
+            td[style*="padding:45px 60px 50px"] { padding:30px 22px 34px !important; }
+            td[style*="padding:30px 40px"] { padding:22px !important; }
+            h1 { font-size:26px !important; line-height:34px !important; }
+            div[style*="font-size:36px"] { font-size:30px !important; line-height:38px !important; letter-spacing:7px !important; }
+        }
+    </style>
+</body>
+</html>`;
+}
+
 /**
  * Generate admin notification email HTML for new user registration
  * @param {Object} userData - User registration data { userId, name, email, mobile, city, referred_by, brand, model, device_name, normalizedAndroidVersion, registrationTime }
  * @returns {string} HTML email content
  */
-function getAdminRegistrationEmailContent(userData) {
+function getLegacyAdminRegistrationEmailContent(userData) {
     const {
         userId,
         name,
@@ -408,6 +634,8 @@ module.exports = {
     queueEmail,
     getWelcomeEmailContent,
     getEmailVerificationContent,
+    getOtpEmailContent,
+    getBrandedEmailContent,
     getAdminRegistrationEmailContent,
     createEmailTransporter,
     formatEmailFrom,

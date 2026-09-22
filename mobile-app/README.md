@@ -38,9 +38,37 @@ The app implements several security features:
 If signing material was ever committed:
 
 1. **Rotate** the Play upload keystore (Play Console → App signing) and create a new Google Play service-account key; revoke the old one.
-2. **Rotate** the API `X-API-Key` / Remote Config `apiSecretKey` on the server (client no longer ships a hardcoded fallback).
+2. **Rotate** the API `X-API-Key` on the server (the client no longer ships a hardcoded fallback).
 3. Remove sensitive files from git history (`git filter-repo` / BFG) and force-push only after coordinating with the team.
 4. Keep secrets in GitLab CI variables / local `key.properties` only.
+
+### Runtime configuration
+
+The app loads `moiAppVersionConfig` from Firebase Remote Config at startup. Set
+its value to JSON containing only the public URL values:
+
+```json
+{
+      "versionConfig": [
+            {
+                  "liveURL": "https://moi-api.floatwalktiruppur.in/apis",
+                  "imageUrl": "https://moi-api.floatwalktiruppur.in"
+            }
+      ]
+}
+```
+
+`maintenanceMode` and `min_app_version` are read from the backend
+`/app-config/public` endpoint, not Firebase Remote Config. The Firebase value is
+therefore limited to `liveURL` and `imageUrl`.
+
+`apiSecretKey` must not be stored in Firebase Remote Config because client-side
+Remote Config values are public to anyone who installs the app. If the backend
+requires the optional `X-API-Key` header, add the value as `API_SECRET_KEY` in
+`mobile-app/.env` or inject it through the release build environment. Keep the
+authoritative `API_SECRET_KEY` in the backend server environment. For production
+mobile security, prefer authenticated user tokens and server-side controls over
+a shared app-wide API key.
 
 ### Release builds (obfuscation)
 

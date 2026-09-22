@@ -137,10 +137,9 @@ class MoiAppHeader extends StatelessWidget implements PreferredSizeWidget {
     final subtitleColor = isDark
         ? const Color(0xFF94A3B8)
         : const Color(0xFF64748B);
-    final bgColor = isDark ? const Color(0xFF0F1A1A) : const Color(0xFFF8FAF5);
-    final borderColor = isDark
-        ? const Color(0xFF1E2D2D)
-        : const Color(0xFFE2E8E5);
+    final bgColor = isDark ? AppColors.darkSurface : const Color(0xFFF8FAF5);
+    final borderColor = isDark ? AppColors.darkBorder : const Color(0xFFE2E8E5);
+    final headerAccent = isDark ? AppColors.accent : const Color(0xFF16A34A);
 
     return AppBar(
       toolbarHeight: preferredSize.height,
@@ -180,9 +179,7 @@ class MoiAppHeader extends StatelessWidget implements PreferredSizeWidget {
                 height: 120,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: const Color(
-                    0xFF16A34A,
-                  ).withValues(alpha: isDark ? 0.08 : 0.05),
+                  color: headerAccent.withValues(alpha: isDark ? 0.12 : 0.05),
                 ),
               ),
             ),
@@ -193,13 +190,19 @@ class MoiAppHeader extends StatelessWidget implements PreferredSizeWidget {
               bottom: 0,
               child: Container(
                 height: 2.5,
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [
-                      Color(0xFF16A34A),
-                      Color(0xFF087443),
-                      Color(0xFF16A34A),
-                    ],
+                    colors: isDark
+                        ? [
+                            AppColors.accent,
+                            AppColors.accentDark,
+                            AppColors.accent,
+                          ]
+                        : const [
+                            Color(0xFF16A34A),
+                            Color(0xFF087443),
+                            Color(0xFF16A34A),
+                          ],
                   ),
                   borderRadius: BorderRadius.only(
                     bottomLeft: Radius.circular(20),
@@ -322,14 +325,13 @@ class MoiBannerHeader extends StatelessWidget implements PreferredSizeWidget {
     final topPadding = MediaQuery.paddingOf(context).top;
     final totalHeight = height + topPadding;
 
-    final bgColor = isDark ? const Color(0xFF0F1A1A) : const Color(0xFFF8FAF5);
+    final bgColor = isDark ? AppColors.darkSurface : const Color(0xFFF8FAF5);
     final titleColor = isDark ? Colors.white : const Color(0xFF102A2A);
     final subtitleColor = isDark
         ? const Color(0xFF94A3B8)
         : const Color(0xFF64748B);
-    final borderColor = isDark
-        ? const Color(0xFF1E2D2D)
-        : const Color(0xFFE2E8E5);
+    final borderColor = isDark ? AppColors.darkBorder : const Color(0xFFE2E8E5);
+    final headerAccent = isDark ? AppColors.accent : const Color(0xFF16A34A);
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle(
@@ -354,9 +356,7 @@ class MoiBannerHeader extends StatelessWidget implements PreferredSizeWidget {
                 height: 130,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: const Color(
-                    0xFF16A34A,
-                  ).withValues(alpha: isDark ? 0.08 : 0.05),
+                  color: headerAccent.withValues(alpha: isDark ? 0.12 : 0.05),
                 ),
               ),
             ),
@@ -366,20 +366,26 @@ class MoiBannerHeader extends StatelessWidget implements PreferredSizeWidget {
               bottom: 6,
               child: _buildHeaderGraphic(isDark),
             ),
-            // Thin green gradient accent line (not bright lime)
+            // Keep the light green accent and use the lime brand accent in dark mode.
             Positioned(
               left: 0,
               right: 0,
               bottom: 0,
               height: 2.5,
               child: Container(
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [
-                      Color(0xFF16A34A),
-                      Color(0xFF087443),
-                      Color(0xFF16A34A),
-                    ],
+                    colors: isDark
+                        ? [
+                            AppColors.accent,
+                            AppColors.accentDark,
+                            AppColors.accent,
+                          ]
+                        : const [
+                            Color(0xFF16A34A),
+                            Color(0xFF087443),
+                            Color(0xFF16A34A),
+                          ],
                   ),
                 ),
               ),

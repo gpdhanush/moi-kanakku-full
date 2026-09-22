@@ -218,6 +218,9 @@ class Connection {
 
   Future<Map<String, String>> _getHeader(bool useToken) async {
     final headers = Map<String, String>.from(_baseHeader);
+    if (apiSecretKey.isNotEmpty) {
+      headers['X-API-Key'] = apiSecretKey;
+    }
     if (useToken) {
       final token = await _getCachedToken();
       if (token != null) {

@@ -63,9 +63,7 @@ class _NotificationListPageState extends State<NotificationListPage> {
     final languageProvider = context.watch<LanguageProvider>();
     final localUnread = _notifications.where((n) => !n.isRead).length;
     final unreadCount = localUnread > 0 ? localUnread : _unreadCount;
-    final title = unreadCount > 0
-        ? '${languageProvider.tr('notifications.title').toTitleCase()} ($unreadCount)'
-        : languageProvider.tr('notifications.title').toTitleCase();
+    final title = languageProvider.tr('notifications.title').toTitleCase();
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -80,6 +78,7 @@ class _NotificationListPageState extends State<NotificationListPage> {
               child: MoiAppHeader.circleButton(
                 onTap: _markAllAsRead,
                 tooltip: languageProvider.tr('notifications.markAllRead'),
+                backgroundColor: Colors.transparent,
                 child: HugeIcon(
                   icon: HugeIcons.strokeRoundedTickDouble02,
                   color: Theme.of(context).colorScheme.onSurface,
@@ -297,7 +296,7 @@ class _NotificationListPageState extends State<NotificationListPage> {
             await _markAsRead(notification);
           }
           if (mounted) {
-            await _showNotificationDetailSheet(notification, accent);
+            await _showNotificationDetailSheet(notification);
           }
         },
         onDelete: () => _confirmAndDelete(notification, index),
@@ -331,7 +330,6 @@ class _NotificationListPageState extends State<NotificationListPage> {
 
   Future<void> _showNotificationDetailSheet(
     NotificationItem notification,
-    Color accent,
   ) async {
     final languageProvider = context.read<LanguageProvider>();
 
@@ -343,8 +341,6 @@ class _NotificationListPageState extends State<NotificationListPage> {
       builder: (sheetContext) {
         final bottomInset = MediaQuery.paddingOf(sheetContext).bottom;
         final maxHeight = MediaQuery.sizeOf(sheetContext).height * 0.78;
-        final isUnread = !notification.isRead;
-
         return Padding(
           padding: EdgeInsets.only(bottom: bottomInset > 0 ? 0 : 8),
           child: Container(
@@ -381,65 +377,17 @@ class _NotificationListPageState extends State<NotificationListPage> {
                       ),
                     ),
                     const SizedBox(height: 18),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Container(
-                          width: 48,
-                          height: 48,
-                          decoration: BoxDecoration(
-                            color: accent.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                          alignment: Alignment.center,
-                          child: HugeIcon(
-                            icon: _getNotificationIcon(notification.type),
-                            color: accent,
-                            size: 22,
-                            strokeWidth: 1.8,
-                          ),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: Text(
+                        _getTimeAgo(notification.time),
+                        textAlign: TextAlign.right,
+                        style: AppTypography.body.copyWith(
+                          color: AppColors.textSecondary,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
                         ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              if (isUnread)
-                                Container(
-                                  margin: const EdgeInsets.only(bottom: 6),
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 3,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: accent.withValues(alpha: 0.12),
-                                    borderRadius: BorderRadius.circular(999),
-                                  ),
-                                  child: Text(
-                                    languageProvider.tr(
-                                      'notifications.unreadBadge',
-                                    ),
-                                    textAlign: TextAlign.left,
-                                    style: AppTypography.body.copyWith(
-                                      color: accent,
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                  ),
-                                ),
-                              Text(
-                                _getTimeAgo(notification.time),
-                                textAlign: TextAlign.left,
-                                style: AppTypography.body.copyWith(
-                                  color: AppColors.textSecondary,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
                     const SizedBox(height: 16),
                     Flexible(
@@ -483,6 +431,7 @@ class _NotificationListPageState extends State<NotificationListPage> {
                     AppButton(
                       title: languageProvider.tr('common.cancel'),
                       onPressed: () => Navigator.of(sheetContext).pop(),
+                      showIcon: false,
                     ),
                   ],
                 ),
@@ -854,6 +803,8 @@ class _NotificationCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final isUnread = !notification.isRead;
     final colors = AppColors.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final deleteColor = isDark ? colors.moiGiven : colors.error;
 
     return Material(
       color: Colors.transparent,
@@ -969,7 +920,9 @@ class _NotificationCard extends StatelessWidget {
               ),
               const SizedBox(width: 4),
               Material(
-                color: AppColors.moiGivenSoft,
+                color: isDark
+                    ? colors.moiGivenSoft
+                    : colors.error.withValues(alpha: 0.10),
                 shape: const CircleBorder(),
                 clipBehavior: Clip.antiAlias,
                 child: InkWell(
@@ -981,7 +934,7 @@ class _NotificationCard extends StatelessWidget {
                     child: Center(
                       child: HugeIcon(
                         icon: HugeIcons.strokeRoundedDelete02,
-                        color: AppColors.moiGiven,
+                        color: deleteColor,
                         size: 16,
                         strokeWidth: 1.9,
                       ),

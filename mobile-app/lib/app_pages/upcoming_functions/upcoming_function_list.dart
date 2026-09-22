@@ -129,6 +129,7 @@ class _UpcomingFunctionListState extends State<UpcomingFunctionList> {
   @override
   Widget build(BuildContext context) {
     final primary = Theme.of(context).colorScheme.primary;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Consumer<LanguageProvider>(
       builder: (context, languageProvider, _) {
@@ -189,11 +190,11 @@ class _UpcomingFunctionListState extends State<UpcomingFunctionList> {
               ),
               backgroundColor: primary,
               tooltip: languageProvider.tr('upcomingFunctions.addFunction'),
-              child: const HugeIcon(
+              child: HugeIcon(
                 icon: HugeIcons.strokeRoundedAdd01,
                 strokeWidth: 2,
                 size: 24,
-                color: Colors.white,
+                color: isDark ? AppColors.charcoal : Colors.white,
               ),
             ),
           ),

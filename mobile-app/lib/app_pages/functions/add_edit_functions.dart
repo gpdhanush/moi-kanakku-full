@@ -613,6 +613,12 @@ class _AddEditFunctionsState extends State<AddEditFunctions> {
               context,
               listen: false,
             ).tr('functions.cropImage'),
+            aspectRatioPresets: const [
+              CropAspectRatioPreset.square,
+              CropAspectRatioPreset.ratio16x9,
+              CropAspectRatioPreset.ratio4x3,
+              CropAspectRatioPreset.original,
+            ],
             aspectRatioLockEnabled: false,
           ),
         ],

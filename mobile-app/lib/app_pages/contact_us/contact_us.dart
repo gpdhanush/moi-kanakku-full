@@ -210,13 +210,13 @@ class _ContactTile extends StatelessWidget {
                 width: 36,
                 height: 36,
                 decoration: BoxDecoration(
-                  color: primary,
-                  borderRadius: BorderRadius.circular(11),
+                  color: primary.withValues(alpha: 0.9),
+                  borderRadius: BorderRadius.circular(5),
                 ),
                 alignment: Alignment.center,
                 child: HugeIcon(
                   icon: actionIcon,
-                  color: Colors.white,
+                  color: isDark ? AppColors.charcoal : Colors.white,
                   size: 16,
                   strokeWidth: 1.9,
                 ),
@@ -248,11 +248,11 @@ class _WorkingHoursCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final cardBg = isDark ? AppColors.darkSurface : Colors.white;
-    final pillBg = isDark ? const Color(0xFF162E21) : const Color(0xFFE8F7EC);
-    final primaryGreen = const Color(0xFF16A34A);
-    final darkGreen = isDark
-        ? const Color(0xFF4ADE80)
-        : const Color(0xFF087443);
+    final pillBg = isDark
+        ? AppColors.darkMoiReceivedSoft
+        : const Color(0xFFE8F7EC);
+    final primaryGreen = isDark ? AppColors.accent : const Color(0xFF16A34A);
+    final darkGreen = isDark ? AppColors.accent : const Color(0xFF087443);
     final titleColor = isDark ? Colors.white : const Color(0xFF102A2A);
     final hoursColor = isDark
         ? const Color(0xFF94A3B8)
@@ -323,7 +323,7 @@ class _WorkingHoursCard extends StatelessWidget {
                   days,
                   textAlign: TextAlign.center,
                   style: AppTypography.body.copyWith(
-                    color: primary,
+                    color: isDark ? AppColors.accent : primary,
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
                   ),

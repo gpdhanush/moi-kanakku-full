@@ -11,6 +11,7 @@ const String bootstrapApiBaseUri = 'https://moi-api.floatwalktiruppur.in/apis';
 
 String appBaseUri = bootstrapApiBaseUri;
 String appImageUrl = "";
+String apiSecretKey = "";
 
 const String appName = "Moi Kanakku";
 String appVersion = "";

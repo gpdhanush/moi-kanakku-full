@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:moi/app_configs/index.dart';
 import 'package:moi/app_firebase/push_notification_service.dart';
@@ -90,8 +91,19 @@ class LoginController {
     FocusScope.of(context).unfocus();
 
     try {
-      const googleServerClientId =
-          '825754651412-m9cnau0v63pqcbcc8a820ep42fmm57gp.apps.googleusercontent.com';
+      final googleServerClientId =
+          dotenv.env['GOOGLE_SERVER_CLIENT_ID'] ??
+          const String.fromEnvironment(
+            'GOOGLE_SERVER_CLIENT_ID',
+            defaultValue: '',
+          );
+      if (googleServerClientId.isEmpty) {
+        alertServices.errorToast(
+          'Google configuration is missing. Please verify the app settings.',
+        );
+        return false;
+      }
+
       final GoogleSignIn googleSignIn = GoogleSignIn(
         scopes: ['email'],
         serverClientId: googleServerClientId,

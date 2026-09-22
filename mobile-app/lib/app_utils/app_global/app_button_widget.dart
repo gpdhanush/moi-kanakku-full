@@ -11,6 +11,7 @@ class AppButton extends StatelessWidget {
   final bool showIcon;
   final bool isLoading;
   final Color? color;
+  final Color? textColor;
   final Gradient? gradient;
 
   const AppButton({
@@ -23,6 +24,7 @@ class AppButton extends StatelessWidget {
     this.showIcon = true,
     this.isLoading = false,
     this.color,
+    this.textColor,
     this.gradient,
   });
 
@@ -55,7 +57,8 @@ class AppButton extends StatelessWidget {
         ? primaryColor.withValues(alpha: 0.22)
         : lightButtonColor.withValues(alpha: 0.18);
 
-    final contentColor = AppColors.white;
+    final contentColor =
+        textColor ?? (isDark ? AppColors.charcoal : AppColors.white);
     const radius = 5.0;
 
     return Container(

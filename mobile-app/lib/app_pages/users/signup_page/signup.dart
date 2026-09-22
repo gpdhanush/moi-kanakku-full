@@ -348,7 +348,6 @@ class _SignupState extends State<Signup> with SingleTickerProviderStateMixin {
       printContent('Error getting FCM token: $e');
       requestModel.fcm_token = requestModel.fcm_token ?? '';
     }
-    printDirect(requestModel.toJson().toString());
     final response = await userServices.signup(
       jsonEncode(requestModel.toJson()),
     );
