@@ -7,6 +7,7 @@ export 'app_global/email_validator.dart';
 export 'app_global/phone_validator.dart';
 export 'app_global/password_validator.dart';
 export 'app_global/image_picker_permissions.dart';
+export 'app_global/image_upload_cropper.dart';
 export 'app_global/pdf_export_service.dart';
 export 'app_forms/mic_icon_widget.dart';
 export 'app_forms/text_form_widgets.dart';

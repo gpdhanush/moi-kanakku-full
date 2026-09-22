@@ -4,7 +4,6 @@ import 'package:flutter/services.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:image_cropper/image_cropper.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
@@ -582,57 +581,13 @@ class _AddEditFunctionsState extends State<AddEditFunctions> {
   }
 
   Future<File?> _cropImage(String imagePath) async {
-    try {
-      final croppedFile = await ImageCropper().cropImage(
-        sourcePath: imagePath,
-        compressFormat: ImageCompressFormat.jpg,
-        compressQuality: 100,
-        aspectRatio: const CropAspectRatio(ratioX: 16, ratioY: 9),
-        uiSettings: [
-          AndroidUiSettings(
-            toolbarTitle: Provider.of<LanguageProvider>(
-              context,
-              listen: false,
-            ).tr('functions.cropImage'),
-            statusBarLight: true,
-            activeControlsWidgetColor: Theme.of(context).colorScheme.primary,
-            toolbarColor: Theme.of(context).colorScheme.primary,
-            navBarLight: false,
-            toolbarWidgetColor: Colors.white,
-            initAspectRatio: CropAspectRatioPreset.ratio16x9,
-            lockAspectRatio: false,
-            aspectRatioPresets: const [
-              CropAspectRatioPreset.square,
-              CropAspectRatioPreset.ratio16x9,
-              CropAspectRatioPreset.ratio4x3,
-              CropAspectRatioPreset.original,
-            ],
-          ),
-          IOSUiSettings(
-            title: Provider.of<LanguageProvider>(
-              context,
-              listen: false,
-            ).tr('functions.cropImage'),
-            aspectRatioPresets: const [
-              CropAspectRatioPreset.square,
-              CropAspectRatioPreset.ratio16x9,
-              CropAspectRatioPreset.ratio4x3,
-              CropAspectRatioPreset.original,
-            ],
-            aspectRatioLockEnabled: false,
-          ),
-        ],
-      );
-      if (croppedFile == null) return null;
-      final compressed = await _compressImage(croppedFile.path);
-      if (compressed != null) {
-        return compressed;
-      }
-      return File(croppedFile.path);
-    } catch (e) {
-      printContent("Error cropping image: $e");
-      return File(imagePath);
-    }
+    return ImageUploadCropper.crop(
+      context: context,
+      imagePath: imagePath,
+      title: context.read<LanguageProvider>().tr('functions.cropImage'),
+      aspectRatioX: 16,
+      aspectRatioY: 9,
+    );
   }
 
   Future<File?> _compressImage(String imagePath) async {

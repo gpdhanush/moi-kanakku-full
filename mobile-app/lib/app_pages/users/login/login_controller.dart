@@ -185,10 +185,14 @@ class LoginController {
 
   Future<void> _persistAuthSession(Map<String, dynamic> authData) async {
     final token = authData['token']?.toString();
-    final rawUser = authData['user'];
+    final rawUser = authData['user'] ?? authData['responseValue'];
     final user = rawUser is Map
         ? Map<String, dynamic>.from(rawUser)
-        : <String, dynamic>{};
+        : Map<String, dynamic>.from(authData);
+    final userId = user['id'] ?? user['userId'] ?? authData['id'];
+    if (userId != null && userId.toString().trim().isNotEmpty) {
+      user['id'] = userId;
+    }
     final lastLogin =
         user['last_login'] ??
         user['lastLogin'] ??
@@ -197,7 +201,7 @@ class LoginController {
     if (lastLogin != null && lastLogin.toString().trim().isNotEmpty) {
       user['last_login'] = lastLogin;
     }
-    final userToStore = user.isNotEmpty ? user : authData;
+    final userToStore = user;
     if (token != null && token.isNotEmpty) {
       await Future.wait([
         secureStorage.save(AppVariables.userInformation, userToStore),

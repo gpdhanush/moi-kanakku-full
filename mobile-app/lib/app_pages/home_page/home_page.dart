@@ -111,11 +111,14 @@ class _HomePageState extends State<HomePage> {
       try {
         final userInfo = await _secureStorage.get(AppVariables.userInformation);
         if (userInfo != null && mounted) {
+          final storedUser = userInfo is Map && userInfo['user'] is Map
+              ? Map<String, dynamic>.from(userInfo['user'] as Map)
+              : userInfo;
           final userProvider = Provider.of<UserProvider>(
             context,
             listen: false,
           );
-          userProvider.updateUserDetails(userInfo);
+          userProvider.updateUserDetails(storedUser);
         }
       } catch (e) {
         debugPrint('Error loading user information: $e');

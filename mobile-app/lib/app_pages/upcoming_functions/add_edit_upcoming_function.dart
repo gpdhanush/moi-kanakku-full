@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:hugeicons/hugeicons.dart';
-import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:moi/app_configs/index.dart';
@@ -517,44 +516,13 @@ class _AddEditUpcomingFunctionState extends State<AddEditUpcomingFunction> {
   }
 
   Future<File?> _cropImage(String imagePath) async {
-    try {
-      final croppedFile = await ImageCropper().cropImage(
-        sourcePath: imagePath,
-        compressFormat: ImageCompressFormat.jpg,
-        compressQuality: 100,
-        aspectRatio: const CropAspectRatio(ratioX: 16, ratioY: 9),
-        uiSettings: [
-          AndroidUiSettings(
-            toolbarTitle: context.read<LanguageProvider>().tr(
-              'upcomingFunctions.cropImage',
-            ),
-            statusBarLight: true,
-            activeControlsWidgetColor: Theme.of(context).colorScheme.primary,
-            toolbarColor: Theme.of(context).colorScheme.primary,
-            navBarLight: false,
-            toolbarWidgetColor: Colors.white,
-            initAspectRatio: CropAspectRatioPreset.ratio16x9,
-            lockAspectRatio: false,
-            aspectRatioPresets: const [
-              CropAspectRatioPreset.square,
-              CropAspectRatioPreset.ratio16x9,
-              CropAspectRatioPreset.ratio4x3,
-              CropAspectRatioPreset.original,
-            ],
-          ),
-          IOSUiSettings(
-            title: context.read<LanguageProvider>().tr(
-              'upcomingFunctions.cropImage',
-            ),
-            aspectRatioLockEnabled: false,
-          ),
-        ],
-      );
-      return croppedFile != null ? File(croppedFile.path) : null;
-    } catch (e) {
-      printContent('Error cropping image: $e');
-      return File(imagePath);
-    }
+    return ImageUploadCropper.crop(
+      context: context,
+      imagePath: imagePath,
+      title: context.read<LanguageProvider>().tr('upcomingFunctions.cropImage'),
+      aspectRatioX: 16,
+      aspectRatioY: 9,
+    );
   }
 
   Future<File?> _compressImage(String imagePath) async {

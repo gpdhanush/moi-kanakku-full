@@ -462,6 +462,7 @@
     "changePhoto": "Change Photo",
     "city": "City",
     "compressFailed": "Unable to compress image",
+    "cropImage": "Crop Image",
     "country": "Country",
     "dateOfBirth": "Date of Birth",
     "deleteAccount": "Deactivate My Account",

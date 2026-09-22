@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:image_cropper/image_cropper.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
@@ -642,7 +641,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     ? HugeIcons.strokeRoundedCheckmarkBadge01
                     : HugeIcons.strokeRoundedMail01,
                 iconColor: isUserEmailVerified(_user)
-                    ? AppColors.moiReceived
+                    ? colorScheme.primary
                     : AppColors.textSecondary,
               ),
             ],
@@ -1084,52 +1083,12 @@ class _ProfilePageState extends State<ProfilePage> {
 
   // Crop image
   Future<File?> _cropImage(String imagePath) async {
-    final languageProvider = Provider.of<LanguageProvider>(
-      context,
-      listen: false,
+    return ImageUploadCropper.crop(
+      context: context,
+      imagePath: imagePath,
+      title: context.read<LanguageProvider>().tr('profile.cropImage'),
+      compressQuality: 85,
     );
-    try {
-      final primary = Theme.of(context).colorScheme.primary;
-
-      final croppedFile = await ImageCropper().cropImage(
-        sourcePath: imagePath,
-        compressFormat: ImageCompressFormat.jpg,
-        compressQuality: 85,
-        uiSettings: [
-          AndroidUiSettings(
-            toolbarTitle: languageProvider.tr('profile.cropImage'),
-            showCropGrid: true,
-            toolbarColor: primary,
-            toolbarWidgetColor: Colors.white,
-            // ignore: deprecated_member_use
-            statusBarColor: primary,
-            statusBarLight: true,
-            activeControlsWidgetColor: primary,
-            initAspectRatio: CropAspectRatioPreset.square,
-            lockAspectRatio: false,
-            aspectRatioPresets: const [
-              CropAspectRatioPreset.square,
-              CropAspectRatioPreset.ratio16x9,
-              CropAspectRatioPreset.ratio4x3,
-              CropAspectRatioPreset.original,
-            ],
-          ),
-          IOSUiSettings(
-            title: languageProvider.tr('profile.cropImage'),
-            aspectRatioLockEnabled: false,
-          ),
-        ],
-      );
-
-      if (croppedFile != null) {
-        return File(croppedFile.path);
-      }
-      return null;
-    } catch (e) {
-      printContent("Error cropping image: $e");
-      // If cropping fails, return original image
-      return File(imagePath);
-    }
   }
 
   // Compress image
