@@ -26,22 +26,31 @@ class SearchWidget extends StatefulWidget {
 class _SearchWidgetState extends State<SearchWidget> {
   final Object _sessionId = Object();
   final SpeechInputService _speech = SpeechInputService.instance;
+  final FocusNode _focusNode = FocusNode();
 
   bool _isListening = false;
   bool _isInitialized = false;
+  bool _isFocused = false;
 
   @override
   void initState() {
     super.initState();
     _initializeSpeech();
     widget.controller?.addListener(_onTextChanged);
+    _focusNode.addListener(_onFocusChanged);
   }
 
   @override
   void dispose() {
     widget.controller?.removeListener(_onTextChanged);
+    _focusNode.removeListener(_onFocusChanged);
+    _focusNode.dispose();
     _speech.release(_sessionId);
     super.dispose();
+  }
+
+  void _onFocusChanged() {
+    if (mounted) setState(() => _isFocused = _focusNode.hasFocus);
   }
 
   void _onTextChanged() {
@@ -123,24 +132,26 @@ class _SearchWidgetState extends State<SearchWidget> {
     final extraTrailing = widget.trailing?.toList() ?? const <Widget>[];
 
     return Container(
-      height: 48,
+      height: 56,
       decoration: BoxDecoration(
         color: colors.surface,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: colors.border,
-          width: 1,
+          color: _isFocused ? primary : colors.border,
+          width: _isFocused ? 1.5 : 1,
         ),
         boxShadow: AppShadows.soft,
       ),
       alignment: Alignment.center,
       child: TextField(
         controller: widget.controller,
+        focusNode: _focusNode,
         style: AppTypography.body.copyWith(
           color: colors.textPrimary,
           fontSize: 14,
           fontWeight: FontWeight.w500,
         ),
+        textAlignVertical: TextAlignVertical.center,
         cursorColor: primary,
         textInputAction: TextInputAction.search,
         decoration: InputDecoration(
@@ -152,10 +163,7 @@ class _SearchWidgetState extends State<SearchWidget> {
           ),
           border: InputBorder.none,
           isDense: true,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 4,
-            vertical: 12,
-          ),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 4),
           prefixIcon: Padding(
             padding: const EdgeInsets.only(left: 12, right: 8),
             child: HugeIcon(
@@ -167,7 +175,7 @@ class _SearchWidgetState extends State<SearchWidget> {
           ),
           prefixIconConstraints: const BoxConstraints(
             minWidth: 42,
-            minHeight: 24,
+            minHeight: 56,
           ),
           suffixIcon: Row(
             mainAxisSize: MainAxisSize.min,
@@ -206,7 +214,7 @@ class _SearchWidgetState extends State<SearchWidget> {
           ),
           suffixIconConstraints: const BoxConstraints(
             minWidth: 48,
-            minHeight: 40,
+            minHeight: 56,
           ),
         ),
       ),

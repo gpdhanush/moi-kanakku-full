@@ -284,8 +284,8 @@ class _TransactionDashboardState extends State<TransactionDashboard> {
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           appBar: MoiAppHeader(
             title: languageProvider.tr('nav.overview'),
-            showBack: false,
-            onBack: null,
+            showBack: true,
+            onBack: _goHome,
           ),
           body: MoiRefreshIndicator(
             onRefresh: () => fetchPersonLists(reset: true, showLoading: false),
@@ -299,7 +299,7 @@ class _TransactionDashboardState extends State<TransactionDashboard> {
                     ),
                     child: ListView(
                       physics: const AlwaysScrollableScrollPhysics(
-                        parent: ClampingScrollPhysics(),
+                        parent: BouncingScrollPhysics(),
                       ),
                       children: [
                         SearchWidget(
@@ -358,9 +358,26 @@ class _TransactionDashboardState extends State<TransactionDashboard> {
     return CustomScrollView(
       controller: _scrollController,
       physics: const AlwaysScrollableScrollPhysics(
-        parent: ClampingScrollPhysics(),
+        parent: BouncingScrollPhysics(),
       ),
       slivers: [
+        SliverPersistentHeader(
+          pinned: true,
+          delegate: _OverviewSearchDelegate(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.page,
+                AppSpacing.sm,
+                AppSpacing.page,
+                AppSpacing.sm,
+              ),
+              child: SearchWidget(
+                controller: searchController,
+                hintText: languageProvider.tr('transactions.search'),
+              ),
+            ),
+          ),
+        ),
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(
@@ -371,11 +388,6 @@ class _TransactionDashboardState extends State<TransactionDashboard> {
             ),
             child: Column(
               children: [
-                SearchWidget(
-                  controller: searchController,
-                  hintText: languageProvider.tr('transactions.search'),
-                ),
-                const SizedBox(height: AppSpacing.sm),
                 _buildActionButtons(languageProvider),
                 const SizedBox(height: AppSpacing.sm),
               ],
@@ -467,7 +479,9 @@ class _TransactionDashboardState extends State<TransactionDashboard> {
           subtitle: isSearching
               ? languageProvider.tr('functions.tryAdjustSearch')
               : languageProvider.tr('transactions.emptyHint'),
-          imagePath: 'assets/images/empty-state/person-empty.png',
+          icon: isSearching
+              ? HugeIcons.strokeRoundedSearchRemove
+              : HugeIcons.strokeRoundedUser,
           accentColor: primary,
         ),
       );
@@ -544,6 +558,33 @@ class _TransactionDashboardState extends State<TransactionDashboard> {
       ),
     );
   }
+}
+
+class _OverviewSearchDelegate extends SliverPersistentHeaderDelegate {
+  final Widget child;
+
+  const _OverviewSearchDelegate({required this.child});
+
+  @override
+  double get minExtent => 72;
+
+  @override
+  double get maxExtent => 72;
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    return Material(
+      color: Theme.of(context).scaffoldBackgroundColor,
+      child: child,
+    );
+  }
+
+  @override
+  bool shouldRebuild(covariant _OverviewSearchDelegate oldDelegate) => false;
 }
 
 class _QuickActionButton extends StatelessWidget {
