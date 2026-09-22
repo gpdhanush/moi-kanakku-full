@@ -29,6 +29,7 @@ class _FeedbacksState extends State<Feedbacks> {
 
   List<dynamic> _previousFeedbacks = [];
   bool _isLoading = false;
+  String _profileImageUrl = '';
 
   @override
   void initState() {
@@ -60,6 +61,12 @@ class _FeedbacksState extends State<Feedbacks> {
             });
           }
           return;
+        }
+
+        if (mounted) {
+          setState(() {
+            _profileImageUrl = _resolveProfileImageUrl(userData);
+          });
         }
 
         final userId = userData['id'].toString();
@@ -276,6 +283,7 @@ class _FeedbacksState extends State<Feedbacks> {
               primary: primary,
               languageProvider: languageProvider,
               formatDate: _formatDate,
+              profileImageUrl: _profileImageUrl,
             ),
           ),
       ],
@@ -306,6 +314,30 @@ class _FeedbacksState extends State<Feedbacks> {
           .replaceAll('Z', '')
           .replaceAll('.000', '');
     }
+  }
+
+  String _resolveProfileImageUrl(Map<String, dynamic> user) {
+    final imagePath = (user['profile_image_url'] ?? user['profile_image'])
+        ?.toString()
+        .trim();
+    if (imagePath == null ||
+        imagePath.isEmpty ||
+        imagePath.toLowerCase() == 'null' ||
+        imagePath.toLowerCase() == 'undefined') {
+      return '';
+    }
+    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+      return imagePath;
+    }
+    final normalized = imagePath.replaceFirst(RegExp(r'^/+'), '');
+    if (appImageUrl.trim().isNotEmpty) {
+      return '$appImageUrl/$normalized';
+    }
+    final apiBase = bootstrapApiBaseUri.trim();
+    final baseWithoutApis = apiBase.endsWith('/apis')
+        ? apiBase.replaceFirst(RegExp(r'/apis$'), '')
+        : apiBase;
+    return '$baseWithoutApis/$normalized';
   }
 
   void _onSavePressed() {
@@ -376,12 +408,14 @@ class _FeedbackCard extends StatelessWidget {
   final Color primary;
   final LanguageProvider languageProvider;
   final String Function(String) formatDate;
+  final String profileImageUrl;
 
   const _FeedbackCard({
     required this.feedback,
     required this.primary,
     required this.languageProvider,
     required this.formatDate,
+    required this.profileImageUrl,
   });
 
   @override
@@ -409,6 +443,7 @@ class _FeedbackCard extends StatelessWidget {
           ).toTitleCase()
         : '';
     final cardColors = AppColors.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     final statusLabel = isClosed
         ? languageProvider.tr('feedback.closed')
@@ -456,12 +491,27 @@ class _FeedbackCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(11),
                       ),
                       alignment: Alignment.center,
-                      child: HugeIcon(
-                        icon: HugeIcons.strokeRoundedUser,
-                        color: primary,
-                        size: 18,
-                        strokeWidth: 1.8,
-                      ),
+                      child: profileImageUrl.isEmpty
+                          ? HugeIcon(
+                              icon: HugeIcons.strokeRoundedUser,
+                              color: primary,
+                              size: 18,
+                              strokeWidth: 1.8,
+                            )
+                          : ClipRRect(
+                              borderRadius: BorderRadius.circular(11),
+                              child: MoiNetworkImage(
+                                url: profileImageUrl,
+                                width: 38,
+                                height: 38,
+                                errorBuilder: (_, _, _) => HugeIcon(
+                                  icon: HugeIcons.strokeRoundedUser,
+                                  color: primary,
+                                  size: 18,
+                                  strokeWidth: 1.8,
+                                ),
+                              ),
+                            ),
                     ),
                     const SizedBox(width: 10),
                     Expanded(
@@ -495,8 +545,11 @@ class _FeedbackCard extends StatelessWidget {
                         vertical: 5,
                       ),
                       decoration: BoxDecoration(
-                        color: statusBg,
+                        color: isDark ? Colors.transparent : statusBg,
                         borderRadius: BorderRadius.circular(20),
+                        border: isDark
+                            ? Border.all(color: statusColor, width: 1)
+                            : null,
                       ),
                       child: Text(
                         statusLabel,
@@ -566,7 +619,7 @@ class _FeedbackCard extends StatelessWidget {
                         ),
                         alignment: Alignment.center,
                         child: HugeIcon(
-                          icon: HugeIcons.strokeRoundedCustomerService01,
+                          icon: HugeIcons.strokeRoundedUserGroup,
                           color: Theme.of(context).brightness == Brightness.dark
                               ? AppColors.darkSuccess
                               : const Color(0xFF2E7D32),
