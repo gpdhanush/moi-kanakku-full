@@ -73,14 +73,24 @@ const formatAdminUserListItem = (details) => {
   const devices = details.devices || (details.device ? [details.device] : []);
   const summary = summarizeDevices(devices);
   const authSummary = buildAuthSummary(details);
+  const primaryDevice = details.device || devices[0] || null;
+  const email =
+    typeof details.email === "string"
+      ? details.email.trim()
+      : details.email
+        ? String(details.email).trim()
+        : null;
   return {
     id: details.id,
     mobile: details.mobile,
     name: details.full_name,
+    email: email || null,
     last_login: details.last_activity_at,
     city: details.profile?.city || null,
     profile_image_url: details.profile?.profile_image_url || null,
-    device_name: details.device?.device_name || null,
+    device_name: primaryDevice?.device_name || null,
+    brand: primaryDevice?.brand || null,
+    model: primaryDevice?.model || null,
     status: details.status || "ACTIVE",
     app_status: summary.app_status,
     last_seen_at: summary.last_seen_at,

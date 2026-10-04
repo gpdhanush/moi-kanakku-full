@@ -16,6 +16,7 @@ import {
   Bell,
   Send,
   UserX,
+  Download,
 } from "lucide-react";
 import { PageTitle } from "@/components/ui/page-title";
 import { StatCard, StatCardSkeleton } from "@/components/ui/stat-card";
@@ -59,6 +60,7 @@ import {
 } from "@/features/messaging/api";
 import { formatDateTime, displayValue, resolveImageUrl, formatAppStatus, appStatusClassName } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
+import { exportUsersListToPDF } from "@/utils/usersListPdf";
 
 const PAGE_LIMITS = [5, 10, 20, 50] as const;
 const APP_STATUS_FILTERS: { value: "ALL" | AppInstallStatus; label: string }[] = [
@@ -136,6 +138,7 @@ export default function UsersMaster() {
   const [notificationBody, setNotificationBody] = useState("");
   const [notificationType, setNotificationType] =
     useState<BulkNotificationType>("general");
+  const [isExporting, setIsExporting] = useState(false);
 
   const metaElement = usePageMeta({
     title: "Users Master",
@@ -155,7 +158,17 @@ export default function UsersMaster() {
       const appStatus = String(user.app_status || "UNKNOWN").toUpperCase();
       if (appStatusFilter !== "ALL" && appStatus !== appStatusFilter) return false;
       if (!q) return true;
-      return [user.name, user.mobile, user.city, user.device_name, user.status, user.app_status]
+      return [
+        user.name,
+        user.email,
+        user.mobile,
+        user.city,
+        user.device_name,
+        user.brand,
+        user.model,
+        user.status,
+        user.app_status,
+      ]
         .join(" ")
         .toLowerCase()
         .includes(q);
@@ -370,6 +383,82 @@ export default function UsersMaster() {
     setPage(1);
   };
 
+  const exportUsers = useMemo(() => {
+    if (selectedCount > 0) {
+      return filtered.filter((user) => selectedIds.has(String(user.id)));
+    }
+    return filtered;
+  }, [filtered, selectedCount, selectedIds]);
+
+  const handleExportUsersPdf = async () => {
+    try {
+      setIsExporting(true);
+      const freshUsers = await refetch();
+      const latest = freshUsers.data ?? data;
+      const q = search.trim().toLowerCase();
+      let rows = latest.filter((user) => {
+        const appStatus = String(user.app_status || "UNKNOWN").toUpperCase();
+        if (appStatusFilter !== "ALL" && appStatus !== appStatusFilter) return false;
+        if (!q) return true;
+        return [
+          user.name,
+          user.email,
+          user.mobile,
+          user.city,
+          user.device_name,
+          user.brand,
+          user.model,
+          user.status,
+          user.app_status,
+        ]
+          .join(" ")
+          .toLowerCase()
+          .includes(q);
+      });
+
+      if (selectedCount > 0) {
+        rows = rows.filter((user) => selectedIds.has(String(user.id)));
+      }
+
+      if (!rows.length) {
+        toast({
+          title: "Nothing to export",
+          description: "There are no users matching the current filters.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Older list APIs omit email; enrich from user-detail endpoint.
+      const exportRows = await usersApi.getExportDirectory(rows);
+
+      const scopeLabel =
+        selectedCount > 0
+          ? `${exportRows.length} selected user${exportRows.length === 1 ? "" : "s"}`
+          : `${exportRows.length} filtered user${exportRows.length === 1 ? "" : "s"}`;
+
+      exportUsersListToPDF(exportRows, {
+        title: "Users Directory",
+        subtitle: `Export scope: ${scopeLabel}`,
+      });
+      toast({
+        title: "Export ready",
+        description: `PDF for ${scopeLabel} opened in a new window.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Export failed",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Unable to create the PDF report.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   const SortableHead = ({
     label,
     column,
@@ -476,6 +565,20 @@ export default function UsersMaster() {
               >
                 {isFetching ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
                 Refresh
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                onClick={() => void handleExportUsersPdf()}
+                disabled={isExporting || exportUsers.length === 0}
+              >
+                {isExporting ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Download className="h-4 w-4" />
+                )}
+                {isExporting ? "Preparing PDF..." : "Export PDF"}
               </Button>
               <Button
                 size="sm"
