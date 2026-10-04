@@ -51,25 +51,36 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { toast } from "@/hooks/use-toast";
-import { usersApi, type AppInstallStatus, type UserListItem } from "@/features/users/api";
+import {
+  usersApi,
+  type AppInstallStatus,
+  type UserListItem,
+} from "@/features/users/api";
 import {
   adminNotificationsApi,
   emailApi,
   type BulkEmailType,
   type BulkNotificationType,
 } from "@/features/messaging/api";
-import { formatDateTime, displayValue, resolveImageUrl, formatAppStatus, appStatusClassName } from "@/lib/formatters";
+import {
+  formatDateTime,
+  displayValue,
+  resolveImageUrl,
+  formatAppStatus,
+  appStatusClassName,
+} from "@/lib/formatters";
 import { cn } from "@/lib/utils";
 import { exportUsersListToPDF } from "@/utils/usersListPdf";
 
 const PAGE_LIMITS = [5, 10, 20, 50] as const;
-const APP_STATUS_FILTERS: { value: "ALL" | AppInstallStatus; label: string }[] = [
-  { value: "ALL", label: "Status" },
-  { value: "ACTIVE", label: "Installed" },
-  { value: "INACTIVE", label: "Inactive" },
-  { value: "LIKELY_UNINSTALLED", label: "Likely Uninstalled" },
-  { value: "UNKNOWN", label: "Unknown" },
-];
+const APP_STATUS_FILTERS: { value: "ALL" | AppInstallStatus; label: string }[] =
+  [
+    { value: "ALL", label: "Status" },
+    { value: "ACTIVE", label: "Installed" },
+    { value: "INACTIVE", label: "Inactive" },
+    { value: "LIKELY_UNINSTALLED", label: "Likely Uninstalled" },
+    { value: "UNKNOWN", label: "Unknown" },
+  ];
 
 const EMAIL_TYPES: { value: BulkEmailType; label: string }[] = [
   { value: "notification", label: "Notification" },
@@ -109,7 +120,13 @@ function toSortTime(value?: string | null): number {
   return Number.isNaN(time) ? 0 : time;
 }
 
-function SortIcon({ active, direction }: { active: boolean; direction: SortDir }) {
+function SortIcon({
+  active,
+  direction,
+}: {
+  active: boolean;
+  direction: SortDir;
+}) {
   if (!active) return <ArrowUpDown className="h-3.5 w-3.5 opacity-50" />;
   return direction === "asc" ? (
     <ArrowUp className="h-3.5 w-3.5" />
@@ -121,7 +138,9 @@ function SortIcon({ active, direction }: { active: boolean; direction: SortDir }
 export default function UsersMaster() {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
-  const [appStatusFilter, setAppStatusFilter] = useState<"ALL" | AppInstallStatus>("ALL");
+  const [appStatusFilter, setAppStatusFilter] = useState<
+    "ALL" | AppInstallStatus
+  >("ALL");
   const [sortKey, setSortKey] = useState<SortKey>("sno");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [page, setPage] = useState(1);
@@ -145,7 +164,14 @@ export default function UsersMaster() {
     description: "Manage app users and profiles",
   });
 
-  const { data = [], isLoading, isFetching, isError, error, refetch } = useQuery({
+  const {
+    data = [],
+    isLoading,
+    isFetching,
+    isError,
+    error,
+    refetch,
+  } = useQuery({
     queryKey: ["admin", "users"],
     queryFn: () => usersApi.list(),
     staleTime: 60_000,
@@ -156,7 +182,8 @@ export default function UsersMaster() {
     const q = search.trim().toLowerCase();
     const list = data.filter((user) => {
       const appStatus = String(user.app_status || "UNKNOWN").toUpperCase();
-      if (appStatusFilter !== "ALL" && appStatus !== appStatusFilter) return false;
+      if (appStatusFilter !== "ALL" && appStatus !== appStatusFilter)
+        return false;
       if (!q) return true;
       return [
         user.name,
@@ -182,29 +209,37 @@ export default function UsersMaster() {
           return compareValues(
             (a.name || "").toLowerCase(),
             (b.name || "").toLowerCase(),
-            sortDir
+            sortDir,
           );
         case "app_status":
           return compareValues(
             String(a.app_status || "UNKNOWN").toUpperCase(),
             String(b.app_status || "UNKNOWN").toUpperCase(),
-            sortDir
+            sortDir,
           );
         case "last_seen_at":
-          return compareValues(toSortTime(a.last_seen_at), toSortTime(b.last_seen_at), sortDir);
+          return compareValues(
+            toSortTime(a.last_seen_at),
+            toSortTime(b.last_seen_at),
+            sortDir,
+          );
         case "last_login":
-          return compareValues(toSortTime(a.last_login), toSortTime(b.last_login), sortDir);
+          return compareValues(
+            toSortTime(a.last_login),
+            toSortTime(b.last_login),
+            sortDir,
+          );
         case "city":
           return compareValues(
             (a.city || "").toLowerCase(),
             (b.city || "").toLowerCase(),
-            sortDir
+            sortDir,
           );
         case "status":
           return compareValues(
             (a.status || "ACTIVE").toUpperCase(),
             (b.status || "ACTIVE").toUpperCase(),
-            sortDir
+            sortDir,
           );
         default:
           return 0;
@@ -217,7 +252,10 @@ export default function UsersMaster() {
   const totalItems = filtered.length;
   const totalPages = Math.max(1, Math.ceil(totalItems / limit));
   const currentPage = Math.min(page, totalPages);
-  const pageRows = filtered.slice((currentPage - 1) * limit, currentPage * limit);
+  const pageRows = filtered.slice(
+    (currentPage - 1) * limit,
+    currentPage * limit,
+  );
   const fromItem = totalItems === 0 ? 0 : (currentPage - 1) * limit + 1;
   const toItem = Math.min(currentPage * limit, totalItems);
 
@@ -255,7 +293,7 @@ export default function UsersMaster() {
       selectedCount > 0
         ? selectedUserIds
         : filtered.map((user) => String(user.id)),
-    [selectedCount, selectedUserIds, filtered]
+    [selectedCount, selectedUserIds, filtered],
   );
   const sendingToAll = selectedCount === 0;
 
@@ -324,7 +362,9 @@ export default function UsersMaster() {
     onError: (err: Error) => {
       const timedOut = /timeout/i.test(err.message || "");
       toast({
-        title: timedOut ? "Notification request timed out" : "Failed to send notification",
+        title: timedOut
+          ? "Notification request timed out"
+          : "Failed to send notification",
         description: timedOut
           ? "Sending to all users is still running on the server. Wait a moment before trying again."
           : err.message || "Something went wrong.",
@@ -398,7 +438,8 @@ export default function UsersMaster() {
       const q = search.trim().toLowerCase();
       let rows = latest.filter((user) => {
         const appStatus = String(user.app_status || "UNKNOWN").toUpperCase();
-        if (appStatusFilter !== "ALL" && appStatus !== appStatusFilter) return false;
+        if (appStatusFilter !== "ALL" && appStatus !== appStatusFilter)
+          return false;
         if (!q) return true;
         return [
           user.name,
@@ -438,7 +479,7 @@ export default function UsersMaster() {
           : `${exportRows.length} filtered user${exportRows.length === 1 ? "" : "s"}`;
 
       exportUsersListToPDF(exportRows, {
-        title: "Users Directory",
+        title: "Users List",
         subtitle: `Export scope: ${scopeLabel}`,
       });
       toast({
@@ -492,14 +533,27 @@ export default function UsersMaster() {
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {isLoading ? (
-            Array.from({ length: 3 }).map((_, i) => <StatCardSkeleton key={i} size="sm" />)
+            Array.from({ length: 3 }).map((_, i) => (
+              <StatCardSkeleton key={i} size="sm" />
+            ))
           ) : (
             <>
-              <StatCard size="sm" title="Total Users" value={data.length} icon={Users} color="blue" />
+              <StatCard
+                size="sm"
+                title="Total Users"
+                value={data.length}
+                icon={Users}
+                color="blue"
+              />
               <StatCard
                 size="sm"
                 title="Installed"
-                value={data.filter((u) => String(u.app_status || "").toUpperCase() === "ACTIVE").length}
+                value={
+                  data.filter(
+                    (u) =>
+                      String(u.app_status || "").toUpperCase() === "ACTIVE",
+                  ).length
+                }
                 icon={Smartphone}
                 color="emerald"
               />
@@ -508,7 +562,9 @@ export default function UsersMaster() {
                 title="Likely Uninstalled"
                 value={
                   data.filter(
-                    (u) => String(u.app_status || "").toUpperCase() === "LIKELY_UNINSTALLED"
+                    (u) =>
+                      String(u.app_status || "").toUpperCase() ===
+                      "LIKELY_UNINSTALLED",
                   ).length
                 }
                 icon={UserX}
@@ -535,7 +591,10 @@ export default function UsersMaster() {
             <div className="flex flex-wrap items-center justify-end gap-2">
               {selectedCount > 0 && (
                 <p className="text-sm text-muted-foreground sm:mr-1">
-                  Selected: <span className="font-semibold text-foreground">{selectedCount}</span>
+                  Selected:{" "}
+                  <span className="font-semibold text-foreground">
+                    {selectedCount}
+                  </span>
                 </p>
               )}
               <Select
@@ -563,7 +622,11 @@ export default function UsersMaster() {
                 onClick={() => refetch()}
                 disabled={isFetching}
               >
-                {isFetching ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+                {isFetching ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <RefreshCw className="h-4 w-4" />
+                )}
                 Refresh
               </Button>
               <Button
@@ -639,7 +702,10 @@ export default function UsersMaster() {
               <TableBody>
                 {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="h-28 text-center text-muted-foreground">
+                    <TableCell
+                      colSpan={8}
+                      className="h-28 text-center text-muted-foreground"
+                    >
                       <div className="inline-flex items-center gap-2">
                         <Loader2 className="h-4 w-4 animate-spin" />
                         Loading users...
@@ -648,8 +714,13 @@ export default function UsersMaster() {
                   </TableRow>
                 ) : pageRows.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="h-28 text-center text-muted-foreground">
-                      {search.trim() ? "No users match your search." : "No users found."}
+                    <TableCell
+                      colSpan={8}
+                      className="h-28 text-center text-muted-foreground"
+                    >
+                      {search.trim()
+                        ? "No users match your search."
+                        : "No users found."}
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -665,14 +736,16 @@ export default function UsersMaster() {
                       .toUpperCase();
                     const isActive =
                       (user.status || "ACTIVE").toUpperCase() === "ACTIVE";
-                    const accountStatus = (user.status || "ACTIVE").toUpperCase();
+                    const accountStatus = (
+                      user.status || "ACTIVE"
+                    ).toUpperCase();
                     const isBlocked = accountStatus === "BLOCKED";
                     return (
                       <TableRow
                         key={id}
                         className={cn(
                           index % 2 === 1 && "bg-muted/20",
-                          checked && "bg-primary/5"
+                          checked && "bg-primary/5",
                         )}
                       >
                         <TableCell>
@@ -684,7 +757,9 @@ export default function UsersMaster() {
                             aria-label={`Select ${user.name || id}`}
                           />
                         </TableCell>
-                        <TableCell className="text-center font-medium tabular-nums">{serialNo}</TableCell>
+                        <TableCell className="text-center font-medium tabular-nums">
+                          {serialNo}
+                        </TableCell>
                         <TableCell>
                           <button
                             type="button"
@@ -692,7 +767,9 @@ export default function UsersMaster() {
                             className="flex items-center gap-3 text-left"
                           >
                             <Avatar className="h-9 w-9">
-                              <AvatarImage src={resolveImageUrl(user.profile_image_url)} />
+                              <AvatarImage
+                                src={resolveImageUrl(user.profile_image_url)}
+                              />
                               <AvatarFallback className="bg-primary/10 text-xs font-semibold text-primary">
                                 {initials}
                               </AvatarFallback>
@@ -706,7 +783,7 @@ export default function UsersMaster() {
                           <Badge
                             className={cn(
                               "border-transparent",
-                              appStatusClassName(user.app_status)
+                              appStatusClassName(user.app_status),
                             )}
                           >
                             {formatAppStatus(user.app_status)}
@@ -729,16 +806,16 @@ export default function UsersMaster() {
                                   ? "bg-amber-500/15 text-amber-700 hover:bg-amber-500/20"
                                   : isBlocked
                                     ? "bg-orange-500/15 text-orange-700 hover:bg-orange-500/20"
-                                  : "bg-rose-500/15 text-rose-700 hover:bg-rose-500/20"
+                                    : "bg-rose-500/15 text-rose-700 hover:bg-rose-500/20",
                             )}
                           >
                             {accountStatus === "DELETED"
                               ? "Deleted"
                               : isBlocked
                                 ? "Blocked"
-                              : isActive
-                                ? "Active"
-                                : "Inactive"}
+                                : isActive
+                                  ? "Active"
+                                  : "Inactive"}
                           </Badge>
                         </TableCell>
                       </TableRow>
@@ -837,7 +914,9 @@ export default function UsersMaster() {
             ) : (
               <>
                 Sending to{" "}
-                <span className="font-semibold text-foreground">{selectedCount}</span>{" "}
+                <span className="font-semibold text-foreground">
+                  {selectedCount}
+                </span>{" "}
                 selected users.
               </>
             )}
@@ -936,7 +1015,9 @@ export default function UsersMaster() {
             ) : (
               <>
                 Sending to{" "}
-                <span className="font-semibold text-foreground">{selectedCount}</span>{" "}
+                <span className="font-semibold text-foreground">
+                  {selectedCount}
+                </span>{" "}
                 selected users.
               </>
             )}

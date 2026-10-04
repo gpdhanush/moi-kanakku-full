@@ -17,6 +17,40 @@ function getPreviousMonth(month) {
     return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}`;
 }
 
+function toDateKey(value) {
+    if (!value) return null;
+    if (value instanceof Date && !Number.isNaN(value.getTime())) {
+        return value.toISOString().slice(0, 10);
+    }
+    const text = String(value);
+    const match = text.match(/^(\d{4}-\d{2}-\d{2})/);
+    return match ? match[1] : null;
+}
+
+/** Build a continuous YYYY-MM-DD series for the selected month (up to today for current month). */
+function fillDailySeries(month, rows) {
+    const [year, monthNumber] = month.split('-').map(Number);
+    const daysInMonth = new Date(year, monthNumber, 0).getDate();
+    const today = new Date();
+    const isCurrentMonth =
+        today.getFullYear() === year && today.getMonth() + 1 === monthNumber;
+    const maxDay = isCurrentMonth ? today.getDate() : daysInMonth;
+
+    const counts = new Map();
+    for (const row of rows || []) {
+        const key = toDateKey(row.date);
+        if (!key || !key.startsWith(`${month}-`)) continue;
+        counts.set(key, Number(row.count || 0));
+    }
+
+    const series = [];
+    for (let day = 1; day <= maxDay; day += 1) {
+        const key = `${month}-${String(day).padStart(2, '0')}`;
+        series.push({ date: key, count: counts.get(key) || 0 });
+    }
+    return series;
+}
+
 exports.controller = {
     /**
      * Get dashboard statistics and counts
@@ -309,38 +343,49 @@ exports.controller = {
 
     /**
      * Get user growth and activity analytics for the admin dashboard.
-     * The selected month controls signup trends and month-over-month comparison.
+     * The selected month controls login trends and month-over-month signup comparison.
      */
     getDashboardAnalytics: async (req, res) => {
         try {
             const month = getAnalyticsMonth(req.query.month);
             const previousMonth = getPreviousMonth(month);
-            const cacheKey = `dashboard:analytics:v2:${month}`;
+            const cacheKey = `dashboard:analytics:v4:${month}`;
             const cachedAnalytics = cache.get(cacheKey);
             if (cachedAnalytics) {
                 return res.status(200).json(cachedAnalytics);
             }
 
-            const [monthUsersResult, previousMonthUsersResult, todayUsersResult, dailySignupsResult, recentLoginsResult, recentSignupsResult, cityBreakdownResult] = await Promise.all([
+            const monthStart = `${month}-01`;
+            const previousMonthStart = `${previousMonth}-01`;
+
+            const [monthUsersResult, previousMonthUsersResult, todayUsersResult, dailySignupsResult, dailyLoginsResult, recentLoginsResult, recentSignupsResult, cityBreakdownResult] = await Promise.all([
                 db.query(`SELECT COUNT(*) AS count FROM users
                           WHERE (is_deleted = 0 OR is_deleted IS NULL)
                             AND created_at >= ?
-                            AND created_at < DATE_ADD(?, INTERVAL 1 MONTH)`, [`${month}-01`, `${month}-01`]),
+                            AND created_at < DATE_ADD(?, INTERVAL 1 MONTH)`, [monthStart, monthStart]),
                 db.query(`SELECT COUNT(*) AS count FROM users
                           WHERE (is_deleted = 0 OR is_deleted IS NULL)
                             AND created_at >= ?
-                            AND created_at < DATE_ADD(?, INTERVAL 1 MONTH)`, [`${previousMonth}-01`, `${previousMonth}-01`]),
+                            AND created_at < DATE_ADD(?, INTERVAL 1 MONTH)`, [previousMonthStart, previousMonthStart]),
                 db.query(`SELECT COUNT(*) AS count FROM users
                           WHERE (is_deleted = 0 OR is_deleted IS NULL)
                             AND created_at >= CURDATE()
                             AND created_at < DATE_ADD(CURDATE(), INTERVAL 1 DAY)`),
-                db.query(`SELECT DATE(created_at) AS date, COUNT(*) AS count
+                db.query(`SELECT DATE_FORMAT(created_at, '%Y-%m-%d') AS date, COUNT(*) AS count
                           FROM users
                           WHERE (is_deleted = 0 OR is_deleted IS NULL)
                             AND created_at >= ?
                             AND created_at < DATE_ADD(?, INTERVAL 1 MONTH)
-                          GROUP BY DATE(created_at)
-                          ORDER BY date ASC`, [`${month}-01`, `${month}-01`]),
+                          GROUP BY DATE_FORMAT(created_at, '%Y-%m-%d')
+                          ORDER BY date ASC`, [monthStart, monthStart]),
+                db.query(`SELECT DATE_FORMAT(last_activity_at, '%Y-%m-%d') AS date, COUNT(*) AS count
+                          FROM users
+                          WHERE (is_deleted = 0 OR is_deleted IS NULL)
+                            AND last_activity_at IS NOT NULL
+                            AND last_activity_at >= ?
+                            AND last_activity_at < DATE_ADD(?, INTERVAL 1 MONTH)
+                          GROUP BY DATE_FORMAT(last_activity_at, '%Y-%m-%d')
+                          ORDER BY date ASC`, [monthStart, monthStart]),
                 db.query(`SELECT u.id, u.full_name, u.email, u.last_activity_at, up.city
                           FROM users u
                           LEFT JOIN user_profiles up ON up.user_id = u.id
@@ -378,10 +423,8 @@ exports.controller = {
                     changePercent,
                     todaySignups: Number(todayUsersResult[0][0]?.count || 0),
                 },
-                dailySignups: dailySignupsResult[0].map((row) => ({
-                    date: row.date,
-                    count: Number(row.count || 0),
-                })),
+                dailySignups: fillDailySeries(month, dailySignupsResult[0]),
+                dailyLogins: fillDailySeries(month, dailyLoginsResult[0]),
                 recentLogins: recentLoginsResult[0].map((row) => ({
                     id: fromBinaryUUID(row.id),
                     name: row.full_name || 'Unnamed user',

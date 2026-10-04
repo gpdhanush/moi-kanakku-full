@@ -151,6 +151,7 @@ function mergeExportFields(
     model: device?.model ?? user.model ?? null,
     device_name: device?.device_name ?? user.device_name ?? null,
     is_verified: detail.is_verified ?? user.is_verified ?? null,
+    status: detail.status ?? user.status ?? null,
   };
 }
 
@@ -205,7 +206,9 @@ export const usersApi = {
   ): Promise<UserListItem[]> => {
     if (!users.length) return [];
 
-    const needsEnrichment = users.some((user) => !String(user.email || "").trim());
+    const needsEnrichment = users.some(
+      (user) => !String(user.email || "").trim(),
+    );
     if (!needsEnrichment) return users;
 
     const details = await mapWithConcurrency(users, 6, async (user) => {

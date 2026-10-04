@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import {
@@ -24,7 +24,6 @@ import {
   Loader2,
   type LucideIcon,
 } from "lucide-react";
-import { LineChart, lineClasses } from "@mui/x-charts/LineChart";
 import { PageTitle } from "@/components/ui/page-title";
 import { StatCard, StatCardSkeleton } from "@/components/ui/stat-card";
 import { Button } from "@/components/ui/button";
@@ -34,6 +33,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { SignupTrendChart } from "@/components/charts/SignupTrendChart";
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { dashboardApi, type DashboardStat } from "@/features/dashboard/api";
 import { getCurrentUser } from "@/lib/auth";
@@ -214,6 +214,7 @@ export default function Dashboard() {
     isLoading: isAnalyticsLoading,
     isFetching: isAnalyticsFetching,
     isError: isAnalyticsError,
+    refetch: refetchAnalytics,
   } = useQuery({
     queryKey: ["dashboard", "analytics", selectedMonth],
     queryFn: () => dashboardApi.getAnalytics(selectedMonth),
@@ -223,6 +224,49 @@ export default function Dashboard() {
 
   const recentLogins = analytics?.recentLogins ?? [];
   const recentSignups = analytics?.recentSignups ?? [];
+  const citiesAz = useMemo(() => {
+    const rows = analytics?.cityBreakdown ?? [];
+    return [...rows].sort((a, b) =>
+      (a.city || "UNKNOWN").localeCompare(b.city || "UNKNOWN", "en", {
+        sensitivity: "base",
+      }),
+    );
+  }, [analytics?.cityBreakdown]);
+
+  const loginTrendData = useMemo(() => {
+    const [year, monthNumber] = selectedMonth.split("-").map(Number);
+    const daysInMonth = new Date(year, monthNumber, 0).getDate();
+    const today = new Date();
+    const isCurrentMonth =
+      today.getFullYear() === year && today.getMonth() + 1 === monthNumber;
+    const maxDay = isCurrentMonth ? today.getDate() : daysInMonth;
+
+    const counts = new Map<string, number>();
+    const apiRows = analytics?.dailyLogins ?? [];
+    for (const row of apiRows) {
+      const key = String(row.date ?? "").slice(0, 10);
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(key) || !key.startsWith(`${selectedMonth}-`)) {
+        continue;
+      }
+      counts.set(key, Number(row.count) || 0);
+    }
+
+    // Fallback when API is outdated / missing dailyLogins: use recent login timestamps.
+    if (counts.size === 0) {
+      for (const user of analytics?.recentLogins ?? []) {
+        const key = String(user.lastLogin ?? "").slice(0, 10);
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(key) || !key.startsWith(`${selectedMonth}-`)) {
+          continue;
+        }
+        counts.set(key, (counts.get(key) || 0) + 1);
+      }
+    }
+
+    return Array.from({ length: maxDay }, (_, index) => {
+      const key = `${selectedMonth}-${String(index + 1).padStart(2, "0")}`;
+      return { date: key, count: counts.get(key) || 0 };
+    });
+  }, [analytics?.dailyLogins, analytics?.recentLogins, selectedMonth]);
 
   return (
     <>
@@ -237,7 +281,10 @@ export default function Dashboard() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => refetch()}
+            onClick={() => {
+              void refetch();
+              void refetchAnalytics();
+            }}
             disabled={isFetching || isAnalyticsFetching}
             className="gap-2 self-start sm:self-auto"
           >
@@ -337,69 +384,52 @@ export default function Dashboard() {
                       <div className="grid gap-4 xl:grid-cols-[1.35fr_1fr]">
                         <Card>
                           <CardHeader>
-                            <CardTitle>Signup trend</CardTitle>
-                            <CardDescription>Daily new users in the selected month</CardDescription>
+                            <CardTitle>Login trend</CardTitle>
+                            <CardDescription>
+                              Daily user logins in the selected month · hover for date and count
+                            </CardDescription>
                           </CardHeader>
                           <CardContent>
-                            {analytics.dailySignups.length > 0 ? (
-                              <LineChart
-                                height={260}
-                                xAxis={[{
-                                  scaleType: "point",
-                                  data: analytics.dailySignups.map((signup) => signup.date.slice(8)),
-                                  height: 28,
-                                }]}
-                                series={[{
-                                  data: analytics.dailySignups.map((signup) => signup.count),
-                                  label: "New users",
-                                  showMark: true,
-                                  color: "hsl(var(--chart-2))",
-                                }]}
-                                yAxis={[{ width: 50, min: 0 }]}
-                                margin={{ top: 8, right: 16, left: 8, bottom: 8 }}
-                                sx={{ width: "100%" }}
-                              />
-                            ) : (
-                              <div className="flex h-[260px] items-center justify-center text-sm text-muted-foreground">
-                                No signups recorded for this month.
-                              </div>
-                            )}
+                            <SignupTrendChart
+                              data={loginTrendData}
+                              height={260}
+                              seriesLabel="Logins"
+                              emptyMessage="No logins recorded for this month."
+                              ariaLabel={`Daily logins for ${formatMonthLabel(selectedMonth)}`}
+                            />
                           </CardContent>
                         </Card>
 
                         <Card>
                           <CardHeader>
                             <CardTitle>Users by city</CardTitle>
-                            <CardDescription>Top locations across active users</CardDescription>
+                            <CardDescription>
+                              Locations across active users · A to Z
+                            </CardDescription>
                           </CardHeader>
                           <CardContent>
-                            {analytics.cityBreakdown.length > 0 ? (
-                              <LineChart
-                                height={260}
-                                xAxis={[{
-                                  scaleType: "point",
-                                  data: analytics.cityBreakdown.map((city) => city.city),
-                                  height: 44,
-                                }]}
-                                series={[{
-                                  data: analytics.cityBreakdown.map((city) => city.count),
-                                  label: "Users",
-                                  showMark: true,
-                                  color: "hsl(var(--chart-4))",
-                                }]}
-                                yAxis={[{ width: 50, min: 0 }]}
-                                margin={{ top: 8, right: 16, left: 8, bottom: 8 }}
-                                sx={{
-                                  width: "100%",
-                                  [`& .${lineClasses.line}`]: {
-                                    strokeDasharray: "6 4",
-                                    strokeWidth: 2,
-                                  },
-                                  [`& .${lineClasses.mark}`]: {
-                                    strokeWidth: 2,
-                                  },
-                                }}
-                              />
+                            {citiesAz.length > 0 ? (
+                              <ul className="max-h-[260px] space-y-2 overflow-y-auto pr-1">
+                                {citiesAz.map((item) => {
+                                  const cityName = (item.city || "UNKNOWN").toUpperCase();
+                                  return (
+                                    <li
+                                      key={`${cityName}-${item.count}`}
+                                      className="flex items-center justify-between gap-3 rounded-lg border border-border/60 bg-muted/20 px-3 py-2.5"
+                                    >
+                                      <span className="flex min-w-0 items-center gap-2">
+                                        <MapPin className="h-3.5 w-3.5 shrink-0 text-primary" />
+                                        <span className="truncate text-sm font-semibold tracking-wide">
+                                          {cityName}
+                                        </span>
+                                      </span>
+                                      <span className="shrink-0 rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold tabular-nums text-primary">
+                                        {formatCount(item.count)}
+                                      </span>
+                                    </li>
+                                  );
+                                })}
+                              </ul>
                             ) : (
                               <div className="flex h-[260px] items-center justify-center text-sm text-muted-foreground">
                                 No city data available.
@@ -410,41 +440,6 @@ export default function Dashboard() {
                       </div>
 
                       <div className="grid gap-4 xl:grid-cols-2">
-                        <Card>
-                          <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                              <LogIn className="h-5 w-5 text-primary" />
-                              Recent user logins
-                            </CardTitle>
-                            <CardDescription>Latest eight recorded user activities</CardDescription>
-                          </CardHeader>
-                          <CardContent>
-                            {recentLogins.length > 0 ? (
-                              <div className="grid gap-3 sm:grid-cols-2">
-                                {recentLogins.map((user) => (
-                                  <button
-                                    key={user.id || `${user.name}-${user.lastLogin}`}
-                                    type="button"
-                                    disabled={!user.id}
-                                    onClick={() => user.id && navigate(`/users/${user.id}`)}
-                                    className="rounded-md border bg-muted/20 p-3 text-left transition-colors hover:border-primary/50 hover:bg-accent disabled:cursor-default disabled:hover:border-border disabled:hover:bg-muted/20"
-                                  >
-                                    <p className="truncate font-medium">{user.name}</p>
-                                    <p className="truncate text-xs text-muted-foreground">{user.email || "No email"}</p>
-                                    <p className="mt-2 flex items-center gap-1 text-xs text-muted-foreground">
-                                      <MapPin className="h-3.5 w-3.5" />
-                                      {user.city || "Unknown city"}
-                                    </p>
-                                    <p className="mt-1 text-xs text-muted-foreground">{formatDateTime(user.lastLogin)}</p>
-                                  </button>
-                                ))}
-                              </div>
-                            ) : (
-                              <p className="text-sm text-muted-foreground">No recent login activity found.</p>
-                            )}
-                          </CardContent>
-                        </Card>
-
                         <Card>
                           <CardHeader>
                             <CardTitle className="flex items-center gap-2">
@@ -465,17 +460,66 @@ export default function Dashboard() {
                                     className="rounded-md border bg-muted/20 p-3 text-left transition-colors hover:border-primary/50 hover:bg-accent disabled:cursor-default disabled:hover:border-border disabled:hover:bg-muted/20"
                                   >
                                     <p className="truncate font-medium">{user.name}</p>
-                                    <p className="truncate text-xs text-muted-foreground">{user.email || "No email"}</p>
+                                    <p className="truncate text-xs text-muted-foreground">
+                                      {user.email || "No email"}
+                                    </p>
                                     <p className="mt-2 flex items-center gap-1 text-xs text-muted-foreground">
                                       <MapPin className="h-3.5 w-3.5" />
-                                      {user.city || "Unknown city"}
+                                      {(user.city || "Unknown city").toUpperCase()}
                                     </p>
-                                    <p className="mt-1 text-xs text-muted-foreground">{formatDateTime(user.createdAt)}</p>
+                                    <p className="mt-1 text-xs text-muted-foreground">
+                                      {formatDateTime(user.createdAt)}
+                                    </p>
                                   </button>
                                 ))}
                               </div>
                             ) : (
-                              <p className="text-sm text-muted-foreground">No recent signups found.</p>
+                              <p className="text-sm text-muted-foreground">
+                                No recent signups found.
+                              </p>
+                            )}
+                          </CardContent>
+                        </Card>
+
+                        <Card>
+                          <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                              <LogIn className="h-5 w-5 text-primary" />
+                              Recent user logins
+                            </CardTitle>
+                            <CardDescription>
+                              Latest eight recorded user activities
+                            </CardDescription>
+                          </CardHeader>
+                          <CardContent>
+                            {recentLogins.length > 0 ? (
+                              <div className="grid gap-3 sm:grid-cols-2">
+                                {recentLogins.map((user) => (
+                                  <button
+                                    key={user.id || `${user.name}-${user.lastLogin}`}
+                                    type="button"
+                                    disabled={!user.id}
+                                    onClick={() => user.id && navigate(`/users/${user.id}`)}
+                                    className="rounded-md border bg-muted/20 p-3 text-left transition-colors hover:border-primary/50 hover:bg-accent disabled:cursor-default disabled:hover:border-border disabled:hover:bg-muted/20"
+                                  >
+                                    <p className="truncate font-medium">{user.name}</p>
+                                    <p className="truncate text-xs text-muted-foreground">
+                                      {user.email || "No email"}
+                                    </p>
+                                    <p className="mt-2 flex items-center gap-1 text-xs text-muted-foreground">
+                                      <MapPin className="h-3.5 w-3.5" />
+                                      {(user.city || "Unknown city").toUpperCase()}
+                                    </p>
+                                    <p className="mt-1 text-xs text-muted-foreground">
+                                      {formatDateTime(user.lastLogin)}
+                                    </p>
+                                  </button>
+                                ))}
+                              </div>
+                            ) : (
+                              <p className="text-sm text-muted-foreground">
+                                No recent login activity found.
+                              </p>
                             )}
                           </CardContent>
                         </Card>

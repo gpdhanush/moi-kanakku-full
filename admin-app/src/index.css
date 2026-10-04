@@ -709,3 +709,35 @@ button.no-hover-lift:active,
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+/* TanStack Charts — signup trend hover (crosshair labels + dark tooltip) */
+.mk-users-monthly-chart .ts-chart__crosshair-label-text {
+  fill: #ffffff !important;
+  paint-order: stroke fill;
+}
+
+.mk-users-monthly-chart .ts-chart__crosshair-label-halo {
+  stroke: #334155 !important;
+  stroke-width: 12px !important;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  opacity: 0.95;
+}
+
+.mk-users-chart-tooltip.ts-chart-tooltip {
+  --ts-chart-tooltip-background: #0f172a;
+  --ts-chart-tooltip-color: #f8fafc;
+  --ts-chart-tooltip-border: 1px solid rgba(148, 163, 184, 0.25);
+  --ts-chart-tooltip-border-radius: 0.5rem;
+  --ts-chart-tooltip-shadow: 0 10px 28px rgb(15 23 42 / 0.35);
+  --ts-chart-tooltip-padding: 0.55rem 0.7rem;
+  --ts-chart-tooltip-font: 500 0.75rem/1.35 system-ui, sans-serif;
+  --ts-chart-tooltip-active-row-background: rgba(255, 255, 255, 0.12);
+  --ts-chart-tooltip-active-row-border-radius: 0.35rem;
+}
+
+.mk-users-chart-tooltip .ts-chart-tooltip__title {
+  color: #ffffff;
+  font-weight: 700;
+  margin-bottom: 0.35rem;
+}

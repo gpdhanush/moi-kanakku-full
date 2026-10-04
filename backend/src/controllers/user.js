@@ -14,16 +14,24 @@ const path = require("path");
 const fs = require("fs");
 const logger = require("../config/logger");
 const { validateUuid, sendUuidError } = require("../helpers/idParams");
-const { isBlockedStatus, isInactiveStatus, sendBlockedError, sendInactiveError } = require("../helpers/accountStatus");
+const {
+  isBlockedStatus,
+  isInactiveStatus,
+  sendBlockedError,
+  sendInactiveError,
+} = require("../helpers/accountStatus");
 const {
   summarizeDevices,
   toAdminDevice,
 } = require("../helpers/deviceInstallStatus");
 const cache = require("../utils/cache");
 const { recordAuditLog } = require("../helpers/auditLog");
-const { OAuth2Client } = require('google-auth-library');
-const { buildAuthSummary, normalizeSignupType } = require('../helpers/authProvider');
-const { validatePassword } = require('../helpers/validators');
+const { OAuth2Client } = require("google-auth-library");
+const {
+  buildAuthSummary,
+  normalizeSignupType,
+} = require("../helpers/authProvider");
+const { validatePassword } = require("../helpers/validators");
 
 const googleClient = new OAuth2Client(
   process.env.GOOGLE_CLIENT_ID,
@@ -141,10 +149,10 @@ exports.userController = {
   googleLogin: async (req, res) => {
     try {
       const { idToken } = req.body || {};
-      if (!idToken || typeof idToken !== 'string') {
+      if (!idToken || typeof idToken !== "string") {
         return res.status(400).json({
-          responseType: 'F',
-          responseValue: { message: 'Google ID token is required.' },
+          responseType: "F",
+          responseValue: { message: "Google ID token is required." },
         });
       }
 
@@ -160,15 +168,18 @@ exports.userController = {
       const payload = ticket.getPayload();
       if (!payload || !payload.sub || !payload.email) {
         return res.status(401).json({
-          responseType: 'F',
-          responseValue: { message: 'Invalid Google identity token.' },
+          responseType: "F",
+          responseValue: { message: "Invalid Google identity token." },
         });
       }
 
       const normalizedEmail = String(payload.email).trim().toLowerCase();
       const googleId = String(payload.sub).trim();
-      const normalizedName = String(payload.name || payload.email.split('@')[0]).trim();
-      const googlePicture = typeof payload.picture === 'string' ? payload.picture.trim() : null;
+      const normalizedName = String(
+        payload.name || payload.email.split("@")[0],
+      ).trim();
+      const googlePicture =
+        typeof payload.picture === "string" ? payload.picture.trim() : null;
 
       let user = await User.findByGoogleId(googleId);
       if (!user) {
@@ -179,13 +190,17 @@ exports.userController = {
         const deletedUser =
           (await User.findByGoogleIdIncludingDeleted(googleId)) ||
           (await User.findByEmailIncludingDeleted(normalizedEmail));
-        if (deletedUser && (deletedUser.is_deleted || String(deletedUser.status).toUpperCase() === 'DELETED')) {
+        if (
+          deletedUser &&
+          (deletedUser.is_deleted ||
+            String(deletedUser.status).toUpperCase() === "DELETED")
+        ) {
           return res.status(403).json({
-            responseType: 'F',
+            responseType: "F",
             responseValue: {
-              message: 'Your account has been deleted. Restore it to continue.',
+              message: "Your account has been deleted. Restore it to continue.",
               deleted_at: deletedUser.deleted_at,
-              account_status: 'DELETED',
+              account_status: "DELETED",
             },
           });
         }
@@ -197,7 +212,9 @@ exports.userController = {
           email: normalizedEmail,
           googleId,
         });
-        const created = await User.findById(createdUser.insertId || createdUser.id);
+        const created = await User.findById(
+          createdUser.insertId || createdUser.id,
+        );
         await User.syncGoogleProfile({
           id: created.id,
           name: normalizedName,
@@ -205,7 +222,7 @@ exports.userController = {
         });
         await User.updateLastLogin(created.id);
         return res.status(200).json({
-          responseType: 'S',
+          responseType: "S",
           responseValue: {
             token: tokenService.generateToken(created.id),
             user: {
@@ -214,7 +231,7 @@ exports.userController = {
               email: created.email,
               profileImageUrl: googlePicture,
               last_login: new Date().toISOString(),
-              signupType: 'google',
+              signupType: "google",
               passwordSet: false,
               emailVerified: true,
             },
@@ -223,7 +240,11 @@ exports.userController = {
         });
       }
 
-      if (user.google_id !== googleId && user.email && user.email.toLowerCase() === normalizedEmail) {
+      if (
+        user.google_id !== googleId &&
+        user.email &&
+        user.email.toLowerCase() === normalizedEmail
+      ) {
         await User.linkGoogleAccount(user.id, googleId);
         user = await User.findById(user.id);
       }
@@ -243,7 +264,7 @@ exports.userController = {
       await SessionModel.createSession(userID).catch(() => {});
 
       return res.status(200).json({
-        responseType: 'S',
+        responseType: "S",
         responseValue: {
           token: jwtToken,
           user: {
@@ -252,7 +273,7 @@ exports.userController = {
             email: user.email,
             profileImageUrl: refreshedUser?.profile_image_url || null,
             last_login: new Date().toISOString(),
-            signupType: normalizeSignupType(user.signup_type || 'email'),
+            signupType: normalizeSignupType(user.signup_type || "email"),
             passwordSet: Boolean(user.password_set),
             emailVerified: Boolean(user.is_verified),
           },
@@ -260,17 +281,17 @@ exports.userController = {
         },
       });
     } catch (error) {
-      logger.error('Google login error:', error);
-      const message = String(error?.message || '');
+      logger.error("Google login error:", error);
+      const message = String(error?.message || "");
       const isAudienceError = /audience|recipient|client.?id/i.test(message);
       return res.status(401).json({
-        responseType: 'F',
+        responseType: "F",
         responseValue: {
           message: isAudienceError
-            ? 'Google OAuth client ID is not configured correctly on the server.'
+            ? "Google OAuth client ID is not configured correctly on the server."
             : /token/i.test(message)
-              ? 'Invalid or expired Google token.'
-              : 'Google sign-in failed.',
+              ? "Invalid or expired Google token."
+              : "Google sign-in failed.",
         },
       });
     }
@@ -280,33 +301,48 @@ exports.userController = {
     try {
       const userId = req.user?.userId;
       if (!userId) {
-        return res.status(401).json({ responseType: 'F', responseValue: { message: 'Authentication required.' } });
+        return res
+          .status(401)
+          .json({
+            responseType: "F",
+            responseValue: { message: "Authentication required." },
+          });
       }
 
       const { password } = req.body || {};
       const validation = validatePassword(password);
       if (!validation.isValid) {
         return res.status(400).json({
-          responseType: 'F',
+          responseType: "F",
           responseValue: { message: validation.errors[0] },
         });
       }
 
       const user = await User.findById(userId);
       if (!user) {
-        return res.status(404).json({ responseType: 'F', responseValue: { message: 'User not found.' } });
+        return res
+          .status(404)
+          .json({
+            responseType: "F",
+            responseValue: { message: "User not found." },
+          });
       }
 
       const hashed = await bcrypt.hash(password, 10);
       await User.updatePassword({ id: user.id, password: hashed });
       await User.setPasswordSet(user.id, true);
       return res.status(200).json({
-        responseType: 'S',
-        responseValue: { message: 'Password created successfully' },
+        responseType: "S",
+        responseValue: { message: "Password created successfully" },
       });
     } catch (error) {
-      logger.error('Set password failed:', error);
-      return res.status(500).json({ responseType: 'F', responseValue: { message: 'Unable to set password.' } });
+      logger.error("Set password failed:", error);
+      return res
+        .status(500)
+        .json({
+          responseType: "F",
+          responseValue: { message: "Unable to set password." },
+        });
     }
   },
 
@@ -323,7 +359,11 @@ exports.userController = {
       if (!user) {
         // Check if user exists but is deleted
         const deletedUser = await User.findByEmailIncludingDeleted(email);
-        if (deletedUser && (deletedUser.is_deleted || String(deletedUser.status).toUpperCase() === 'DELETED')) {
+        if (
+          deletedUser &&
+          (deletedUser.is_deleted ||
+            String(deletedUser.status).toUpperCase() === "DELETED")
+        ) {
           return res.status(403).json({
             responseType: "F",
             responseValue: {
@@ -341,11 +381,12 @@ exports.userController = {
         });
       }
 
-      if (String(user.status).toUpperCase() === 'DELETED') {
+      if (String(user.status).toUpperCase() === "DELETED") {
         return res.status(403).json({
           responseType: "F",
           responseValue: {
-            message: "உங்கள் கணக்கு நீக்கப்பட்டுவிட்டது. மீட்டமைக்க OTP பெறவும்.",
+            message:
+              "உங்கள் கணக்கு நீக்கப்பட்டுவிட்டது. மீட்டமைக்க OTP பெறவும்.",
             account_status: "DELETED",
           },
         });
@@ -655,7 +696,10 @@ exports.userController = {
         email,
         mobile,
         password: hashedPassword,
-        city: city != null && String(city).trim() !== "" ? String(city).trim() : null,
+        city:
+          city != null && String(city).trim() !== ""
+            ? String(city).trim()
+            : null,
         fcm_token: fcm_token || null,
         device_name: device_name || null,
         device_id: device_id || null,
@@ -664,7 +708,7 @@ exports.userController = {
         manufacturer: manufacturer || null,
         ram_size: ram_size ?? null,
         android_version: normalizedAndroidVersion,
-        platform: req.body.platform || 'android',
+        platform: req.body.platform || "android",
         app_version: req.body.app_version || req.body.appVersion || null,
       };
 
@@ -763,10 +807,15 @@ exports.userController = {
           });
         } catch (postCreationError) {
           // Rollback: hard delete the user so the email/mobile are freed for retry
-          logger.error("Critical error after user creation, rolling back:", postCreationError);
+          logger.error(
+            "Critical error after user creation, rolling back:",
+            postCreationError,
+          );
           try {
             await User.hardDeleteUser(userId);
-            logger.info(`User ${userId} rolled back due to: ${postCreationError.message}`);
+            logger.info(
+              `User ${userId} rolled back due to: ${postCreationError.message}`,
+            );
           } catch (rollbackError) {
             logger.error(`Failed to rollback user ${userId}:`, rollbackError);
           }
@@ -791,7 +840,9 @@ exports.userController = {
       if (userId) {
         try {
           await User.hardDeleteUser(userId);
-          logger.info(`User ${userId} rolled back due to outer error: ${error.message}`);
+          logger.info(
+            `User ${userId} rolled back due to outer error: ${error.message}`,
+          );
         } catch (rollbackError) {
           logger.error(`Failed to rollback user ${userId}:`, rollbackError);
         }
@@ -1268,7 +1319,9 @@ exports.userController = {
       );
 
       if (query && !query.error) {
-        logger.info("Device registration successful", { userId: String(userId) });
+        logger.info("Device registration successful", {
+          userId: String(userId),
+        });
         recordAuditLog({
           userId,
           action: "DEVICE_REGISTER",
@@ -1364,7 +1417,7 @@ exports.userController = {
           if (req.file.path && fs.existsSync(req.file.path)) {
             fs.unlinkSync(req.file.path);
           }
-        } catch (_) { }
+        } catch (_) {}
         return sendUuidError(res, idCheck.message);
       }
 
@@ -1578,7 +1631,9 @@ exports.userController = {
           );
           if (fs.existsSync(absolutePath)) {
             fs.unlinkSync(absolutePath);
-            logger.info(`Deleted profile image for user ${userId}: ${absolutePath}`);
+            logger.info(
+              `Deleted profile image for user ${userId}: ${absolutePath}`,
+            );
           }
         } catch (deleteError) {
           logger.error("Error deleting profile image file:", deleteError);
@@ -1632,7 +1687,10 @@ exports.userController = {
 
       return res
         .status(200)
-        .json({ responseType: "S", responseValue: formatPublicUserDetails(details) });
+        .json({
+          responseType: "S",
+          responseValue: formatPublicUserDetails(details),
+        });
     } catch (error) {
       return res.status(500).json({
         responseType: "F",
@@ -1689,7 +1747,10 @@ exports.userController = {
   adminAllUserLists: async (req, res) => {
     try {
       const pageNum = Math.max(1, parseInt(req.query.page, 10) || 1);
-      const pageSize = Math.min(100, Math.max(1, parseInt(req.query.limit, 10) || 30));
+      const pageSize = Math.min(
+        100,
+        Math.max(1, parseInt(req.query.limit, 10) || 30),
+      );
       const offset = (pageNum - 1) * pageSize;
 
       const { rows, total } = await User.getAllPublicDetails({
@@ -1708,7 +1769,7 @@ exports.userController = {
         responseValue: formatted,
       });
     } catch (error) {
-      logger.error('adminAllUserLists failure', error);
+      logger.error("adminAllUserLists failure", error);
       return res.status(500).json({
         responseType: "F",
         responseValue: { message: error.toString() },
@@ -1747,7 +1808,7 @@ exports.userController = {
 
   /**
    * ADMIN: activate or deactivate an app user.
-  * Body: { userId, status } where status is ACTIVE, INACTIVE, or BLOCKED
+   * Body: { userId, status } where status is ACTIVE, INACTIVE, or BLOCKED
    */
   adminUpdateUserStatus: async (req, res) => {
     const userId = req.body?.userId || req.body?.id || req.params?.id;
@@ -1760,7 +1821,9 @@ exports.userController = {
     if (!["ACTIVE", "INACTIVE", "BLOCKED"].includes(normalized)) {
       return res.status(400).json({
         responseType: "F",
-        responseValue: { message: "status must be ACTIVE, INACTIVE, or BLOCKED." },
+        responseValue: {
+          message: "status must be ACTIVE, INACTIVE, or BLOCKED.",
+        },
       });
     }
 
@@ -1847,7 +1910,8 @@ exports.userController = {
       return res.status(200).json({
         responseType: "S",
         responseValue: {
-          message: "User account restored. They can log in from the mobile app.",
+          message:
+            "User account restored. They can log in from the mobile app.",
           userId: String(userId),
           status: "ACTIVE",
         },
@@ -1964,15 +2028,21 @@ exports.userController = {
     if (!loginIdentifier || !password) {
       return res.status(400).json({
         responseType: "F",
-        responseValue: { message: "மின்னஞ்சல்/கைபேசி எண் மற்றும் கடவுச்சொல் தேவை!" },
+        responseValue: {
+          message: "மின்னஞ்சல்/கைபேசி எண் மற்றும் கடவுச்சொல் தேவை!",
+        },
       });
     }
 
     try {
       let user = await Admin.findByIdentifier(loginIdentifier);
       if (!user) {
-        const deletedUser = await Admin.findByIdentifierIncludingDeleted(loginIdentifier);
-        if (deletedUser && (deletedUser.is_deleted === 1 || deletedUser.is_deleted === true)) {
+        const deletedUser =
+          await Admin.findByIdentifierIncludingDeleted(loginIdentifier);
+        if (
+          deletedUser &&
+          (deletedUser.is_deleted === 1 || deletedUser.is_deleted === true)
+        ) {
           return res.status(403).json({
             responseType: "F",
             responseValue: {
@@ -1990,11 +2060,12 @@ exports.userController = {
       }
 
       // Check account active/inactive status
-      if (user.status === 'INACTIVE') {
+      if (user.status === "INACTIVE") {
         return res.status(403).json({
           responseType: "F",
           responseValue: {
-            message: "உங்கள் கணக்கு செயலிழக்கப்பட்டுள்ளது. தயவுசெய்து நிர்வாகியை தொடர்பு கொள்ளவும்.",
+            message:
+              "உங்கள் கணக்கு செயலிழக்கப்பட்டுள்ளது. தயவுசெய்து நிர்வாகியை தொடர்பு கொள்ளவும்.",
             account_status: "INACTIVE",
           },
         });
@@ -2004,9 +2075,14 @@ exports.userController = {
       try {
         const blockStatus = await Admin.getLoginBlockStatus(user.id);
         if (blockStatus.is_blocked) {
-          const blockedUntilDate = blockStatus.blocked_until ? new Date(blockStatus.blocked_until) : null;
+          const blockedUntilDate = blockStatus.blocked_until
+            ? new Date(blockStatus.blocked_until)
+            : null;
           const minutesRemaining = blockedUntilDate
-            ? Math.max(1, Math.ceil((blockedUntilDate - new Date()) / (1000 * 60)))
+            ? Math.max(
+                1,
+                Math.ceil((blockedUntilDate - new Date()) / (1000 * 60)),
+              )
             : null;
 
           const msg = minutesRemaining
@@ -2034,7 +2110,9 @@ exports.userController = {
 
       if (!isPasswordValid) {
         try {
-          const failureStatus = await Admin.incrementFailedLoginAttempts(user.id);
+          const failureStatus = await Admin.incrementFailedLoginAttempts(
+            user.id,
+          );
           if (failureStatus.blocked) {
             return res.status(429).json({
               responseType: "F",
@@ -2080,7 +2158,7 @@ exports.userController = {
 
       // Check if MFA is enabled for this admin
       try {
-        const mfaRecord = await MFA.findByUserId(userID, 'admin');
+        const mfaRecord = await MFA.findByUserId(userID, "admin");
         if (mfaRecord && mfaRecord.is_enabled === 1) {
           return res.status(200).json({
             responseType: "S",
@@ -2089,10 +2167,11 @@ exports.userController = {
               is_mfa_required: true,
               user_id: userID,
               userId: userID,
-              account_type: 'admin',
-              accountType: 'admin',
-              message: "MFA challenge required. Please enter your TOTP verification code or backup code."
-            }
+              account_type: "admin",
+              accountType: "admin",
+              message:
+                "MFA challenge required. Please enter your TOTP verification code or backup code.",
+            },
           });
         }
       } catch (mfaErr) {
@@ -2100,15 +2179,16 @@ exports.userController = {
       }
 
       tokenService.invalidatePreviousToken(userID);
-      const { accessToken, refreshToken } = tokenService.generateTokenPair(userID);
+      const { accessToken, refreshToken } =
+        tokenService.generateTokenPair(userID);
       logger.debug(`admin login for ${userID}, token generated`);
 
       const now = new Date();
-      if (typeof Admin.updateLastLogin === 'function') {
+      if (typeof Admin.updateLastLogin === "function") {
         try {
           await Admin.updateLastLogin(userID);
         } catch (e) {
-          logger.warn('admin updateLastLogin failed', e);
+          logger.warn("admin updateLastLogin failed", e);
         }
       }
 
@@ -2118,7 +2198,7 @@ exports.userController = {
         name: user.full_name,
         email: user.email,
         mobile: user.mobile,
-        status: 'ACTIVE',
+        status: "ACTIVE",
         email_verified_at: user.email_verified_at || null,
         last_login_at: now,
         last_activity_at: now,
@@ -2164,7 +2244,9 @@ exports.userController = {
         tokenService.removeToken(userId);
         return res.status(401).json({
           responseType: "F",
-          responseValue: { message: "Invalid refresh token. Please login again." },
+          responseValue: {
+            message: "Invalid refresh token. Please login again.",
+          },
         });
       }
 
@@ -2193,7 +2275,10 @@ exports.userController = {
       });
     } catch (error) {
       const expired = error?.name === "TokenExpiredError";
-      logger.warn("adminRefreshToken failed", { name: error?.name, message: error?.message });
+      logger.warn("adminRefreshToken failed", {
+        name: error?.name,
+        message: error?.message,
+      });
       return res.status(401).json({
         responseType: "F",
         responseValue: {
@@ -2229,15 +2314,20 @@ exports.userController = {
         });
       }
 
-      const token = crypto.randomBytes(32).toString('hex');
+      const token = crypto.randomBytes(32).toString("hex");
       const expires = new Date(Date.now() + 60 * 60 * 1000);
       await Admin.setResetToken(admin.id, token, expires);
 
-      const baseUrl = process.env.ADMIN_RESET_URL || process.env.FRONTEND_URL || 'https://moi-kanakku-api.prasowlabs.in/admin/reset-password';
-      const resetLink = baseUrl.includes('?') ? `${baseUrl}&token=${token}` : `${baseUrl}?token=${token}`;
+      const baseUrl =
+        process.env.ADMIN_RESET_URL ||
+        process.env.FRONTEND_URL ||
+        "https://moi-kanakku-api.prasowlabs.in/admin/reset-password";
+      const resetLink = baseUrl.includes("?")
+        ? `${baseUrl}&token=${token}`
+        : `${baseUrl}?token=${token}`;
       const html = getBrandedEmailContent({
-        title: 'Admin Password Reset',
-        body: `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-spacing:0;"><tr><td style="padding:0;"><p style="margin:0 0 10px;color:#171717;font-size:17px;line-height:27px;">Hi <strong>${escapeHtml(admin.full_name || '')}</strong>,</p><p style="margin:0;color:#686868;font-size:16px;line-height:27px;">You requested a password reset for your administrator account. Please use the button below to choose a new password.</p><p style="text-align:center;margin:32px 0 18px;"><a href="${escapeHtml(resetLink)}" style="display:inline-block;padding:14px 28px;background-color:#171717;color:#ffffff;text-decoration:none;border-radius:8px;font-size:16px;font-weight:700;">Reset Password</a></p><p style="text-align:center;margin:0;color:#686868;font-size:14px;line-height:21px;">This link will expire in <strong style="color:#171717;">one hour</strong>.</p><div style="height:1px;background-color:#e4e1d9;margin:32px 0 26px;"></div><p style="margin:0;color:#8a8882;font-size:13px;line-height:21px;">If you did not request this password reset, you can safely ignore this email.</p></td></tr></table>`,
+        title: "Admin Password Reset",
+        body: `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-spacing:0;"><tr><td style="padding:0;"><p style="margin:0 0 10px;color:#171717;font-size:17px;line-height:27px;">Hi <strong>${escapeHtml(admin.full_name || "")}</strong>,</p><p style="margin:0;color:#686868;font-size:16px;line-height:27px;">You requested a password reset for your administrator account. Please use the button below to choose a new password.</p><p style="text-align:center;margin:32px 0 18px;"><a href="${escapeHtml(resetLink)}" style="display:inline-block;padding:14px 28px;background-color:#171717;color:#ffffff;text-decoration:none;border-radius:8px;font-size:16px;font-weight:700;">Reset Password</a></p><p style="text-align:center;margin:0;color:#686868;font-size:14px;line-height:21px;">This link will expire in <strong style="color:#171717;">one hour</strong>.</p><div style="height:1px;background-color:#e4e1d9;margin:32px 0 26px;"></div><p style="margin:0;color:#8a8882;font-size:13px;line-height:21px;">If you did not request this password reset, you can safely ignore this email.</p></td></tr></table>`,
       });
       /* const html = `<!DOCTYPE html>
 <html>
@@ -2302,7 +2392,7 @@ exports.userController = {
       queueEmail(
         {
           to: admin.email,
-          subject: 'Admin password reset',
+          subject: "Admin password reset",
           html,
         },
         `admin-forgot:${admin.email}`,
@@ -2310,7 +2400,10 @@ exports.userController = {
 
       return res.status(200).json({
         responseType: "S",
-        responseValue: { message: "கடவுச்சொல் மீட்டமைப்பு விவரங்கள் உங்கள் மின்னஞ்சலுக்கு அனுப்பப்பட்டன." },
+        responseValue: {
+          message:
+            "கடவுச்சொல் மீட்டமைப்பு விவரங்கள் உங்கள் மின்னஞ்சலுக்கு அனுப்பப்பட்டன.",
+        },
       });
     } catch (err) {
       logger.error("Error in adminForgotPassword:", err);
@@ -2342,7 +2435,10 @@ exports.userController = {
           responseValue: { message: "தவறான அல்லது காலாவதியான டோக்கன்" },
         });
       }
-      if (record.reset_token_expires_at && new Date(record.reset_token_expires_at) < new Date()) {
+      if (
+        record.reset_token_expires_at &&
+        new Date(record.reset_token_expires_at) < new Date()
+      ) {
         return res.status(400).json({
           responseType: "F",
           responseValue: { message: "டோக்கன் காலாவதியாகிவிட்டது" },
@@ -2391,11 +2487,18 @@ exports.userController = {
 
       // Check if updated email or mobile exists in another active admin account
       if (email || mobile) {
-        const isConflict = await Admin.checkEmailOrMobileExists(adminId, email, mobile);
+        const isConflict = await Admin.checkEmailOrMobileExists(
+          adminId,
+          email,
+          mobile,
+        );
         if (isConflict) {
           return res.status(400).json({
             responseType: "F",
-            responseValue: { message: "மின்னஞ்சல் அல்லது கைபேசி எண் ஏற்கனவே பயன்படுத்தப்படுகிறது!" },
+            responseValue: {
+              message:
+                "மின்னஞ்சல் அல்லது கைபேசி எண் ஏற்கனவே பயன்படுத்தப்படுகிறது!",
+            },
           });
         }
       }
@@ -2453,7 +2556,9 @@ exports.userController = {
     if (!oldPass || !newPass) {
       return res.status(400).json({
         responseType: "F",
-        responseValue: { message: "தற்போதைய கடவுச்சொல் மற்றும் புதிய கடவுச்சொல் தேவை!" },
+        responseValue: {
+          message: "தற்போதைய கடவுச்சொல் மற்றும் புதிய கடவுச்சொல் தேவை!",
+        },
       });
     }
 

@@ -15,6 +15,11 @@ function escapeHtml(value: unknown): string {
     .replace(/'/g, "&#039;");
 }
 
+function toUpperDisplay(value?: string | number | boolean | null): string {
+  const text = displayValue(value);
+  return text === "N/A" ? text : text.toUpperCase();
+}
+
 function formatBrandModel(user: UserListItem): string {
   const brand = String(user.brand ?? "").trim();
   const model = String(user.model ?? "").trim();
@@ -35,25 +40,56 @@ function isEmailVerified(user: UserListItem): boolean {
   if (typeof value === "boolean") return value;
   if (typeof value === "number") return value === 1;
   if (typeof value === "string") {
-    const normalized = value.trim().toLowerCase();
+    const normalized = String(value).trim().toLowerCase();
     return ["1", "true", "yes", "y"].includes(normalized);
   }
   return false;
 }
 
-function verifiedBadge(verified: boolean): string {
-  return verified
-    ? `<span class="badge badge-yes">Verified</span>`
-    : `<span class="badge badge-no">Not Verified</span>`;
+function resolveStatus(user: UserListItem): string {
+  const status = String(user.status || "ACTIVE")
+    .trim()
+    .toUpperCase();
+  return status || "ACTIVE";
+}
+
+function statusBadge(status: string): string {
+  const tone =
+    status === "ACTIVE"
+      ? "badge-active"
+      : status === "INACTIVE"
+        ? "badge-inactive"
+        : status === "BLOCKED"
+          ? "badge-blocked"
+          : status === "DELETED"
+            ? "badge-deleted"
+            : "badge-default";
+  return `<span class="badge ${tone}">${escapeHtml(status)}</span>`;
+}
+
+function emailCell(user: UserListItem): string {
+  const email = resolveEmail(user);
+  const verified = isEmailVerified(user) && email !== "N/A";
+  return `
+    <span class="email-cell">
+      <span>${escapeHtml(email)}</span>
+      ${
+        verified
+          ? '<span class="verified-tick" title="Email verified">✓</span>'
+          : ""
+      }
+    </span>`;
 }
 
 function buildDocument(
   users: UserListItem[],
-  { title = "Users Directory", subtitle }: UsersListPdfOptions,
+  { title = "Users List", subtitle }: UsersListPdfOptions,
 ): string {
   const generatedAt = formatDateTime(new Date().toISOString());
   const withEmail = users.filter((user) => resolveEmail(user) !== "N/A").length;
-  const verifiedCount = users.filter((user) => isEmailVerified(user)).length;
+  const activeCount = users.filter(
+    (user) => resolveStatus(user) === "ACTIVE",
+  ).length;
   const withDevice = users.filter((user) => {
     const brand = String(user.brand ?? "").trim();
     const model = String(user.model ?? "").trim();
@@ -63,20 +99,20 @@ function buildDocument(
 
   const rows = users
     .map((user, index) => {
-      const verified = isEmailVerified(user);
+      const status = resolveStatus(user);
       return `
         <tr>
           <td class="col-sno">${escapeHtml(index + 1)}</td>
           <td class="col-name">
             <div class="name-cell">
-              <strong>${escapeHtml(displayValue(user.name))}</strong>
+              <strong>${escapeHtml(toUpperDisplay(user.name))}</strong>
             </div>
           </td>
-          <td class="col-email">${escapeHtml(resolveEmail(user))}</td>
+          <td class="col-status">${statusBadge(status)}</td>
+          <td class="col-email">${emailCell(user)}</td>
           <td class="col-mobile">${escapeHtml(displayValue(user.mobile))}</td>
-          <td class="col-city">${escapeHtml(displayValue(user.city))}</td>
+          <td class="col-city">${escapeHtml(toUpperDisplay(user.city))}</td>
           <td class="col-device">${escapeHtml(formatBrandModel(user))}</td>
-          <td class="col-verified">${verifiedBadge(verified)}</td>
         </tr>`;
     })
     .join("");
@@ -98,17 +134,31 @@ function buildDocument(
     }
     .report-content { position: relative; z-index: 1; }
     header {
-      align-items: flex-end;
+      align-items: center;
       border-bottom: 3px solid #2563eb;
       display: flex;
-      gap: 18px;
+      gap: 20px;
       justify-content: space-between;
       margin-bottom: 14px;
       padding-bottom: 14px;
     }
-    .brand-line { align-items: center; display: flex; gap: 14px; }
-    .brand-logo { height: 52px; object-fit: contain; width: 52px; }
-    .brand-wordmark { height: 38px; max-width: 260px; object-fit: contain; }
+    .header-left {
+      align-items: flex-start;
+      display: flex;
+      flex: 1 1 auto;
+      flex-direction: column;
+      justify-content: center;
+      text-align: left;
+    }
+    .header-right {
+      align-items: center;
+      display: flex;
+      flex: 0 0 auto;
+      gap: 12px;
+      justify-content: flex-end;
+    }
+    .brand-logo { height: 56px; object-fit: contain; width: 56px; }
+    .brand-wordmark { height: 40px; max-width: 280px; object-fit: contain; }
     .header-copy h1 {
       font-size: 24px;
       letter-spacing: -0.02em;
@@ -153,22 +203,6 @@ function buildDocument(
       overflow: hidden;
       padding: 10px;
     }
-    .section-title {
-      align-items: center;
-      color: #1e40af;
-      display: flex;
-      font-size: 13px;
-      gap: 8px;
-      margin: 0 0 10px;
-    }
-    .section-title span {
-      background: #dbeafe;
-      border-radius: 999px;
-      color: #1d4ed8;
-      font-size: 10px;
-      font-weight: 700;
-      padding: 2px 8px;
-    }
     table {
       border-collapse: collapse;
       table-layout: fixed;
@@ -190,14 +224,35 @@ function buildDocument(
     }
     td { background: white; font-size: 9.5px; }
     tr:nth-child(even) td { background: #f8fafc; }
-    .col-sno { text-align: center; width: 36px; }
+    .col-sno { text-align: center; width: 48px; }
     .col-name { width: 16%; }
+    .col-status { text-align: center; width: 11%; }
     .col-email { width: 22%; }
     .col-mobile { width: 12%; }
     .col-city { width: 12%; }
     .col-device { width: 18%; }
-    .col-verified { text-align: center; width: 12%; }
     .name-cell strong { color: #0f172a; font-size: 10px; }
+    .email-cell {
+      align-items: center;
+      display: inline-flex;
+      gap: 6px;
+      max-width: 100%;
+    }
+    .verified-tick {
+      align-items: center;
+      background: #dcfce7;
+      border: 1px solid #86efac;
+      border-radius: 999px;
+      color: #15803d;
+      display: inline-flex;
+      flex-shrink: 0;
+      font-size: 11px;
+      font-weight: 800;
+      height: 16px;
+      justify-content: center;
+      line-height: 1;
+      width: 16px;
+    }
     .badge {
       border-radius: 999px;
       display: inline-block;
@@ -207,14 +262,11 @@ function buildDocument(
       padding: 3px 8px;
       text-transform: uppercase;
     }
-    .badge-yes {
-      background: #dcfce7;
-      color: #166534;
-    }
-    .badge-no {
-      background: #fee2e2;
-      color: #991b1b;
-    }
+    .badge-active { background: #dcfce7; color: #166534; }
+    .badge-inactive { background: #fef3c7; color: #92400e; }
+    .badge-blocked { background: #fee2e2; color: #991b1b; }
+    .badge-deleted { background: #e2e8f0; color: #334155; }
+    .badge-default { background: #e0e7ff; color: #3730a3; }
     .empty {
       color: #64748b;
       padding: 28px 12px;
@@ -236,43 +288,37 @@ function buildDocument(
 <body>
   <div class="report-content">
     <header>
-      <div>
-        <div class="brand-line">
-          <img src="/logo-new.png" alt="" class="brand-logo" />
-          <img src="/label-dark.png" alt="Moi Kanakku" class="brand-wordmark" />
+      <div class="header-left header-copy">
+        <h1>${escapeHtml(title)}</h1>
+        <div class="meta">
+          Generated on ${escapeHtml(generatedAt)}
+          ${subtitle ? `<br />${escapeHtml(subtitle)}` : ""}
         </div>
-        <div class="header-copy" style="margin-top: 10px;">
-          <h1>${escapeHtml(title)}</h1>
-          <div class="meta">
-            Generated on ${escapeHtml(generatedAt)}
-            ${subtitle ? `<br />${escapeHtml(subtitle)}` : ""}
-          </div>
-        </div>
+      </div>
+      <div class="header-right">
+        <img src="/logo-new.png" alt="" class="brand-logo" />
+        <img src="/label-dark.png" alt="Moi Kanakku" class="brand-wordmark" />
       </div>
     </header>
 
     <div class="summary">
       <div class="summary-card card-blue"><strong>${users.length}</strong><span>Total Users</span></div>
-      <div class="summary-card card-emerald"><strong>${withEmail}</strong><span>With Email</span></div>
-      <div class="summary-card card-violet"><strong>${verifiedCount}</strong><span>Email Verified</span></div>
+      <div class="summary-card card-emerald"><strong>${activeCount}</strong><span>Active Users</span></div>
+      <div class="summary-card card-violet"><strong>${withEmail}</strong><span>With Email</span></div>
       <div class="summary-card card-amber"><strong>${withDevice}</strong><span>With Device Info</span></div>
     </div>
 
     <section class="table-shell">
-      <h2 class="section-title">
-        User Directory
-        <span>${users.length}</span>
-      </h2>
       <table>
         <thead>
           <tr>
-            <th class="col-sno">#</th>
+            <th class="col-sno">S.No</th>
             <th class="col-name">Full Name</th>
+            <th class="col-status">Status</th>
             <th class="col-email">Email</th>
             <th class="col-mobile">Mobile</th>
             <th class="col-city">City</th>
             <th class="col-device">Brand &amp; Model</th>
-            <th class="col-verified">Email Verified</th>
           </tr>
         </thead>
         <tbody>

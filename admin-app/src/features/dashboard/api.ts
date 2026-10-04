@@ -21,6 +21,7 @@ export interface DashboardAnalytics {
     todaySignups: number;
   };
   dailySignups: { date: string; count: number }[];
+  dailyLogins: { date: string; count: number }[];
   recentLogins: {
     id: string | null;
     name: string;
