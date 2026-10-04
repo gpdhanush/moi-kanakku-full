@@ -1,0 +1,280 @@
+@import "tailwindcss";
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --font-sans: "Arimo", "Mukta Malar", "Noto Sans Tamil", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Space Grotesk", "Noto Sans Tamil", ui-sans-serif, system-ui, sans-serif;
+  /* Tamil: Noto Sans Tamil for headings, Mukta Malar for body */
+  --font-tamil: "Mukta Malar", "Noto Sans Tamil", ui-sans-serif, system-ui, sans-serif;
+  --font-tamil-display: "Noto Sans Tamil", "Mukta Malar", ui-sans-serif, system-ui, sans-serif;
+  --radius-sm: 5px;
+  --radius-md: 5px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-2xl: 16px;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-bright: var(--primary-bright);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-ink: var(--ink);
+  --color-ink-foreground: var(--ink-foreground);
+  --color-ink-muted: var(--ink-muted);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  /* Previous brand palette mapped onto theme token names */
+  --color-lime: #90d01f;
+  --color-lime-bright: #9ae214;
+  --color-lime-soft: #f7fee7;
+  --color-ivory-50: #ffffff;
+  --color-ivory-100: #fafafa;
+  --color-ivory-200: #f7fee7;
+  --color-ivory-300: #e4e4e7;
+  --color-teal-50: #f7fee7;
+  --color-teal-100: #ecfccb;
+  --color-teal-200: #d4d4d8;
+  --color-teal-700: #3f3f46;
+  --color-teal-800: #09090b;
+  --color-teal-900: #09090b;
+  --color-teal-950: #000000;
+  --color-gold-50: #f7fee7;
+  --color-gold-300: #bef264;
+  --color-gold-400: #9ae214;
+  --color-gold-500: #90d01f;
+  --color-gold-600: #74a818;
+  --color-gold-700: #5a8212;
+}
+
+:root {
+  --radius: 5px;
+  --background: #ffffff;
+  --foreground: #09090b;
+  --card: #ffffff;
+  --card-foreground: #09090b;
+  --popover: #ffffff;
+  --popover-foreground: #09090b;
+  --primary: #90d01f;
+  --primary-bright: #9ae214;
+  --primary-foreground: #09090b;
+  --secondary: #fafafa;
+  --secondary-foreground: #09090b;
+  --muted: #fafafa;
+  --muted-foreground: #71717a;
+  --accent: #f7fee7;
+  --accent-foreground: #09090b;
+  --ink: #09090b;
+  --ink-foreground: #ffffff;
+  --ink-muted: #a1a1aa;
+  --destructive: #be123c;
+  --destructive-foreground: #ffffff;
+  --border: #e4e4e7;
+  --input: #e4e4e7;
+  --ring: #90d01f;
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-display);
+  }
+  /* Tamil UI: Mukta Malar body + Noto Sans Tamil headings */
+  html.lang-ta body,
+  html[lang="ta"] body,
+  body.lang-ta {
+    font-family: var(--font-tamil);
+    font-size: 1rem;
+    line-height: 1.65;
+  }
+  html.lang-ta h1,
+  html.lang-ta h2,
+  html.lang-ta h3,
+  html.lang-ta h4,
+  html.lang-ta h5,
+  html.lang-ta h6,
+  html[lang="ta"] h1,
+  html[lang="ta"] h2,
+  html[lang="ta"] h3,
+  html[lang="ta"] h4,
+  html[lang="ta"] h5,
+  html[lang="ta"] h6,
+  body.lang-ta h1,
+  body.lang-ta h2,
+  body.lang-ta h3,
+  body.lang-ta h4,
+  body.lang-ta h5,
+  body.lang-ta h6,
+  html.lang-ta .font-display,
+  html[lang="ta"] .font-display,
+  body.lang-ta .font-display,
+  .font-tamil {
+    font-family: var(--font-tamil-display);
+    letter-spacing: 0;
+  }
+
+  /*
+   * Tamil script reads denser at Latin display sizes.
+   * Cap h1/h2 and soften weight for comfortable reading.
+   */
+  html.lang-ta h1,
+  html[lang="ta"] h1,
+  body.lang-ta h1 {
+    font-size: clamp(1.5rem, 3.6vw, 2.25rem) !important;
+    line-height: 1.3 !important;
+    font-weight: 700 !important;
+    letter-spacing: 0 !important;
+  }
+  html.lang-ta h2,
+  html[lang="ta"] h2,
+  body.lang-ta h2 {
+    font-size: clamp(1.25rem, 2.6vw, 1.75rem) !important;
+    line-height: 1.35 !important;
+    font-weight: 700 !important;
+    letter-spacing: 0 !important;
+  }
+  html.lang-ta h3,
+  html[lang="ta"] h3,
+  body.lang-ta h3 {
+    font-size: clamp(1.0625rem, 2vw, 1.25rem) !important;
+    line-height: 1.4 !important;
+    font-weight: 600 !important;
+  }
+
+  /* Nav: Tamil-friendly size in the pill bar */
+  html.lang-ta .site-nav,
+  html[lang="ta"] .site-nav,
+  body.lang-ta .site-nav {
+    font-family: var(--font-tamil);
+  }
+  html.lang-ta .site-nav .site-nav-link,
+  html[lang="ta"] .site-nav .site-nav-link,
+  body.lang-ta .site-nav .site-nav-link {
+    font-size: 0.8125rem;
+    line-height: 1.3;
+    font-weight: 500;
+  }
+  ::selection {
+    background: #90d01f;
+    color: #09090b;
+  }
+  :focus-visible {
+    outline: 2px solid #90d01f;
+    outline-offset: 3px;
+  }
+}
+
+@utility container-page {
+  max-width: 80rem;
+  margin-inline: auto;
+  padding-inline: 1rem;
+}
+
+@utility bg-pattern {
+  background-color: #ffffff;
+  background-image: radial-gradient(#90d01f 0.75px, transparent 0.75px);
+  background-size: 24px 24px;
+  background-position: 0 0;
+}
+
+@utility glass-card {
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(144, 208, 31, 0.22);
+}
+
+@utility custom-shadow {
+  box-shadow:
+    0 12px 32px -6px rgba(9, 9, 11, 0.08),
+    0 4px 12px -2px rgba(144, 208, 31, 0.1);
+}
+
+@utility android-phone-border {
+  border: 10px solid #09090b;
+  border-radius: 40px;
+  box-shadow: 0 25px 50px -12px rgba(9, 9, 11, 0.35);
+}
+
+@utility fade-up {
+  animation: fade-up 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@utility animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+
+@utility animate-pulse-glow {
+  animation: pulse-glow 3s infinite;
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes pulse-glow {
+  0%,
+  100% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.05);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-float,
+  .animate-pulse-glow,
+  .fade-up {
+    animation: none !important;
+  }
+}

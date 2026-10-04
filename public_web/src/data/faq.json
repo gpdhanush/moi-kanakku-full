@@ -1,0 +1,34 @@
+[
+  {
+    "id": "what-is-moi-kanakku",
+    "questionEn": "What is Moi Kanakku?",
+    "questionTa": "Moi Kanakku என்றால் என்ன?",
+    "answerEn": "Moi Kanakku is an Android app for Tamil families to record and manage moi given and received at celebrations — clearly, simply, and for free.",
+    "answerTa": "Moi Kanakku என்பது தமிழ் குடும்ப விழாக்களில் கொடுத்த மற்றும் பெற்ற மொய் தொகைகளை எளிதாகப் பதிவு செய்து நிர்வகிக்க உதவும் Android செயலியாகும் — தெளிவாகவும் இலவசமாகவும்.",
+    "hasReadMore": true
+  },
+  {
+    "id": "given-and-received",
+    "questionEn": "Can I record both Moi given and received?",
+    "questionTa": "கொடுத்த மொய் மற்றும் பெற்ற மொய் இரண்டையும் பதிவு செய்ய முடியுமா?",
+    "answerEn": "Yes. Keep separate logs for amounts you give at others’ functions and amounts you receive at your own celebrations.",
+    "answerTa": "ஆம். மற்றவர் விசேஷங்களுக்குக் கொடுத்த மொய் மற்றும் உங்கள் வீட்டு விசேஷத்தில் பெற்ற மொய் ஆகியவற்றைத் தனித்தனியாகப் பதிவு செய்யலாம்.",
+    "hasReadMore": true
+  },
+  {
+    "id": "android-support",
+    "questionEn": "Which Android phones support the app?",
+    "questionTa": "எந்தெந்த Android போன்களில் இந்தச் செயலி இயங்கும்?",
+    "answerEn": "Moi Kanakku works on Android 7.0 (Nougat) and newer phones. Download it free from Google Play Store.",
+    "answerTa": "Android 7.0 (Nougat) மற்றும் அதற்குப் பிந்தைய போன்களில் இயங்கும். Google Play Store மூலம் இலவசமாகப் பதிவிறக்கலாம்.",
+    "hasReadMore": false
+  },
+  {
+    "id": "is-it-free",
+    "questionEn": "Is the app free or paid?",
+    "questionTa": "இந்தச் செயலி இலவசமா?",
+    "answerEn": "Moi Kanakku is 100% free for everyone — no ads, no subscriptions, and no paid plans.",
+    "answerTa": "Moi Kanakku அனைவருக்கும் 100% இலவசம் — விளம்பரம் இல்லை, சந்தா இல்லை, கட்டண திட்டம் இல்லை.",
+    "hasReadMore": true
+  }
+]
