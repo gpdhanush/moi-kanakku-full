@@ -22,31 +22,55 @@ try {
    and queued requests handling without exhausting cPanel connection limits.
    ========================================================================== */
 
+// const poolConfig = {
+//   host: process.env.DB_HOST || 'localhost',
+//   port: Number(process.env.DB_PORT) || 3306,
+//   user: process.env.DB_USER,
+//   password: process.env.DB_PASSWORD,
+//   database: process.env.DB_NAME,
+
+//   // Connection Pool Limits (Optimized for Shared cPanel Hosting)
+//   waitForConnections: true,
+//   connectionLimit: Number(process.env.DB_CONNECTION_LIMIT) || 10,
+//   maxIdle: Number(process.env.DB_MAX_IDLE) || 10,
+//   idleTimeout: Number(process.env.DB_IDLE_TIMEOUT) || 60000, // 60s idle drop
+//   queueLimit: 0, // Queue requests instead of failing immediately
+
+//   // Socket & TCP Keep-Alive Protection (Prevents cPanel NAT firewall connection drops)
+//   enableKeepAlive: true,
+//   keepAliveInitialDelay: 10000, // 10 seconds
+//   connectTimeout: 10000, // 10 seconds
+
+//   // Dates & Type Handling
+//   dateStrings: true,
+//   supportBigNumbers: true,
+//   bigNumberStrings: true
+// };
+
 const poolConfig = {
-  host: process.env.DB_HOST || 'localhost',
+  host: process.env.DB_HOST || "localhost",
   port: Number(process.env.DB_PORT) || 3306,
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
-  
-  // Connection Pool Limits (Optimized for Shared cPanel Hosting)
+
+  // Connection pool
   waitForConnections: true,
   connectionLimit: Number(process.env.DB_CONNECTION_LIMIT) || 10,
   maxIdle: Number(process.env.DB_MAX_IDLE) || 10,
-  idleTimeout: Number(process.env.DB_IDLE_TIMEOUT) || 60000, // 60s idle drop
-  queueLimit: 0, // Queue requests instead of failing immediately
+  idleTimeout: Number(process.env.DB_IDLE_TIMEOUT) || 60000,
+  queueLimit: 0,
 
-  // Socket & TCP Keep-Alive Protection (Prevents cPanel NAT firewall connection drops)
+  // Connection settings
   enableKeepAlive: true,
-  keepAliveInitialDelay: 10000, // 10 seconds
-  connectTimeout: 10000, // 10 seconds
+  keepAliveInitialDelay: 10000,
+  connectTimeout: 10000,
 
-  // Dates & Type Handling
+  // Data handling
   dateStrings: true,
   supportBigNumbers: true,
-  bigNumberStrings: true
+  bigNumberStrings: true,
 };
-
 const pool = mysql.createPool(poolConfig);
 
 // Monitor connection pool events for diagnostic logging
