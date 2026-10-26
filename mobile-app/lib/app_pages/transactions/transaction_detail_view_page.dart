@@ -75,7 +75,7 @@ class _TransactionDetailViewPageState extends State<TransactionDetailViewPage> {
     final amount = _formatAmount(widget.transaction['amount']);
     final isCustom = _isCustom(widget.transaction['isCustom']);
     final customFunction = _clean(widget.transaction['customFunction']);
-    final accent = isInvest ? AppColors.moiReceived : AppColors.moiGiven;
+    final accent = isInvest ? primary : Colors.red;
 
     final person = widget.transaction['person'] is Map
         ? Map<String, dynamic>.from(widget.transaction['person'] as Map)
@@ -344,29 +344,22 @@ class _AmountHeaderCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final heroBg = isDark ? const Color(0xFF071B18) : const Color(0xFF0E6A5E);
-    final heroSoft = isDark ? const Color(0xFF0D312A) : const Color(0xFF145C4C);
-    final heroFg = isDark ? const Color(0xFFB8FFE8) : Colors.white;
-    final heroMuted = isDark
-        ? const Color(0xFF7EE8C7)
-        : heroFg.withValues(alpha: 0.72);
+    // final isDark = Theme.of(context).brightness == Brightness.dark;
+    final heroBg = accent;
+    final heroSoft = accent;
+    final heroFg = Colors.white;
+    final heroMuted = Colors.white.withValues(alpha: 0.78);
 
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(18),
-        color: isDark ? heroBg : null,
-        gradient: isDark
-            ? null
-            : LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [heroBg, heroSoft, const Color(0xFF0A4F45)],
-              ),
-        border: isDark
-            ? Border.all(color: const Color(0xFF4AF2B6), width: 1.4)
-            : null,
+        color: heroBg,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [heroBg, heroSoft],
+        ),
         boxShadow: [
           BoxShadow(
             color: heroBg.withValues(alpha: 0.32),

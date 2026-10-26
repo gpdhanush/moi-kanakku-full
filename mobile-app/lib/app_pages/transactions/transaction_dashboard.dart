@@ -584,7 +584,8 @@ class _OverviewSearchDelegate extends SliverPersistentHeaderDelegate {
   }
 
   @override
-  bool shouldRebuild(covariant _OverviewSearchDelegate oldDelegate) => false;
+  bool shouldRebuild(covariant _OverviewSearchDelegate oldDelegate) =>
+      oldDelegate.child != child;
 }
 
 class _QuickActionButton extends StatelessWidget {

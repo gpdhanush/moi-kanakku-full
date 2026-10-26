@@ -36,7 +36,9 @@ class MoiInvoiceListTile extends StatelessWidget {
     required Color? accent,
     VoidCallback? onTap,
   }) {
-    final resolvedAccent = accent ?? AppColors.primary;
+    final resolvedAccent = isReceived
+        ? (Colors.green ?? AppColors.moiReceived)
+        : Colors.red;
     return MoiInvoiceListTile(
       key: key,
       title: title,

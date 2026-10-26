@@ -320,7 +320,7 @@ class _TransactionPersonDetailsState extends State<TransactionPersonDetails> {
 
           return MoiInvoiceListTile.moiFlow(
             isReceived: isInvest,
-            accent: Theme.of(context).colorScheme.primary,
+            accent: AppColors.moiReceived,
             title: functionName.toString().toUpperCase(),
             subtitle: subtitleParts.join(' • '),
             amount: amount != null && amount.toString().isNotEmpty
