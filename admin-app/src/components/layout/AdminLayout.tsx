@@ -3,7 +3,12 @@ import { useState, useEffect } from "react";
 import { AdminSidebar } from "./AdminSidebar";
 import { AdminHeader } from "./AdminHeader";
 import { AppFooter } from "./AppFooter";
-import { getCurrentUserAsync, purgeLegacyTokenStorage } from "@/lib/auth";
+import {
+  getAuthToken,
+  getCurrentUserAsync,
+  getRefreshToken,
+  purgeLegacyTokenStorage,
+} from "@/lib/auth";
 import { authApi } from "@/features/auth/api";
 import { useIdleTimeout } from "@/hooks/useIdleTimeout";
 import { Loader2 } from "lucide-react";
@@ -23,18 +28,45 @@ export function AdminLayout() {
     const checkAuth = async () => {
       try {
         purgeLegacyTokenStorage();
-        // Mint access from tab-scoped refresh before probing protected APIs.
+
+        // Cross-origin (admin host ≠ API host): cookies are blocked.
+        // If login already stored a Bearer token in memory, trust it and
+        // skip /admin/session (that call 401s without cookies and is noise).
+        const memoryUser = await getCurrentUserAsync();
+        if (memoryUser?.id && getAuthToken()) {
+          setIsAuth(true);
+          try {
+            const { scheduleAccessTokenRefresh } = await import(
+              "@/lib/sessionKeepAlive"
+            );
+            scheduleAccessTokenRefresh();
+          } catch {
+            // non-fatal
+          }
+          return;
+        }
+
+        // Soft reload: mint access from tab-scoped refresh, then optional session.
         try {
           const { ensureFreshAccessToken } = await import("@/lib/axios");
           await ensureFreshAccessToken(false);
         } catch {
-          // fall through to session / memory checks
+          // fall through
         }
 
-        const restored = await authApi.restoreSession();
-        const user = restored || (await getCurrentUserAsync());
-        setIsAuth(!!user?.id);
-        if (user?.id) {
+        let restored = null;
+        // Only probe cookie session when we still lack a Bearer (same-site deploys).
+        if (!getAuthToken()) {
+          restored = await authApi.restoreSession();
+        }
+
+        const user =
+          restored ||
+          (await getCurrentUserAsync()) ||
+          (getRefreshToken() ? await getCurrentUserAsync() : null);
+        const ok = !!(user?.id && (getAuthToken() || getRefreshToken()));
+        setIsAuth(ok);
+        if (ok) {
           try {
             const { scheduleAccessTokenRefresh } = await import(
               "@/lib/sessionKeepAlive"
@@ -79,15 +111,10 @@ export function AdminLayout() {
           collapsed={collapsed}
           onToggleSidebar={() => setCollapsed((prev) => !prev)}
         />
-        <div className="flex flex-1 flex-col overflow-hidden">
-          <main
-            className="flex-1 overflow-y-scroll overflow-x-hidden p-6"
-            style={{ scrollbarGutter: "stable", minHeight: 0 }}
-          >
-            <Outlet />
-          </main>
-          <AppFooter />
-        </div>
+        <main className="flex-1 overflow-y-auto p-4 md:p-6">
+          <Outlet />
+        </main>
+        <AppFooter />
       </div>
     </div>
   );

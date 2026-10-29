@@ -71,4 +71,19 @@ describe('admin auth storage (cookie + tab session)', () => {
     expect(getRefreshToken()).toBeNull();
     expect(sessionStorage.getItem('__moi_admin_rt')).toBeNull();
   });
+
+  it('does not wipe existing access token when persist omits tokens', async () => {
+    await persistAdminSession({
+      user: { id: '1', name: 'A', email: 'a@b.com' },
+      accessToken: 'keep-me',
+      refreshToken: 'keep-rt',
+    });
+    await persistAdminSession({
+      user: { id: '1', name: 'A', email: 'a@b.com' },
+      csrfToken: 'new-csrf',
+    });
+    expect(getAuthToken()).toBe('keep-me');
+    expect(getRefreshToken()).toBe('keep-rt');
+    expect(getCsrfToken()).toBe('new-csrf');
+  });
 });

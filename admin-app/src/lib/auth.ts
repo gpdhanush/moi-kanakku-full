@@ -218,12 +218,16 @@ export async function persistAdminSession(options: {
   };
   writeSession(USER_SESSION_KEY, JSON.stringify(memoryUser));
 
+  // Only overwrite tokens when a non-empty value is provided — never wipe
+  // an existing Bearer session with null (e.g. cookie-only session JSON).
   const access =
     options.accessToken ||
     options.token ||
     (typeof accessFromUser === 'string' ? accessFromUser : null) ||
     (typeof tokenFromUser === 'string' ? tokenFromUser : null);
-  memoryAccessToken = access && String(access).trim() ? String(access) : null;
+  if (access && String(access).trim()) {
+    memoryAccessToken = String(access);
+  }
 
   const refresh =
     options.refreshToken ||
@@ -233,10 +237,12 @@ export async function persistAdminSession(options: {
     writeSession(REFRESH_SESSION_KEY, memoryRefreshToken);
   }
 
-  setCsrfToken(
+  const csrf =
     options.csrfToken ??
-      (typeof csrfFromUser === 'string' ? csrfFromUser : null),
-  );
+    (typeof csrfFromUser === 'string' ? csrfFromUser : null);
+  if (csrf != null && String(csrf).trim()) {
+    setCsrfToken(String(csrf));
+  }
 }
 
 export async function forceLogout(reason?: string): Promise<void> {

@@ -2220,9 +2220,15 @@ exports.userController = {
       });
 
       // Cookies + JSON JWTs (cross-origin SPA needs Bearer when 3P cookies blocked).
+      // Explicitly re-attach tokens so an outdated publicAdminSessionPayload
+      // that strips secrets cannot break production admin login.
+      const sessionPayload = publicAdminSessionPayload(response, csrfToken);
+      sessionPayload.accessToken = accessToken;
+      sessionPayload.token = accessToken;
+      sessionPayload.refreshToken = refreshToken;
       return res.status(200).json({
         responseType: "S",
-        responseValue: publicAdminSessionPayload(response, csrfToken),
+        responseValue: sessionPayload,
       });
     } catch (error) {
       logger.error("Error during admin login:", error);
@@ -2277,23 +2283,27 @@ exports.userController = {
 
       // Return JWTs in JSON for cross-origin SPA memory (cookies alone are
       // often blocked third-party). Client must not write them to localStorage.
+      const sessionPayload = publicAdminSessionPayload(
+        {
+          id: admin.id,
+          full_name: admin.full_name,
+          name: admin.full_name,
+          email: admin.email,
+          mobile: admin.mobile,
+          status: admin.status,
+          last_login_at: admin.last_login_at || now,
+          token: pair.accessToken,
+          accessToken: pair.accessToken,
+          refreshToken: pair.refreshToken,
+        },
+        csrfToken,
+      );
+      sessionPayload.accessToken = pair.accessToken;
+      sessionPayload.token = pair.accessToken;
+      sessionPayload.refreshToken = pair.refreshToken;
       return res.status(200).json({
         responseType: "S",
-        responseValue: publicAdminSessionPayload(
-          {
-            id: admin.id,
-            full_name: admin.full_name,
-            name: admin.full_name,
-            email: admin.email,
-            mobile: admin.mobile,
-            status: admin.status,
-            last_login_at: admin.last_login_at || now,
-            token: pair.accessToken,
-            accessToken: pair.accessToken,
-            refreshToken: pair.refreshToken,
-          },
-          csrfToken,
-        ),
+        responseValue: sessionPayload,
       });
     } catch (error) {
       const expired = error?.name === "TokenExpiredError";

@@ -58,7 +58,18 @@ function testRefreshFromCookie() {
   assert.strictEqual(source, "cookie");
 }
 
+function testPublicPayloadDoesNotStripWhenTokensPresent() {
+  const out = publicAdminSessionPayload(
+    { id: 2, token: "t", accessToken: "t", refreshToken: "r" },
+    "c",
+  );
+  assert.ok(out.accessToken, "accessToken must remain in JSON for cross-origin SPA");
+  assert.ok(out.refreshToken, "refreshToken must remain in JSON for cross-origin SPA");
+  assert.strictEqual(out.csrfToken, "c");
+}
+
 testPublicPayloadIncludesMemoryTokens();
+testPublicPayloadDoesNotStripWhenTokensPresent();
 testExtractPrefersBearer();
 testExtractFallsBackToCookie();
 testRefreshFromCookie();

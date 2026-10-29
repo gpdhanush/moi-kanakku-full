@@ -93,13 +93,24 @@ export default function Login() {
   useEffect(() => {
     const redirectIfAuthed = async () => {
       purgeLegacyTokenStorage();
+      const { getAuthToken, getRefreshToken } = await import("@/lib/auth");
+      if ((await getCurrentUserAsync())?.id && getAuthToken()) {
+        navigate("/dashboard", { replace: true });
+        return;
+      }
       try {
         const { ensureFreshAccessToken } = await import("@/lib/axios");
         await ensureFreshAccessToken(false);
       } catch {
         // no tab refresh / cookies — stay on login
       }
-      const restored = await authApi.restoreSession();
+      if (!getAuthToken() && !getRefreshToken()) {
+        // Cross-origin: /admin/session will 401 without cookies — skip probe.
+        return;
+      }
+      const restored = getAuthToken()
+        ? await getCurrentUserAsync()
+        : await authApi.restoreSession();
       if (restored || (await getCurrentUserAsync())) {
         navigate("/dashboard", { replace: true });
       }
@@ -215,7 +226,7 @@ export default function Login() {
       const result = await authApi.login(trimmed, password);
       clearMfaPendingLogin();
 
-      if (!result.mfaRequired) {
+      if (result.mfaRequired === false) {
         await persistAdminSession({
           user: result.user,
           csrfToken: result.csrfToken,

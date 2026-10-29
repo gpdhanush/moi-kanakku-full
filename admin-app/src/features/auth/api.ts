@@ -213,6 +213,14 @@ export const authApi = {
       const refreshToken = value.refreshToken
         ? String(value.refreshToken)
         : undefined;
+      // Cross-origin admin SPA cannot rely on cookies — Bearer is required.
+      if (!accessToken) {
+        throw new AuthLoginError({
+          message:
+            'API login response has no accessToken (server still on cookie-only auth). Upload/restart the backend from the latest branch, then try again.',
+          status: 500,
+        });
+      }
       return {
         mfaRequired: false,
         csrfToken,
@@ -255,19 +263,24 @@ export const authApi = {
       const value = data.responseValue || {};
       const user = normalizeUser(value);
       if (!user.id) return null;
+      const accessToken = value.accessToken || value.token
+        ? String(value.accessToken || value.token)
+        : undefined;
+      const refreshToken = value.refreshToken
+        ? String(value.refreshToken)
+        : undefined;
       await persistAdminSession({
         user,
-        csrfToken: value.csrfToken ? String(value.csrfToken) : null,
-        accessToken: value.accessToken || value.token
-          ? String(value.accessToken || value.token)
-          : null,
-        refreshToken: value.refreshToken
-          ? String(value.refreshToken)
-          : null,
+        ...(value.csrfToken
+          ? { csrfToken: String(value.csrfToken) }
+          : {}),
+        ...(accessToken ? { accessToken } : {}),
+        ...(refreshToken ? { refreshToken } : {}),
       });
       return user;
     } catch {
-      // Network/CORS/503 while API is down — treat as logged out, stay on login.
+      // Cookie session unavailable (common cross-origin) — caller may still
+      // have an in-memory Bearer from login / refresh.
       return null;
     }
   },
