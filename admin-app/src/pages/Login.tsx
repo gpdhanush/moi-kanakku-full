@@ -426,6 +426,8 @@ export default function Login() {
                   id="identifier"
                   fieldName="Identifier"
                   type="text"
+                  name="username"
+                  autoComplete="username"
                   placeholder="admin@example.com or mobile"
                   className="pl-10 pr-10"
                   value={identifier}
@@ -454,6 +456,8 @@ export default function Login() {
                   id="password"
                   fieldName="Password"
                   type={showPassword ? "text" : "password"}
+                  name="password"
+                  autoComplete="current-password"
                   placeholder="••••••••"
                   className="pl-10 pr-10"
                   value={password}

@@ -1,11 +1,24 @@
 const express = require("express");
 const cors = require("cors");
-const cookieParser = require("cookie-parser");
 const helmet = require("helmet");
 const morgan = require("morgan");
 const cron = require("node-cron");
 const path = require("path");
 require("dotenv").config();
+
+// Optional until production runs `npm install` after deploy.
+let cookieParser;
+try {
+  cookieParser = require("cookie-parser");
+} catch (err) {
+  console.error(
+    "cookie-parser is not installed. Run npm install in backend/. Cookie auth disabled until then.",
+  );
+  cookieParser = () => (req, _res, next) => {
+    req.cookies = req.cookies || {};
+    next();
+  };
+}
 
 const routes = require("./src/routes");
 const healthRoutes = require("./src/routes/health");
@@ -48,41 +61,55 @@ process.on("uncaughtException", (err) => {
 ========================= */
 
 // CORS Configuration (placed first so preflight OPTIONS requests are answered before security headers)
-// IMPORTANT: With credentials:true, do NOT reflect/allow arbitrary origins (required for cookie auth).
+// IMPORTANT: With credentials:true, never use callback(new Error(...)) — that yields 500s without
+// Access-Control-Allow-Origin and the browser reports a misleading CORS failure.
+function isLocalDevOrigin(origin) {
+  try {
+    const url = new URL(origin);
+    return (
+      url.hostname === "localhost" ||
+      url.hostname === "127.0.0.1" ||
+      url.hostname === "[::1]"
+    );
+  } catch {
+    return (
+      typeof origin === "string" &&
+      (origin.includes("localhost") || origin.includes("127.0.0.1"))
+    );
+  }
+}
+
+function isAllowedCorsOrigin(origin) {
+  if (!origin) return true;
+  if (isLocalDevOrigin(origin)) return true;
+
+  const originsList = process.env.ALLOWED_ORIGINS
+    ? process.env.ALLOWED_ORIGINS.split(",").map((o) => o.trim()).filter(Boolean)
+    : [];
+
+  if (originsList.includes(origin)) return true;
+
+  // Explicit wildcard only outside production (incompatible with credentialed cookies).
+  if (originsList.includes("*") && process.env.NODE_ENV !== "production") {
+    return true;
+  }
+
+  // Dev server with no allowlist configured.
+  if (originsList.length === 0 && process.env.NODE_ENV !== "production") {
+    return true;
+  }
+
+  return false;
+}
+
 const corsOptions = {
   origin: (origin, callback) => {
-    // Allow requests with no origin (mobile apps, cURL, Postman)
-    if (!origin) return callback(null, true);
-
-    const originsList = process.env.ALLOWED_ORIGINS
-      ? process.env.ALLOWED_ORIGINS.split(",").map((o) => o.trim()).filter(Boolean)
-      : [];
-
-    const isLocalhost =
-      origin.includes("localhost") || origin.includes("127.0.0.1");
-
-    if (isLocalhost) {
-      return callback(null, true);
+    // Reflect allowed origin (required when credentials: true). Never throw.
+    if (isAllowedCorsOrigin(origin)) {
+      return callback(null, origin || true);
     }
-
-    if (originsList.includes("*")) {
-      // Wildcard is incompatible with credentialed cookies — reject in production cookie mode.
-      if (process.env.NODE_ENV === "production") {
-        return callback(new Error(`CORS blocked origin: ${origin}`));
-      }
-      return callback(null, true);
-    }
-
-    if (originsList.length > 0 && originsList.includes(origin)) {
-      return callback(null, true);
-    }
-
-    // Dev fallback when ALLOWED_ORIGINS is unset: allow (Bearer-only clients).
-    if (originsList.length === 0 && process.env.NODE_ENV !== "production") {
-      return callback(null, true);
-    }
-
-    return callback(new Error(`CORS blocked origin: ${origin}`));
+    logger.warn("CORS blocked origin", { origin });
+    return callback(null, false);
   },
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
@@ -97,6 +124,7 @@ const corsOptions = {
     "X-CSRF-Token",
     "x-csrf-token",
   ],
+  optionsSuccessStatus: 204,
 };
 
 app.use(cors(corsOptions));

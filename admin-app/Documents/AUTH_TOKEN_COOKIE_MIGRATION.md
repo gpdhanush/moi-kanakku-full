@@ -38,10 +38,24 @@
 
 ## 3. Deploy requirements
 
-1. Set `ALLOWED_ORIGINS` to the exact admin SPA origin(s) (comma-separated). **Required in production** with cookies.
-2. HTTPS in production (`Secure` cookies; `SameSite=None` default when `NODE_ENV=production`).
-3. Optional: `COOKIE_SAMESITE=lax` for same-site admin+API; `COOKIE_SECURE=true` to force Secure.
-4. Redeploy **backend then admin-app**. Users must log in again (legacy localStorage tokens purged).
+1. On the API host after pulling backend changes: `npm install` (needs `cookie-parser`) then restart Node. A missing install crashes the app → **503** from LiteSpeed with **no CORS headers** (browser shows a fake “CORS blocked” error).
+2. Set `ALLOWED_ORIGINS` to the exact admin SPA origin(s), e.g.  
+   `https://gp.prasowlabs.in,http://localhost:8080`  
+   Localhost is also allowed by code for local Vite → production API testing.
+3. HTTPS in production (`Secure` cookies; `SameSite=None` default when `NODE_ENV=production`).
+4. Optional: `COOKIE_SAMESITE=lax` for same-site admin+API; `COOKIE_SECURE=true` to force Secure.
+5. Redeploy **backend then admin-app**. Users must log in again (legacy localStorage tokens purged).
+
+### Diagnose “CORS” vs real outage
+
+```bash
+curl -sI -X OPTIONS 'https://moi-api.floatwalktiruppur.in/apis/users/admin/login' \
+  -H 'Origin: http://localhost:8080' \
+  -H 'Access-Control-Request-Method: POST'
+```
+
+- `503` + HTML, no `access-control-allow-origin` → API process is down (install/restart).
+- `204`/`200` with `access-control-allow-origin: http://localhost:8080` → CORS OK.
 
 ## 4. Remaining risks
 

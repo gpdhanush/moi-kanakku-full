@@ -247,6 +247,7 @@ export const authApi = {
       });
       return user;
     } catch {
+      // Network/CORS/503 while API is down — treat as logged out, stay on login.
       return null;
     }
   },
