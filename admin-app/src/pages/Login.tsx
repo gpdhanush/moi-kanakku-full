@@ -26,14 +26,11 @@ import {
 import { authApi, AuthLoginError } from "@/features/auth/api";
 import { toast } from "@/hooks/use-toast";
 import {
-  initializeSecureStorage,
-} from "@/lib/secureStorage";
-import {
-  getAuthTokenAsync,
   getCurrentUserAsync,
   persistAdminSession,
   setMfaPendingLogin,
   clearMfaPendingLogin,
+  purgeLegacyTokenStorage,
 } from "@/lib/auth";
 import { ENV_CONFIG } from "@/lib/config";
 import { cn } from "@/lib/utils";
@@ -95,10 +92,9 @@ export default function Login() {
 
   useEffect(() => {
     const redirectIfAuthed = async () => {
-      await initializeSecureStorage();
-      const token = await getAuthTokenAsync();
-      const user = await getCurrentUserAsync();
-      if (token && user) {
+      purgeLegacyTokenStorage();
+      const restored = await authApi.restoreSession();
+      if (restored || (await getCurrentUserAsync())) {
         navigate("/dashboard", { replace: true });
       }
     };
@@ -213,11 +209,10 @@ export default function Login() {
       const result = await authApi.login(trimmed, password);
       clearMfaPendingLogin();
 
-      if ("token" in result) {
+      if (!result.mfaRequired) {
         await persistAdminSession({
-          token: result.token,
           user: result.user,
-          refreshToken: result.refreshToken,
+          csrfToken: result.csrfToken,
         });
         storeBlockUntil(null);
         setBlockedUntil(null);

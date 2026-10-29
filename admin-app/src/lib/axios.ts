@@ -1,8 +1,7 @@
 import axios, { AxiosError, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 import { API_CONFIG } from './config';
-import { secureStorageWithCache, getItemSync } from './secureStorage';
 import { logger } from './logger';
-import { forceLogout } from './auth';
+import { forceLogout, getCsrfToken, persistAdminSession, setCsrfToken } from './auth';
 import { handleApiError } from './errorHandler';
 import { startApiLoading, stopApiLoading } from './apiLoading';
 
@@ -38,42 +37,34 @@ function isAdminLoginRequest(config?: InternalAxiosRequestConfig): boolean {
   return url.includes('/users/admin/login');
 }
 
-let refreshPromise: Promise<string> | null = null;
+let refreshPromise: Promise<void> | null = null;
 
-async function persistTokens(accessToken: string, refreshToken?: string) {
-  await secureStorageWithCache.setItem('auth_token', accessToken);
-  if (refreshToken) {
-    await secureStorageWithCache.setItem('refresh_token', refreshToken);
-  }
-}
-
-async function refreshAccessToken(): Promise<string> {
+/**
+ * Rotate admin session using HttpOnly refresh cookie (no token in JS storage).
+ */
+async function refreshAccessToken(): Promise<void> {
   if (refreshPromise) return refreshPromise;
 
   refreshPromise = (async () => {
-    let refreshToken = getItemSync('refresh_token');
-    if (!refreshToken) {
-      refreshToken = await secureStorageWithCache.getItem('refresh_token');
-    }
-    if (!refreshToken) {
-      throw new Error('No refresh token');
-    }
-
     const response = await axios.post(
       `${API_CONFIG.BASE_URL}/users/admin/refresh`,
-      { refreshToken },
+      {},
       {
         headers: { 'Content-Type': 'application/json' },
         timeout: 30000,
+        withCredentials: true,
       }
     );
 
     const data = response.data as {
       responseType?: string;
       responseValue?: {
-        token?: string;
-        accessToken?: string;
-        refreshToken?: string;
+        csrfToken?: string;
+        id?: string | number;
+        name?: string;
+        full_name?: string;
+        email?: string;
+        [key: string]: unknown;
       };
     };
 
@@ -82,13 +73,15 @@ async function refreshAccessToken(): Promise<string> {
     }
 
     const value = data.responseValue || {};
-    const accessToken = String(value.accessToken || value.token || '');
-    if (!accessToken) {
-      throw new Error('Refresh returned no access token');
+    if (value.csrfToken) {
+      setCsrfToken(String(value.csrfToken));
     }
-
-    await persistTokens(accessToken, value.refreshToken);
-    return accessToken;
+    if (value.id != null) {
+      await persistAdminSession({
+        user: value,
+        csrfToken: value.csrfToken ? String(value.csrfToken) : null,
+      });
+    }
   })().finally(() => {
     refreshPromise = null;
   });
@@ -102,6 +95,7 @@ export const apiClient = axios.create({
     'Content-Type': 'application/json',
   },
   timeout: 30000,
+  withCredentials: true,
 });
 
 apiClient.interceptors.request.use(
@@ -111,17 +105,18 @@ apiClient.interceptors.request.use(
       config._loadingStarted = true;
     }
 
-    if (!isAuthFreeRequest(config)) {
-      let token = getItemSync('auth_token');
-      if (!token) {
-        token = await secureStorageWithCache.getItem('auth_token');
-      }
-
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
-    } else if (config.headers) {
+    // Cookie session: never attach Authorization Bearer from localStorage.
+    if (config.headers) {
       delete config.headers.Authorization;
+    }
+
+    const method = String(config.method || 'get').toUpperCase();
+    const needsCsrf = !['GET', 'HEAD', 'OPTIONS'].includes(method);
+    if (needsCsrf && !isAuthFreeRequest(config)) {
+      const csrf = getCsrfToken();
+      if (csrf) {
+        config.headers['X-CSRF-Token'] = csrf;
+      }
     }
 
     if (config.data instanceof FormData) {
@@ -156,13 +151,11 @@ apiClient.interceptors.response.use(
 
     if (status === 401 && config && !isAuthFreeRequest(config) && !config._retry) {
       try {
-        const newToken = await refreshAccessToken();
+        await refreshAccessToken();
         config._retry = true;
-        config.headers = config.headers || {};
-        config.headers.Authorization = `Bearer ${newToken}`;
         return apiClient(config);
       } catch (refreshError) {
-        logger.warn('Admin token refresh failed', refreshError);
+        logger.warn('Admin token refresh failed');
       }
     }
 

@@ -3,8 +3,8 @@ import { useState, useEffect } from "react";
 import { AdminSidebar } from "./AdminSidebar";
 import { AdminHeader } from "./AdminHeader";
 import { AppFooter } from "./AppFooter";
-import { getCurrentUserAsync, getAuthTokenAsync } from "@/lib/auth";
-import { initializeSecureStorage } from "@/lib/secureStorage";
+import { getCurrentUserAsync, purgeLegacyTokenStorage } from "@/lib/auth";
+import { authApi } from "@/features/auth/api";
 import { useIdleTimeout } from "@/hooks/useIdleTimeout";
 import { Loader2 } from "lucide-react";
 import { logger } from "@/lib/logger";
@@ -22,10 +22,11 @@ export function AdminLayout() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        await initializeSecureStorage();
-        const token = await getAuthTokenAsync();
-        const user = await getCurrentUserAsync();
-        setIsAuth(!!(token && user));
+        purgeLegacyTokenStorage();
+        // Prefer cookie session restore; fall back to in-memory user (same tab).
+        const restored = await authApi.restoreSession();
+        const user = restored || (await getCurrentUserAsync());
+        setIsAuth(!!user?.id);
       } catch (error) {
         logger.error("Authentication check failed:", error);
         setIsAuth(false);

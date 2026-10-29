@@ -17,8 +17,9 @@ const String appName = "Moi Kanakku";
 String appVersion = "";
 const String appPackageName = "com.renzo.moi";
 
-// Global variables - DEPRECATED: Use UserProvider instead
-// Kept for backward compatibility during migration
+// Global variables - DEPRECATED: Use UserProvider + SecureStorageService instead.
+// Do not persist credentials here. jwtToken is cleared on session wipe and must
+// never be written from new code — prefer UserProvider.jwtToken / getToken().
 List<dynamic> userDetails = [];
 Map<String, dynamic> deviceInfo = {};
 String? jwtToken;

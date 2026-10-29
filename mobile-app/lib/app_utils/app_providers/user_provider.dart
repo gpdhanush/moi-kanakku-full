@@ -152,11 +152,14 @@ class UserProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Update JWT token
+  /// Update JWT token. Pass null to remove the persisted credential.
   Future<void> updateJwtToken(String? token) async {
     _jwtToken = token;
-    if (token != null) {
+    if (token != null && token.isNotEmpty) {
       await _secureStorage.saveToken(token);
+    } else {
+      await _secureStorage.deleteToken();
+      _jwtToken = null;
     }
     notifyListeners();
   }

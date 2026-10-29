@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+const cookieParser = require("cookie-parser");
 const helmet = require("helmet");
 const morgan = require("morgan");
 const cron = require("node-cron");
@@ -47,45 +48,61 @@ process.on("uncaughtException", (err) => {
 ========================= */
 
 // CORS Configuration (placed first so preflight OPTIONS requests are answered before security headers)
-app.use(
-  cors({
-    origin: (origin, callback) => {
-      // Allow requests with no origin (mobile apps, cURL, Postman)
-      if (!origin) return callback(null, true);
+// IMPORTANT: With credentials:true, do NOT reflect/allow arbitrary origins (required for cookie auth).
+const corsOptions = {
+  origin: (origin, callback) => {
+    // Allow requests with no origin (mobile apps, cURL, Postman)
+    if (!origin) return callback(null, true);
 
-      const originsList = process.env.ALLOWED_ORIGINS
-        ? process.env.ALLOWED_ORIGINS.split(",").map((o) => o.trim())
-        : [];
+    const originsList = process.env.ALLOWED_ORIGINS
+      ? process.env.ALLOWED_ORIGINS.split(",").map((o) => o.trim()).filter(Boolean)
+      : [];
 
-      const isLocalhost = origin.includes("localhost") || origin.includes("127.0.0.1");
+    const isLocalhost =
+      origin.includes("localhost") || origin.includes("127.0.0.1");
 
-      if (
-        originsList.length === 0 ||
-        originsList.includes("*") ||
-        originsList.includes(origin) ||
-        isLocalhost
-      ) {
-        return callback(null, true);
-      }
-
+    if (isLocalhost) {
       return callback(null, true);
-    },
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-    allowedHeaders: [
-      "Origin",
-      "X-Requested-With",
-      "Content-Type",
-      "Accept",
-      "Authorization",
-      "X-API-Key",
-      "x-api-key"
-    ],
-  }),
-);
+    }
+
+    if (originsList.includes("*")) {
+      // Wildcard is incompatible with credentialed cookies — reject in production cookie mode.
+      if (process.env.NODE_ENV === "production") {
+        return callback(new Error(`CORS blocked origin: ${origin}`));
+      }
+      return callback(null, true);
+    }
+
+    if (originsList.length > 0 && originsList.includes(origin)) {
+      return callback(null, true);
+    }
+
+    // Dev fallback when ALLOWED_ORIGINS is unset: allow (Bearer-only clients).
+    if (originsList.length === 0 && process.env.NODE_ENV !== "production") {
+      return callback(null, true);
+    }
+
+    return callback(new Error(`CORS blocked origin: ${origin}`));
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+  allowedHeaders: [
+    "Origin",
+    "X-Requested-With",
+    "Content-Type",
+    "Accept",
+    "Authorization",
+    "X-API-Key",
+    "x-api-key",
+    "X-CSRF-Token",
+    "x-csrf-token",
+  ],
+};
+
+app.use(cors(corsOptions));
 
 // Handle preflight OPTIONS requests for all routes
-app.options("*", cors());
+app.options("*", cors(corsOptions));
 
 // Secure headers — allow uploaded images/files to be embedded by the admin
 // app and other allowed frontends (default CORP "same-origin" blocks <img>).
@@ -103,6 +120,7 @@ app.use(morgan("dev"));
 // Increase payload size for bulk endpoints (default is 100kb)
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(cookieParser());
 
 /* =========================
    STATIC UPLOAD DIRECTORY

@@ -6,9 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Camera, X, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getImageUrl } from '@/lib/imageUtils';
-import { API_CONFIG } from '@/lib/config';
 import { logger } from '@/lib/logger';
-import { getItemSync, secureStorageWithCache } from '@/lib/secureStorage';
 
 interface ProfilePhotoUploadProps {
   value?: string;
@@ -27,7 +25,6 @@ export function ProfilePhotoUpload({
   size = 'lg',
   name = ''
 }: ProfilePhotoUploadProps) {
-  const API_BASE_URL = API_CONFIG.BASE_URL;
   const [imageSrc, setImageSrc] = useState<string | null>(getImageUrl(value) || null);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
@@ -202,20 +199,9 @@ export function ProfilePhotoUpload({
       const formData = new FormData();
       formData.append('file', croppedImage, 'profile-photo.jpg');
 
-      // Get token from secure storage
-      let token = getItemSync('auth_token');
-      if (!token) {
-        token = await secureStorageWithCache.getItem('auth_token');
-      }
-      
-      const headers: HeadersInit = {
-        'Authorization': `Bearer ${token || ''}`,
-      };
-      
-      const response = await fetch(`${API_BASE_URL}/employees/upload-profile-photo`, {
+      const { credentialedFetch } = await import('@/lib/credentialedFetch');
+      const response = await credentialedFetch('/employees/upload-profile-photo', {
         method: 'POST',
-        headers,
-        credentials: 'include',
         body: formData,
       });
 

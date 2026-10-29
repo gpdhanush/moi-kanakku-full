@@ -2,7 +2,6 @@ import { FileText, Eye, Download, Image as ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getImageUrl } from "@/lib/imageUtils";
 import { API_CONFIG } from "@/lib/config";
-import { getAuthToken } from "@/lib/auth";
 
 interface Attachment {
   id: number;
@@ -75,18 +74,14 @@ export function AttachmentList({
     const bugPathMatch = attachment.path?.match(/\/bugs\/(\d+)\/attachments\/(\d+)/);
     if (bugPathMatch) {
       try {
-        const API_BASE_URL = API_CONFIG.BASE_URL;
-        const token = getAuthToken();
         const bugId = bugPathMatch[1];
         const attachmentId = bugPathMatch[2];
         
         if (bugId && attachmentId) {
-          const downloadUrl = `${API_BASE_URL}/bugs/${bugId}/attachments/${attachmentId}`;
-          const headers: HeadersInit = {
-            'Authorization': `Bearer ${token}`,
-          };
-          
-          const response = await fetch(downloadUrl, { headers });
+          const { credentialedFetch } = await import('@/lib/credentialedFetch');
+          const response = await credentialedFetch(
+            `/bugs/${bugId}/attachments/${attachmentId}`
+          );
           
           if (!response.ok) {
             throw new Error('Failed to download attachment');

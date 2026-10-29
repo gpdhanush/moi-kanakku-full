@@ -8,10 +8,9 @@ import { HelmetProvider } from "react-helmet-async";
 import { AdminLayout } from "./components/layout/AdminLayout";
 import { LoadingProvider, useLoading } from "./contexts/LoadingContext";
 import ErrorBoundary from "./components/ErrorBoundary";
-import { logger } from "./lib/logger";
 import { queryClient } from "./lib/queryClient";
 import { useEffect, lazy } from "react";
-import { initializeSecureStorage } from "@/lib/secureStorage";
+import { purgeLegacyTokenStorage } from "@/lib/auth";
 import { registerLoadingCallback } from "@/lib/apiLoading";
 import { LazyRoute } from "./components/LazyRoute";
 import { ENV_CONFIG } from "./lib/config";
@@ -41,9 +40,8 @@ const AppContent = () => {
   const { setLoading } = useLoading();
 
   useEffect(() => {
-    initializeSecureStorage().catch((error) => {
-      logger.error("Failed to initialize secure storage:", error);
-    });
+    // Migrate away from legacy JWT localStorage / secureStorage token blobs.
+    purgeLegacyTokenStorage();
   }, []);
 
   useEffect(() => {

@@ -7,12 +7,13 @@
     "start": "node app.js",
     "dev": "nodemon app.js",
     "debug": "node --inspect app.js",
-    "test": "node src/helpers/deviceInstallStatus.test.js"
+    "test": "node src/helpers/deviceInstallStatus.test.js && node src/middlewares/adminCookieAuth.test.js"
   },
   "author": "gpdhanush",
   "license": "ISC",
   "dependencies": {
     "bcryptjs": "^2.4.3",
+    "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",

@@ -7,13 +7,24 @@ void main() {
       'email': 'a@b.com',
       'password': 'secret',
       'token': 'jwt-value',
+      'idToken': 'google-token',
+      'sessionToken': 'session',
       'nested': {'otp': '123456'},
     }) as Map;
 
     expect(redacted['email'], 'a@b.com');
     expect(redacted['password'], '***');
     expect(redacted['token'], '***');
+    expect(redacted['idToken'], '***');
+    expect(redacted['sessionToken'], '***');
     expect((redacted['nested'] as Map)['otp'], '***');
+  });
+
+  test('redacts raw JWT-looking strings', () {
+    final redacted = redactSensitive(
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.payload.signature',
+    );
+    expect(redacted, '***');
   });
 
   test('redacts authorization headers', () {

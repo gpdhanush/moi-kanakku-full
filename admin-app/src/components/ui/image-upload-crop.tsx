@@ -7,7 +7,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Upload, X, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getImageUrl } from '@/lib/imageUtils';
-import { API_CONFIG } from '@/lib/config';
 import { logger } from '@/lib/logger';
 
 interface ImageUploadCropProps {
@@ -19,7 +18,6 @@ interface ImageUploadCropProps {
 }
 
 export function ImageUploadCrop({ value, onChange, aspect = 1, className, disabled }: ImageUploadCropProps) {
-  const API_BASE_URL = API_CONFIG.BASE_URL;
   const [imageSrc, setImageSrc] = useState<string | null>(getImageUrl(value) || null);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
@@ -120,36 +118,9 @@ export function ImageUploadCrop({ value, onChange, aspect = 1, className, disabl
       const formData = new FormData();
       formData.append('file', croppedImage, 'profile-photo.jpg');
 
-      // Get token and user from secure storage
-      const { getItemSync, secureStorageWithCache } = await import('@/lib/secureStorage');
-      let token = getItemSync('auth_token');
-      let userStr = getItemSync('user');
-      
-      if (!token) {
-        token = await secureStorageWithCache.getItem('auth_token');
-      }
-      if (!userStr) {
-        userStr = await secureStorageWithCache.getItem('user');
-      }
-      
-      let userId = null;
-      if (userStr) {
-        try {
-          const user = JSON.parse(userStr);
-          userId = user.id;
-        } catch (e) {
-          logger.error('Error parsing user:', e);
-        }
-      }
-      
-      const headers: HeadersInit = {
-        'Authorization': `Bearer ${token || ''}`,
-      };
-      // Note: user-id header removed - user ID is now in JWT token payload
-      
-      const response = await fetch(`${API_BASE_URL}/employees/upload-profile-photo`, {
+      const { credentialedFetch } = await import('@/lib/credentialedFetch');
+      const response = await credentialedFetch('/employees/upload-profile-photo', {
         method: 'POST',
-        headers,
         body: formData,
       });
 

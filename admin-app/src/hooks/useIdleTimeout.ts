@@ -1,7 +1,7 @@
 import { useEffect, useRef, useCallback, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
-import { clearAuth } from "@/lib/auth";
+import { authApi } from "@/features/auth/api";
 import { toast } from "@/hooks/use-toast";
 import {
   getSessionTimeout,
@@ -48,7 +48,7 @@ export function useIdleTimeout({ enabled = true }: UseIdleTimeoutOptions = {}) {
 
   const logout = useCallback(async () => {
     clearTimers();
-    await clearAuth();
+    await authApi.logout();
     queryClient.clear();
     toast({
       title: "Session Expired",

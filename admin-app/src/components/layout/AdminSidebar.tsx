@@ -22,7 +22,8 @@ import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { getCurrentUser, clearAuth } from "@/lib/auth";
+import { getCurrentUser } from "@/lib/auth";
+import { authApi } from "@/features/auth/api";
 import { ENV_CONFIG } from "@/lib/config";
 import {
   AlertDialog,
@@ -119,7 +120,7 @@ export function AdminSidebar({ collapsed, onCollapsedChange }: AdminSidebarProps
   };
 
   const handleLogout = async () => {
-    await clearAuth();
+    await authApi.logout();
     queryClient.clear();
     navigate("/login");
   };

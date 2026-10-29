@@ -109,7 +109,7 @@ export function MarkdownRenderer({ content, className = "" }: MarkdownRendererPr
 
   const processInlineMarkdown = (text: string): React.ReactNode[] => {
     const parts: React.ReactNode[] = [];
-    let currentIndex = 0;
+    const currentIndex = 0;
     let key = 0;
 
     // Process images ![alt](url)
@@ -125,18 +125,21 @@ export function MarkdownRenderer({ content, className = "" }: MarkdownRendererPr
         key += 1000;
       }
 
-      // Add image
-      parts.push(
-        <img
-          key={`img-${key++}`}
-          src={match[2]}
-          alt={match[1]}
-          className="max-w-full h-auto rounded-md my-2"
-          onError={(e) => {
-            (e.target as HTMLImageElement).style.display = "none";
-          }}
-        />
-      );
+      // Add image (http/https only — block javascript: and data: XSS vectors)
+      const imageSrc = match[2];
+      if (/^https?:\/\//i.test(imageSrc)) {
+        parts.push(
+          <img
+            key={`img-${key++}`}
+            src={imageSrc}
+            alt={match[1]}
+            className="max-w-full h-auto rounded-md my-2"
+            onError={(e) => {
+              (e.target as HTMLImageElement).style.display = "none";
+            }}
+          />
+        );
+      }
 
       lastIndex = match.index + match[0].length;
     }
@@ -153,7 +156,7 @@ export function MarkdownRenderer({ content, className = "" }: MarkdownRendererPr
   const processTextFormatting = (text: string, startKey: number): React.ReactNode[] => {
     const parts: React.ReactNode[] = [];
     let key = startKey;
-    let currentIndex = 0;
+    const currentIndex = 0;
 
     // Process links [text](url)
     const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
@@ -168,18 +171,25 @@ export function MarkdownRenderer({ content, className = "" }: MarkdownRendererPr
         key += 100;
       }
 
-      // Add link
-      parts.push(
-        <a
-          key={`link-${key++}`}
-          href={match[2]}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-primary hover:underline"
-        >
-          {match[1]}
-        </a>
-      );
+      // Add link (http/https only)
+      const href = match[2];
+      if (/^https?:\/\//i.test(href)) {
+        parts.push(
+          <a
+            key={`link-${key++}`}
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary hover:underline"
+          >
+            {match[1]}
+          </a>
+        );
+      } else {
+        parts.push(
+          <span key={`link-text-${key++}`}>{match[1]}</span>
+        );
+      }
 
       lastIndex = match.index + match[0].length;
     }
@@ -198,7 +208,7 @@ export function MarkdownRenderer({ content, className = "" }: MarkdownRendererPr
   const processBoldItalicCode = (text: string, startKey: number): React.ReactNode[] => {
     const parts: React.ReactNode[] = [];
     let key = startKey;
-    let processed = text;
+    const processed = text;
 
     // Process inline code `code`
     const codeRegex = /`([^`]+)`/g;

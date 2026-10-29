@@ -32,6 +32,12 @@ const {
   normalizeSignupType,
 } = require("../helpers/authProvider");
 const { validatePassword } = require("../helpers/validators");
+const {
+  setAdminAuthCookies,
+  clearAdminAuthCookies,
+  extractRefreshToken,
+  publicAdminSessionPayload,
+} = require("../middlewares/adminCookieAuth");
 
 const googleClient = new OAuth2Client(
   process.env.GOOGLE_CLIENT_ID,
@@ -2208,9 +2214,16 @@ exports.userController = {
         refreshToken,
       };
 
-      return res
-        .status(200)
-        .json({ responseType: "S", responseValue: response });
+      const csrfToken = setAdminAuthCookies(res, {
+        accessToken,
+        refreshToken,
+      });
+
+      // JWTs are HttpOnly cookies for the admin SPA. Do not return them in JSON.
+      return res.status(200).json({
+        responseType: "S",
+        responseValue: publicAdminSessionPayload(response, csrfToken),
+      });
     } catch (error) {
       logger.error("Error during admin login:", error);
       return res.status(500).json({
@@ -2221,12 +2234,10 @@ exports.userController = {
   },
 
   /**
-   * ADMIN REFRESH TOKEN - issue a new access token from a valid refresh token.
-   * Body: { refreshToken }
-   * Survives access-token expiry and in-memory session loss after server restart.
+   * ADMIN REFRESH TOKEN - rotate access/refresh from body OR HttpOnly refresh cookie.
    */
   adminRefreshToken: async (req, res) => {
-    const refreshToken = req.body?.refreshToken || req.body?.refresh_token;
+    const { token: refreshToken } = extractRefreshToken(req);
 
     if (!refreshToken) {
       return res.status(400).json({
@@ -2242,6 +2253,7 @@ exports.userController = {
 
       if (!admin || admin.is_deleted === 1 || admin.is_deleted === true) {
         tokenService.removeToken(userId);
+        clearAdminAuthCookies(res);
         return res.status(401).json({
           responseType: "F",
           responseValue: {
@@ -2252,26 +2264,31 @@ exports.userController = {
 
       if (isInactiveStatus(admin.status)) {
         tokenService.removeToken(userId);
+        clearAdminAuthCookies(res);
         return sendInactiveError(res);
       }
 
       const pair = tokenService.generateTokenPair(userId);
       const now = new Date();
+      const csrfToken = setAdminAuthCookies(res, {
+        accessToken: pair.accessToken,
+        refreshToken: pair.refreshToken,
+      });
 
       return res.status(200).json({
         responseType: "S",
-        responseValue: {
-          id: admin.id,
-          full_name: admin.full_name,
-          name: admin.full_name,
-          email: admin.email,
-          mobile: admin.mobile,
-          status: admin.status,
-          last_login_at: admin.last_login_at || now,
-          token: pair.accessToken,
-          accessToken: pair.accessToken,
-          refreshToken: pair.refreshToken,
-        },
+        responseValue: publicAdminSessionPayload(
+          {
+            id: admin.id,
+            full_name: admin.full_name,
+            name: admin.full_name,
+            email: admin.email,
+            mobile: admin.mobile,
+            status: admin.status,
+            last_login_at: admin.last_login_at || now,
+          },
+          csrfToken,
+        ),
       });
     } catch (error) {
       const expired = error?.name === "TokenExpiredError";
@@ -2279,6 +2296,7 @@ exports.userController = {
         name: error?.name,
         message: error?.message,
       });
+      clearAdminAuthCookies(res);
       return res.status(401).json({
         responseType: "F",
         responseValue: {
@@ -2286,6 +2304,80 @@ exports.userController = {
             ? "Refresh token expired. Please login again."
             : "Invalid refresh token. Please login again.",
         },
+      });
+    }
+  },
+
+  /**
+   * ADMIN SESSION — restore SPA session from HttpOnly cookies (no tokens in body).
+   */
+  adminSession: async (req, res) => {
+    try {
+      const adminId = req.user?.userId;
+      const admin = await Admin.findById(adminId);
+      if (!admin || admin.is_deleted) {
+        clearAdminAuthCookies(res);
+        return res.status(401).json({
+          responseType: "F",
+          responseValue: { message: "Session expired. Please login again." },
+        });
+      }
+
+      // Rotate CSRF on each session probe so memory can be rehydrated after reload.
+      const access = req.cookies?.moi_admin_access;
+      const refresh = req.cookies?.moi_admin_refresh;
+      const csrfToken = setAdminAuthCookies(res, {
+        accessToken: access,
+        refreshToken: refresh,
+      });
+
+      return res.status(200).json({
+        responseType: "S",
+        responseValue: publicAdminSessionPayload(
+          {
+            id: admin.id,
+            full_name: admin.full_name,
+            name: admin.full_name,
+            email: admin.email,
+            mobile: admin.mobile,
+            status: admin.status,
+            email_verified_at: admin.email_verified_at || null,
+            last_login_at: admin.last_login_at,
+            created_at: admin.created_at,
+            profile_image: admin.profile_image_url || null,
+          },
+          csrfToken,
+        ),
+      });
+    } catch (error) {
+      logger.error("adminSession error:", error);
+      return res.status(500).json({
+        responseType: "F",
+        responseValue: { message: "Failed to load session." },
+      });
+    }
+  },
+
+  /**
+   * ADMIN LOGOUT — revoke server token + clear auth cookies.
+   */
+  adminLogout: async (req, res) => {
+    try {
+      const adminId = req.user?.userId;
+      if (adminId !== undefined && adminId !== null) {
+        tokenService.removeToken(adminId);
+      }
+      clearAdminAuthCookies(res);
+      return res.status(200).json({
+        responseType: "S",
+        responseValue: { message: "Logged out successfully." },
+      });
+    } catch (error) {
+      clearAdminAuthCookies(res);
+      logger.error("adminLogout error:", error);
+      return res.status(200).json({
+        responseType: "S",
+        responseValue: { message: "Logged out successfully." },
       });
     }
   },

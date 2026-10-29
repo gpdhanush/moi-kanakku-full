@@ -4,6 +4,10 @@ const User = require('../models/user');
 const Admin = require('../models/admin');
 const logger = require('../config/logger');
 const { isBlockedStatus, isInactiveStatus, sendBlockedError, sendInactiveError } = require('../helpers/accountStatus');
+const {
+    extractAccessToken,
+    enforceAdminCsrf,
+} = require('./adminCookieAuth');
 
 const LOGIN_REQUIRED_MESSAGE = "அணுகல் மறுக்கப்பட்டது. தயவுசெய்து தொடர உள்நுழையவும்.";
 const EXPIRED_TOKEN_MESSAGE = "டோக்கன் காலாவதியாகிவிட்டது. தயவுசெய்து தொடர உள்நுழையவும்.";
@@ -15,33 +19,35 @@ const AUTH_FAILED_MESSAGE = "Authentication failed. Please login again.";
 
 /**
  * Middleware to authenticate JWT tokens
- * Validates token signature, expiration, checks against stored token (single-session policy),
- * and verifies user still exists in database (security protection for deleted users)
+ * Accepts Authorization Bearer (mobile) OR admin HttpOnly access cookie (SPA).
+ * Cookie-authenticated mutating requests require matching X-CSRF-Token.
  */
 function authenticateRequest(req, res, next, { resolveAccount, accountType }) {
-    // Extract token from Authorization header (format: "Bearer <token>")
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
-    
+    const { token, source } = extractAccessToken(req);
+
     if (!token) {
-        return res.status(401).json({ 
-            responseType: "F", 
-            responseValue: { message: LOGIN_REQUIRED_MESSAGE } 
+        return res.status(401).json({
+            responseType: "F",
+            responseValue: { message: LOGIN_REQUIRED_MESSAGE }
         });
+    }
+
+    if (accountType === 'admin' && !enforceAdminCsrf(req, res, source)) {
+        return;
     }
 
     // Verify JWT token signature and expiration
     jwt.verify(token, process.env.JWT_SECRET, async (err, decoded) => {
         if (err) {
             if (err.name === 'TokenExpiredError') {
-                return res.status(401).json({ 
-                    responseType: "F", 
-                    responseValue: { message: EXPIRED_TOKEN_MESSAGE } 
+                return res.status(401).json({
+                    responseType: "F",
+                    responseValue: { message: EXPIRED_TOKEN_MESSAGE }
                 });
             }
-            return res.status(401).json({ 
-                responseType: "F", 
-                responseValue: { message: INVALID_TOKEN_MESSAGE } 
+            return res.status(401).json({
+                responseType: "F",
+                responseValue: { message: INVALID_TOKEN_MESSAGE }
             });
         }
 
@@ -54,25 +60,27 @@ function authenticateRequest(req, res, next, { resolveAccount, accountType }) {
 
         // Extract user ID from decoded token (UUID string or legacy number)
         const userId = decoded.userId;
-        
+
         // Validate userId exists
         if (userId === undefined || userId === null || userId === '') {
-            return res.status(401).json({ 
-                responseType: "F", 
-                responseValue: { message: INVALID_TOKEN_LOGIN_MESSAGE } 
+            return res.status(401).json({
+                responseType: "F",
+                responseValue: { message: INVALID_TOKEN_LOGIN_MESSAGE }
             });
         }
-        
+
         // Check if token matches the stored token (enforces single-session policy)
-        // This ensures only the latest login token is valid
         const storedToken = tokenService.getTokenForUser(userId);
-        
-        // If no token stored, null, or doesn't match, reject the request
+
         if (!storedToken || storedToken !== token) {
-            logger.debug('token mismatch for user', userId, { token, storedToken });
-            return res.status(401).json({ 
-                responseType: "F", 
-                responseValue: { message: SESSION_EXPIRED_MESSAGE } 
+            logger.debug('token mismatch for user', String(userId), {
+                hasIncoming: Boolean(token),
+                hasStored: Boolean(storedToken),
+                source,
+            });
+            return res.status(401).json({
+                responseType: "F",
+                responseValue: { message: SESSION_EXPIRED_MESSAGE }
             });
         }
 
@@ -81,17 +89,17 @@ function authenticateRequest(req, res, next, { resolveAccount, accountType }) {
             const account = await resolveAccount(userId);
             if (!account) {
                 tokenService.removeToken(userId);
-                return res.status(401).json({ 
-                    responseType: "F", 
-                    responseValue: { message: ACCOUNT_DELETED_MESSAGE } 
+                return res.status(401).json({
+                    responseType: "F",
+                    responseValue: { message: ACCOUNT_DELETED_MESSAGE }
                 });
             }
 
             if (account.is_deleted) {
                 tokenService.removeToken(userId);
-                return res.status(401).json({ 
-                    responseType: "F", 
-                    responseValue: { message: ACCOUNT_DELETED_MESSAGE } 
+                return res.status(401).json({
+                    responseType: "F",
+                    responseValue: { message: ACCOUNT_DELETED_MESSAGE }
                 });
             }
 
@@ -106,9 +114,9 @@ function authenticateRequest(req, res, next, { resolveAccount, accountType }) {
             }
         } catch (dbError) {
             logger.error('Database error in auth middleware:', dbError);
-            return res.status(401).json({ 
-                responseType: "F", 
-                responseValue: { message: AUTH_FAILED_MESSAGE } 
+            return res.status(401).json({
+                responseType: "F",
+                responseValue: { message: AUTH_FAILED_MESSAGE }
             });
         }
 
@@ -116,7 +124,8 @@ function authenticateRequest(req, res, next, { resolveAccount, accountType }) {
         req.user = {
             ...decoded,
             userId: typeof userId === 'number' ? userId : String(userId),
-            accountType
+            accountType,
+            authSource: source,
         };
         if (accountType === 'admin') req.admin = req.user;
         next();
@@ -175,4 +184,3 @@ async function tryResolveAccountType(token) {
 }
 
 module.exports = { authenticateToken, authenticateAdminToken, tryResolveAccountType };
-

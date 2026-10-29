@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:moi/app_configs/index.dart';
 import 'package:moi/app_firebase/push_notification_service.dart';
+import 'package:moi/app_services/connection.dart';
 import 'package:moi/app_themes/index.dart';
 import 'package:moi/app_utils/app_providers/connectivity_provider.dart';
 import 'package:moi/app_utils/app_providers/language_provider.dart';
@@ -35,6 +36,8 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
+    // Register Dio JWT cache clear listener before any logout/session wipe.
+    Connection.instance;
     WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;

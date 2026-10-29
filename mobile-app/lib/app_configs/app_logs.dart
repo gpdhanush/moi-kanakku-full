@@ -12,12 +12,16 @@ const _sensitiveKeys = {
   'token',
   'accesstoken',
   'refreshtoken',
+  'idtoken',
+  'sessiontoken',
   'authorization',
   'x-api-key',
   'apisecretkey',
   'secret',
+  'jwt',
   'fcm_token',
   'fcmtoken',
+  'notificationtoken',
 };
 
 /// PRINT ONLY PAGE TITLES

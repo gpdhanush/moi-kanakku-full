@@ -7,6 +7,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:moi/app_configs/index.dart';
 import 'package:moi/app_firebase/push_notification_service.dart';
 import 'package:moi/app_services/user_services.dart';
+import 'package:moi/app_storages/auth_credential_sanitizer.dart';
 import 'package:moi/app_storages/secure_storages.dart';
 import 'package:moi/app_utils/index.dart';
 import 'package:moi/app_utils/app_providers/language_provider.dart';
@@ -201,7 +202,8 @@ class LoginController {
     if (lastLogin != null && lastLogin.toString().trim().isNotEmpty) {
       user['last_login'] = lastLogin;
     }
-    final userToStore = user;
+    // JWT stays in saveToken only — never inside the user profile blob.
+    final userToStore = AuthCredentialSanitizer.stripSecretsFromMap(user);
     if (token != null && token.isNotEmpty) {
       await Future.wait([
         secureStorage.save(AppVariables.userInformation, userToStore),

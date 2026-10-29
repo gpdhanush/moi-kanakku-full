@@ -29,6 +29,8 @@ router.post('/restore', userController.restoreAccount);
 // ADMIN USER MANAGEMENT ROUTES
 router.post("/admin/login", userController.adminLogin);
 router.post("/admin/refresh", userController.adminRefreshToken);
+router.get("/admin/session", authenticateAdminToken, userController.adminSession);
+router.post("/admin/logout", authenticateAdminToken, userController.adminLogout);
 router.post("/admin/forgot-password", userController.adminForgotPassword);
 router.post("/admin/reset-password", userController.adminResetPassword);
 

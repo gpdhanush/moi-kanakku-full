@@ -32,6 +32,9 @@ class Connection {
   factory Connection() => instance;
 
   Connection._internal() {
+    // Keep Dio's in-memory JWT in sync when secure storage wipes the session.
+    SecureStorageService.onSessionCleared = clearCachedToken;
+
     _dio = Dio(
       BaseOptions(
         baseUrl: appBaseUri,

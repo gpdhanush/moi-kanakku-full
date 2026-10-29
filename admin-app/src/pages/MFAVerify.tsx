@@ -76,11 +76,9 @@ export default function MFAVerify() {
         pending.accountType
       );
 
-      const accessToken = response.accessToken || response.token;
       await persistAdminSession({
-        token: accessToken,
         user: response.user,
-        refreshToken: response.refreshToken,
+        csrfToken: response.csrfToken,
       });
       clearMfaPendingLogin();
 

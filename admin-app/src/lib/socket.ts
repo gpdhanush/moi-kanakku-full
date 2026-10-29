@@ -1,12 +1,11 @@
 import { io, Socket } from 'socket.io-client';
 import { API_CONFIG } from './config';
-import { getAuthToken } from './auth';
 import { logger } from './logger';
 
 let socket: Socket | null = null;
 
 /**
- * Get or create Socket.IO connection
+ * Get or create Socket.IO connection using cookie credentials (no JS JWT).
  */
 function getSocket(): Socket {
   if (socket && socket.connected) {
@@ -18,16 +17,9 @@ function getSocket(): Socket {
     throw new Error('Server URL not configured');
   }
 
-  const token = getAuthToken();
-  if (!token) {
-    throw new Error('Authentication token not found');
-  }
-
-  // Create new socket connection
+  // Create new socket connection — cookies sent when withCredentials is true.
   socket = io(serverUrl, {
-    auth: {
-      token,
-    },
+    withCredentials: true,
     transports: ['websocket', 'polling'],
     reconnection: true,
     reconnectionDelay: 1000,
@@ -64,4 +56,3 @@ export function disconnectSocket(): void {
     socket = null;
   }
 }
-

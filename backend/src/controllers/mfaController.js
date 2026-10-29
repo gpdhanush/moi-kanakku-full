@@ -6,6 +6,10 @@ const User = require('../models/user');
 const Admin = require('../models/admin');
 const tokenService = require('../middlewares/tokenService');
 const logger = require('../config/logger');
+const {
+  setAdminAuthCookies,
+  publicAdminSessionPayload,
+} = require('../middlewares/adminCookieAuth');
 
 /**
  * Generate 8 random backup codes (format: XXXX-XXXX)
@@ -437,6 +441,21 @@ exports.mfaController = {
             token: jwtToken,
           };
         }
+      }
+
+      if (accountType === 'admin' && pair.refreshToken) {
+        const csrfToken = setAdminAuthCookies(res, {
+          accessToken: jwtToken,
+          refreshToken: pair.refreshToken,
+        });
+        return res.status(200).json({
+          responseType: "S",
+          responseValue: {
+            message: "MFA verification successful",
+            used_backup_code: usedBackupCode,
+            ...publicAdminSessionPayload(accountPayload, csrfToken),
+          },
+        });
       }
 
       return res.status(200).json({

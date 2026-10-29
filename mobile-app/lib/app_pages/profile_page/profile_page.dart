@@ -8,6 +8,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:moi/app_configs/index.dart';
+import 'package:moi/app_services/connection.dart';
 import 'package:moi/app_services/user_services.dart';
 import 'package:moi/app_storages/secure_storages.dart';
 import 'package:moi/app_themes/index.dart';
@@ -904,7 +905,15 @@ class _ProfilePageState extends State<ProfilePage> {
       );
       if (response != null && response['responseType'] == "S") {
         _alertServices.successToast(response['responseValue']['message']);
+        Connection.instance.clearCachedToken();
         await _storage.clearSessionData();
+        if (!mounted) return;
+        try {
+          await Provider.of<UserProvider>(
+            context,
+            listen: false,
+          ).clearUserData();
+        } catch (_) {}
         if (!mounted) return;
         Navigator.pushNamedAndRemoveUntil(context, 'login', (r) => false);
       }

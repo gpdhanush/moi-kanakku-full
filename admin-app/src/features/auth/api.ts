@@ -1,5 +1,5 @@
 import { apiClient } from '@/lib/axios';
-import { secureStorageWithCache } from '@/lib/secureStorage';
+import { clearAuth, persistAdminSession } from '@/lib/auth';
 import type { AxiosError } from 'axios';
 
 export interface MoiApiResponse<T> {
@@ -16,13 +16,13 @@ export interface AdminUser {
   email: string;
   last_login: string;
   profile_image: string | null;
-  token: string;
+  /** @deprecated JWTs are HttpOnly cookies — omitted from SPA storage. */
+  token?: string;
 }
 
 export interface LoginResult {
   mfaRequired: false;
-  token: string;
-  refreshToken?: string;
+  csrfToken?: string;
   user: Omit<AdminUser, 'token'>;
 }
 
@@ -78,6 +78,7 @@ type LoginApiUser = {
   token?: string;
   accessToken?: string;
   refreshToken?: string;
+  csrfToken?: string;
   mfa_required?: boolean;
   is_mfa_required?: boolean;
   account_type?: string;
@@ -99,8 +100,7 @@ function extractMessage(
   return fallback;
 }
 
-function normalizeUser(value: LoginApiUser): AdminUser {
-  const token = value.accessToken || value.token || '';
+function normalizeUser(value: LoginApiUser): Omit<AdminUser, 'token'> {
   return {
     id: String(value.id ?? ''),
     name: value.full_name || value.name || 'Admin',
@@ -109,7 +109,6 @@ function normalizeUser(value: LoginApiUser): AdminUser {
     status: value.status || 'ACTIVE',
     last_login: value.last_login_at || value.last_login || '',
     profile_image: value.profile_image ?? null,
-    token,
   };
 }
 
@@ -198,18 +197,15 @@ export const authApi = {
       }
 
       const user = normalizeUser(value);
-      if (!user.token) {
+      if (!user.id) {
         throw new AuthLoginError({
-          message: 'Login succeeded but no token was returned',
+          message: 'Login succeeded but no user profile was returned',
           status: 500,
         });
       }
 
-      const { token, ...rest } = user;
-      const refreshToken = value.refreshToken
-        ? String(value.refreshToken)
-        : undefined;
-      return { mfaRequired: false, token, refreshToken, user: rest };
+      const csrfToken = value.csrfToken ? String(value.csrfToken) : undefined;
+      return { mfaRequired: false, csrfToken, user };
     } catch (error) {
       if (error instanceof AuthLoginError) throw error;
       throw toLoginError(error);
@@ -217,10 +213,42 @@ export const authApi = {
   },
 
   logout: async (): Promise<void> => {
-    await secureStorageWithCache.removeItem('auth_token');
-    await secureStorageWithCache.removeItem('refresh_token');
-    await secureStorageWithCache.removeItem('user');
-    await secureStorageWithCache.removeItem('remember_me');
+    try {
+      await apiClient.post(
+        '/users/admin/logout',
+        {},
+        { skipErrorHandler: true, skipLoading: true }
+      );
+    } catch {
+      // still clear client state
+    }
+    await clearAuth();
+  },
+
+  /**
+   * Restore SPA session from HttpOnly cookies after reload.
+   */
+  restoreSession: async (): Promise<Omit<AdminUser, 'token'> | null> => {
+    try {
+      const response = await apiClient.get<MoiApiResponse<LoginApiUser>>(
+        '/users/admin/session',
+        { skipLoading: true, skipErrorHandler: true }
+      );
+      const data = response.data;
+      if (String(data.responseType).toUpperCase() !== 'S') {
+        return null;
+      }
+      const value = data.responseValue || {};
+      const user = normalizeUser(value);
+      if (!user.id) return null;
+      await persistAdminSession({
+        user,
+        csrfToken: value.csrfToken ? String(value.csrfToken) : null,
+      });
+      return user;
+    } catch {
+      return null;
+    }
   },
 
   forgotPassword: async (identifier: string): Promise<{ message: string }> => {
@@ -316,25 +344,9 @@ export const authApi = {
         throw new Error(extractMessage(data, 'Failed to update profile'));
       }
 
-      const current = await secureStorageWithCache.getItem('user');
-      let existing: Partial<Omit<AdminUser, 'token'>> = {};
-      if (current) {
-        try {
-          existing = JSON.parse(current);
-        } catch {
-          existing = {};
-        }
-      }
-
       const raw = data.responseValue || {};
-      const updated = normalizeUser({
-        ...existing,
-        ...raw,
-        token: '',
-      });
-      const { token: _token, ...user } = updated;
-
-      await secureStorageWithCache.setItem('user', JSON.stringify(user));
+      const user = normalizeUser(raw);
+      await persistAdminSession({ user });
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new Event('moi-admin-user-updated'));
       }
@@ -414,9 +426,7 @@ export interface MfaStatus {
 }
 
 export interface MfaVerifyLoginResult {
-  token: string;
-  accessToken?: string;
-  refreshToken?: string;
+  csrfToken?: string;
   user: Omit<AdminUser, 'token'>;
   expiresIn?: number;
 }
@@ -528,27 +538,20 @@ export const mfaApi = {
         response.data,
         'MFA verification failed'
       );
-      const accessToken = String(value.accessToken || value.token || '');
-      if (!accessToken) {
-        throw new Error('MFA verification succeeded but no token was returned');
-      }
-
-      // Backend now returns the full admin session object alongside token.
+      // Backend sets HttpOnly cookies; JSON contains profile + csrfToken only.
       const userRaw = (
         value.user && typeof value.user === 'object'
           ? value.user
           : value
       ) as LoginApiUser;
-      const user = normalizeUser({ ...userRaw, token: accessToken });
-      const { token: _t, ...rest } = user;
+      const user = normalizeUser(userRaw);
+      if (!user.id) {
+        throw new Error('MFA verification succeeded but no user was returned');
+      }
 
       return {
-        token: accessToken,
-        accessToken: value.accessToken ? String(value.accessToken) : undefined,
-        refreshToken: value.refreshToken
-          ? String(value.refreshToken)
-          : undefined,
-        user: rest,
+        csrfToken: value.csrfToken ? String(value.csrfToken) : undefined,
+        user,
         expiresIn:
           typeof value.expiresIn === 'number' ? value.expiresIn : undefined,
       };
