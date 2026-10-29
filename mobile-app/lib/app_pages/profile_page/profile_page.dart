@@ -389,17 +389,6 @@ class _ProfilePageState extends State<ProfilePage> {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(18),
-        gradient: LinearGradient(
-          colors: isDarkMode
-              ? [
-                  AppColors.darkSurface.withValues(alpha: 0.94),
-                  AppColors.darkSurfaceVariant,
-                  primary.withValues(alpha: 0.78),
-                ]
-              : [primary, soft, deep],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
         boxShadow: [
           BoxShadow(
             color: isDarkMode
@@ -410,8 +399,27 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
         ],
       ),
-      child: Stack(
-        children: [
+      // Clip decorative glow circles to the rounded card (avoids white
+      // sharp corners leaking past bottom-left / other edges).
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(18),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: isDarkMode
+                  ? [
+                      AppColors.darkSurface.withValues(alpha: 0.94),
+                      AppColors.darkSurfaceVariant,
+                      primary.withValues(alpha: 0.78),
+                    ]
+                  : [primary, soft, deep],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+          child: Stack(
+            clipBehavior: Clip.hardEdge,
+            children: [
           Positioned(
             top: -20,
             right: -20,
@@ -568,7 +576,9 @@ class _ProfilePageState extends State<ProfilePage> {
               ],
             ),
           ),
-        ],
+            ],
+          ),
+        ),
       ),
     );
   }

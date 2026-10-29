@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:hugeicons/hugeicons.dart';
 import 'package:moi/app_configs/index.dart';
 import 'package:moi/app_firebase/firebase_remote.dart';
 import 'package:moi/app_themes/index.dart';
@@ -124,43 +123,37 @@ class _MaintenanceModePageState extends State<MaintenanceModePage> {
                       SizedBox(
                         width: double.infinity,
                         height: 52,
-                        child: FilledButton.icon(
+                        child: FilledButton(
                           onPressed: _isChecking ? null : _tryAgain,
-                          icon: _isChecking
-                              ? SizedBox(
-                                  width: 18,
-                                  height: 18,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2.2,
-                                    color: colorScheme.onPrimary,
-                                  ),
-                                )
-                              : HugeIcon(
-                                  icon: HugeIcons.strokeRoundedRefresh,
-                                  color: colorScheme.onPrimary,
-                                  size: 20,
-                                  strokeWidth: 1.9,
-                                ),
-                          label: Text(
-                            _isChecking
-                                ? languageProvider.tr('common.checking')
-                                : languageProvider.tr('common.tryAgain'),
-                          ),
                           style: FilledButton.styleFrom(
                             backgroundColor: primary,
-                            foregroundColor: colorScheme.onPrimary,
+                            foregroundColor: Colors.white,
                             disabledBackgroundColor: primary.withValues(
                               alpha: 0.5,
                             ),
-                            disabledForegroundColor: colorScheme.onPrimary,
+                            disabledForegroundColor: Colors.white,
                             textStyle: AppTypography.label.copyWith(
                               fontSize: 15,
                               fontWeight: FontWeight.w800,
+                              color: Colors.white,
                             ),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(18),
                             ),
                           ),
+                          child: _isChecking
+                              ? const SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2.2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : Text(
+                                  languageProvider.tr('common.tryAgain'),
+                                  style: const TextStyle(color: Colors.white),
+                                ),
                         ),
                       ),
                     ],
