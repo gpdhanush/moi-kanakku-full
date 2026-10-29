@@ -79,6 +79,8 @@ export default function MFAVerify() {
       await persistAdminSession({
         user: response.user,
         csrfToken: response.csrfToken,
+        accessToken: response.accessToken,
+        refreshToken: response.refreshToken,
       });
       clearMfaPendingLogin();
 

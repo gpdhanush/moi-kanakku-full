@@ -31,6 +31,24 @@
 
   <body>
     <div id="root"></div>
+    <!-- Kill leftover Workbox/PWA SWs on local Vite before modules load -->
+    <script>
+      (function () {
+        var host = location.hostname;
+        if (host !== 'localhost' && host !== '127.0.0.1' && host !== '[::1]') return;
+        if (!('serviceWorker' in navigator)) return;
+        navigator.serviceWorker.getRegistrations().then(function (regs) {
+          regs.forEach(function (r) { r.unregister(); });
+        });
+        if (window.caches && caches.keys) {
+          caches.keys().then(function (keys) {
+            keys.forEach(function (k) {
+              if (/workbox|naethra-ems|precache/i.test(k)) caches.delete(k);
+            });
+          });
+        }
+      })();
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

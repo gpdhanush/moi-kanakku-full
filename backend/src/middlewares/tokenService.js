@@ -1,10 +1,11 @@
 const jwt = require('jsonwebtoken');
 
-// In-memory token storage (consider using Redis for production with multiple servers)
+// In-memory token storage (consider Redis for multi-instance production)
 const userTokens = {};
 const refreshTokens = {};
 
-const ACCESS_EXPIRES = process.env.JWT_ACCESS_EXPIRES || '30d';
+// Short-lived access + longer refresh. Override via env.
+const ACCESS_EXPIRES = process.env.JWT_ACCESS_EXPIRES || '1h';
 const REFRESH_EXPIRES = process.env.JWT_REFRESH_EXPIRES || '30d';
 
 function getRefreshSecret() {
@@ -103,6 +104,27 @@ function verifyRefreshToken(token) {
 }
 
 /**
+ * Single-session check for access tokens.
+ * After server restart the map is empty — rehydrate a still-valid JWT so
+ * overnight sessions survive process restarts without forcing re-login.
+ * If a newer login stored a different token, the old one is rejected.
+ *
+ * @param {string|number} userId
+ * @param {string} token - already signature-verified access JWT
+ * @returns {boolean}
+ */
+function acceptAccessToken(userId, token) {
+    if (userId == null || !token) return false;
+    const key = normalizeUserId(userId);
+    const stored = userTokens[key];
+    if (!stored) {
+        userTokens[key] = token;
+        return true;
+    }
+    return stored === token;
+}
+
+/**
  * Invalidate the previous token for a user (single-session policy)
  * @param {string|number} userId - The user ID
  */
@@ -151,9 +173,12 @@ module.exports = {
     generateRefreshToken,
     generateTokenPair,
     verifyRefreshToken,
+    acceptAccessToken,
     invalidatePreviousToken,
     getTokenForUser,
     removeToken,
     hasToken,
     userTokens,
+    ACCESS_EXPIRES,
+    REFRESH_EXPIRES,
 };

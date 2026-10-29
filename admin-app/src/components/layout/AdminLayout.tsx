@@ -23,10 +23,27 @@ export function AdminLayout() {
     const checkAuth = async () => {
       try {
         purgeLegacyTokenStorage();
-        // Prefer cookie session restore; fall back to in-memory user (same tab).
+        // Mint access from tab-scoped refresh before probing protected APIs.
+        try {
+          const { ensureFreshAccessToken } = await import("@/lib/axios");
+          await ensureFreshAccessToken(false);
+        } catch {
+          // fall through to session / memory checks
+        }
+
         const restored = await authApi.restoreSession();
         const user = restored || (await getCurrentUserAsync());
         setIsAuth(!!user?.id);
+        if (user?.id) {
+          try {
+            const { scheduleAccessTokenRefresh } = await import(
+              "@/lib/sessionKeepAlive"
+            );
+            scheduleAccessTokenRefresh();
+          } catch {
+            // non-fatal
+          }
+        }
       } catch (error) {
         logger.error("Authentication check failed:", error);
         setIsAuth(false);

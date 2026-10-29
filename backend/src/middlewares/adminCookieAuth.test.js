@@ -7,7 +7,7 @@ const {
   REFRESH_COOKIE,
 } = require("./adminCookieAuth");
 
-function testPublicPayloadStripsTokens() {
+function testPublicPayloadIncludesMemoryTokens() {
   const csrf = "csrf-abc";
   const out = publicAdminSessionPayload(
     {
@@ -22,9 +22,10 @@ function testPublicPayloadStripsTokens() {
   );
   assert.strictEqual(out.csrfToken, csrf);
   assert.strictEqual(out.email, "a@b.com");
-  assert.strictEqual(out.token, undefined);
-  assert.strictEqual(out.accessToken, undefined);
-  assert.strictEqual(out.refreshToken, undefined);
+  // Returned for SPA in-memory Bearer (cross-origin); never for localStorage.
+  assert.strictEqual(out.accessToken, "jwt-access");
+  assert.strictEqual(out.token, "jwt-access");
+  assert.strictEqual(out.refreshToken, "jwt-refresh");
 }
 
 function testExtractPrefersBearer() {
@@ -57,7 +58,7 @@ function testRefreshFromCookie() {
   assert.strictEqual(source, "cookie");
 }
 
-testPublicPayloadStripsTokens();
+testPublicPayloadIncludesMemoryTokens();
 testExtractPrefersBearer();
 testExtractFallsBackToCookie();
 testRefreshFromCookie();

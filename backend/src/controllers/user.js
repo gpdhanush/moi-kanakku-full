@@ -2219,7 +2219,7 @@ exports.userController = {
         refreshToken,
       });
 
-      // JWTs are HttpOnly cookies for the admin SPA. Do not return them in JSON.
+      // Cookies + JSON JWTs (cross-origin SPA needs Bearer when 3P cookies blocked).
       return res.status(200).json({
         responseType: "S",
         responseValue: publicAdminSessionPayload(response, csrfToken),
@@ -2275,6 +2275,8 @@ exports.userController = {
         refreshToken: pair.refreshToken,
       });
 
+      // Return JWTs in JSON for cross-origin SPA memory (cookies alone are
+      // often blocked third-party). Client must not write them to localStorage.
       return res.status(200).json({
         responseType: "S",
         responseValue: publicAdminSessionPayload(
@@ -2286,6 +2288,9 @@ exports.userController = {
             mobile: admin.mobile,
             status: admin.status,
             last_login_at: admin.last_login_at || now,
+            token: pair.accessToken,
+            accessToken: pair.accessToken,
+            refreshToken: pair.refreshToken,
           },
           csrfToken,
         ),
@@ -2323,9 +2328,12 @@ exports.userController = {
         });
       }
 
-      // Rotate CSRF on each session probe so memory can be rehydrated after reload.
-      const access = req.cookies?.moi_admin_access;
-      const refresh = req.cookies?.moi_admin_refresh;
+      // Rotate CSRF; re-issue cookies. Also return JWTs for SPA memory (cross-origin).
+      const access =
+        req.cookies?.moi_admin_access ||
+        (req.headers.authorization || "").replace(/^Bearer\s+/i, "") ||
+        null;
+      const refresh = req.cookies?.moi_admin_refresh || null;
       const csrfToken = setAdminAuthCookies(res, {
         accessToken: access,
         refreshToken: refresh,
@@ -2345,6 +2353,9 @@ exports.userController = {
             last_login_at: admin.last_login_at,
             created_at: admin.created_at,
             profile_image: admin.profile_image_url || null,
+            accessToken: access,
+            token: access,
+            refreshToken: refresh,
           },
           csrfToken,
         ),

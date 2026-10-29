@@ -43,10 +43,10 @@ function cookieBaseOptions() {
 }
 
 function accessMaxAgeMs() {
-  // Mirror JWT access default (30d) unless overridden via env seconds.
+  // Mirror JWT access default (1h) unless overridden via env seconds.
   const seconds = Number(process.env.JWT_ACCESS_COOKIE_MAX_AGE_SEC);
   if (Number.isFinite(seconds) && seconds > 0) return seconds * 1000;
-  return 30 * 24 * 60 * 60 * 1000;
+  return 60 * 60 * 1000;
 }
 
 function refreshMaxAgeMs() {
@@ -172,19 +172,29 @@ function enforceAdminCsrf(req, res, tokenSource) {
 }
 
 /**
- * Strip secrets from admin login JSON. Tokens live in HttpOnly cookies for browsers.
- * csrfToken is returned for the SPA memory store (not a JWT).
+ * Admin SPA session JSON.
+ *
+ * HttpOnly cookies are set for same-site deployments. Access/refresh JWTs are
+ * ALSO returned so a cross-origin SPA (e.g. localhost → api host) can keep them
+ * in JS memory only — browsers often block third-party cookies cross-site.
+ * Client keeps access in memory; refresh may use tab-scoped sessionStorage.
+ * Never write JWTs to localStorage.
  */
 function publicAdminSessionPayload(accountPayload, csrfToken) {
+  const payload = accountPayload || {};
+  const accessToken = payload.accessToken || payload.token || null;
+  const refreshToken = payload.refreshToken || null;
   const {
     token: _t,
     accessToken: _a,
     refreshToken: _r,
     ...safe
-  } = accountPayload || {};
+  } = payload;
   return {
     ...safe,
     csrfToken,
+    ...(accessToken ? { accessToken, token: accessToken } : {}),
+    ...(refreshToken ? { refreshToken } : {}),
   };
 }
 

@@ -69,13 +69,12 @@ function authenticateRequest(req, res, next, { resolveAccount, accountType }) {
             });
         }
 
-        // Check if token matches the stored token (enforces single-session policy)
-        const storedToken = tokenService.getTokenForUser(userId);
-
-        if (!storedToken || storedToken !== token) {
+        // Single-session: reject superseded tokens. After process restart the
+        // in-memory map is empty — rehydrate a still-valid access JWT.
+        if (!tokenService.acceptAccessToken(userId, token)) {
             logger.debug('token mismatch for user', String(userId), {
                 hasIncoming: Boolean(token),
-                hasStored: Boolean(storedToken),
+                hasStored: Boolean(tokenService.getTokenForUser(userId)),
                 source,
             });
             return res.status(401).json({
@@ -161,8 +160,7 @@ async function tryResolveAccountType(token) {
             if (userId === undefined || userId === null || userId === '') {
                 return resolve(null);
             }
-            const storedToken = tokenService.getTokenForUser(userId);
-            if (!storedToken || storedToken !== token) {
+            if (!tokenService.acceptAccessToken(userId, token)) {
                 return resolve(null);
             }
             try {

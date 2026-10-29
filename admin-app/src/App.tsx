@@ -11,6 +11,7 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import { queryClient } from "./lib/queryClient";
 import { useEffect, lazy } from "react";
 import { purgeLegacyTokenStorage } from "@/lib/auth";
+import { startSessionKeepAlive } from "@/lib/sessionKeepAlive";
 import { registerLoadingCallback } from "@/lib/apiLoading";
 import { LazyRoute } from "./components/LazyRoute";
 import { ENV_CONFIG } from "./lib/config";
@@ -42,6 +43,7 @@ const AppContent = () => {
   useEffect(() => {
     // Migrate away from legacy JWT localStorage / secureStorage token blobs.
     purgeLegacyTokenStorage();
+    startSessionKeepAlive();
   }, []);
 
   useEffect(() => {

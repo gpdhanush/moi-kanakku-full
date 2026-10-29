@@ -23,6 +23,8 @@ export interface AdminUser {
 export interface LoginResult {
   mfaRequired: false;
   csrfToken?: string;
+  accessToken?: string;
+  refreshToken?: string;
   user: Omit<AdminUser, 'token'>;
 }
 
@@ -205,7 +207,19 @@ export const authApi = {
       }
 
       const csrfToken = value.csrfToken ? String(value.csrfToken) : undefined;
-      return { mfaRequired: false, csrfToken, user };
+      const accessToken = value.accessToken || value.token
+        ? String(value.accessToken || value.token)
+        : undefined;
+      const refreshToken = value.refreshToken
+        ? String(value.refreshToken)
+        : undefined;
+      return {
+        mfaRequired: false,
+        csrfToken,
+        accessToken,
+        refreshToken,
+        user,
+      };
     } catch (error) {
       if (error instanceof AuthLoginError) throw error;
       throw toLoginError(error);
@@ -244,6 +258,12 @@ export const authApi = {
       await persistAdminSession({
         user,
         csrfToken: value.csrfToken ? String(value.csrfToken) : null,
+        accessToken: value.accessToken || value.token
+          ? String(value.accessToken || value.token)
+          : null,
+        refreshToken: value.refreshToken
+          ? String(value.refreshToken)
+          : null,
       });
       return user;
     } catch {
@@ -428,6 +448,8 @@ export interface MfaStatus {
 
 export interface MfaVerifyLoginResult {
   csrfToken?: string;
+  accessToken?: string;
+  refreshToken?: string;
   user: Omit<AdminUser, 'token'>;
   expiresIn?: number;
 }
@@ -539,7 +561,6 @@ export const mfaApi = {
         response.data,
         'MFA verification failed'
       );
-      // Backend sets HttpOnly cookies; JSON contains profile + csrfToken only.
       const userRaw = (
         value.user && typeof value.user === 'object'
           ? value.user
@@ -550,8 +571,16 @@ export const mfaApi = {
         throw new Error('MFA verification succeeded but no user was returned');
       }
 
+      const accessToken = value.accessToken || value.token
+        ? String(value.accessToken || value.token)
+        : undefined;
+
       return {
         csrfToken: value.csrfToken ? String(value.csrfToken) : undefined,
+        accessToken,
+        refreshToken: value.refreshToken
+          ? String(value.refreshToken)
+          : undefined,
         user,
         expiresIn:
           typeof value.expiresIn === 'number' ? value.expiresIn : undefined,

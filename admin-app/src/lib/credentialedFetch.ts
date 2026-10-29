@@ -1,8 +1,8 @@
 import { API_CONFIG } from './config';
-import { getCsrfToken } from './auth';
+import { getAuthToken, getCsrfToken } from './auth';
 
 /**
- * Cookie-authenticated fetch for multipart uploads (no Bearer from storage).
+ * Authenticated fetch for multipart uploads (memory Bearer + cookies).
  */
 export async function credentialedFetch(
   path: string,
@@ -10,9 +10,15 @@ export async function credentialedFetch(
 ): Promise<Response> {
   const method = String(init.method || 'GET').toUpperCase();
   const headers = new Headers(init.headers || {});
-  headers.delete('Authorization');
 
-  if (!['GET', 'HEAD', 'OPTIONS'].includes(method)) {
+  const bearer = getAuthToken();
+  if (bearer) {
+    headers.set('Authorization', `Bearer ${bearer}`);
+  } else {
+    headers.delete('Authorization');
+  }
+
+  if (!['GET', 'HEAD', 'OPTIONS'].includes(method) && !bearer) {
     const csrf = getCsrfToken();
     if (csrf) {
       headers.set('X-CSRF-Token', csrf);

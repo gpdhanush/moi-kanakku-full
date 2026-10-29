@@ -93,6 +93,12 @@ export default function Login() {
   useEffect(() => {
     const redirectIfAuthed = async () => {
       purgeLegacyTokenStorage();
+      try {
+        const { ensureFreshAccessToken } = await import("@/lib/axios");
+        await ensureFreshAccessToken(false);
+      } catch {
+        // no tab refresh / cookies — stay on login
+      }
       const restored = await authApi.restoreSession();
       if (restored || (await getCurrentUserAsync())) {
         navigate("/dashboard", { replace: true });
@@ -213,7 +219,17 @@ export default function Login() {
         await persistAdminSession({
           user: result.user,
           csrfToken: result.csrfToken,
+          accessToken: result.accessToken,
+          refreshToken: result.refreshToken,
         });
+        try {
+          const { scheduleAccessTokenRefresh } = await import(
+            "@/lib/sessionKeepAlive"
+          );
+          scheduleAccessTokenRefresh();
+        } catch {
+          // non-fatal
+        }
         storeBlockUntil(null);
         setBlockedUntil(null);
         setAttemptsRemaining(null);

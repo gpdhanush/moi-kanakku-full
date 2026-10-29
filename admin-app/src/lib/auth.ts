@@ -1,14 +1,20 @@
 /**
- * Admin authentication helpers — HttpOnly cookie sessions.
+ * Admin authentication helpers.
  *
- * JWTs are never stored in localStorage/sessionStorage. The API sets
- * HttpOnly cookies; the SPA keeps only non-sensitive user profile + CSRF
- * token in memory (CSRF is rehydrated via GET /users/admin/session).
+ * - Never write JWTs to localStorage.
+ * - Prefer HttpOnly cookies when same-site.
+ * - Keep access JWT in memory; keep refresh JWT in memory + sessionStorage
+ *   (tab-scoped) so overnight / soft reloads can refresh without re-login.
+ *   Closing the browser tab clears sessionStorage.
  */
 
 import { logger } from './logger';
 
 export const MFA_PENDING_KEY = 'mfa_pending_login';
+
+/** Tab-scoped refresh persistence (not localStorage). Cleared on tab close. */
+const REFRESH_SESSION_KEY = '__moi_admin_rt';
+const USER_SESSION_KEY = '__moi_admin_user';
 
 export type AdminUser = {
   id: string;
@@ -26,9 +32,10 @@ export type MfaPendingLogin = {
   accountType?: string;
 };
 
-/** In-memory only — never persist JWTs here. */
 let memoryUser: AdminUser | null = null;
 let memoryCsrfToken: string | null = null;
+let memoryAccessToken: string | null = null;
+let memoryRefreshToken: string | null = null;
 let memoryMfaPending: MfaPendingLogin | null = null;
 
 const LEGACY_AUTH_KEYS = [
@@ -38,14 +45,47 @@ const LEGACY_AUTH_KEYS = [
   'remember_me',
 ] as const;
 
+function readSession(key: string): string | null {
+  try {
+    return sessionStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function writeSession(key: string, value: string | null): void {
+  try {
+    if (value == null || value === '') sessionStorage.removeItem(key);
+    else sessionStorage.setItem(key, value);
+  } catch {
+    // private mode / quota
+  }
+}
+
+/** Hydrate memory from tab sessionStorage (runs once on module load). */
+function hydrateFromSessionStorage(): void {
+  const rt = readSession(REFRESH_SESSION_KEY);
+  if (rt) memoryRefreshToken = rt;
+
+  const rawUser = readSession(USER_SESSION_KEY);
+  if (rawUser) {
+    try {
+      const parsed = JSON.parse(rawUser) as AdminUser;
+      if (parsed?.id) memoryUser = parsed;
+    } catch {
+      writeSession(USER_SESSION_KEY, null);
+    }
+  }
+}
+
+hydrateFromSessionStorage();
+
 /** Remove legacy plaintext / encrypted token material from browser storage. */
 export function purgeLegacyTokenStorage(): void {
   try {
     for (const key of LEGACY_AUTH_KEYS) {
       localStorage.removeItem(key);
     }
-    // Obfuscated secureStorage keys cannot be enumerated reliably; wipe all
-    // keys that look like our previous secure_ prefix blobs on first boot.
     const toRemove: string[] = [];
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
@@ -62,7 +102,7 @@ export function purgeLegacyTokenStorage(): void {
     sessionStorage.removeItem(MFA_PENDING_KEY);
     sessionStorage.removeItem('session_master_key');
   } catch {
-    // ignore storage access errors
+    // ignore
   }
 }
 
@@ -76,6 +116,7 @@ export function getCsrfToken(): string | null {
 
 export function setCurrentUser(user: AdminUser | null): void {
   memoryUser = user;
+  writeSession(USER_SESSION_KEY, user ? JSON.stringify(user) : null);
 }
 
 export function getCurrentUser(): AdminUser | null {
@@ -86,18 +127,20 @@ export async function getCurrentUserAsync(): Promise<AdminUser | null> {
   return memoryUser;
 }
 
-/** @deprecated Tokens are HttpOnly cookies — always null for SPA. */
 export function getAuthToken(): string | null {
-  return null;
+  return memoryAccessToken;
 }
 
-/** @deprecated Tokens are HttpOnly cookies — always null for SPA. */
 export async function getAuthTokenAsync(): Promise<string | null> {
-  return null;
+  return memoryAccessToken;
+}
+
+export function getRefreshToken(): string | null {
+  return memoryRefreshToken || readSession(REFRESH_SESSION_KEY);
 }
 
 export function isAuthenticated(): boolean {
-  return !!memoryUser?.id;
+  return !!(memoryUser?.id && (memoryAccessToken || getRefreshToken()));
 }
 
 export function setMfaPendingLogin(payload: MfaPendingLogin): void {
@@ -105,7 +148,6 @@ export function setMfaPendingLogin(payload: MfaPendingLogin): void {
     userId: String(payload.userId),
     accountType: payload.accountType || 'admin',
   };
-  // Intentionally do not write sessionStorage (no auth secrets / session tokens).
 }
 
 export function getMfaPendingLogin(): MfaPendingLogin | null {
@@ -124,28 +166,34 @@ export function clearMfaPendingLogin(): void {
 export async function clearAuth(): Promise<void> {
   memoryUser = null;
   memoryCsrfToken = null;
+  memoryAccessToken = null;
+  memoryRefreshToken = null;
+  writeSession(REFRESH_SESSION_KEY, null);
+  writeSession(USER_SESSION_KEY, null);
   clearMfaPendingLogin();
   purgeLegacyTokenStorage();
 }
 
 /**
- * Persist non-sensitive session metadata after cookie-authenticated login.
- * `token` / `refreshToken` arguments are ignored (cookies are set by the API).
+ * Store session in memory (+ refresh/user in sessionStorage for tab continuity).
+ * Never writes JWTs to localStorage.
  */
 export async function persistAdminSession(options: {
   user: unknown;
   csrfToken?: string | null;
   token?: string | null;
+  accessToken?: string | null;
   refreshToken?: string | null;
 }): Promise<void> {
   purgeLegacyTokenStorage();
-  const raw = options.user && typeof options.user === 'object'
-    ? (options.user as Record<string, unknown>)
-    : {};
+  const raw =
+    options.user && typeof options.user === 'object'
+      ? (options.user as Record<string, unknown>)
+      : {};
   const {
-    token: _t,
-    accessToken: _a,
-    refreshToken: _r,
+    token: tokenFromUser,
+    accessToken: accessFromUser,
+    refreshToken: refreshFromUser,
     csrfToken: csrfFromUser,
     ...safeUser
   } = raw;
@@ -168,6 +216,22 @@ export async function persistAdminSession(options: {
       null,
     ...safeUser,
   };
+  writeSession(USER_SESSION_KEY, JSON.stringify(memoryUser));
+
+  const access =
+    options.accessToken ||
+    options.token ||
+    (typeof accessFromUser === 'string' ? accessFromUser : null) ||
+    (typeof tokenFromUser === 'string' ? tokenFromUser : null);
+  memoryAccessToken = access && String(access).trim() ? String(access) : null;
+
+  const refresh =
+    options.refreshToken ||
+    (typeof refreshFromUser === 'string' ? refreshFromUser : null);
+  if (refresh && String(refresh).trim()) {
+    memoryRefreshToken = String(refresh);
+    writeSession(REFRESH_SESSION_KEY, memoryRefreshToken);
+  }
 
   setCsrfToken(
     options.csrfToken ??
@@ -178,16 +242,19 @@ export async function persistAdminSession(options: {
 export async function forceLogout(reason?: string): Promise<void> {
   try {
     logger.warn('Force logout triggered', reason ? `Reason: ${reason}` : '');
-    // Best-effort server cookie clear via raw fetch (avoid axios circular import).
     try {
       const { API_CONFIG } = await import('./config');
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      if (memoryCsrfToken) headers['X-CSRF-Token'] = memoryCsrfToken;
+      if (memoryAccessToken) {
+        headers.Authorization = `Bearer ${memoryAccessToken}`;
+      }
       await fetch(`${API_CONFIG.BASE_URL}/users/admin/logout`, {
         method: 'POST',
         credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(memoryCsrfToken ? { 'X-CSRF-Token': memoryCsrfToken } : {}),
-        },
+        headers,
         body: '{}',
       });
     } catch {
