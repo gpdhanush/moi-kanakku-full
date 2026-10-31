@@ -61,23 +61,24 @@ Use a centralized token-based palette so future screens and components stay cons
 
 ### Light Mode Palette
 
-- Primary: #16A34A
-- Brand Accent: #A3E635
-- Background: #F7F8F3
+- Primary: #059669
+- Brand Accent: #B7E34A
+- Background: #F8F6F0
 - Surface: #FFFFFF
-- Text: #102A2A
-- Secondary Text: #64748B
-- Border: #E2E8E5
+- Text: #171A1C
+- Secondary Text: #687078
+- Border: #E3E5DF
+- Accessible primary button: #15803D with white text
 
 ### Dark Mode Palette
 
-- Primary: #4ADE80
-- Brand Accent: #BEF264
-- Background: #0B1210
-- Surface: #121C18
-- Text: #F1F5F3
-- Secondary Text: #A7B5AE
-- Border: #26352E
+- Primary: #B7E34A
+- Brand Accent: #8BCF22
+- Background: #111315
+- Surface: #191D20
+- Text: #F4F6F2
+- Secondary Text: #AAB1B5
+- Border: #30363A
 
 ### Additional Semantic Colors
 
@@ -108,7 +109,7 @@ Use a centralized token-based palette so future screens and components stay cons
 ### Font Family
 
 Use:
-- English: Manrope
+- English: Arimo (bundled for offline use)
 - Tamil: Noto Sans Tamil
 
 Do not introduce another font unless explicitly requested.
@@ -155,10 +156,10 @@ Preferred values:
 Avoid random values such as 7, 13, 17, 19, 23, 27, 31 unless there is a specific layout need.
 
 Default screen horizontal padding:
-- 24dp
+- 16dp
 
 Compact layouts may use:
-- 16dp
+- 12dp
 
 ---
 
@@ -168,35 +169,35 @@ Button styling must remain consistent across all screens and actions.
 
 ### Border Radius Scale
 
-All buttons must use a 5px border radius.
+Light-mode buttons use a 5dp radius; dark-mode buttons use the existing 12dp radius.
 
 Required button radius:
 - Button radius: 5dp
 - Input radius: 16dp
-- Card radius: 20dp
-- Dialog radius: 24dp
-- Bottom sheet radius: 28dp
+- Card radius: 16dp
+- Dialog radius: 20dp
+- Bottom sheet radius: 24dp
 - Chip radius: 999dp
 
 ### Light Mode Button Styling
 
 Light mode primary buttons must use:
-- Background: #16A34A
+- Background: #15803D
 - Text: #FFFFFF
 - Border radius: 5dp
 - Height: 52dp
 
-Secondary and tertiary light mode buttons should remain minimal and readable, but all standard buttons still use a 5dp radius.
+Secondary and tertiary light-mode buttons remain minimal and readable, with a 5dp radius.
 
 ### Dark Mode Button Styling
 
-Dark mode button styling remains as currently defined and does not require any change.
+Dark mode primary buttons use the lime primary, charcoal text, and 12dp radius.
 
 ### Button Styling Rules
 
-- All standard buttons must use a 5dp radius.
+- Light-mode buttons must use a 5dp radius; dark-mode buttons use a 12dp radius.
 - Light mode primary buttons must use green background with white text.
-- Dark mode keeps the current design and should not be altered.
+- Dark mode primary buttons use the lime primary with charcoal text.
 - Buttons should support default, pressed, disabled, loading, and focused states.
 - Loading should not change overall size or cause layout jumping.
 - Do not create random button designs for individual screens.
@@ -213,16 +214,17 @@ Dark mode button styling remains as currently defined and does not require any c
 - Keep surfaces light enough to feel premium and calm.
 - Use soft, low-opacity shadows and minimal elevation.
 
-### Example Light Theme Tokens
+### Light Theme Tokens
 
-- App background: #F7F8F3
+- App background: #F8F6F0
 - Card surface: #FFFFFF
-- Primary CTA: #16A34A
+- Primary: #059669
+- Primary CTA: #15803D
 - Primary CTA Text: #FFFFFF
-- Brand accent: #A3E635
-- Primary text: #102A2A
-- Secondary text: #64748B
-- Border: #E2E8E5
+- Brand accent: #B7E34A
+- Primary text: #171A1C
+- Secondary text: #687078
+- Border: #E3E5DF
 
 ---
 
@@ -235,15 +237,15 @@ Dark mode button styling remains as currently defined and does not require any c
 - Limit overly saturated colors to small highlights and status states.
 - Prefer surface contrast and borders over heavy shadows.
 
-### Example Dark Theme Tokens
+### Dark Theme Tokens
 
-- App background: #0B1210
-- Card surface: #121C18
-- Primary CTA: #4ADE80
-- Brand accent: #BEF264
-- Primary text: #F1F5F3
-- Secondary text: #A7B5AE
-- Border: #26352E
+- App background: #111315
+- Card surface: #191D20
+- Primary CTA: #B7E34A
+- Brand accent: #8BCF22
+- Primary text: #F4F6F2
+- Secondary text: #AAB1B5
+- Border: #30363A
 
 ---
 
@@ -425,7 +427,7 @@ All standard buttons must follow the existing button system.
 
 Default:
 - Height: 52dp
-- Radius: 16dp
+- Radius: 5dp in light mode and 12dp in dark mode
 
 Every interactive button should support:
 - Default
@@ -750,7 +752,7 @@ Therefore:
 - Do not truncate important Tamil text.
 
 Use:
-- Manrope → English
+- Arimo → English
 - Noto Sans Tamil → Tamil
 
 ---

@@ -13,29 +13,8 @@ class ConfigurationErrorPage extends StatefulWidget {
   State<ConfigurationErrorPage> createState() => _ConfigurationErrorPageState();
 }
 
-class _ConfigurationErrorPageState extends State<ConfigurationErrorPage>
-    with SingleTickerProviderStateMixin {
+class _ConfigurationErrorPageState extends State<ConfigurationErrorPage> {
   bool _isChecking = false;
-  late final AnimationController _pulseController;
-  late final Animation<double> _pulseAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _pulseController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1800),
-    )..repeat(reverse: true);
-    _pulseAnimation = Tween<double>(begin: 0.92, end: 1.08).animate(
-      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
-    );
-  }
-
-  @override
-  void dispose() {
-    _pulseController.dispose();
-    super.dispose();
-  }
 
   Future<void> _tryAgain() async {
     if (_isChecking) return;
@@ -110,35 +89,32 @@ class _ConfigurationErrorPageState extends State<ConfigurationErrorPage>
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  ScaleTransition(
-                    scale: _pulseAnimation,
-                    child: Container(
-                      height: 120,
-                      width: 120,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            colorScheme.error.withValues(alpha: 0.18),
-                            colorScheme.error.withValues(alpha: 0.06),
-                          ],
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: colorScheme.error.withValues(alpha: 0.18),
-                            blurRadius: 28,
-                            offset: const Offset(0, 12),
-                          ),
+                  Container(
+                    height: 120,
+                    width: 120,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          colorScheme.error.withValues(alpha: 0.18),
+                          colorScheme.error.withValues(alpha: 0.06),
                         ],
                       ),
-                      child: HugeIcon(
-                        icon: HugeIcons.strokeRoundedSettings02,
-                        size: 54,
-                        color: colorScheme.error,
-                        strokeWidth: 1.8,
-                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: colorScheme.error.withValues(alpha: 0.18),
+                          blurRadius: 28,
+                          offset: const Offset(0, 12),
+                        ),
+                      ],
+                    ),
+                    child: HugeIcon(
+                      icon: HugeIcons.strokeRoundedSettings02,
+                      size: 54,
+                      color: colorScheme.error,
+                      strokeWidth: 1.8,
                     ),
                   ),
                   const SizedBox(height: 32),

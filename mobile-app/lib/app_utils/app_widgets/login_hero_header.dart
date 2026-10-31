@@ -55,6 +55,7 @@ class _AuthImageHeroState extends State<AuthImageHero>
   AnimationController? _snowController;
   List<_Snowflake>? _flakes;
   DateTime? _snowStartedAt;
+  bool _snowAnimationEnabled = false;
 
   @override
   void initState() {
@@ -62,12 +63,41 @@ class _AuthImageHeroState extends State<AuthImageHero>
     if (widget.enableSnow) {
       final random = math.Random(17);
       _flakes = List.generate(36, (_) => _Snowflake.random(random));
-      _snowStartedAt = DateTime.now();
-      _snowController = AnimationController(
-        vsync: this,
-        duration: const Duration(seconds: 1),
-      )..repeat();
     }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _syncSnowAnimation(MediaQuery.disableAnimationsOf(context));
+  }
+
+  @override
+  void didUpdateWidget(covariant AuthImageHero oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.enableSnow != widget.enableSnow) {
+      _syncSnowAnimation(MediaQuery.disableAnimationsOf(context));
+    }
+  }
+
+  void _syncSnowAnimation(bool reduceMotion) {
+    final shouldAnimate = widget.enableSnow && !reduceMotion;
+    if (_snowAnimationEnabled == shouldAnimate) return;
+
+    _snowAnimationEnabled = shouldAnimate;
+    if (!shouldAnimate) {
+      _snowController?.stop();
+      return;
+    }
+
+    final random = math.Random(17);
+    _flakes ??= List.generate(36, (_) => _Snowflake.random(random));
+    _snowStartedAt = DateTime.now();
+    _snowController ??= AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 1),
+    );
+    _snowController!.repeat();
   }
 
   @override
@@ -100,7 +130,7 @@ class _AuthImageHeroState extends State<AuthImageHero>
       filterQuality: FilterQuality.high,
     );
     final snowLayer =
-        widget.enableSnow &&
+        _snowAnimationEnabled &&
             _snowController != null &&
             _flakes != null &&
             _snowStartedAt != null

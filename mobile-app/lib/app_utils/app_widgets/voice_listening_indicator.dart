@@ -23,6 +23,7 @@ class VoiceListeningIndicator extends StatefulWidget {
 class _VoiceListeningIndicatorState extends State<VoiceListeningIndicator>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
+  bool? _reduceMotion;
 
   @override
   void initState() {
@@ -31,17 +32,25 @@ class _VoiceListeningIndicatorState extends State<VoiceListeningIndicator>
       vsync: this,
       duration: const Duration(milliseconds: 1200),
     );
-    _syncAnimation();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _syncAnimation(MediaQuery.disableAnimationsOf(context));
   }
 
   @override
   void didUpdateWidget(covariant VoiceListeningIndicator oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.active != widget.active) _syncAnimation();
+    if (oldWidget.active != widget.active) {
+      _syncAnimation(_reduceMotion ?? MediaQuery.disableAnimationsOf(context));
+    }
   }
 
-  void _syncAnimation() {
-    if (widget.active) {
+  void _syncAnimation(bool reduceMotion) {
+    _reduceMotion = reduceMotion;
+    if (widget.active && !reduceMotion) {
       _controller.repeat();
     } else {
       _controller.stop();
@@ -57,9 +66,11 @@ class _VoiceListeningIndicatorState extends State<VoiceListeningIndicator>
 
   @override
   Widget build(BuildContext context) {
-    if (!widget.active) {
+    if (!widget.active || _reduceMotion == true) {
       return HugeIcon(
-        icon: HugeIcons.strokeRoundedMic01,
+        icon: widget.active
+            ? HugeIcons.strokeRoundedMic02
+            : HugeIcons.strokeRoundedMic01,
         color: widget.color,
         size: widget.size,
         strokeWidth: 1.9,

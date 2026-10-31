@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'app_colors.dart';
 import 'app_custom_themes.dart';
+import 'app_radius.dart';
 import 'app_shadows.dart';
 
 class AppThemes {
@@ -16,23 +17,14 @@ class AppThemes {
   static const double tabletBreakpoint = 768;
   static const double desktopBreakpoint = 1024;
 
-  /// Tamil glyphs render visually larger than Latin at the same size.
-  /// Scale the whole UI text down slightly for a friendlier Tamil layout.
-  static const double tamilTextScale = 0.88;
-
   static double _fontDelta(String languageCode) {
-    // Kept for callers; Tamil sizing is handled via [textScaleForLanguage].
+    // Kept for callers; both languages use the platform text scaler.
     return 0.0;
   }
 
   /// Public font delta getter for language-specific font sizing
   static double getFontDelta(String languageCode) {
     return _fontDelta(languageCode);
-  }
-
-  /// Multiplier applied on top of the system text scaler for a language.
-  static double textScaleForLanguage(String languageCode) {
-    return languageCode.toLowerCase() == 'ta' ? tamilTextScale : 1.0;
   }
 
   /// Clamp font sizes to ensure readability
@@ -257,9 +249,9 @@ class AppThemes {
     bool isDark = false,
   }) {
     final isLightMode = !isDark;
-    final buttonRadius = isLightMode ? 5.0 : 12.0;
+    final buttonRadius = isLightMode ? AppRadius.button : AppRadius.md;
     final buttonBackground = isLightMode
-        ? const Color(0xFF16A34A)
+        ? AppColors.lightButtonPrimary
         : AppColors.primary;
     final buttonForeground = isLightMode ? AppColors.white : AppColors.charcoal;
 
@@ -310,7 +302,7 @@ class AppThemes {
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppRadius.card),
           side: BorderSide(color: c.border.withValues(alpha: 0.6)),
         ),
       ),
@@ -318,7 +310,7 @@ class AppThemes {
         backgroundColor: c.surfaceElevated,
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(AppRadius.lg),
           side: BorderSide(color: c.border),
         ),
       ),
@@ -327,7 +319,9 @@ class AppThemes {
         surfaceTintColor: Colors.transparent,
         modalBackgroundColor: c.surfaceElevated,
         shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          borderRadius: BorderRadius.vertical(
+            top: Radius.circular(AppRadius.xl),
+          ),
         ),
       ),
       dividerColor: c.border,
@@ -342,7 +336,7 @@ class AppThemes {
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
           foregroundColor: AppColors.white,
-          backgroundColor: const Color(0xFF16A34A),
+          backgroundColor: AppColors.lightButtonPrimary,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
         ),
       ),
@@ -394,15 +388,15 @@ class AppThemes {
         fillColor: c.surface,
         hintStyle: _arimo(color: c.textMuted, fontSize: 14),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(AppRadius.input),
           borderSide: BorderSide(color: c.border),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(AppRadius.input),
           borderSide: BorderSide(color: c.border),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(AppRadius.input),
           borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
         ),
       ),
@@ -513,7 +507,7 @@ class AppThemes {
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppRadius.card),
           side: BorderSide(color: c.border),
         ),
       ),
@@ -521,7 +515,7 @@ class AppThemes {
         backgroundColor: c.surfaceElevated,
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(AppRadius.lg),
           side: BorderSide(color: c.border),
         ),
       ),
@@ -530,7 +524,9 @@ class AppThemes {
         surfaceTintColor: Colors.transparent,
         modalBackgroundColor: c.surfaceElevated,
         shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          borderRadius: BorderRadius.vertical(
+            top: Radius.circular(AppRadius.xl),
+          ),
         ),
       ),
       dividerColor: c.border,
@@ -546,6 +542,9 @@ class AppThemes {
         style: FilledButton.styleFrom(
           foregroundColor: AppColors.charcoal,
           backgroundColor: AppColors.primary,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.md),
+          ),
         ),
       ),
       textButtonTheme: TextButtonThemeData(
@@ -553,7 +552,9 @@ class AppThemes {
           elevation: 0,
           foregroundColor: c.textSecondary,
           textStyle: AppTextStyles.textButtonStyle,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.md),
+          ),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
@@ -561,6 +562,9 @@ class AppThemes {
           foregroundColor: c.textPrimary,
           backgroundColor: c.surfaceVariant,
           side: BorderSide(color: c.border),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.md),
+          ),
         ),
       ),
       floatingActionButtonTheme: FloatingActionButtonThemeData(
@@ -595,15 +599,15 @@ class AppThemes {
         fillColor: c.surface,
         hintStyle: _arimo(color: c.textMuted, fontSize: 14),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(AppRadius.input),
           borderSide: BorderSide(color: c.border),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(AppRadius.input),
           borderSide: BorderSide(color: c.border),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(AppRadius.input),
           borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
         ),
       ),

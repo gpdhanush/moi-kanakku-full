@@ -25,12 +25,28 @@ class RotatingSettingsIcon extends StatefulWidget {
 class _RotatingSettingsIconState extends State<RotatingSettingsIcon>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
+  bool? _reduceMotion;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(vsync: this, duration: widget.duration)
-      ..repeat();
+    _controller = AnimationController(vsync: this, duration: widget.duration);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _syncAnimation(MediaQuery.disableAnimationsOf(context));
+  }
+
+  void _syncAnimation(bool reduceMotion) {
+    if (_reduceMotion == reduceMotion) return;
+    _reduceMotion = reduceMotion;
+    if (reduceMotion) {
+      _controller.stop();
+    } else {
+      _controller.repeat();
+    }
   }
 
   @override
@@ -38,9 +54,7 @@ class _RotatingSettingsIconState extends State<RotatingSettingsIcon>
     super.didUpdateWidget(oldWidget);
     if (oldWidget.duration != widget.duration) {
       _controller.duration = widget.duration;
-      if (!_controller.isAnimating) {
-        _controller.repeat();
-      }
+      if (_reduceMotion == false) _controller.repeat();
     }
   }
 
@@ -60,15 +74,22 @@ class _RotatingSettingsIconState extends State<RotatingSettingsIcon>
         color: widget.backgroundColor,
       ),
       alignment: Alignment.center,
-      child: RotationTransition(
-        turns: _controller,
-        child: HugeIcon(
-          icon: HugeIcons.strokeRoundedSettings01,
-          size: widget.iconSize,
-          color: widget.color,
-          strokeWidth: 1.6,
-        ),
-      ),
+      child: _reduceMotion == true
+          ? HugeIcon(
+              icon: HugeIcons.strokeRoundedSettings01,
+              size: widget.iconSize,
+              color: widget.color,
+              strokeWidth: 1.6,
+            )
+          : RotationTransition(
+              turns: _controller,
+              child: HugeIcon(
+                icon: HugeIcons.strokeRoundedSettings01,
+                size: widget.iconSize,
+                color: widget.color,
+                strokeWidth: 1.6,
+              ),
+            ),
     );
   }
 }

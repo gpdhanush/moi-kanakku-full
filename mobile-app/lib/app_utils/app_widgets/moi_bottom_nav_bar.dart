@@ -193,45 +193,42 @@ class _MoiBottomNavTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = selected ? active : inactive;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final activeDotColor = isDark
-        ? const Color(0xFFB9F863)
-        : Theme.of(context).colorScheme.primary;
 
-    return InkWell(
-      onTap: onTap,
-      splashColor: Colors.transparent,
-      highlightColor: Colors.transparent,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 180),
-            curve: Curves.easeOutCubic,
-            width: selected ? 72 : 40,
-            height: selected ? 34 : 28,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: selected ? indicator : Colors.transparent,
-              borderRadius: BorderRadius.circular(selected ? 18 : 12),
-              boxShadow: const [],
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: item.label,
+      child: InkWell(
+        onTap: onTap,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              curve: Curves.easeOutCubic,
+              width: selected ? 72 : 40,
+              height: selected ? 34 : 28,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: selected ? indicator : Colors.transparent,
+                borderRadius: BorderRadius.circular(selected ? 18 : 12),
+                boxShadow: const [],
+              ),
+              child: HugeIcon(
+                icon: item.icon,
+                color: selected ? active : inactive,
+                size: selected ? 22 : 20,
+                strokeWidth: selected ? 2.0 : 1.8,
+              ),
             ),
-            child: HugeIcon(
-              icon: item.icon,
-              color: selected ? active : inactive,
-              size: selected ? 22 : 20,
-              strokeWidth: selected ? 2.0 : 1.8,
-            ),
-          ),
-          const SizedBox(height: 6),
-          if (!selected)
+            const SizedBox(height: 6),
             AnimatedDefaultTextStyle(
               duration: const Duration(milliseconds: 180),
               curve: Curves.easeOutCubic,
               style: AppTypography.label.copyWith(
                 color: color,
                 fontSize: 10.5,
-                fontWeight: FontWeight.w500,
+                fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
                 letterSpacing: -0.1,
                 height: 1.1,
               ),
@@ -241,19 +238,9 @@ class _MoiBottomNavTile extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
               ),
-            )
-          else
-            SizedBox(
-              width: 8,
-              height: 8,
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  color: activeDotColor,
-                  shape: BoxShape.circle,
-                ),
-              ),
             ),
-        ],
+          ],
+        ),
       ),
     );
   }

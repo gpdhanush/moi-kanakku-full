@@ -36,7 +36,7 @@ class AppButton extends StatelessWidget {
     final List<List<dynamic>>? effectiveIcon =
         icon ?? (showIcon ? HugeIcons.strokeRoundedFloppyDisk : null);
 
-    final lightButtonColor = Theme.of(context).colorScheme.primary;
+    final lightButtonColor = AppColors.lightButtonPrimary;
     final defaultGradient = isDark
         ? LinearGradient(
             colors: [
@@ -59,7 +59,7 @@ class AppButton extends StatelessWidget {
 
     final contentColor =
         textColor ?? (isDark ? AppColors.charcoal : AppColors.white);
-    const radius = 5.0;
+    final radius = isDark ? AppRadius.md : AppRadius.button;
 
     return Container(
       width: width ?? double.infinity,

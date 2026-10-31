@@ -21,6 +21,7 @@ abstract final class AppColors {
   static const Color saffronGold = Color(0xFFF2B84B);
   static const Color lightPrimary = Color(0xFF059669);
   static const Color darkPrimary = accent;
+  static const Color lightButtonPrimary = Color(0xFF15803D);
 
   /// Locked brand seed — replaces the former multi-accent picker.
   static const Color brandSeed = primary;

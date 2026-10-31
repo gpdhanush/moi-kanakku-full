@@ -3,11 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 /// Smooth layered wave clip used under auth heroes.
-enum WaveCurveStyle {
-  soft,
-  deep,
-  gentle,
-}
+enum WaveCurveStyle { soft, deep, gentle }
 
 class WaveBottom extends StatelessWidget {
   final Color color;
@@ -174,21 +170,36 @@ class AnimatedWaveBottom extends StatefulWidget {
 class _AnimatedWaveBottomState extends State<AnimatedWaveBottom>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
+  bool? _reduceMotion;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(vsync: this, duration: widget.duration)
-      ..repeat();
+    _controller = AnimationController(vsync: this, duration: widget.duration);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _syncAnimation(MediaQuery.disableAnimationsOf(context));
+  }
+
+  void _syncAnimation(bool reduceMotion) {
+    if (_reduceMotion == reduceMotion) return;
+    _reduceMotion = reduceMotion;
+    if (reduceMotion) {
+      _controller.stop();
+    } else {
+      _controller.repeat();
+    }
   }
 
   @override
   void didUpdateWidget(covariant AnimatedWaveBottom oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.duration != widget.duration) {
-      _controller
-        ..duration = widget.duration
-        ..repeat();
+      _controller.duration = widget.duration;
+      if (_reduceMotion == false) _controller.repeat();
     }
   }
 
@@ -200,6 +211,16 @@ class _AnimatedWaveBottomState extends State<AnimatedWaveBottom>
 
   @override
   Widget build(BuildContext context) {
+    if (_reduceMotion ?? MediaQuery.disableAnimationsOf(context)) {
+      return WaveBottom(
+        color: widget.color,
+        height: widget.height,
+        opacity: widget.opacity,
+        style: widget.style,
+        phase: 0,
+      );
+    }
+
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, _) {
@@ -222,10 +243,8 @@ class _AnimatedWaveBottomState extends State<AnimatedWaveBottom>
 class WaveHeroClipper extends CustomClipper<Path> {
   final double phase;
 
-  WaveHeroClipper({
-    required Listenable reclip,
-    required this.phase,
-  }) : super(reclip: reclip);
+  WaveHeroClipper({required Listenable reclip, required this.phase})
+    : super(reclip: reclip);
 
   @override
   Path getClip(Size size) {

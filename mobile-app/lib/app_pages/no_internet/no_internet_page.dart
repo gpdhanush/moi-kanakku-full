@@ -13,29 +13,8 @@ class NoInternetPage extends StatefulWidget {
   State<NoInternetPage> createState() => _NoInternetPageState();
 }
 
-class _NoInternetPageState extends State<NoInternetPage>
-    with SingleTickerProviderStateMixin {
+class _NoInternetPageState extends State<NoInternetPage> {
   bool _isChecking = false;
-  late final AnimationController _pulseController;
-  late final Animation<double> _pulseAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _pulseController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1800),
-    )..repeat(reverse: true);
-    _pulseAnimation = Tween<double>(begin: 0.96, end: 1.04).animate(
-      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
-    );
-  }
-
-  @override
-  void dispose() {
-    _pulseController.dispose();
-    super.dispose();
-  }
 
   Future<void> _tryAgain() async {
     if (_isChecking) return;
@@ -117,38 +96,35 @@ class _NoInternetPageState extends State<NoInternetPage>
               ),
               child: Column(
                 children: [
-                  ScaleTransition(
-                    scale: _pulseAnimation,
+                  Container(
+                    width: 80,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      color: colors.surface,
+                      borderRadius: BorderRadius.circular(22),
+                      border: Border.all(color: colors.border),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.moiGiven.withValues(alpha: 0.12),
+                          blurRadius: 24,
+                          offset: const Offset(0, 10),
+                        ),
+                      ],
+                    ),
+                    alignment: Alignment.center,
                     child: Container(
-                      width: 80,
-                      height: 80,
+                      width: 48,
+                      height: 48,
                       decoration: BoxDecoration(
-                        color: colors.surface,
-                        borderRadius: BorderRadius.circular(22),
-                        border: Border.all(color: colors.border),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.moiGiven.withValues(alpha: 0.12),
-                            blurRadius: 24,
-                            offset: const Offset(0, 10),
-                          ),
-                        ],
+                        color: AppColors.moiGivenSoft,
+                        borderRadius: BorderRadius.circular(14),
                       ),
                       alignment: Alignment.center,
-                      child: Container(
-                        width: 48,
-                        height: 48,
-                        decoration: BoxDecoration(
-                          color: AppColors.moiGivenSoft,
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        alignment: Alignment.center,
-                        child: HugeIcon(
-                          icon: HugeIcons.strokeRoundedWifiDisconnected01,
-                          size: 22,
-                          color: AppColors.moiGiven,
-                          strokeWidth: 1.8,
-                        ),
+                      child: HugeIcon(
+                        icon: HugeIcons.strokeRoundedWifiDisconnected01,
+                        size: 22,
+                        color: AppColors.moiGiven,
+                        strokeWidth: 1.8,
                       ),
                     ),
                   ),

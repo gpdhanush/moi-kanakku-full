@@ -91,24 +91,12 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
                     debugShowCheckedModeBanner: false,
                     initialRoute: 'splash',
                     // Keep a single FlutterEasyLoading Host (GlobalKey) so
-                    // theme/language rebuilds do not remount it. Apply Tamil
-                    // text scale on the child only — never wrap the Host.
+                    // theme/language rebuilds do not remount it. Preserve the
+                    // platform text scaler for both supported languages.
                     builder: (context, child) {
-                      final langScale = AppThemes.textScaleForLanguage(
-                        languageProvider.currentLanguage,
-                      );
-                      final media = MediaQuery.of(context);
-                      final systemFactor = media.textScaler.scale(14) / 14;
                       return FlutterEasyLoading(
                         key: _easyLoadingHostKey,
-                        child: MediaQuery(
-                          data: media.copyWith(
-                            textScaler: TextScaler.linear(
-                              systemFactor * langScale,
-                            ),
-                          ),
-                          child: child ?? const SizedBox.shrink(),
-                        ),
+                        child: child ?? const SizedBox.shrink(),
                       );
                     },
                     onGenerateRoute: AppRoute.allRoutes,
