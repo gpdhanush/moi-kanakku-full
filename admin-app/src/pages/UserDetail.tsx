@@ -1,11 +1,6 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
-import {
-  useMutation,
-  useQueries,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft,
   User,
@@ -31,6 +26,7 @@ import {
   ChevronDown,
   ScrollText,
   Download,
+  ChevronRight,
 } from "lucide-react";
 import { StatCard, StatCardSkeleton } from "@/components/ui/stat-card";
 import { Button } from "@/components/ui/button";
@@ -74,15 +70,27 @@ import {
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { toast } from "@/hooks/use-toast";
 import { usersApi, type UserDevice } from "@/features/users/api";
-import { personsApi, type PersonItem } from "@/features/persons/api";
 import {
-  transactionFunctionsApi,
-  type TransactionFunctionItem,
-} from "@/features/transaction-functions/api";
+  useUserFunctionsQuery,
+  useUserPersonsQuery,
+  useUserQuery,
+  useUserTransactionsQuery,
+} from "@/features/users/queries";
 import {
-  transactionsApi,
-  type TransactionItem,
-} from "@/features/transactions/api";
+  Field,
+  SectionCard,
+  TransactionTypeBadge,
+  ViewTransactionButton,
+} from "@/features/users/detail-ui";
+import {
+  functionPath,
+  personFullName,
+  personPath,
+  transactionPersonName,
+} from "@/features/users/detail-utils";
+import type { PersonItem } from "@/features/persons/api";
+import type { TransactionFunctionItem } from "@/features/transaction-functions/api";
+import type { TransactionItem } from "@/features/transactions/api";
 import {
   upcomingFunctionsApi,
   type UpcomingFunctionItem,
@@ -126,39 +134,6 @@ const NOTIFICATION_TYPES: { value: BulkNotificationType; label: string }[] = [
   { value: "general", label: "general" },
 ];
 
-function Field({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="min-w-0 space-y-1">
-      <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-        {label}
-      </p>
-      <p className="break-words text-sm font-medium text-foreground">{value}</p>
-    </div>
-  );
-}
-
-function SectionCard({
-  title,
-  icon,
-  children,
-}: {
-  title: string;
-  icon: ReactNode;
-  children: ReactNode;
-}) {
-  return (
-    <div className="min-w-0 rounded-2xl border border-border/60 bg-card p-5 shadow-sm">
-      <div className="mb-4 flex items-center gap-2.5">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
-          {icon}
-        </div>
-        <h3 className="text-sm font-semibold tracking-tight">{title}</h3>
-      </div>
-      {children}
-    </div>
-  );
-}
-
 export default function UserDetail() {
   const { userId = "" } = useParams();
   const navigate = useNavigate();
@@ -181,48 +156,16 @@ export default function UserDetail() {
     useState<BulkNotificationType>("general");
   const [isExporting, setIsExporting] = useState(false);
 
-  const userQuery = useQuery({
-    queryKey: ["admin", "users", userId],
-    queryFn: () => usersApi.getById(userId),
+  const userQuery = useUserQuery(userId);
+  const personsQuery = useUserPersonsQuery(userId);
+  const functionsQuery = useUserFunctionsQuery(userId);
+  const transactionsQuery = useUserTransactionsQuery(userId);
+  const upcomingFunctionsQuery = useQuery({
+    queryKey: ["admin", "upcoming-functions", userId],
+    queryFn: () => upcomingFunctionsApi.list(userId),
     enabled: !!userId,
     staleTime: 60_000,
   });
-
-  const relatedQueries = useQueries({
-    queries: [
-      {
-        queryKey: ["admin", "persons", userId],
-        queryFn: () => personsApi.listByUser(userId),
-        enabled: !!userId,
-        staleTime: 60_000,
-      },
-      {
-        queryKey: ["admin", "transaction-functions", userId],
-        queryFn: () => transactionFunctionsApi.list(userId),
-        enabled: !!userId,
-        staleTime: 60_000,
-      },
-      {
-        queryKey: ["admin", "transactions", "user", userId],
-        queryFn: () => transactionsApi.list(userId),
-        enabled: !!userId,
-        staleTime: 60_000,
-      },
-      {
-        queryKey: ["admin", "upcoming-functions", userId],
-        queryFn: () => upcomingFunctionsApi.list(userId),
-        enabled: !!userId,
-        staleTime: 60_000,
-      },
-    ],
-  });
-
-  const [
-    personsQuery,
-    functionsQuery,
-    transactionsQuery,
-    upcomingFunctionsQuery,
-  ] = relatedQueries;
 
   const notificationsQuery = useQuery({
     queryKey: [
@@ -1119,6 +1062,28 @@ export default function UserDetail() {
               render: (row) => formatDateTime(row.createdAt),
               searchValue: (row) => row.createdAt || "",
             },
+            {
+              key: "actions",
+              header: "Actions",
+              className: "w-20 text-right",
+              render: (row) => (
+                <Button
+                  asChild
+                  size="icon"
+                  variant="ghost"
+                  className="h-8 w-8"
+                  title="View person details"
+                >
+                  <Link
+                    to={personPath(userId, row.id)}
+                    aria-label={`View details for ${personFullName(row)}`}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Link>
+                </Button>
+              ),
+              searchValue: () => "",
+            },
           ]}
         />
 
@@ -1181,6 +1146,28 @@ export default function UserDetail() {
               render: (row) => formatDateTime(row.createdAt),
               searchValue: (row) => row.createdAt || "",
             },
+            {
+              key: "actions",
+              header: "Actions",
+              className: "w-20 text-right",
+              render: (row) => (
+                <Button
+                  asChild
+                  size="icon"
+                  variant="ghost"
+                  className="h-8 w-8"
+                  title="View function details"
+                >
+                  <Link
+                    to={functionPath(userId, row.id)}
+                    aria-label={`View details for ${row.functionName || "function"}`}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Link>
+                </Button>
+              ),
+              searchValue: () => "",
+            },
           ]}
         />
 
@@ -1201,6 +1188,12 @@ export default function UserDetail() {
               searchValue: () => "",
             },
             {
+              key: "person",
+              header: "Person",
+              render: (row) => transactionPersonName(row),
+              searchValue: (row) => transactionPersonName(row),
+            },
+            {
               key: "transactionFunction",
               header: "Transaction Function",
               render: (row) => displayValue(row.transactionFunctionName),
@@ -1215,18 +1208,7 @@ export default function UserDetail() {
             {
               key: "type",
               header: "Type",
-              render: (row) => (
-                <Badge
-                  className={cn(
-                    "border-transparent",
-                    (row.type || "").toUpperCase() === "RETURN"
-                      ? "bg-amber-500/15 text-amber-700"
-                      : "bg-emerald-500/15 text-emerald-700",
-                  )}
-                >
-                  {formatLabel(row.type)}
-                </Badge>
-              ),
+              render: (row) => <TransactionTypeBadge type={row.type} />,
               searchValue: (row) => row.type || "",
             },
             {
@@ -1251,6 +1233,15 @@ export default function UserDetail() {
               className: "whitespace-nowrap",
               render: (row) => formatDateTime(row.createdAt),
               searchValue: (row) => row.createdAt || "",
+            },
+            {
+              key: "actions",
+              header: "Actions",
+              className: "w-20 text-right",
+              render: (row) => (
+                <ViewTransactionButton userId={userId} row={row} />
+              ),
+              searchValue: () => "",
             },
           ]}
         />

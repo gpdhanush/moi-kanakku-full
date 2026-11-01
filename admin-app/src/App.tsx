@@ -22,6 +22,9 @@ const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const UsersMaster = lazy(() => import("./pages/UsersMaster"));
 const UserDetail = lazy(() => import("./pages/UserDetail"));
+const PersonDetail = lazy(() => import("./pages/PersonDetail"));
+const FunctionDetail = lazy(() => import("./pages/FunctionDetail"));
+const TransactionDetail = lazy(() => import("./pages/TransactionDetail"));
 const Transactions = lazy(() => import("./pages/Transactions"));
 const Functions = lazy(() => import("./pages/Functions"));
 const UpcomingFunctions = lazy(() => import("./pages/UpcomingFunctions"));
@@ -70,6 +73,9 @@ const AppContent = () => {
           <Route path="/dashboard" element={<LazyRoute><Dashboard /></LazyRoute>} />
           <Route path="/users" element={<LazyRoute><UsersMaster /></LazyRoute>} />
           <Route path="/users/:userId" element={<LazyRoute><UserDetail /></LazyRoute>} />
+          <Route path="/users/:userId/persons/:personId" element={<LazyRoute><PersonDetail /></LazyRoute>} />
+          <Route path="/users/:userId/functions/:functionId" element={<LazyRoute><FunctionDetail /></LazyRoute>} />
+          <Route path="/users/:userId/transactions/:transactionId" element={<LazyRoute><TransactionDetail /></LazyRoute>} />
           <Route path="/transactions" element={<LazyRoute><Transactions /></LazyRoute>} />
           <Route path="/functions" element={<LazyRoute><Functions /></LazyRoute>} />
           <Route path="/upcoming-functions" element={<LazyRoute><UpcomingFunctions /></LazyRoute>} />

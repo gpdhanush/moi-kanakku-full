@@ -28,15 +28,15 @@ const toastVariants = cva(
     variants: {
       variant: {
         default:
-          "default border-primary bg-[linear-gradient(hsl(var(--primary)/0.1),hsl(var(--primary)/0.1))] text-primary dark:border-primary/80 dark:bg-primary/15 dark:text-primary",
+          "default border-primary bg-background bg-[linear-gradient(hsl(var(--primary)/0.1),hsl(var(--primary)/0.1))] text-primary dark:border-primary/80 dark:bg-[linear-gradient(hsl(var(--primary)/0.15),hsl(var(--primary)/0.15))] dark:text-primary",
         success:
-          "success border-[#2da44e] bg-[linear-gradient(#2da44e1a,#2da44e1a)] text-[#1a7f37] dark:border-emerald-400/80 dark:bg-emerald-500/15 dark:text-emerald-200",
+          "success border-[#2da44e] bg-background bg-[linear-gradient(#2da44e1a,#2da44e1a)] text-[#1a7f37] dark:border-emerald-400/80 dark:bg-[linear-gradient(rgb(16_185_129/0.15),rgb(16_185_129/0.15))] dark:text-emerald-200",
         destructive:
-          "destructive border-[#f85149] bg-[linear-gradient(#f851491a,#f851491a)] text-[#b22b2b] dark:border-red-400/80 dark:bg-red-500/15 dark:text-red-200",
+          "destructive border-[#f85149] bg-background bg-[linear-gradient(#f851491a,#f851491a)] text-[#b22b2b] dark:border-red-400/80 dark:bg-[linear-gradient(rgb(239_68_68/0.15),rgb(239_68_68/0.15))] dark:text-red-200",
         error:
-          "destructive error border-[#f85149] bg-[linear-gradient(#f851491a,#f851491a)] text-[#b22b2b] dark:border-red-400/80 dark:bg-red-500/15 dark:text-red-200",
+          "destructive error border-[#f85149] bg-background bg-[linear-gradient(#f851491a,#f851491a)] text-[#b22b2b] dark:border-red-400/80 dark:bg-[linear-gradient(rgb(239_68_68/0.15),rgb(239_68_68/0.15))] dark:text-red-200",
         info:
-          "info border-primary bg-[linear-gradient(hsl(var(--primary)/0.1),hsl(var(--primary)/0.1))] text-primary dark:border-primary/80 dark:bg-primary/15 dark:text-primary",
+          "info border-primary bg-background bg-[linear-gradient(hsl(var(--primary)/0.1),hsl(var(--primary)/0.1))] text-primary dark:border-primary/80 dark:bg-[linear-gradient(hsl(var(--primary)/0.15),hsl(var(--primary)/0.15))] dark:text-primary",
       },
     },
     defaultVariants: {
