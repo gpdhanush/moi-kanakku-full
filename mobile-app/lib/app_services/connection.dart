@@ -4,8 +4,6 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:moi/app_configs/api_startup_config.dart';
-import 'package:moi/app_configs/api_certificate_pinning.dart';
-import 'package:moi/app_configs/dio_certificate_pinning.dart';
 import 'package:moi/app_configs/index.dart';
 import 'package:moi/app_storages/secure_storages.dart';
 import 'package:moi/app_utils/app_global/alert_services.dart';
@@ -48,8 +46,6 @@ class Connection {
             (status < 300 || status == 400 || status == 403 || status == 404),
       ),
     );
-
-    configureApiCertificatePinning(_dio);
 
     _dio.interceptors.add(
       InterceptorsWrapper(
@@ -603,13 +599,6 @@ class Connection {
       _alertServices.errorToast(
         _tr('network.noInternet', 'No Internet Connection'),
       );
-      return;
-    }
-
-    final pinningMessage = certificatePinningErrorMessage(e);
-    if (pinningMessage != null) {
-      printContent('Certificate pinning failure: $pinningMessage');
-      _alertServices.errorToast(certificatePinningFailureMessage);
       return;
     }
 
