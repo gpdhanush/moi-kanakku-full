@@ -69,7 +69,7 @@ import {
   formatAppStatus,
   appStatusClassName,
 } from "@/lib/formatters";
-import { cn } from "@/lib/utils";
+import { cn, toNameCase } from "@/lib/utils";
 import { exportUsersListToPDF } from "@/utils/usersListPdf";
 
 const PAGE_LIMITS = [5, 10, 20, 50] as const;
@@ -121,19 +121,11 @@ function toSortTime(value?: string | null): number {
   return Number.isNaN(time) ? 0 : time;
 }
 
-function toNameTitleCase(value?: string | null): string {
-  if (!value) return "";
-  return value
-    .trim()
-    .toLowerCase()
-    .replace(/(^|[\s.'-])(\p{L})/gu, (_, sep: string, ch: string) => sep + ch.toUpperCase());
-}
-
 function formatActiveDevice(user: {
   active_device_brand?: string | null;
   active_device_android_version?: string | null;
 }): string {
-  const brand = toNameTitleCase(user.active_device_brand);
+  const brand = toNameCase(user.active_device_brand);
   const rawVersion = String(user.active_device_android_version ?? "").trim();
   const version = rawVersion
     ? /^android/i.test(rawVersion)
@@ -721,19 +713,18 @@ export default function UsersMaster() {
                     </div>
                   </TableHead>
                   <SortableHead label="Name" column="name" />
-                  <SortableHead label="App Status" column="app_status" />
-                  <SortableHead label="Active Device" column="device" />
+                  <SortableHead label="Status" column="app_status" />
+                  <SortableHead label="Device" column="device" />
                   <SortableHead label="Last Seen" column="last_seen_at" />
                   <SortableHead label="Last Login" column="last_login" />
                   <SortableHead label="City" column="city" />
-                  <SortableHead label="Status" column="status" />
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoading ? (
                   <TableRow>
                     <TableCell
-                      colSpan={8}
+                      colSpan={7}
                       className="h-28 text-center text-muted-foreground"
                     >
                       <div className="inline-flex items-center gap-2">
@@ -745,7 +736,7 @@ export default function UsersMaster() {
                 ) : pageRows.length === 0 ? (
                   <TableRow>
                     <TableCell
-                      colSpan={8}
+                      colSpan={7}
                       className="h-28 text-center text-muted-foreground"
                     >
                       {search.trim()
@@ -763,12 +754,6 @@ export default function UsersMaster() {
                       .join("")
                       .slice(0, 2)
                       .toUpperCase();
-                    const isActive =
-                      (user.status || "ACTIVE").toUpperCase() === "ACTIVE";
-                    const accountStatus = (
-                      user.status || "ACTIVE"
-                    ).toUpperCase();
-                    const isBlocked = accountStatus === "BLOCKED";
                     return (
                       <TableRow
                         key={id}
@@ -801,7 +786,7 @@ export default function UsersMaster() {
                               </AvatarFallback>
                             </Avatar>
                             <p className="font-medium text-primary hover:underline">
-                              {toNameTitleCase(user.name) || "N/A"}
+                              {toNameCase(user.name) || "N/A"}
                             </p>
                           </button>
                         </TableCell>
@@ -825,28 +810,6 @@ export default function UsersMaster() {
                           {formatDateTime(user.last_login)}
                         </TableCell>
                         <TableCell>{displayValue(user.city)}</TableCell>
-                        <TableCell>
-                          <Badge
-                            className={cn(
-                              "border-transparent",
-                              isActive
-                                ? "bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/20"
-                                : accountStatus === "DELETED"
-                                  ? "bg-amber-500/15 text-amber-700 hover:bg-amber-500/20"
-                                  : isBlocked
-                                    ? "bg-orange-500/15 text-orange-700 hover:bg-orange-500/20"
-                                    : "bg-rose-500/15 text-rose-700 hover:bg-rose-500/20",
-                            )}
-                          >
-                            {accountStatus === "DELETED"
-                              ? "Deleted"
-                              : isBlocked
-                                ? "Blocked"
-                                : isActive
-                                  ? "Active"
-                                  : "Inactive"}
-                          </Badge>
-                        </TableCell>
                       </TableRow>
                     );
                   })
