@@ -51,7 +51,7 @@ export function formatAppStatus(value?: string | null, { device = false } = {}):
   const status = String(value || "UNKNOWN").toUpperCase();
   if (status === "ACTIVE") return device ? "Active" : "Installed";
   if (status === "INACTIVE") return "Inactive";
-  if (status === "LIKELY_UNINSTALLED") return "Likely Uninstalled";
+  if (status === "LIKELY_UNINSTALLED") return "Uninstalled";
   return "Unknown";
 }
 

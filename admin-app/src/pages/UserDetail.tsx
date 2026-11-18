@@ -943,7 +943,7 @@ export default function UserDetail() {
                 </div>
               ))}
               <p className="text-xs text-muted-foreground">
-                Likely Uninstalled means FCM reported this token as invalid. It
+                Uninstalled means FCM reported this token as invalid. It
                 is not a guaranteed uninstall time.
               </p>
             </div>

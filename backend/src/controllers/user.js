@@ -88,6 +88,9 @@ const formatAdminUserListItem = (details) => {
   const summary = summarizeDevices(devices);
   const authSummary = buildAuthSummary(details);
   const primaryDevice = details.device || devices[0] || null;
+  const activeDevice =
+    devices.find((d) => d && (d.is_active === 1 || d.is_active === true)) ||
+    primaryDevice;
   const email =
     typeof details.email === "string"
       ? details.email.trim()
@@ -105,6 +108,8 @@ const formatAdminUserListItem = (details) => {
     device_name: primaryDevice?.device_name || null,
     brand: primaryDevice?.brand || null,
     model: primaryDevice?.model || null,
+    active_device_brand: activeDevice?.brand || null,
+    active_device_android_version: activeDevice?.androidVersion || null,
     status: details.status || "ACTIVE",
     app_status: summary.app_status,
     last_seen_at: summary.last_seen_at,

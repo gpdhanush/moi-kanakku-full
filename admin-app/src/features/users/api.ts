@@ -27,6 +27,8 @@ export interface UserListItem {
   device_name: string | null;
   brand?: string | null;
   model?: string | null;
+  active_device_brand?: string | null;
+  active_device_android_version?: string | null;
   status?: string | null;
   app_status?: AppInstallStatus | string | null;
   last_seen_at?: string | null;

@@ -78,7 +78,7 @@ const APP_STATUS_FILTERS: { value: "ALL" | AppInstallStatus; label: string }[] =
     { value: "ALL", label: "Status" },
     { value: "ACTIVE", label: "Installed" },
     { value: "INACTIVE", label: "Inactive" },
-    { value: "LIKELY_UNINSTALLED", label: "Likely Uninstalled" },
+    { value: "LIKELY_UNINSTALLED", label: "Uninstalled" },
     { value: "UNKNOWN", label: "Unknown" },
   ];
 
@@ -101,6 +101,7 @@ type SortKey =
   | "sno"
   | "name"
   | "app_status"
+  | "device"
   | "last_seen_at"
   | "last_login"
   | "city"
@@ -118,6 +119,29 @@ function toSortTime(value?: string | null): number {
   if (!value) return 0;
   const time = new Date(value).getTime();
   return Number.isNaN(time) ? 0 : time;
+}
+
+function toNameTitleCase(value?: string | null): string {
+  if (!value) return "";
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/(^|[\s.'-])(\p{L})/gu, (_, sep: string, ch: string) => sep + ch.toUpperCase());
+}
+
+function formatActiveDevice(user: {
+  active_device_brand?: string | null;
+  active_device_android_version?: string | null;
+}): string {
+  const brand = toNameTitleCase(user.active_device_brand);
+  const rawVersion = String(user.active_device_android_version ?? "").trim();
+  const version = rawVersion
+    ? /^android/i.test(rawVersion)
+      ? rawVersion
+      : `Android ${rawVersion}`
+    : "";
+  if (brand && version) return `${brand} (${version})`;
+  return brand || version;
 }
 
 function SortIcon({
@@ -215,6 +239,12 @@ export default function UsersMaster() {
           return compareValues(
             String(a.app_status || "UNKNOWN").toUpperCase(),
             String(b.app_status || "UNKNOWN").toUpperCase(),
+            sortDir,
+          );
+        case "device":
+          return compareValues(
+            formatActiveDevice(a).toLowerCase(),
+            formatActiveDevice(b).toLowerCase(),
             sortDir,
           );
         case "last_seen_at":
@@ -559,7 +589,7 @@ export default function UsersMaster() {
               />
               <StatCard
                 size="sm"
-                title="Likely Uninstalled"
+                title="Uninstalled"
                 value={
                   data.filter(
                     (u) =>
@@ -690,9 +720,9 @@ export default function UsersMaster() {
                       />
                     </div>
                   </TableHead>
-                  <SortableHead label="S.No" column="sno" className="w-16" />
                   <SortableHead label="Name" column="name" />
                   <SortableHead label="App Status" column="app_status" />
+                  <SortableHead label="Active Device" column="device" />
                   <SortableHead label="Last Seen" column="last_seen_at" />
                   <SortableHead label="Last Login" column="last_login" />
                   <SortableHead label="City" column="city" />
@@ -726,7 +756,6 @@ export default function UsersMaster() {
                 ) : (
                   pageRows.map((user, index) => {
                     const id = String(user.id);
-                    const serialNo = (currentPage - 1) * limit + index + 1;
                     const checked = selectedIds.has(id);
                     const initials = (user.name || "U")
                       .split(" ")
@@ -757,9 +786,6 @@ export default function UsersMaster() {
                             aria-label={`Select ${user.name || id}`}
                           />
                         </TableCell>
-                        <TableCell className="text-center font-medium tabular-nums">
-                          {serialNo}
-                        </TableCell>
                         <TableCell>
                           <button
                             type="button"
@@ -775,7 +801,7 @@ export default function UsersMaster() {
                               </AvatarFallback>
                             </Avatar>
                             <p className="font-medium text-primary hover:underline">
-                              {user.name || "N/A"}
+                              {toNameTitleCase(user.name) || "N/A"}
                             </p>
                           </button>
                         </TableCell>
@@ -788,6 +814,9 @@ export default function UsersMaster() {
                           >
                             {formatAppStatus(user.app_status)}
                           </Badge>
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap">
+                          {formatActiveDevice(user) || "N/A"}
                         </TableCell>
                         <TableCell className="whitespace-nowrap text-muted-foreground">
                           {formatDateTime(user.last_seen_at)}
