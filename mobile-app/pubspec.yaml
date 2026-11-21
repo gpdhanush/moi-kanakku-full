@@ -2,7 +2,7 @@ name: moi
 description: "Moi Kanakku - Tamil Accounting App"
 publish_to: "none"
 
-version: 5.3.2+60 # ANDROID PLAY STORE VERSION
+version: 5.3.3+61 # ANDROID PLAY STORE VERSION
 
 environment:
   sdk: ^3.8.0

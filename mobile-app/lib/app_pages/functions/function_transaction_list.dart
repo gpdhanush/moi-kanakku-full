@@ -5,7 +5,6 @@ import 'package:hugeicons/hugeicons.dart';
 import 'package:intl/intl.dart';
 import 'package:moi/app_configs/index.dart';
 import 'package:moi/app_services/index.dart';
-import 'package:moi/app_services/export_service.dart';
 import 'package:moi/app_storages/secure_storages.dart';
 import 'package:moi/app_themes/index.dart';
 import 'package:moi/app_utils/index.dart';
@@ -82,94 +81,11 @@ class _FunctionTransactionListState extends State<FunctionTransactionList> {
     }
   }
 
-  Future<List<Map<String, dynamic>>> _fetchAllForExport() async {
-    final user = await storage.get(AppVariables.userInformation);
-    final userId = user is Map ? user['id']?.toString() : null;
-    if (userId == null || userId.isEmpty) return [];
-    final functionId = widget.functionData['id'].toString();
-    final searchQuery = searchController.text.trim();
-    final all = <Map<String, dynamic>>[];
-    var page = 1;
-    var hasMore = true;
-    while (hasMore) {
-      final response = await transactionServices.listTransactions({
-        'userId': userId,
-        'transactionFunctionId': functionId,
-        'page': page,
-        'limit': 100,
-        if (searchQuery.isNotEmpty) 'search': searchQuery,
-      }, showLoading: false);
-      if (response == null ||
-          response is! Map ||
-          response['responseType'] != 'S') {
-        break;
-      }
-      final chunk = PaginatedResponseParser.mapChunk(response['responseValue']);
-      all.addAll(chunk);
-      hasMore = response['hasMore'] == true && chunk.isNotEmpty;
-      page += 1;
-      if (page > 500) break;
-    }
-    return all;
-  }
-
-  Future<void> _exportFunctionTransactionsPdf() async {
-    var dialogOpen = false;
-    try {
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (_) => const Center(child: CircularProgressIndicator()),
-      );
-      dialogOpen = true;
-
-      final user = await storage.get(AppVariables.userInformation);
-      final transactions = await _fetchAllForExport();
-
-      if (user == null) {
-        if (mounted) {
-          alertServices.errorToast(
-            context.read<LanguageProvider>().tr(
-              'transactionList.userDetailsNotFound',
-            ),
-          );
-        }
-        return;
-      }
-
-      final functionName =
-          widget.functionData['functionName']?.toString().replaceAll(
-            RegExp(r'[^a-zA-Z0-9]'),
-            '_',
-          ) ??
-          'Transactions';
-      final fileName = "Moi_${functionName}_Transactions.pdf";
-
-      await ExportService.exportTransactionsToPdf(
-        transactions: transactions,
-        userDetails: user,
-        fileName: fileName,
-      );
-
-      if (mounted) {
-        alertServices.successToast(
-          context.read<LanguageProvider>().tr(
-            'transactionList.exportedSuccessfully',
-          ),
-        );
-      }
-    } catch (e) {
-      debugPrint('Error exporting transactions: $e');
-      if (mounted) {
-        alertServices.errorToast(
-          context.read<LanguageProvider>().tr('transactionList.exportError'),
-        );
-      }
-    } finally {
-      if (dialogOpen && mounted) {
-        Navigator.of(context, rootNavigator: true).pop();
-      }
-    }
+  Future<void> _showExportSupportSheet() {
+    return showExportSupportSheet(
+      context: context,
+      languageProvider: context.read<LanguageProvider>(),
+    );
   }
 
   Future<void> _loadTransactions({
@@ -266,11 +182,11 @@ class _FunctionTransactionListState extends State<FunctionTransactionList> {
             padding: const EdgeInsets.only(right: 10),
             child: MoiAppHeader.circleButton(
               tooltip: languageProvider.tr('transactionList.exportPdf'),
-              onTap: _exportFunctionTransactionsPdf,
+              onTap: _showExportSupportSheet,
               backgroundColor: Colors.white.withValues(alpha: 0.14),
-              child: const HugeIcon(
+              child: HugeIcon(
                 icon: HugeIcons.strokeRoundedPdf02,
-                color: Colors.white,
+                color: primary,
                 size: 20,
                 strokeWidth: 1.9,
               ),
