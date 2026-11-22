@@ -1,6 +1,6 @@
 -- Moi Kanakku database backup
 -- Database: floatwal_moi_kanakku_db
--- Generated: 2026-11-18T13:39:55.781Z
+-- Generated: 2026-11-22T16:14:56.525Z
 
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS=0;
@@ -36,7 +36,7 @@ CREATE TABLE `admins` (
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 INSERT INTO `admins` (`id`, `full_name`, `email`, `mobile`, `password_hash`, `password_changed_at`, `status`, `failed_login_attempts`, `locked_until`, `email_verified_at`, `reset_token`, `reset_token_expires_at`, `last_login_at`, `last_activity_at`, `is_deleted`, `deleted_at`, `created_at`, `updated_at`) VALUES
-('1', 'GNANA PRAKASAM', 'agprakash406@gmail.com', '7845456609', '$2a$10$0hCM5XkCycvSts2xKekrgedadfmU5nWXZGq/DJWiBrvIDoi5Txquy', '2026-08-09 00:27:37', 'ACTIVE', 0, NULL, NULL, '78a931f7e23f6b0d5ceba605cd4e35f32b670bc17550cb34670da3c2b039af55', '2026-08-09 01:26:06', '2026-11-18 19:09:11', '2026-11-18 19:09:11', 0, NULL, '2026-03-03 05:58:45', '2026-11-18 19:09:11');
+('1', 'GNANA PRAKASAM', 'agprakash406@gmail.com', '7845456609', '$2a$10$0hCM5XkCycvSts2xKekrgedadfmU5nWXZGq/DJWiBrvIDoi5Txquy', '2026-08-09 00:27:37', 'ACTIVE', 0, NULL, NULL, '78a931f7e23f6b0d5ceba605cd4e35f32b670bc17550cb34670da3c2b039af55', '2026-08-09 01:26:06', '2026-11-22 21:43:07', '2026-11-22 21:43:07', 0, NULL, '2026-03-03 05:58:45', '2026-11-22 21:43:07');
 
 DROP TABLE IF EXISTS `app_alert_user_states`;
 CREATE TABLE `app_alert_user_states` (
@@ -176,7 +176,7 @@ CREATE TABLE `notifications` (
   KEY `idx_user_read` (`user_id`,`is_read`),
   KEY `idx_notif_user_del_created` (`user_id`,`is_deleted`,`created_at` DESC),
   CONSTRAINT `fk_notifications_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=467 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=489 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 INSERT INTO `notifications` (`id`, `user_id`, `title`, `body`, `type`, `is_read`, `read_at`, `created_at`, `updated_at`, `is_deleted`, `deleted_at`) VALUES
 ('1', '2', 'நாளைய நிகழ்வு நினைவூட்டல்', 'Puthiya upcoming function இடம்: Chennai', 'function', 1, '2026-09-17 14:15:40', '2026-09-09 06:00:08', '2026-09-17 19:37:45', 1, '2026-09-17 19:37:45'),
@@ -209,89 +209,15 @@ INSERT INTO `notifications` (`id`, `user_id`, `title`, `body`, `type`, `is_read`
 ('347', '82', 'கடவுச்சொல் மீட்டமைக்கப்பட்டது', 'உங்கள் கடவுச்சொல் வெற்றிகரமாக மீட்டமைக்கப்பட்டது. உங்கள் கணக்கின் பாதுகாப்பை உறுதிப்படுத்த, வழக்கமாக கடவுச்சொல்லை மாற்றவும்.', 'account', 0, NULL, '2026-10-30 23:15:56', '2026-10-30 23:15:56', 0, NULL),
 ('348', '87', 'பயனர் வெற்றிகரமாக பதிவு செய்யப்பட்டார்', 'இப்போது நீங்கள் இந்த பயன்பாட்டைப் பயன்படுத்தலாம்', 'account', 1, '2026-10-31 03:39:20', '2026-10-31 02:56:35', '2026-10-31 03:39:20', 0, NULL),
 ('364', '88', 'பயனர் வெற்றிகரமாக பதிவு செய்யப்பட்டார்', 'இப்போது நீங்கள் இந்த பயன்பாட்டைப் பயன்படுத்தலாம்', 'account', 0, NULL, '2026-10-31 20:58:39', '2026-10-31 20:58:39', 0, NULL),
-('385', '11', 'Password Update Reminder', 'Your password has not been updated in over 3 months. Please update your password to keep your account secure.', 'account', 0, NULL, '2026-11-04 09:00:00', '2026-11-04 09:00:00', 0, NULL),
-('386', '45', 'Password Update Reminder', 'Your password has not been updated in over 3 months. Please update your password to keep your account secure.', 'account', 0, NULL, '2026-11-04 09:00:00', '2026-11-04 09:00:00', 0, NULL),
-('387', '13', 'Password Update Reminder', 'Your password has not been updated in over 3 months. Please update your password to keep your account secure.', 'account', 0, NULL, '2026-11-04 09:00:00', '2026-11-04 09:00:00', 0, NULL),
-('388', '11', 'Password Update Reminder', 'Your password has not been updated in over 3 months. Please update your password to keep your account secure.', 'account', 0, NULL, '2026-11-04 09:00:00', '2026-11-04 09:00:00', 0, NULL),
-('389', '45', 'Password Update Reminder', 'Your password has not been updated in over 3 months. Please update your password to keep your account secure.', 'account', 0, NULL, '2026-11-04 09:00:00', '2026-11-04 09:00:00', 0, NULL),
-('390', '13', 'Password Update Reminder', 'Your password has not been updated in over 3 months. Please update your password to keep your account secure.', 'account', 0, NULL, '2026-11-04 09:00:00', '2026-11-04 09:00:00', 0, NULL),
-('391', '11', 'Password Update Reminder', 'Your password has not been updated in over 3 months. Please update your password to keep your account secure.', 'account', 0, NULL, '2026-11-07 09:00:01', '2026-11-07 09:00:01', 0, NULL),
-('392', '45', 'Password Update Reminder', 'Your password has not been updated in over 3 months. Please update your password to keep your account secure.', 'account', 0, NULL, '2026-11-07 09:00:01', '2026-11-07 09:00:01', 0, NULL),
-('393', '13', 'Password Update Reminder', 'Your password has not been updated in over 3 months. Please update your password to keep your account secure.', 'account', 0, NULL, '2026-11-07 09:00:01', '2026-11-07 09:00:01', 0, NULL),
-('394', '11', 'Password Update Reminder', 'Your password has not been updated in over 3 months. Please update your password to keep your account secure.', 'account', 0, NULL, '2026-11-08 09:00:00', '2026-11-08 09:00:00', 0, NULL),
-('395', '45', 'Password Update Reminder', 'Your password has not been updated in over 3 months. Please update your password to keep your account secure.', 'account', 0, NULL, '2026-11-08 09:00:00', '2026-11-08 09:00:00', 0, NULL),
-('396', '13', 'Password Update Reminder', 'Your password has not been updated in over 3 months. Please update your password to keep your account secure.', 'account', 0, NULL, '2026-11-08 09:00:00', '2026-11-08 09:00:00', 0, NULL),
-('397', '11', 'Password Update Reminder', 'Your password has not been updated in over 3 months. Please update your password to keep your account secure.', 'account', 0, NULL, '2026-11-08 09:00:00', '2026-11-08 09:00:00', 0, NULL),
-('398', '13', 'Password Update Reminder', 'Your password has not been updated in over 3 months. Please update your password to keep your account secure.', 'account', 0, NULL, '2026-11-08 09:00:00', '2026-11-08 09:00:00', 0, NULL),
-('399', '45', 'Password Update Reminder', 'Your password has not been updated in over 3 months. Please update your password to keep your account secure.', 'account', 0, NULL, '2026-11-08 09:00:00', '2026-11-08 09:00:00', 0, NULL),
 ('400', '89', 'பயனர் வெற்றிகரமாக பதிவு செய்யப்பட்டார்', 'இப்போது நீங்கள் இந்த பயன்பாட்டைப் பயன்படுத்தலாம்', 'account', 0, NULL, '2026-11-08 15:03:04', '2026-11-08 15:03:04', 0, NULL),
-('401', '11', 'Password Update Reminder', 'Your password has not been updated in over 3 months. Please update your password to keep your account secure.', 'account', 0, NULL, '2026-11-09 09:00:00', '2026-11-09 09:00:00', 0, NULL),
-('402', '45', 'Password Update Reminder', 'Your password has not been updated in over 3 months. Please update your password to keep your account secure.', 'account', 0, NULL, '2026-11-09 09:00:00', '2026-11-09 09:00:00', 0, NULL),
-('403', '11', 'Password Update Reminder', 'Your password has not been updated in over 3 months. Please update your password to keep your account secure.', 'account', 0, NULL, '2026-11-09 09:00:00', '2026-11-09 09:00:00', 0, NULL),
-('404', '13', 'Password Update Reminder', 'Your password has not been updated in over 3 months. Please update your password to keep your account secure.', 'account', 0, NULL, '2026-11-09 09:00:00', '2026-11-09 09:00:00', 0, NULL),
-('405', '45', 'Password Update Reminder', 'Your password has not been updated in over 3 months. Please update your password to keep your account secure.', 'account', 0, NULL, '2026-11-09 09:00:00', '2026-11-09 09:00:00', 0, NULL),
-('406', '13', 'Password Update Reminder', 'Your password has not been updated in over 3 months. Please update your password to keep your account secure.', 'account', 0, NULL, '2026-11-09 09:00:00', '2026-11-09 09:00:00', 0, NULL),
 ('407', '2', 'Tomorrow Event Reminder', 'Susmi Location: Murugabavanam', 'function', 1, '2026-11-13 17:28:35', '2026-11-10 06:00:00', '2026-11-13 17:28:35', 0, NULL),
-('408', '11', 'Password Update Reminder', 'Your password has not been updated in over 3 months. Please update your password to keep your account secure.', 'account', 0, NULL, '2026-11-10 09:00:01', '2026-11-10 09:00:01', 0, NULL),
-('409', '11', 'Password Update Reminder', 'Your password has not been updated in over 3 months. Please update your password to keep your account secure.', 'account', 0, NULL, '2026-11-10 09:00:01', '2026-11-10 09:00:01', 0, NULL),
-('410', '13', 'Password Update Reminder', 'Your password has not been updated in over 3 months. Please update your password to keep your account secure.', 'account', 0, NULL, '2026-11-10 09:00:01', '2026-11-10 09:00:01', 0, NULL),
-('411', '13', 'Password Update Reminder', 'Your password has not been updated in over 3 months. Please update your password to keep your account secure.', 'account', 0, NULL, '2026-11-10 09:00:01', '2026-11-10 09:00:01', 0, NULL),
-('412', '45', 'Password Update Reminder', 'Your password has not been updated in over 3 months. Please update your password to keep your account secure.', 'account', 0, NULL, '2026-11-10 09:00:01', '2026-11-10 09:00:01', 0, NULL),
-('413', '45', 'Password Update Reminder', 'Your password has not been updated in over 3 months. Please update your password to keep your account secure.', 'account', 0, NULL, '2026-11-10 09:00:01', '2026-11-10 09:00:01', 0, NULL),
-('414', '13', 'Password Update Reminder', 'Your password has not been updated in over 3 months. Please update your password to keep your account secure.', 'account', 0, NULL, '2026-11-11 09:00:00', '2026-11-11 09:00:00', 0, NULL),
-('415', '11', 'Password Update Reminder', 'Your password has not been updated in over 3 months. Please update your password to keep your account secure.', 'account', 0, NULL, '2026-11-11 09:00:00', '2026-11-11 09:00:00', 0, NULL),
-('416', '13', 'Password Update Reminder', 'Your password has not been updated in over 3 months. Please update your password to keep your account secure.', 'account', 0, NULL, '2026-11-11 09:00:00', '2026-11-11 09:00:00', 0, NULL),
-('417', '11', 'Password Update Reminder', 'Your password has not been updated in over 3 months. Please update your password to keep your account secure.', 'account', 0, NULL, '2026-11-11 09:00:00', '2026-11-11 09:00:00', 0, NULL),
-('418', '45', 'Password Update Reminder', 'Your password has not been updated in over 3 months. Please update your password to keep your account secure.', 'account', 0, NULL, '2026-11-11 09:00:00', '2026-11-11 09:00:00', 0, NULL),
-('419', '45', 'Password Update Reminder', 'Your password has not been updated in over 3 months. Please update your password to keep your account secure.', 'account', 0, NULL, '2026-11-11 09:00:00', '2026-11-11 09:00:00', 0, NULL),
-('420', '11', 'Password Update Reminder', 'Your password has not been updated in over 3 months. Please update your password to keep your account secure.', 'account', 0, NULL, '2026-11-12 09:00:00', '2026-11-12 09:00:00', 0, NULL),
-('421', '45', 'Password Update Reminder', 'Your password has not been updated in over 3 months. Please update your password to keep your account secure.', 'account', 0, NULL, '2026-11-12 09:00:00', '2026-11-12 09:00:00', 0, NULL),
-('422', '13', 'Password Update Reminder', 'Your password has not been updated in over 3 months. Please update your password to keep your account secure.', 'account', 0, NULL, '2026-11-12 09:00:00', '2026-11-12 09:00:00', 0, NULL),
-('423', '11', 'Password Update Reminder', 'Your password has not been updated in over 3 months. Please update your password to keep your account secure.', 'account', 0, NULL, '2026-11-12 09:00:00', '2026-11-12 09:00:00', 0, NULL),
-('424', '13', 'Password Update Reminder', 'Your password has not been updated in over 3 months. Please update your password to keep your account secure.', 'account', 0, NULL, '2026-11-12 09:00:00', '2026-11-12 09:00:00', 0, NULL),
-('425', '45', 'Password Update Reminder', 'Your password has not been updated in over 3 months. Please update your password to keep your account secure.', 'account', 0, NULL, '2026-11-12 09:00:00', '2026-11-12 09:00:00', 0, NULL),
-('426', '13', 'Password Update Reminder', 'Your password has not been updated in over 3 months. Please update your password to keep your account secure.', 'account', 0, NULL, '2026-11-13 09:00:00', '2026-11-13 09:00:00', 0, NULL),
-('427', '11', 'Password Update Reminder', 'Your password has not been updated in over 3 months. Please update your password to keep your account secure.', 'account', 0, NULL, '2026-11-13 09:00:00', '2026-11-13 09:00:00', 0, NULL),
-('428', '45', 'Password Update Reminder', 'Your password has not been updated in over 3 months. Please update your password to keep your account secure.', 'account', 0, NULL, '2026-11-13 09:00:00', '2026-11-13 09:00:00', 0, NULL),
-('429', '11', 'Password Update Reminder', 'Your password has not been updated in over 3 months. Please update your password to keep your account secure.', 'account', 0, NULL, '2026-11-13 09:00:00', '2026-11-13 09:00:00', 0, NULL),
-('430', '13', 'Password Update Reminder', 'Your password has not been updated in over 3 months. Please update your password to keep your account secure.', 'account', 0, NULL, '2026-11-13 09:00:00', '2026-11-13 09:00:00', 0, NULL),
-('431', '11', 'Password Update Reminder', 'Your password has not been updated in over 3 months. Please update your password to keep your account secure.', 'account', 0, NULL, '2026-11-13 09:00:00', '2026-11-13 09:00:00', 0, NULL),
 ('432', '20', 'New Feedback Submitted', 'Your feedback has been successfully submitted. We will review it shortly.', 'general', 1, '2026-11-13 18:23:42', '2026-11-13 18:18:43', '2026-11-13 18:23:42', 0, NULL),
 ('433', '59', 'கடவுச்சொல் மீட்டமைக்கப்பட்டது', 'உங்கள் கடவுச்சொல் வெற்றிகரமாக மீட்டமைக்கப்பட்டது. உங்கள் கணக்கின் பாதுகாப்பை உறுதிப்படுத்த, வழக்கமாக கடவுச்சொல்லை மாற்றவும்.', 'account', 0, NULL, '2026-11-14 01:01:31', '2026-11-14 01:01:31', 0, NULL),
-('434', '11', 'Password Update Reminder', 'Your password has not been updated in over 3 months. Please update your password to keep your account secure.', 'account', 0, NULL, '2026-11-14 09:00:00', '2026-11-14 09:00:00', 0, NULL),
-('435', '11', 'Password Update Reminder', 'Your password has not been updated in over 3 months. Please update your password to keep your account secure.', 'account', 0, NULL, '2026-11-14 09:00:00', '2026-11-14 09:00:00', 0, NULL),
-('436', '11', 'Password Update Reminder', 'Your password has not been updated in over 3 months. Please update your password to keep your account secure.', 'account', 0, NULL, '2026-11-14 09:00:00', '2026-11-14 09:00:00', 0, NULL),
-('437', '13', 'Password Update Reminder', 'Your password has not been updated in over 3 months. Please update your password to keep your account secure.', 'account', 0, NULL, '2026-11-14 09:00:00', '2026-11-14 09:00:00', 0, NULL),
-('438', '20', 'Password Update Reminder', 'Your password has not been updated in over 3 months. Please update your password to keep your account secure.', 'account', 0, NULL, '2026-11-14 09:00:00', '2026-11-14 09:00:00', 0, NULL),
-('439', '11', 'Password Update Reminder', 'Your password has not been updated in over 3 months. Please update your password to keep your account secure.', 'account', 0, NULL, '2026-11-14 09:00:00', '2026-11-14 09:00:00', 0, NULL),
 ('440', '54', 'கடவுச்சொல் மீட்டமைக்கப்பட்டது', 'உங்கள் கடவுச்சொல் வெற்றிகரமாக மீட்டமைக்கப்பட்டது. உங்கள் கணக்கின் பாதுகாப்பை உறுதிப்படுத்த, வழக்கமாக கடவுச்சொல்லை மாற்றவும்.', 'account', 0, NULL, '2026-11-14 22:20:33', '2026-11-14 22:20:33', 0, NULL),
-('441', '11', 'Password Update Reminder', 'Your password has not been updated in over 3 months. Please update your password to keep your account secure.', 'account', 0, NULL, '2026-11-15 09:00:01', '2026-11-15 09:00:01', 0, NULL),
-('442', '20', 'Password Update Reminder', 'Your password has not been updated in over 3 months. Please update your password to keep your account secure.', 'account', 0, NULL, '2026-11-15 09:00:01', '2026-11-15 09:00:01', 0, NULL),
-('443', '11', 'Password Update Reminder', 'Your password has not been updated in over 3 months. Please update your password to keep your account secure.', 'account', 0, NULL, '2026-11-15 09:00:01', '2026-11-15 09:00:01', 0, NULL),
-('444', '13', 'Password Update Reminder', 'Your password has not been updated in over 3 months. Please update your password to keep your account secure.', 'account', 0, NULL, '2026-11-15 09:00:01', '2026-11-15 09:00:01', 0, NULL),
-('445', '11', 'Password Update Reminder', 'Your password has not been updated in over 3 months. Please update your password to keep your account secure.', 'account', 0, NULL, '2026-11-15 09:00:01', '2026-11-15 09:00:01', 0, NULL),
-('446', '11', 'Password Update Reminder', 'Your password has not been updated in over 3 months. Please update your password to keep your account secure.', 'account', 0, NULL, '2026-11-15 09:00:01', '2026-11-15 09:00:01', 0, NULL),
-('447', '11', 'Password Update Reminder', 'Your password has not been updated in over 3 months. Please update your password to keep your account secure.', 'account', 0, NULL, '2026-11-16 09:00:00', '2026-11-16 09:00:00', 0, NULL),
-('448', '13', 'Password Update Reminder', 'Your password has not been updated in over 3 months. Please update your password to keep your account secure.', 'account', 0, NULL, '2026-11-16 09:00:00', '2026-11-16 09:00:00', 0, NULL),
-('449', '45', 'Password Update Reminder', 'Your password has not been updated in over 3 months. Please update your password to keep your account secure.', 'account', 0, NULL, '2026-11-16 09:00:00', '2026-11-16 09:00:00', 0, NULL),
-('450', '20', 'Password Update Reminder', 'Your password has not been updated in over 3 months. Please update your password to keep your account secure.', 'account', 0, NULL, '2026-11-16 09:00:00', '2026-11-16 09:00:00', 0, NULL),
-('451', '11', 'Password Update Reminder', 'Your password has not been updated in over 3 months. Please update your password to keep your account secure.', 'account', 0, NULL, '2026-11-16 09:00:00', '2026-11-16 09:00:00', 0, NULL),
-('452', '11', 'Password Update Reminder', 'Your password has not been updated in over 3 months. Please update your password to keep your account secure.', 'account', 0, NULL, '2026-11-16 09:00:00', '2026-11-16 09:00:00', 0, NULL),
-('453', '11', 'Password Update Reminder', 'Your password has not been updated in over 3 months. Please update your password to keep your account secure.', 'account', 0, NULL, '2026-11-17 09:00:00', '2026-11-17 09:00:00', 0, NULL),
-('454', '13', 'Password Update Reminder', 'Your password has not been updated in over 3 months. Please update your password to keep your account secure.', 'account', 0, NULL, '2026-11-17 09:00:00', '2026-11-17 09:00:00', 0, NULL);
-INSERT INTO `notifications` (`id`, `user_id`, `title`, `body`, `type`, `is_read`, `read_at`, `created_at`, `updated_at`, `is_deleted`, `deleted_at`) VALUES
-('455', '11', 'Password Update Reminder', 'Your password has not been updated in over 3 months. Please update your password to keep your account secure.', 'account', 0, NULL, '2026-11-17 09:00:00', '2026-11-17 09:00:00', 0, NULL),
-('456', '45', 'Password Update Reminder', 'Your password has not been updated in over 3 months. Please update your password to keep your account secure.', 'account', 0, NULL, '2026-11-17 09:00:00', '2026-11-17 09:00:00', 0, NULL),
-('457', '20', 'Password Update Reminder', 'Your password has not been updated in over 3 months. Please update your password to keep your account secure.', 'account', 0, NULL, '2026-11-17 09:00:00', '2026-11-17 09:00:00', 0, NULL),
-('458', '11', 'Password Update Reminder', 'Your password has not been updated in over 3 months. Please update your password to keep your account secure.', 'account', 0, NULL, '2026-11-17 09:00:00', '2026-11-17 09:00:00', 0, NULL),
-('459', '20', 'Feedback Response', 'Thanks', 'general', 0, NULL, '2026-11-17 16:28:11', '2026-11-17 16:28:11', 0, NULL),
-('460', '11', 'Password Update Reminder', 'Your password has not been updated in over 3 months. Please update your password to keep your account secure.', 'account', 0, NULL, '2026-11-18 09:00:00', '2026-11-18 09:00:00', 0, NULL),
-('461', '13', 'Password Update Reminder', 'Your password has not been updated in over 3 months. Please update your password to keep your account secure.', 'account', 0, NULL, '2026-11-18 09:00:00', '2026-11-18 09:00:00', 0, NULL),
-('462', '11', 'Password Update Reminder', 'Your password has not been updated in over 3 months. Please update your password to keep your account secure.', 'account', 0, NULL, '2026-11-18 09:00:00', '2026-11-18 09:00:00', 0, NULL),
-('463', '11', 'Password Update Reminder', 'Your password has not been updated in over 3 months. Please update your password to keep your account secure.', 'account', 0, NULL, '2026-11-18 09:00:00', '2026-11-18 09:00:00', 0, NULL),
-('464', '20', 'Password Update Reminder', 'Your password has not been updated in over 3 months. Please update your password to keep your account secure.', 'account', 0, NULL, '2026-11-18 09:00:00', '2026-11-18 09:00:00', 0, NULL),
-('465', '11', 'Password Update Reminder', 'Your password has not been updated in over 3 months. Please update your password to keep your account secure.', 'account', 0, NULL, '2026-11-18 09:00:00', '2026-11-18 09:00:00', 0, NULL),
-('466', '90', 'பயனர் வெற்றிகரமாக பதிவு செய்யப்பட்டார்', 'இப்போது நீங்கள் இந்த பயன்பாட்டைப் பயன்படுத்தலாம்', 'account', 0, NULL, '2026-11-18 16:11:15', '2026-11-18 16:11:15', 0, NULL);
+('459', '20', 'Feedback Response', 'Thanks', 'general', 1, '2026-11-21 23:13:00', '2026-11-17 16:28:11', '2026-11-21 23:13:00', 0, NULL),
+('466', '90', 'பயனர் வெற்றிகரமாக பதிவு செய்யப்பட்டார்', 'இப்போது நீங்கள் இந்த பயன்பாட்டைப் பயன்படுத்தலாம்', 'account', 0, NULL, '2026-11-18 16:11:15', '2026-11-18 16:11:15', 0, NULL),
+('467', '90', 'Welcome to Moi Kanakku', 'Welcome to Moi Kanakku', 'general', 0, NULL, '2026-11-18 19:11:20', '2026-11-18 19:11:20', 0, NULL),
+('480', '91', 'பயனர் வெற்றிகரமாக பதிவு செய்யப்பட்டார்', 'இப்போது நீங்கள் இந்த பயன்பாட்டைப் பயன்படுத்தலாம்', 'account', 0, NULL, '2026-11-22 08:54:52', '2026-11-22 08:54:52', 0, NULL);
 
 DROP TABLE IF EXISTS `persons`;
 CREATE TABLE `persons` (
@@ -308,7 +234,7 @@ CREATE TABLE `persons` (
   UNIQUE KEY `unique_person_per_user` (`user_id`,`first_name`,`last_name`,`mobile`,`city`),
   KEY `idx_persons_user` (`user_id`),
   KEY `idx_persons_user_del_name` (`user_id`,`first_name`)
-) ENGINE=InnoDB AUTO_INCREMENT=1389 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=1433 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 INSERT INTO `persons` (`id`, `user_id`, `first_name`, `last_name`, `mobile`, `city`, `occupation`, `created_at`, `updated_at`) VALUES
 ('1', '29', 'மலர்', 'பூபாலன்', NULL, 'அனைப்பட்டி', NULL, '2026-03-06 14:00:47', '2026-07-06 18:45:40'),
@@ -1172,7 +1098,6 @@ INSERT INTO `persons` (`id`, `user_id`, `first_name`, `last_name`, `mobile`, `ci
 ('904', '46', 'KALI', NULL, NULL, 'RAJAPALAYAM', NULL, '2026-08-24 16:49:09', '2026-08-24 16:49:09'),
 ('905', '46', 'BIRUNDHA', 'C', NULL, 'KEELAIYUR', NULL, '2026-08-24 16:49:43', '2026-08-24 16:49:43'),
 ('906', '46', 'AMSALA', 'B', NULL, 'CHIDAMBARAM', NULL, '2026-08-24 16:50:13', '2026-08-24 16:50:13'),
-('907', '46', 'DURGA', NULL, NULL, 'MEMATHUR', NULL, '2026-08-24 16:50:39', '2026-08-24 16:50:39'),
 ('908', '46', 'NATARAJAN', 'V', NULL, 'SIRKAZHI', NULL, '2026-08-24 16:51:12', '2026-08-24 16:51:12'),
 ('909', '46', 'MANIMEGALAI', 'T', NULL, 'CHENNAI', NULL, '2026-08-24 16:51:50', '2026-08-24 17:28:34'),
 ('910', '46', 'PURSHOTHAMAN', 'K', NULL, 'RAYANALLUR', NULL, '2026-08-24 16:52:23', '2026-08-24 16:52:23'),
@@ -1218,9 +1143,9 @@ INSERT INTO `persons` (`id`, `user_id`, `first_name`, `last_name`, `mobile`, `ci
 ('952', '46', 'EXECUTIVE  DIRECTOR', 'T', NULL, 'MAYILADUTHURAI', NULL, '2026-08-24 17:46:57', '2026-08-24 17:46:57'),
 ('954', '46', 'MALA', 'RAJENDRAN', NULL, 'MANJAKOLLAI', NULL, '2026-08-24 18:38:58', '2026-08-24 18:38:58'),
 ('955', '46', 'SHANKAR', 'M', NULL, 'RAJAPALAYAM', 'VAO', '2026-08-24 18:40:37', '2026-09-16 09:21:41'),
-('959', '46', 'VINITHA', 'MALA', NULL, 'VANDAIYAN KUPPAM', NULL, '2026-08-25 11:16:38', '2026-08-25 11:16:38');
+('959', '46', 'VINITHA', 'MALA', NULL, 'VANDAIYAN KUPPAM', NULL, '2026-08-25 11:16:38', '2026-08-25 11:16:38'),
+('960', '46', 'RAJARAMAN', 'JANAGI', NULL, 'SEMBANARKOIL', NULL, '2026-08-25 11:18:41', '2026-08-25 11:18:41');
 INSERT INTO `persons` (`id`, `user_id`, `first_name`, `last_name`, `mobile`, `city`, `occupation`, `created_at`, `updated_at`) VALUES
-('960', '46', 'RAJARAMAN', 'JANAGI', NULL, 'SEMBANARKOIL', NULL, '2026-08-25 11:18:41', '2026-08-25 11:18:41'),
 ('961', '46', 'PANDIYAN', 'N', NULL, 'RAJAPALAYAM', NULL, '2026-08-25 11:20:32', '2026-08-25 11:20:32'),
 ('962', '46', 'PANDIAN', 'N', NULL, 'RAJAPALAYAM', NULL, '2026-08-25 11:22:57', '2026-09-10 04:59:26'),
 ('963', '46', 'PALANI', 'R', NULL, 'RAJAPALAYAM', NULL, '2026-08-25 11:24:21', '2026-08-25 11:24:21'),
@@ -1319,9 +1244,9 @@ INSERT INTO `persons` (`id`, `user_id`, `first_name`, `last_name`, `mobile`, `ci
 ('1060', '46', 'JYOTHI', 'V', NULL, 'SEMBANARKOIL', 'TEACHER', '2026-08-26 11:51:25', '2026-08-26 11:51:25'),
 ('1061', '46', 'ANNAMALAI', 'G', NULL, 'THIRUCHAMPALLI', NULL, '2026-08-26 11:51:57', '2026-08-26 11:51:57'),
 ('1062', '46', 'JAYABALAN', NULL, NULL, 'NELLUR', NULL, '2026-08-26 11:52:32', '2026-08-26 11:52:32'),
-('1063', '46', 'CHINNAIYAN', 'R', NULL, 'MUDIKANDANALLUR', NULL, '2026-08-26 11:53:04', '2026-08-26 11:53:04');
+('1063', '46', 'CHINNAIYAN', 'R', NULL, 'MUDIKANDANALLUR', NULL, '2026-08-26 11:53:04', '2026-08-26 11:53:04'),
+('1064', '46', 'DHINES', 'ATS', NULL, 'MAYILADUTHURAI', 'ATS', '2026-08-26 11:54:28', '2026-08-26 11:54:28');
 INSERT INTO `persons` (`id`, `user_id`, `first_name`, `last_name`, `mobile`, `city`, `occupation`, `created_at`, `updated_at`) VALUES
-('1064', '46', 'DHINES', 'ATS', NULL, 'MAYILADUTHURAI', 'ATS', '2026-08-26 11:54:28', '2026-08-26 11:54:28'),
 ('1065', '46', 'SIVA', 'S', NULL, 'MAYILADUTHURAI', 'ATS', '2026-08-26 11:56:19', '2026-08-26 11:56:19'),
 ('1066', '46', 'MANJULA', 'SARAVANAN', NULL, 'MAYILADUTHURAI', NULL, '2026-08-26 11:57:35', '2026-08-26 11:57:35'),
 ('1067', '46', 'KANDHASAMY', 'S', NULL, 'MAYILADUTHURAI', 'ATS', '2026-08-26 11:58:10', '2026-08-26 11:58:10'),
@@ -1420,9 +1345,9 @@ INSERT INTO `persons` (`id`, `user_id`, `first_name`, `last_name`, `mobile`, `ci
 ('1160', '46', 'JAYARAMAN', 'V', NULL, 'THIRUCHAMPALLI', NULL, '2026-08-26 17:14:48', '2026-08-26 17:14:48'),
 ('1161', '46', 'RAMADOSS', 'K', NULL, 'MARUDHUR', 'FCI', '2026-08-26 17:15:33', '2026-08-26 17:15:33'),
 ('1162', '46', 'THIYAGARAJAN', 'P', NULL, 'KURINJIPADI', NULL, '2026-08-26 17:19:46', '2026-08-26 17:19:46'),
-('1163', '46', 'SELVARAJ', 'V', NULL, 'MAYILADUTHURAI', 'ATS', '2026-08-26 17:20:25', '2026-08-26 17:20:25');
+('1163', '46', 'SELVARAJ', 'V', NULL, 'MAYILADUTHURAI', 'ATS', '2026-08-26 17:20:25', '2026-08-26 17:20:25'),
+('1164', '46', 'THULASI', 'K', NULL, 'KALAHASTHINATHAPURAM', NULL, '2026-08-26 17:21:04', '2026-08-26 17:21:04');
 INSERT INTO `persons` (`id`, `user_id`, `first_name`, `last_name`, `mobile`, `city`, `occupation`, `created_at`, `updated_at`) VALUES
-('1164', '46', 'THULASI', 'K', NULL, 'KALAHASTHINATHAPURAM', NULL, '2026-08-26 17:21:04', '2026-08-26 17:21:04'),
 ('1165', '46', 'SEKAR', 'R', NULL, 'VALLAM', 'TEACHER', '2026-08-26 17:21:58', '2026-08-26 17:21:58'),
 ('1166', '46', 'MOHAN', 'M', NULL, 'THIRUCHAMPALLI', NULL, '2026-08-26 17:22:25', '2026-08-26 17:22:25'),
 ('1167', '46', 'CHANDRAN', 'S', NULL, 'MUDIKANDANALLUR', 'EB', '2026-08-26 17:23:07', '2026-08-26 17:23:07'),
@@ -1521,9 +1446,9 @@ INSERT INTO `persons` (`id`, `user_id`, `first_name`, `last_name`, `mobile`, `ci
 ('1283', '24', 'SATHAIYA', 'SERUPPU KADAI', NULL, 'TRICHY', NULL, '2026-09-14 20:17:19', '2026-09-14 20:17:19'),
 ('1284', '24', 'VIJAYAN', NULL, NULL, 'MADURAI', NULL, '2026-09-14 20:18:09', '2026-09-14 20:18:09'),
 ('1285', '24', 'RATHIGA', NULL, NULL, 'KOVAI', NULL, '2026-09-14 20:18:33', '2026-09-14 20:18:33'),
-('1287', '54', 'KANDHA ROOPAN', 'NIVETHA', '+91 9894455948', 'MADURAI', NULL, '2026-09-17 16:08:45', '2026-10-04 10:18:33');
+('1287', '54', 'KANDHA ROOPAN', 'NIVETHA', '+91 9894455948', 'MADURAI', NULL, '2026-09-17 16:08:45', '2026-10-04 10:18:33'),
+('1297', '59', 'சக்திவேல்', 'ஆசைக்கிளி', NULL, 'மதுரை M.K.PURAM', NULL, '2026-09-17 22:06:39', '2026-09-17 22:06:39');
 INSERT INTO `persons` (`id`, `user_id`, `first_name`, `last_name`, `mobile`, `city`, `occupation`, `created_at`, `updated_at`) VALUES
-('1297', '59', 'சக்திவேல்', 'ஆசைக்கிளி', NULL, 'மதுரை M.K.PURAM', NULL, '2026-09-17 22:06:39', '2026-09-17 22:06:39'),
 ('1298', '59', 'சேகர்', 'பஞ்சவர்ணம்', NULL, 'மதுரை M.K.PURAM', NULL, '2026-09-17 22:07:43', '2026-09-17 22:07:43'),
 ('1299', '59', 'சங்குநாதன்', 'வாலேஷ்வரி', NULL, 'பாண்டிகோவில்', NULL, '2026-09-17 22:08:24', '2026-09-17 22:08:24'),
 ('1300', '59', 'வினோத்', 'சங்கரி', NULL, 'KK NAGAR', NULL, '2026-09-17 22:09:07', '2026-09-17 22:09:07'),
@@ -1601,13 +1526,57 @@ INSERT INTO `persons` (`id`, `user_id`, `first_name`, `last_name`, `mobile`, `ci
 ('1377', '49', 'செந்தில்', 'பானு', NULL, 'ரத்தினபுாி', NULL, '2026-10-25 19:54:54', '2026-10-25 19:54:54'),
 ('1378', '46', 'RAMANI', 'E', NULL, 'VIRALUR', NULL, '2026-10-27 23:05:00', '2026-10-27 23:05:00'),
 ('1379', '86', 'KRISHNA', NULL, NULL, 'CHENNAI', NULL, '2026-10-29 15:45:12', '2026-10-29 15:45:12'),
-('1380', '20', 'Kumar', NULL, NULL, 'Chennai', 'Doctor', '2026-10-29 17:51:22', '2026-11-13 18:33:29'),
+('1380', '20', 'Kumar', NULL, NULL, 'Chennai', 'Doctor', '2026-10-29 17:51:22', '2026-11-21 23:11:10'),
 ('1381', '87', 'ARUN', 'DHARANI', NULL, 'THANJAI', NULL, '2026-10-31 02:58:54', '2026-10-31 03:10:29'),
 ('1384', '87', 'SUGAN', 'ARUN', '7871167121', 'THANJAI', 'STUDENT', '2026-10-31 03:32:22', '2026-10-31 03:32:22'),
 ('1385', '89', 'WALTER', NULL, NULL, 'TIRUVANNAMALAI', NULL, '2026-11-09 07:07:14', '2026-11-09 07:07:14'),
 ('1386', '46', 'Sekar', 'P', NULL, 'KALAHASTHINATHAPURAM', NULL, '2026-11-13 18:59:00', '2026-11-13 18:59:00'),
 ('1387', '46', 'KUMARAN', 'SI', NULL, 'CHENNAI', NULL, '2026-11-14 16:30:56', '2026-11-14 16:31:28'),
-('1388', '90', 'செந்தில் வாசகி', 'மாமா', NULL, 'MELAPETTAIPALAYAM', NULL, '2026-11-18 16:15:09', '2026-11-18 16:19:01');
+('1388', '90', 'செந்தில் வாசகி', 'மாமா', NULL, 'MELAPETTAIPALAYAM', NULL, '2026-11-18 16:15:09', '2026-11-18 16:19:01'),
+('1390', '91', 'MANI', NULL, NULL, 'DESUR', NULL, '2026-11-22 18:28:46', '2026-11-22 18:28:46'),
+('1391', '91', 'SUSILA', NULL, NULL, 'DESUR', NULL, '2026-11-22 18:29:35', '2026-11-22 18:29:35'),
+('1392', '91', 'SELVAKUMAR AMMA', NULL, NULL, 'PAKKAM', NULL, '2026-11-22 18:30:23', '2026-11-22 18:30:23'),
+('1393', '91', 'SELVAKUMAR AKKA', NULL, NULL, 'PAKKAM', NULL, '2026-11-22 18:30:58', '2026-11-22 18:30:58'),
+('1394', '91', 'YASUDA', NULL, NULL, 'KODAMBAKKAM', NULL, '2026-11-22 18:32:46', '2026-11-22 18:32:46'),
+('1395', '91', 'ELANGO/JAYANTHI', NULL, NULL, 'SESARAYANPETTAI', NULL, '2026-11-22 18:33:49', '2026-11-22 18:33:49'),
+('1396', '91', 'KUMARAVEL/THILAGAVATHI', NULL, NULL, 'SESARAYANPETTAI', NULL, '2026-11-22 18:34:38', '2026-11-22 18:34:38'),
+('1397', '91', 'JAI WATER SUPPLY', NULL, NULL, 'CHENNAI', NULL, '2026-11-22 18:35:01', '2026-11-22 18:35:01'),
+('1398', '91', 'S BABU/PADMA', NULL, NULL, 'KATTANKULATHUR', NULL, '2026-11-22 18:36:00', '2026-11-22 18:36:00'),
+('1399', '91', 'V SUNDARI', NULL, NULL, 'KAATU DEVADUR', NULL, '2026-11-22 18:36:35', '2026-11-22 18:36:35'),
+('1400', '91', 'ARUNAGIRI', NULL, NULL, 'MADHOOR', NULL, '2026-11-22 18:37:09', '2026-11-22 18:37:09'),
+('1401', '91', 'KRISHNAMOORTHY/ANJALI', NULL, NULL, 'SONALUR', NULL, '2026-11-22 18:37:54', '2026-11-22 18:37:54'),
+('1402', '91', 'N PERUMAL', NULL, NULL, 'KAATU DEVATHOOR', NULL, '2026-11-22 18:38:13', '2026-11-22 18:38:13'),
+('1403', '91', 'MURUVAMMAL', NULL, NULL, 'KOYAMBEDU', NULL, '2026-11-22 18:39:42', '2026-11-22 18:39:42'),
+('1404', '91', 'SELVARAJ / VARALAKSHMI', NULL, NULL, 'SURAIEDU', NULL, '2026-11-22 18:40:39', '2026-11-22 18:40:39'),
+('1405', '91', 'RAVI MANGALAKSHMI', NULL, NULL, 'URAPAKKAM', NULL, '2026-11-22 18:41:27', '2026-11-22 18:41:27');
+INSERT INTO `persons` (`id`, `user_id`, `first_name`, `last_name`, `mobile`, `city`, `occupation`, `created_at`, `updated_at`) VALUES
+('1406', '91', 'R RAVIKUMAR', NULL, NULL, 'S KOLATHUR MAINROAD', NULL, '2026-11-22 18:42:01', '2026-11-22 18:42:01'),
+('1407', '91', 'POONGAVANAM UDAIYAR', NULL, NULL, 'ELAPAKKAM', NULL, '2026-11-22 18:42:37', '2026-11-22 18:42:37'),
+('1408', '91', 'DHANASEKAR / S SELVI', NULL, NULL, 'URAPAKKAM', NULL, '2026-11-22 18:43:21', '2026-11-22 18:43:21'),
+('1409', '91', 'S RAMACHANDIRAN/VASANTHI', NULL, NULL, 'URAPAKKAM', NULL, '2026-11-22 18:43:50', '2026-11-22 18:43:50'),
+('1410', '91', 'MALIGA/SELVARAJ', NULL, NULL, 'KAATU DEVATHOOR', NULL, '2026-11-22 18:44:19', '2026-11-22 18:44:19'),
+('1411', '91', 'V KANNADASAN/BHUVANESHWARI', NULL, NULL, 'IAYYAPA NAGAR', NULL, '2026-11-22 18:45:49', '2026-11-22 18:45:49'),
+('1412', '91', 'V MURUGAN/ RADHIKA', NULL, NULL, 'MADHOOR', NULL, '2026-11-22 18:46:16', '2026-11-22 18:46:16'),
+('1413', '91', 'EZHILARASAN', NULL, NULL, 'MEDVAKKAM', NULL, '2026-11-22 18:49:07', '2026-11-22 18:49:07'),
+('1414', '91', 'K MOORTHY', NULL, NULL, 'URAPAKKAM', NULL, '2026-11-22 18:49:35', '2026-11-22 18:49:35'),
+('1415', '91', 'ARUMUGAM / MALLIGA', NULL, NULL, 'MADHOOR', NULL, '2026-11-22 18:50:06', '2026-11-22 18:50:06'),
+('1416', '91', 'T DHANASEKARAN/CHANDRAKALA', NULL, NULL, 'URAPAKKAM', NULL, '2026-11-22 18:52:36', '2026-11-22 18:52:36'),
+('1417', '91', 'K SREENIVASAN/S JAYANTHI', NULL, NULL, 'PATTUR', NULL, '2026-11-22 18:53:02', '2026-11-22 18:53:02'),
+('1418', '91', 'A CHANDRA LATE', NULL, NULL, 'MADURAVAYAL', NULL, '2026-11-22 18:53:37', '2026-11-22 18:53:37'),
+('1419', '91', 'CHANDRASEKAN UDAIYAR', NULL, NULL, 'MEDAVAKKAM', NULL, '2026-11-22 18:54:23', '2026-11-22 18:54:23'),
+('1420', '91', 'R JAYAPRAKASH/ JEYA VATSALA', NULL, NULL, 'AMBATTUR', NULL, '2026-11-22 18:54:55', '2026-11-22 18:54:55'),
+('1421', '91', 'GUNASEKARAN / PRABHAVATHI', NULL, NULL, 'MANGADU', NULL, '2026-11-22 18:55:47', '2026-11-22 18:55:47'),
+('1422', '91', 'P SURESH / LOGA PRIYA', NULL, NULL, 'KK NAGAR', NULL, '2026-11-22 18:56:19', '2026-11-22 18:56:19'),
+('1423', '91', 'DHANASEKAR / SUMATHI', NULL, NULL, 'SONALUR', NULL, '2026-11-22 18:58:11', '2026-11-22 18:58:11'),
+('1424', '91', 'SELVAM / MAGESHWARI', NULL, NULL, 'KANDIGAI', NULL, '2026-11-22 18:58:42', '2026-11-22 18:58:42'),
+('1425', '91', 'SELVAKUMAR / DEEPA', NULL, NULL, 'PAKKAM', NULL, '2026-11-22 18:59:07', '2026-11-22 18:59:07'),
+('1426', '91', 'SARAVANAN/ RAJESHWARI', NULL, NULL, 'MEDAVAKKAM', NULL, '2026-11-22 18:59:33', '2026-11-22 18:59:33'),
+('1427', '91', 'BALA', NULL, NULL, 'KOOT ROAD', NULL, '2026-11-22 18:59:49', '2026-11-22 18:59:49'),
+('1428', '91', 'UNKNOWN 1', NULL, NULL, 'UNKNOWN 1', NULL, '2026-11-22 19:01:30', '2026-11-22 19:01:30'),
+('1429', '91', 'UNKNOWN 2', NULL, NULL, 'UNKNOWN 2', NULL, '2026-11-22 19:01:50', '2026-11-22 19:01:50'),
+('1430', '91', 'UNKNOWN 3', NULL, NULL, 'UNKNOWN 3', NULL, '2026-11-22 19:02:05', '2026-11-22 19:02:05'),
+('1431', '91', 'UNKNOWN 4', NULL, NULL, 'UNKNOWN 4', NULL, '2026-11-22 19:02:21', '2026-11-22 19:02:21'),
+('1432', '91', 'UNKNOWN 5', NULL, NULL, 'UNKNOWN 5', NULL, '2026-11-22 19:02:41', '2026-11-22 19:02:41');
 
 DROP TABLE IF EXISTS `transaction_functions`;
 CREATE TABLE `transaction_functions` (
@@ -1707,7 +1676,7 @@ CREATE TABLE `transactions` (
   CONSTRAINT `fk_transactions_person` FOREIGN KEY (`person_id`) REFERENCES `persons` (`id`) ON DELETE CASCADE,
   CONSTRAINT `transactions_ibfk_2` FOREIGN KEY (`person_id`) REFERENCES `persons` (`id`) ON DELETE CASCADE,
   CONSTRAINT `transactions_ibfk_3` FOREIGN KEY (`transaction_function_id`) REFERENCES `transaction_functions` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=1434 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=1480 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 INSERT INTO `transactions` (`id`, `user_id`, `person_id`, `transaction_function_id`, `transaction_function_name`, `transaction_date`, `type`, `amount`, `item_name`, `notes`, `is_custom`, `custom_function`, `is_deleted`, `deleted_at`, `created_at`, `updated_at`) VALUES
 ('1', '29', '248', '12', 'இல்ல காதணி விழா', '2026-03-08', 'RETURN', '2000.00', NULL, NULL, 0, NULL, 0, NULL, '2026-03-15 15:23:11', '2026-07-07 10:18:34'),
@@ -2511,14 +2480,13 @@ INSERT INTO `transactions` (`id`, `user_id`, `person_id`, `transaction_function_
 ('850', '46', '904', '21', 'ஆயா கருமாதி', '2025-03-20', 'INVEST', '200.00', NULL, NULL, 0, NULL, 0, NULL, '2026-08-24 16:49:09', '2026-08-24 16:49:09'),
 ('851', '46', '905', '21', 'ஆயா கருமாதி', '2025-03-20', 'INVEST', '200.00', NULL, NULL, 0, NULL, 0, NULL, '2026-08-24 16:49:43', '2026-08-24 16:49:43'),
 ('852', '46', '906', '21', 'ஆயா கருமாதி', '2025-03-20', 'INVEST', '500.00', NULL, NULL, 0, NULL, 0, NULL, '2026-08-24 16:50:13', '2026-08-24 16:50:13'),
-('853', '46', '907', '21', 'ஆயா கருமாதி', '2025-03-20', 'INVEST', '1000.00', NULL, NULL, 0, NULL, 0, NULL, '2026-08-24 16:50:39', '2026-08-24 16:50:39'),
 ('854', '46', '908', '21', 'ஆயா கருமாதி', '2025-03-20', 'INVEST', '1000.00', NULL, NULL, 0, NULL, 0, NULL, '2026-08-24 16:51:12', '2026-08-24 16:51:12'),
 ('855', '46', '909', '21', 'ஆயா கருமாதி', '2025-03-19', 'INVEST', '500.00', NULL, NULL, 0, NULL, 0, NULL, '2026-08-24 16:51:50', '2026-08-24 17:29:01'),
 ('856', '46', '910', '21', 'ஆயா கருமாதி', '2025-03-20', 'INVEST', '1000.00', NULL, NULL, 0, NULL, 0, NULL, '2026-08-24 16:52:23', '2026-08-24 16:52:23'),
 ('857', '46', '911', '21', 'ஆயா கருமாதி', '2025-03-20', 'INVEST', '200.00', NULL, NULL, 0, NULL, 0, NULL, '2026-08-24 16:52:50', '2026-08-24 16:52:50'),
-('858', '46', '912', '21', 'ஆயா கருமாதி', '2025-03-20', 'INVEST', '300.00', NULL, NULL, 0, NULL, 0, NULL, '2026-08-24 16:53:31', '2026-08-24 16:53:31');
+('858', '46', '912', '21', 'ஆயா கருமாதி', '2025-03-20', 'INVEST', '300.00', NULL, NULL, 0, NULL, 0, NULL, '2026-08-24 16:53:31', '2026-08-24 16:53:31'),
+('859', '46', '913', '21', 'ஆயா கருமாதி', '2025-03-20', 'INVEST', '200.00', NULL, NULL, 0, NULL, 0, NULL, '2026-08-24 16:54:13', '2026-08-24 16:54:13');
 INSERT INTO `transactions` (`id`, `user_id`, `person_id`, `transaction_function_id`, `transaction_function_name`, `transaction_date`, `type`, `amount`, `item_name`, `notes`, `is_custom`, `custom_function`, `is_deleted`, `deleted_at`, `created_at`, `updated_at`) VALUES
-('859', '46', '913', '21', 'ஆயா கருமாதி', '2025-03-20', 'INVEST', '200.00', NULL, NULL, 0, NULL, 0, NULL, '2026-08-24 16:54:13', '2026-08-24 16:54:13'),
 ('860', '46', '914', '21', 'ஆயா கருமாதி', '2025-03-20', 'INVEST', '200.00', NULL, NULL, 0, NULL, 0, NULL, '2026-08-24 16:54:50', '2026-08-24 16:54:50'),
 ('861', '46', '915', '21', 'ஆயா கருமாதி', '2025-03-20', 'INVEST', '200.00', NULL, NULL, 0, NULL, 0, NULL, '2026-08-24 16:55:16', '2026-08-24 16:55:16'),
 ('862', '46', '916', '21', 'ஆயா கருமாதி', '2025-03-20', 'INVEST', '2000.00', NULL, NULL, 0, NULL, 0, NULL, '2026-08-24 16:55:45', '2026-08-24 16:55:45'),
@@ -2617,9 +2585,9 @@ INSERT INTO `transactions` (`id`, `user_id`, `person_id`, `transaction_function_
 ('961', '46', '986', '3', 'இல்ல புதுமனை புகுவிழா', '2025-09-04', 'RETURN', '200.00', NULL, NULL, 0, NULL, 0, NULL, '2026-08-25 12:31:39', '2026-08-25 12:31:39'),
 ('962', '46', '943', '10', 'இல்ல திருமண விழா', '2025-09-04', 'RETURN', '200.00', NULL, NULL, 0, NULL, 0, NULL, '2026-08-25 12:32:43', '2026-08-25 12:32:43'),
 ('963', '46', '987', '10', 'இல்ல திருமண விழா', '2025-09-04', 'RETURN', '200.00', NULL, NULL, 0, NULL, 0, NULL, '2026-08-25 12:33:59', '2026-08-25 12:33:59'),
-('964', '46', '988', '9', 'மற்றவை', '2025-09-26', 'RETURN', '100.00', NULL, NULL, 1, 'Aayal Expired', 0, NULL, '2026-08-25 12:35:25', '2026-08-25 12:35:25');
+('964', '46', '988', '9', 'மற்றவை', '2025-09-26', 'RETURN', '100.00', NULL, NULL, 1, 'Aayal Expired', 0, NULL, '2026-08-25 12:35:25', '2026-08-25 12:35:25'),
+('965', '46', '969', '8', 'வளைகாப்பு விழா', '2025-09-12', 'RETURN', '200.00', NULL, NULL, 0, NULL, 0, NULL, '2026-08-25 12:38:01', '2026-08-25 12:38:01');
 INSERT INTO `transactions` (`id`, `user_id`, `person_id`, `transaction_function_id`, `transaction_function_name`, `transaction_date`, `type`, `amount`, `item_name`, `notes`, `is_custom`, `custom_function`, `is_deleted`, `deleted_at`, `created_at`, `updated_at`) VALUES
-('965', '46', '969', '8', 'வளைகாப்பு விழா', '2025-09-12', 'RETURN', '200.00', NULL, NULL, 0, NULL, 0, NULL, '2026-08-25 12:38:01', '2026-08-25 12:38:01'),
 ('966', '46', '989', '9', 'மற்றவை', '2025-09-28', 'RETURN', '200.00', NULL, NULL, 1, 'Kala Karumathi', 0, NULL, '2026-08-25 12:39:25', '2026-08-25 12:39:25'),
 ('967', '46', '990', '10', 'இல்ல திருமண விழா', '2025-10-31', 'RETURN', '200.00', NULL, NULL, 0, NULL, 0, NULL, '2026-08-25 12:40:30', '2026-08-25 12:40:30'),
 ('968', '46', '991', '3', 'இல்ல புதுமனை புகுவிழா', '2025-11-30', 'RETURN', '200.00', NULL, NULL, 0, NULL, 0, NULL, '2026-08-25 12:42:34', '2026-08-25 12:42:34'),
@@ -2718,9 +2686,9 @@ INSERT INTO `transactions` (`id`, `user_id`, `person_id`, `transaction_function_
 ('1065', '46', '1070', '22', 'அபிநயா சடங்கு', '2016-06-10', 'INVEST', '100.00', NULL, NULL, 0, NULL, 0, NULL, '2026-08-26 12:00:19', '2026-08-26 12:00:19'),
 ('1066', '46', '1071', '22', 'அபிநயா சடங்கு', '2016-06-10', 'INVEST', '100.00', NULL, NULL, 0, NULL, 0, NULL, '2026-08-26 12:01:35', '2026-08-26 12:01:35'),
 ('1067', '46', '1072', '22', 'அபிநயா சடங்கு', '2016-06-10', 'INVEST', '100.00', NULL, NULL, 0, NULL, 0, NULL, '2026-08-26 12:02:20', '2026-08-26 12:02:20'),
-('1068', '46', '1073', '22', 'அபிநயா சடங்கு', '2016-06-10', 'INVEST', '200.00', NULL, NULL, 0, NULL, 0, NULL, '2026-08-26 12:02:51', '2026-08-26 12:02:51');
+('1068', '46', '1073', '22', 'அபிநயா சடங்கு', '2016-06-10', 'INVEST', '200.00', NULL, NULL, 0, NULL, 0, NULL, '2026-08-26 12:02:51', '2026-08-26 12:02:51'),
+('1069', '46', '1074', '22', 'அபிநயா சடங்கு', '2016-06-10', 'INVEST', '200.00', NULL, NULL, 0, NULL, 0, NULL, '2026-08-26 12:03:41', '2026-08-26 12:03:41');
 INSERT INTO `transactions` (`id`, `user_id`, `person_id`, `transaction_function_id`, `transaction_function_name`, `transaction_date`, `type`, `amount`, `item_name`, `notes`, `is_custom`, `custom_function`, `is_deleted`, `deleted_at`, `created_at`, `updated_at`) VALUES
-('1069', '46', '1074', '22', 'அபிநயா சடங்கு', '2016-06-10', 'INVEST', '200.00', NULL, NULL, 0, NULL, 0, NULL, '2026-08-26 12:03:41', '2026-08-26 12:03:41'),
 ('1070', '46', '1075', '22', 'அபிநயா சடங்கு', '2016-06-10', 'INVEST', '300.00', NULL, NULL, 0, NULL, 0, NULL, '2026-08-26 12:05:00', '2026-08-26 12:05:00'),
 ('1071', '46', '1076', '22', 'அபிநயா சடங்கு', '2016-06-10', 'INVEST', '100.00', NULL, NULL, 0, NULL, 0, NULL, '2026-08-26 12:06:50', '2026-08-26 12:06:50'),
 ('1072', '46', '865', '22', 'அபிநயா சடங்கு', '2016-06-10', 'INVEST', '100.00', NULL, NULL, 0, NULL, 0, NULL, '2026-08-26 12:07:21', '2026-08-26 12:07:21'),
@@ -2819,9 +2787,9 @@ INSERT INTO `transactions` (`id`, `user_id`, `person_id`, `transaction_function_
 ('1165', '46', '1156', '22', 'அபிநயா சடங்கு', '2016-06-10', 'INVEST', '200.00', NULL, NULL, 0, NULL, 0, NULL, '2026-08-26 14:32:11', '2026-08-26 14:32:11'),
 ('1166', '46', '862', '22', 'அபிநயா சடங்கு', '2016-06-10', 'INVEST', '100.00', NULL, NULL, 0, NULL, 0, NULL, '2026-08-26 14:33:44', '2026-08-26 14:33:44'),
 ('1167', '46', '1157', '22', 'அபிநயா சடங்கு', '2016-06-10', 'INVEST', '100.00', NULL, NULL, 0, NULL, 0, NULL, '2026-08-26 14:34:37', '2026-08-26 14:34:37'),
-('1168', '46', '1158', '22', 'அபிநயா சடங்கு', '2016-06-10', 'INVEST', '100.00', NULL, NULL, 0, NULL, 0, NULL, '2026-08-26 14:37:03', '2026-08-26 14:37:03');
+('1168', '46', '1158', '22', 'அபிநயா சடங்கு', '2016-06-10', 'INVEST', '100.00', NULL, NULL, 0, NULL, 0, NULL, '2026-08-26 14:37:03', '2026-08-26 14:37:03'),
+('1169', '46', '1159', '22', 'அபிநயா சடங்கு', '2016-06-10', 'INVEST', '100.00', NULL, NULL, 0, NULL, 0, NULL, '2026-08-26 14:37:59', '2026-08-26 14:37:59');
 INSERT INTO `transactions` (`id`, `user_id`, `person_id`, `transaction_function_id`, `transaction_function_name`, `transaction_date`, `type`, `amount`, `item_name`, `notes`, `is_custom`, `custom_function`, `is_deleted`, `deleted_at`, `created_at`, `updated_at`) VALUES
-('1169', '46', '1159', '22', 'அபிநயா சடங்கு', '2016-06-10', 'INVEST', '100.00', NULL, NULL, 0, NULL, 0, NULL, '2026-08-26 14:37:59', '2026-08-26 14:37:59'),
 ('1170', '46', '1160', '22', 'அபிநயா சடங்கு', '2016-06-10', 'INVEST', '100.00', NULL, NULL, 0, NULL, 0, NULL, '2026-08-26 17:14:48', '2026-08-26 17:14:48'),
 ('1171', '46', '1161', '22', 'அபிநயா சடங்கு', '2016-06-10', 'INVEST', '100.00', NULL, NULL, 0, NULL, 0, NULL, '2026-08-26 17:15:33', '2026-08-26 17:15:33'),
 ('1172', '46', '970', '13', 'இல்ல பூப்புனித நீராட்டு விழா', '2026-08-26', 'INVEST', '200.00', NULL, 'Abinaya Dadangu', 0, NULL, 1, '2026-08-26 17:18:51', '2026-08-26 17:17:12', '2026-08-26 17:18:51'),
@@ -2920,9 +2888,9 @@ INSERT INTO `transactions` (`id`, `user_id`, `person_id`, `transaction_function_
 ('1286', '52', '1263', '14', 'மொய் விருந்து விழா', '2026-09-06', 'RETURN', '5000.00', NULL, NULL, 0, NULL, 0, NULL, '2026-09-06 08:16:51', '2026-09-06 08:16:51'),
 ('1287', '52', '1264', '14', 'மொய் விருந்து விழா', '2026-09-06', 'RETURN', '5000.00', NULL, NULL, 0, NULL, 0, NULL, '2026-09-06 08:18:26', '2026-09-06 08:18:26'),
 ('1288', '52', '1265', '14', 'மொய் விருந்து விழா', '2026-09-06', 'RETURN', '2000.00', NULL, NULL, 0, NULL, 0, NULL, '2026-09-06 08:19:01', '2026-09-06 08:19:01'),
-('1290', '52', '1267', '14', 'மொய் விருந்து விழா', '2026-09-06', 'RETURN', '3000.00', NULL, NULL, 0, NULL, 0, NULL, '2026-09-06 08:21:38', '2026-09-06 08:21:38');
+('1290', '52', '1267', '14', 'மொய் விருந்து விழா', '2026-09-06', 'RETURN', '3000.00', NULL, NULL, 0, NULL, 0, NULL, '2026-09-06 08:21:38', '2026-09-06 08:21:38'),
+('1291', '52', '1268', '10', 'இல்ல திருமண விழா', '2026-09-06', 'RETURN', '1000.00', NULL, NULL, 0, NULL, 0, NULL, '2026-09-06 08:22:42', '2026-09-06 08:22:42');
 INSERT INTO `transactions` (`id`, `user_id`, `person_id`, `transaction_function_id`, `transaction_function_name`, `transaction_date`, `type`, `amount`, `item_name`, `notes`, `is_custom`, `custom_function`, `is_deleted`, `deleted_at`, `created_at`, `updated_at`) VALUES
-('1291', '52', '1268', '10', 'இல்ல திருமண விழா', '2026-09-06', 'RETURN', '1000.00', NULL, NULL, 0, NULL, 0, NULL, '2026-09-06 08:22:42', '2026-09-06 08:22:42'),
 ('1292', '52', '1269', '14', 'மொய் விருந்து விழா', '2026-09-06', 'RETURN', '2000.00', NULL, NULL, 0, NULL, 0, NULL, '2026-09-06 08:23:44', '2026-09-06 08:23:44'),
 ('1294', '52', '1271', '14', 'மொய் விருந்து விழா', '2026-09-06', 'RETURN', '20000.00', NULL, NULL, 0, NULL, 0, NULL, '2026-09-06 10:35:23', '2026-09-06 10:35:23'),
 ('1295', '52', '1272', '12', 'இல்ல காதணி விழா', '2026-09-06', 'RETURN', '2000.00', NULL, NULL, 0, NULL, 0, NULL, '2026-09-06 14:24:38', '2026-09-06 14:24:38'),
@@ -3021,9 +2989,9 @@ INSERT INTO `transactions` (`id`, `user_id`, `person_id`, `transaction_function_
 ('1407', '84', '1373', '42', 'First holy communion', '2019-06-02', 'INVEST', '200.00', NULL, NULL, 0, NULL, 0, NULL, '2026-10-07 23:07:08', '2026-10-07 23:07:08'),
 ('1408', '84', '1374', '42', 'First holy communion', '2019-06-02', 'INVEST', '2000.00', NULL, NULL, 0, NULL, 0, NULL, '2026-10-07 23:08:47', '2026-10-07 23:08:47'),
 ('1409', '49', '1375', '13', 'இல்ல பூப்புனித நீராட்டு விழா', '2026-10-18', 'RETURN', '5000.00', NULL, NULL, 0, NULL, 0, NULL, '2026-10-20 07:03:25', '2026-10-20 07:03:25'),
-('1410', '46', '1376', '9', 'மற்றவை', '2026-10-20', 'RETURN', '100.00', NULL, NULL, 1, 'பிறந்தநாள் விழா', 0, NULL, '2026-10-20 14:30:26', '2026-10-20 14:30:26');
+('1410', '46', '1376', '9', 'மற்றவை', '2026-10-20', 'RETURN', '100.00', NULL, NULL, 1, 'பிறந்தநாள் விழா', 0, NULL, '2026-10-20 14:30:26', '2026-10-20 14:30:26'),
+('1411', '46', '968', '8', 'வளைகாப்பு விழா', '2026-10-25', 'RETURN', '1000.00', NULL, NULL, 0, NULL, 0, NULL, '2026-10-25 09:02:48', '2026-10-25 09:02:48');
 INSERT INTO `transactions` (`id`, `user_id`, `person_id`, `transaction_function_id`, `transaction_function_name`, `transaction_date`, `type`, `amount`, `item_name`, `notes`, `is_custom`, `custom_function`, `is_deleted`, `deleted_at`, `created_at`, `updated_at`) VALUES
-('1411', '46', '968', '8', 'வளைகாப்பு விழா', '2026-10-25', 'RETURN', '1000.00', NULL, NULL, 0, NULL, 0, NULL, '2026-10-25 09:02:48', '2026-10-25 09:02:48'),
 ('1412', '46', '968', '21', 'ஆயா கருமாதி', '2025-03-20', 'INVEST', '2000.00', NULL, NULL, 0, NULL, 0, NULL, '2026-10-25 09:06:41', '2026-10-25 09:06:41'),
 ('1413', '46', '933', '10', 'இல்ல திருமண விழா', '2024-09-08', 'RETURN', '1000.00', NULL, NULL, 0, NULL, 0, NULL, '2026-10-25 10:47:28', '2026-10-25 10:47:28'),
 ('1414', '49', '1377', '13', 'இல்ல பூப்புனித நீராட்டு விழா', '2026-10-25', 'RETURN', '500.00', NULL, NULL, 0, NULL, 0, NULL, '2026-10-25 19:54:54', '2026-10-25 19:54:54'),
@@ -3032,7 +3000,7 @@ INSERT INTO `transactions` (`id`, `user_id`, `person_id`, `transaction_function_
 ('1417', '46', '1378', '10', 'இல்ல திருமண விழா', '2024-09-15', 'RETURN', '200.00', NULL, NULL, 0, NULL, 0, NULL, '2026-10-27 23:05:00', '2026-10-27 23:05:00'),
 ('1418', '46', '868', '9', 'மற்றவை', '2026-10-28', 'RETURN', '200.00', NULL, NULL, 1, 'Sardhana Nalungu', 0, NULL, '2026-10-28 10:37:50', '2026-10-28 10:37:50'),
 ('1419', '86', '1379', '13', 'இல்ல பூப்புனித நீராட்டு விழா', '2026-08-18', 'RETURN', '500.00', NULL, NULL, 0, NULL, 0, NULL, '2026-10-29 15:45:12', '2026-10-29 15:45:12'),
-('1420', '20', '1380', '12', 'இல்ல காதணி விழா', '2026-10-29', 'RETURN', '500.00', NULL, 'Updated notes', 0, NULL, 0, NULL, '2026-10-29 17:51:22', '2026-10-29 17:55:01'),
+('1420', '20', '1380', '12', 'இல்ல காதணி விழா', '2026-10-29', 'RETURN', '500.00', NULL, 'Updated notes', 0, NULL, 0, NULL, '2026-10-29 17:51:22', '2026-11-21 23:10:33'),
 ('1421', '87', '1381', '10', 'இல்ல திருமண விழா', '2026-10-31', 'INVEST', '51000.00', NULL, NULL, 0, NULL, 1, '2026-10-31 03:10:59', '2026-10-31 02:58:55', '2026-10-31 03:10:59'),
 ('1423', '87', '1381', '44', 'அறுபது நிறைவு மணி விழா', '2026-10-31', 'INVEST', '51000.00', NULL, 'naveen', 0, NULL, 0, NULL, '2026-10-31 03:12:21', '2026-10-31 03:12:21'),
 ('1424', '87', '1381', '44', 'அறுபது நிறைவு மணி விழா', '2026-10-31', 'INVEST', '51000.00', NULL, 'subash', 0, NULL, 0, NULL, '2026-10-31 03:13:00', '2026-10-31 03:13:00'),
@@ -3043,7 +3011,52 @@ INSERT INTO `transactions` (`id`, `user_id`, `person_id`, `transaction_function_
 ('1430', '46', '922', '9', 'மற்றவை', '2026-11-10', 'RETURN', '500.00', NULL, NULL, 1, 'சஷ்டியப்த பூர்த்தி', 0, NULL, '2026-11-13 18:54:52', '2026-11-13 18:54:52'),
 ('1431', '46', '1386', '10', 'இல்ல திருமண விழா', '2026-11-11', 'RETURN', '200.00', NULL, NULL, 0, NULL, 0, NULL, '2026-11-13 18:59:00', '2026-11-13 18:59:00'),
 ('1432', '46', '1387', '9', 'மற்றவை', '2026-11-14', 'INVEST', '5000.00', NULL, NULL, 1, 'Koil Visit', 0, NULL, '2026-11-14 16:30:56', '2026-11-14 16:30:56'),
-('1433', '90', '1388', '10', 'இல்ல திருமண விழா', '2026-11-15', 'RETURN', '600.00', NULL, 'Mama', 0, NULL, 0, NULL, '2026-11-18 16:15:09', '2026-11-18 16:15:09');
+('1433', '90', '1388', '10', 'இல்ல திருமண விழா', '2026-11-15', 'RETURN', '600.00', NULL, 'Mama', 0, NULL, 0, NULL, '2026-11-18 16:15:09', '2026-11-18 16:15:09'),
+('1434', '46', '1032', '21', 'ஆயா கருமாதி', '2025-03-20', 'INVEST', '1000.00', NULL, NULL, 0, NULL, 0, NULL, '2026-11-20 18:21:57', '2026-11-20 18:21:57'),
+('1435', '46', '1032', '3', 'இல்ல புதுமனை புகுவிழா', '2026-11-20', 'RETURN', '200.00', 'Saree, Pant Shirt', NULL, 0, NULL, 0, NULL, '2026-11-20 18:22:51', '2026-11-20 18:22:51'),
+('1437', '91', '1390', '8', 'வளைகாப்பு விழா', '2026-11-22', 'INVEST', '500.00', NULL, NULL, 0, NULL, 0, NULL, '2026-11-22 18:28:46', '2026-11-22 18:28:46'),
+('1438', '91', '1391', '8', 'வளைகாப்பு விழா', '2026-11-22', 'INVEST', '500.00', NULL, NULL, 0, NULL, 0, NULL, '2026-11-22 18:29:35', '2026-11-22 18:29:35'),
+('1439', '91', '1392', '8', 'வளைகாப்பு விழா', '2026-11-22', 'INVEST', '100.00', NULL, NULL, 0, NULL, 0, NULL, '2026-11-22 18:30:23', '2026-11-22 18:30:23'),
+('1440', '91', '1393', '8', 'வளைகாப்பு விழா', '2026-11-22', 'INVEST', '200.00', NULL, NULL, 0, NULL, 0, NULL, '2026-11-22 18:30:58', '2026-11-22 18:30:58'),
+('1441', '91', '1394', '8', 'வளைகாப்பு விழா', '2026-11-22', 'INVEST', '200.00', NULL, NULL, 0, NULL, 0, NULL, '2026-11-22 18:32:46', '2026-11-22 18:32:46'),
+('1442', '91', '1395', '8', 'வளைகாப்பு விழா', '2026-11-22', 'INVEST', '500.00', NULL, NULL, 0, NULL, 0, NULL, '2026-11-22 18:33:49', '2026-11-22 18:33:49'),
+('1443', '91', '1396', '8', 'வளைகாப்பு விழா', '2026-11-22', 'INVEST', '200.00', NULL, NULL, 0, NULL, 0, NULL, '2026-11-22 18:34:38', '2026-11-22 18:34:38'),
+('1444', '91', '1397', '8', 'வளைகாப்பு விழா', '2026-11-22', 'INVEST', '1000.00', NULL, NULL, 0, NULL, 0, NULL, '2026-11-22 18:35:01', '2026-11-22 18:35:01'),
+('1445', '91', '1398', '8', 'வளைகாப்பு விழா', '2026-11-22', 'INVEST', '500.00', NULL, NULL, 0, NULL, 0, NULL, '2026-11-22 18:36:00', '2026-11-22 18:36:00'),
+('1446', '91', '1399', '8', 'வளைகாப்பு விழா', '2026-11-22', 'INVEST', '500.00', NULL, NULL, 0, NULL, 0, NULL, '2026-11-22 18:36:35', '2026-11-22 18:36:35'),
+('1447', '91', '1400', '8', 'வளைகாப்பு விழா', '2026-11-22', 'INVEST', '200.00', NULL, NULL, 0, NULL, 0, NULL, '2026-11-22 18:37:09', '2026-11-22 18:37:09'),
+('1448', '91', '1401', '8', 'வளைகாப்பு விழா', '2026-11-22', 'INVEST', '1000.00', NULL, NULL, 0, NULL, 0, NULL, '2026-11-22 18:37:54', '2026-11-22 18:37:54'),
+('1449', '91', '1402', '8', 'வளைகாப்பு விழா', '2026-11-22', 'INVEST', '500.00', NULL, NULL, 0, NULL, 0, NULL, '2026-11-22 18:38:13', '2026-11-22 18:38:13'),
+('1450', '91', '1403', '8', 'வளைகாப்பு விழா', '2026-11-22', 'INVEST', '300.00', NULL, NULL, 0, NULL, 0, NULL, '2026-11-22 18:39:42', '2026-11-22 18:39:42'),
+('1451', '91', '1404', '8', 'வளைகாப்பு விழா', '2026-11-22', 'INVEST', '201.00', NULL, NULL, 0, NULL, 0, NULL, '2026-11-22 18:40:39', '2026-11-22 18:40:39'),
+('1452', '91', '1405', '8', 'வளைகாப்பு விழா', '2026-11-22', 'INVEST', '200.00', NULL, NULL, 0, NULL, 0, NULL, '2026-11-22 18:41:27', '2026-11-22 18:41:27'),
+('1453', '91', '1406', '8', 'வளைகாப்பு விழா', '2026-11-22', 'INVEST', '200.00', NULL, NULL, 0, NULL, 0, NULL, '2026-11-22 18:42:01', '2026-11-22 18:42:01'),
+('1454', '91', '1407', '8', 'வளைகாப்பு விழா', '2026-11-22', 'INVEST', '300.00', NULL, NULL, 0, NULL, 0, NULL, '2026-11-22 18:42:37', '2026-11-22 18:42:37'),
+('1455', '91', '1408', '8', 'வளைகாப்பு விழா', '2026-11-22', 'INVEST', '500.00', NULL, NULL, 0, NULL, 0, NULL, '2026-11-22 18:43:21', '2026-11-22 18:43:21'),
+('1456', '91', '1409', '8', 'வளைகாப்பு விழா', '2026-11-22', 'INVEST', '500.00', NULL, NULL, 0, NULL, 0, NULL, '2026-11-22 18:43:50', '2026-11-22 18:43:50'),
+('1457', '91', '1410', '8', 'வளைகாப்பு விழா', '2026-11-22', 'INVEST', '501.00', NULL, NULL, 0, NULL, 0, NULL, '2026-11-22 18:44:19', '2026-11-22 18:44:19'),
+('1458', '91', '1411', '8', 'வளைகாப்பு விழா', '2026-11-22', 'INVEST', '201.00', NULL, NULL, 0, NULL, 0, NULL, '2026-11-22 18:45:49', '2026-11-22 18:45:49'),
+('1459', '91', '1412', '8', 'வளைகாப்பு விழா', '2026-11-22', 'INVEST', '501.00', NULL, NULL, 0, NULL, 0, NULL, '2026-11-22 18:46:16', '2026-11-22 18:46:16'),
+('1460', '91', '1413', '8', 'வளைகாப்பு விழா', '2026-11-22', 'INVEST', '500.00', NULL, NULL, 0, NULL, 0, NULL, '2026-11-22 18:49:07', '2026-11-22 18:49:07'),
+('1461', '91', '1414', '8', 'வளைகாப்பு விழா', '2026-11-22', 'INVEST', '500.00', NULL, NULL, 0, NULL, 0, NULL, '2026-11-22 18:49:35', '2026-11-22 18:49:35'),
+('1462', '91', '1415', '8', 'வளைகாப்பு விழா', '2026-11-22', 'INVEST', '500.00', NULL, NULL, 0, NULL, 0, NULL, '2026-11-22 18:50:06', '2026-11-22 18:50:06'),
+('1463', '91', '1416', '8', 'வளைகாப்பு விழா', '2026-11-22', 'INVEST', '200.00', NULL, NULL, 0, NULL, 0, NULL, '2026-11-22 18:52:36', '2026-11-22 18:52:36'),
+('1464', '91', '1417', '8', 'வளைகாப்பு விழா', '2026-11-22', 'INVEST', '500.00', NULL, NULL, 0, NULL, 0, NULL, '2026-11-22 18:53:02', '2026-11-22 18:53:02'),
+('1465', '91', '1418', '8', 'வளைகாப்பு விழா', '2026-11-22', 'INVEST', '505.00', NULL, NULL, 0, NULL, 0, NULL, '2026-11-22 18:53:37', '2026-11-22 18:53:37'),
+('1466', '91', '1419', '8', 'வளைகாப்பு விழா', '2026-11-22', 'INVEST', '500.00', NULL, NULL, 0, NULL, 0, NULL, '2026-11-22 18:54:23', '2026-11-22 18:54:23'),
+('1467', '91', '1420', '8', 'வளைகாப்பு விழா', '2026-11-22', 'INVEST', '500.00', NULL, NULL, 0, NULL, 0, NULL, '2026-11-22 18:54:55', '2026-11-22 18:54:55'),
+('1468', '91', '1421', '8', 'வளைகாப்பு விழா', '2026-11-22', 'INVEST', '200.00', NULL, NULL, 0, NULL, 0, NULL, '2026-11-22 18:55:47', '2026-11-22 18:55:47'),
+('1469', '91', '1422', '8', 'வளைகாப்பு விழா', '2026-11-22', 'INVEST', '500.00', NULL, NULL, 0, NULL, 0, NULL, '2026-11-22 18:56:19', '2026-11-22 18:56:19'),
+('1470', '91', '1423', '8', 'வளைகாப்பு விழா', '2026-11-22', 'INVEST', '1000.00', NULL, NULL, 0, NULL, 0, NULL, '2026-11-22 18:58:11', '2026-11-22 18:58:11'),
+('1471', '91', '1424', '8', 'வளைகாப்பு விழா', '2026-11-22', 'INVEST', '1000.00', NULL, NULL, 0, NULL, 0, NULL, '2026-11-22 18:58:42', '2026-11-22 18:58:42'),
+('1472', '91', '1425', '8', 'வளைகாப்பு விழா', '2026-11-22', 'INVEST', '500.00', NULL, NULL, 0, NULL, 0, NULL, '2026-11-22 18:59:07', '2026-11-22 18:59:07'),
+('1473', '91', '1426', '8', 'வளைகாப்பு விழா', '2026-11-22', 'INVEST', '500.00', NULL, NULL, 0, NULL, 0, NULL, '2026-11-22 18:59:33', '2026-11-22 18:59:33'),
+('1474', '91', '1427', '8', 'வளைகாப்பு விழா', '2026-11-22', 'INVEST', '1000.00', NULL, NULL, 0, NULL, 0, NULL, '2026-11-22 18:59:49', '2026-11-22 18:59:49'),
+('1475', '91', '1428', '8', 'வளைகாப்பு விழா', '2026-11-22', 'INVEST', '100.00', NULL, NULL, 0, NULL, 0, NULL, '2026-11-22 19:01:30', '2026-11-22 19:01:30'),
+('1476', '91', '1429', '8', 'வளைகாப்பு விழா', '2026-11-22', 'INVEST', '100.00', NULL, NULL, 0, NULL, 0, NULL, '2026-11-22 19:01:50', '2026-11-22 19:01:50'),
+('1477', '91', '1430', '8', 'வளைகாப்பு விழா', '2026-11-22', 'INVEST', '100.00', NULL, NULL, 0, NULL, 0, NULL, '2026-11-22 19:02:05', '2026-11-22 19:02:05'),
+('1478', '91', '1431', '8', 'வளைகாப்பு விழா', '2026-11-22', 'INVEST', '100.00', NULL, NULL, 0, NULL, 0, NULL, '2026-11-22 19:02:21', '2026-11-22 19:02:21'),
+('1479', '91', '1432', '8', 'வளைகாப்பு விழா', '2026-11-22', 'INVEST', '51.00', NULL, NULL, 0, NULL, 0, NULL, '2026-11-22 19:02:41', '2026-11-22 19:02:41');
 
 DROP TABLE IF EXISTS `upcoming_functions`;
 CREATE TABLE `upcoming_functions` (
@@ -3075,8 +3088,8 @@ INSERT INTO `upcoming_functions` (`id`, `user_id`, `title`, `description`, `func
 ('6', '2', 'Puthiya upcoming function', 'Test', '2026-09-10', 'Chennai', 'uploads/2/upcoming-function/file-1789604039697-568986556.jpg', 'COMPLETED', 1, '2026-09-17 22:03:33', '2026-09-08 18:31:35', '2026-09-17 22:03:33'),
 ('7', '2', 'Test', NULL, '2026-09-19', 'Dindigul', 'uploads/2/upcoming-function/file-1789591351525-225561401.jpg', 'CANCELLED', 1, '2026-09-17 22:03:35', '2026-09-17 02:12:31', '2026-09-17 22:03:35'),
 ('8', '2', 'Mahesh Ku Kalyanam', '', '2026-09-19', 'Chennai Mandapam', 'uploads/2/upcoming-function/file-1789662805526-106876077.jpg', 'CANCELLED', 1, '2026-09-21 05:47:19', '2026-09-17 22:03:26', '2026-09-21 05:47:19'),
-('9', '46', 'Saradha Reception', '', '2026-11-01', 'KALAHASTHINATHAPURAM', 'uploads/46/upcoming-function/file-1793511825287-486314452.jpg', 'COMPLETED', 0, NULL, '2026-11-01 11:09:57', '2026-11-02 13:22:14'),
-('10', '46', 'Paramasivam Kiragapravesam', '', '2026-11-13', 'KEELAIYUR', NULL, 'COMPLETED', 0, NULL, '2026-11-01 19:05:44', '2026-11-14 06:00:00'),
+('9', '46', 'Saradha Reception', '', '2026-11-01', 'KALAHASTHINATHAPURAM', 'uploads/46/upcoming-function/file-1793511825287-486314452.jpg', 'COMPLETED', 1, '2026-11-22 09:56:25', '2026-11-01 11:09:57', '2026-11-22 09:56:25'),
+('10', '46', 'Paramasivam Kiragapravesam', '', '2026-11-13', 'KEELAIYUR', NULL, 'COMPLETED', 1, '2026-11-22 09:56:20', '2026-11-01 19:05:44', '2026-11-22 09:56:20'),
 ('11', '2', 'Susmi', NULL, '2026-11-11', 'Murugabavanam', NULL, 'COMPLETED', 0, NULL, '2026-11-06 16:08:28', '2026-11-12 06:00:00'),
 ('12', '20', 'Test Event', NULL, '2026-11-13', 'Hall A', NULL, 'COMPLETED', 0, NULL, '2026-11-13 18:17:27', '2026-11-14 06:00:00');
 
@@ -3098,7 +3111,7 @@ CREATE TABLE `user_audit_logs` (
   KEY `idx_ual_action_created` (`action`,`created_at`),
   KEY `idx_ual_created` (`created_at`),
   CONSTRAINT `fk_ual_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=813 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=889 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 INSERT INTO `user_audit_logs` (`id`, `user_id`, `action`, `entity_type`, `entity_id`, `summary`, `metadata`, `ip_address`, `user_agent`, `device_id`, `created_at`) VALUES
 ('158', '13', 'LOGIN', 'user', '13', 'User logged in', '[object Object]', '49.47.219.235', 'Dart/3.13 (dart:io)', NULL, '2026-09-20 07:06:13'),
@@ -3463,7 +3476,84 @@ INSERT INTO `user_audit_logs` (`id`, `user_id`, `action`, `entity_type`, `entity
 ('809', '90', 'PERSON_UPDATE', 'person', '1388', 'Person updated: செந்தில் வாசகி MPP', NULL, '106.198.38.106', 'Dart/3.13 (dart:io)', NULL, '2026-11-18 16:18:05'),
 ('810', '90', 'PERSON_UPDATE', 'person', '1388', 'Person updated: செந்தில் வாசகி மாமா', NULL, '106.198.38.106', 'Dart/3.13 (dart:io)', NULL, '2026-11-18 16:19:01'),
 ('811', '90', 'DEVICE_REGISTER', 'device', 'SP1A.210812.016', 'Device registered or refreshed', '[object Object]', '106.198.38.106', 'Dart/3.13 (dart:io)', 'SP1A.210812.016', '2026-11-18 16:20:14'),
-('812', '90', 'DEVICE_REGISTER', 'device', 'SP1A.210812.016', 'Device registered or refreshed', '[object Object]', '122.165.249.133', 'Dart/3.13 (dart:io)', 'SP1A.210812.016', '2026-11-18 16:38:09');
+('812', '90', 'DEVICE_REGISTER', 'device', 'SP1A.210812.016', 'Device registered or refreshed', '[object Object]', '122.165.249.133', 'Dart/3.13 (dart:io)', 'SP1A.210812.016', '2026-11-18 16:38:09'),
+('813', '46', 'LOGIN', 'user', '46', 'User logged in', '[object Object]', '106.195.35.174', 'Dart/3.13 (dart:io)', NULL, '2026-11-20 18:17:17'),
+('814', '46', 'DEVICE_REGISTER', 'device', 'CP2A.260605.016', 'Device registered or refreshed', '[object Object]', '106.195.35.174', 'Dart/3.13 (dart:io)', 'CP2A.260605.016', '2026-11-20 18:17:17'),
+('815', '46', 'TRANSACTION_DELETE', 'transaction', '853', 'Transaction deleted', NULL, '106.195.35.174', 'Dart/3.13 (dart:io)', NULL, '2026-11-20 18:17:58'),
+('816', '46', 'PERSON_DELETE', 'person', '907', 'Person deleted: DURGA', NULL, '106.195.35.174', 'Dart/3.13 (dart:io)', NULL, '2026-11-20 18:18:10'),
+('817', '46', 'TRANSACTION_CREATE', 'transaction', '1434', 'Transaction created (INVEST)', '[object Object]', '106.195.35.174', 'Dart/3.13 (dart:io)', NULL, '2026-11-20 18:21:57'),
+('818', '46', 'TRANSACTION_CREATE', 'transaction', '1435', 'Transaction created (RETURN)', '[object Object]', '106.195.42.174', 'Dart/3.13 (dart:io)', NULL, '2026-11-20 18:22:51'),
+('819', '2', 'LOGIN', 'user', '2', 'User logged in', '[object Object]', '210.18.130.37', 'Dart/3.13 (dart:io)', NULL, '2026-11-21 07:48:51'),
+('820', '2', 'DEVICE_REGISTER', 'device', 'A171VCH.41-15', 'Device registered or refreshed', '[object Object]', '210.18.130.37', 'Dart/3.13 (dart:io)', 'A171VCH.41-15', '2026-11-21 07:48:51'),
+('821', '2', 'LOGIN', 'user', '2', 'User logged in', '[object Object]', '210.18.130.37', 'Dart/3.13 (dart:io)', NULL, '2026-11-21 13:08:07'),
+('822', '2', 'DEVICE_REGISTER', 'device', 'CE2A.260420.051.A2', 'Device registered or refreshed', '[object Object]', '210.18.130.37', 'Dart/3.13 (dart:io)', 'CE2A.260420.051.A2', '2026-11-21 13:08:07'),
+('823', '2', 'LOGIN', 'user', '2', 'User logged in', '[object Object]', '210.18.130.37', 'Dart/3.13 (dart:io)', NULL, '2026-11-21 15:56:57'),
+('824', '2', 'DEVICE_REGISTER', 'device', 'A171VCH.41-15', 'Device registered or refreshed', '[object Object]', '210.18.130.37', 'Dart/3.13 (dart:io)', 'A171VCH.41-15', '2026-11-21 15:56:57'),
+('825', '20', 'LOGIN', 'user', '20', 'User logged in', '[object Object]', '108.177.24.173', 'Dart/3.13 (dart:io)', NULL, '2026-11-21 23:04:39'),
+('826', '20', 'DEVICE_REGISTER', 'device', 'BE2A.250530.026.F3', 'Device registered or refreshed', '[object Object]', '108.177.24.173', 'Dart/3.13 (dart:io)', 'BE2A.250530.026.F3', '2026-11-21 23:04:39'),
+('827', '20', 'TRANSACTION_UPDATE', 'transaction', '1420', 'Transaction updated (RETURN)', '[object Object]', '108.177.24.173', 'Dart/3.13 (dart:io)', NULL, '2026-11-21 23:10:33'),
+('828', '20', 'PERSON_UPDATE', 'person', '1380', 'Person updated: Kumar', NULL, '108.177.24.173', 'Dart/3.13 (dart:io)', NULL, '2026-11-21 23:11:10'),
+('829', '20', 'PROFILE_UPDATE', 'user', '20', 'Profile updated', '[object Object]', '108.177.24.173', 'Dart/3.13 (dart:io)', NULL, '2026-11-21 23:17:21'),
+('830', '20', 'PROFILE_PHOTO_UPDATE', 'user', '20', 'Profile photo removed', NULL, '108.177.24.173', 'Dart/3.13 (dart:io)', NULL, '2026-11-21 23:19:44'),
+('831', '20', 'LOGOUT', 'user', '20', 'User logged out', NULL, '108.177.24.173', 'Dart/3.13 (dart:io)', NULL, '2026-11-21 23:23:13'),
+('832', '91', 'SIGNUP', 'user', '91', 'New user registered', '[object Object]', '115.99.66.110', 'Dart/3.13 (dart:io)', 'BP2A.250605.031.A3_V000L1', '2026-11-22 08:54:52'),
+('833', '91', 'LOGIN', 'user', '91', 'User logged in', '[object Object]', '115.99.66.110', 'Dart/3.13 (dart:io)', NULL, '2026-11-22 08:55:17'),
+('834', '91', 'DEVICE_REGISTER', 'device', 'BP2A.250605.031.A3_V000L1', 'Device registered or refreshed', '[object Object]', '115.99.66.110', 'Dart/3.13 (dart:io)', 'BP2A.250605.031.A3_V000L1', '2026-11-22 08:55:17'),
+('835', '91', 'DEVICE_REGISTER', 'device', 'BP2A.250605.031.A3_V000L1', 'Device registered or refreshed', '[object Object]', '157.51.129.101', 'Dart/3.13 (dart:io)', 'BP2A.250605.031.A3_V000L1', '2026-11-22 09:25:46'),
+('836', '91', 'DEVICE_REGISTER', 'device', 'BP2A.250605.031.A3_V000L1', 'Device registered or refreshed', '[object Object]', '157.51.131.69', 'Dart/3.13 (dart:io)', 'BP2A.250605.031.A3_V000L1', '2026-11-22 09:29:08'),
+('837', '91', 'TRANSACTION_CREATE', 'transaction', '1436', 'Transaction created (INVEST)', '[object Object]', '157.51.131.69', 'Dart/3.13 (dart:io)', NULL, '2026-11-22 09:29:47'),
+('838', '91', 'DEVICE_REGISTER', 'device', 'BP2A.250605.031.A3_V000L1', 'Device registered or refreshed', '[object Object]', '157.51.131.69', 'Dart/3.13 (dart:io)', 'BP2A.250605.031.A3_V000L1', '2026-11-22 09:29:59'),
+('839', '46', 'LOGIN', 'user', '46', 'User logged in', '[object Object]', '106.192.167.36', 'Dart/3.13 (dart:io)', NULL, '2026-11-22 09:55:11'),
+('840', '46', 'DEVICE_REGISTER', 'device', 'CP2A.260605.016', 'Device registered or refreshed', '[object Object]', '106.192.167.36', 'Dart/3.13 (dart:io)', 'CP2A.260605.016', '2026-11-22 09:55:11'),
+('841', '46', 'UPCOMING_DELETE', 'upcoming_function', '10', 'Upcoming function deleted: Paramasivam Kiragapravesam', NULL, '106.192.167.36', 'Dart/3.13 (dart:io)', NULL, '2026-11-22 09:56:20'),
+('842', '46', 'UPCOMING_DELETE', 'upcoming_function', '9', 'Upcoming function deleted: Saradha Reception', NULL, '106.192.167.36', 'Dart/3.13 (dart:io)', NULL, '2026-11-22 09:56:25'),
+('843', '91', 'LOGIN', 'user', '91', 'User logged in', '[object Object]', '115.99.66.110', 'Dart/3.13 (dart:io)', NULL, '2026-11-22 18:27:09'),
+('844', '91', 'DEVICE_REGISTER', 'device', 'BP2A.250605.031.A3_V000L1', 'Device registered or refreshed', '[object Object]', '115.99.66.110', 'Dart/3.13 (dart:io)', 'BP2A.250605.031.A3_V000L1', '2026-11-22 18:27:09'),
+('845', '91', 'PERSON_DELETE', 'person', '1389', 'Person deleted: KISHORE', NULL, '115.99.66.110', 'Dart/3.13 (dart:io)', NULL, '2026-11-22 18:28:07'),
+('846', '91', 'TRANSACTION_CREATE', 'transaction', '1437', 'Transaction created (INVEST)', '[object Object]', '115.99.66.110', 'Dart/3.13 (dart:io)', NULL, '2026-11-22 18:28:46'),
+('847', '91', 'TRANSACTION_CREATE', 'transaction', '1438', 'Transaction created (INVEST)', '[object Object]', '115.99.66.110', 'Dart/3.13 (dart:io)', NULL, '2026-11-22 18:29:35'),
+('848', '91', 'TRANSACTION_CREATE', 'transaction', '1439', 'Transaction created (INVEST)', '[object Object]', '115.99.66.110', 'Dart/3.13 (dart:io)', NULL, '2026-11-22 18:30:23'),
+('849', '91', 'TRANSACTION_CREATE', 'transaction', '1440', 'Transaction created (INVEST)', '[object Object]', '115.99.66.110', 'Dart/3.13 (dart:io)', NULL, '2026-11-22 18:30:58'),
+('850', '91', 'TRANSACTION_CREATE', 'transaction', '1441', 'Transaction created (INVEST)', '[object Object]', '115.99.66.110', 'Dart/3.13 (dart:io)', NULL, '2026-11-22 18:32:46'),
+('851', '91', 'TRANSACTION_CREATE', 'transaction', '1442', 'Transaction created (INVEST)', '[object Object]', '115.99.66.110', 'Dart/3.13 (dart:io)', NULL, '2026-11-22 18:33:49'),
+('852', '91', 'TRANSACTION_CREATE', 'transaction', '1443', 'Transaction created (INVEST)', '[object Object]', '115.99.66.110', 'Dart/3.13 (dart:io)', NULL, '2026-11-22 18:34:38');
+INSERT INTO `user_audit_logs` (`id`, `user_id`, `action`, `entity_type`, `entity_id`, `summary`, `metadata`, `ip_address`, `user_agent`, `device_id`, `created_at`) VALUES
+('853', '91', 'TRANSACTION_CREATE', 'transaction', '1444', 'Transaction created (INVEST)', '[object Object]', '115.99.66.110', 'Dart/3.13 (dart:io)', NULL, '2026-11-22 18:35:01'),
+('854', '91', 'TRANSACTION_CREATE', 'transaction', '1445', 'Transaction created (INVEST)', '[object Object]', '115.99.66.110', 'Dart/3.13 (dart:io)', NULL, '2026-11-22 18:36:00'),
+('855', '91', 'TRANSACTION_CREATE', 'transaction', '1446', 'Transaction created (INVEST)', '[object Object]', '115.99.66.110', 'Dart/3.13 (dart:io)', NULL, '2026-11-22 18:36:35'),
+('856', '91', 'TRANSACTION_CREATE', 'transaction', '1447', 'Transaction created (INVEST)', '[object Object]', '115.99.66.110', 'Dart/3.13 (dart:io)', NULL, '2026-11-22 18:37:09'),
+('857', '91', 'TRANSACTION_CREATE', 'transaction', '1448', 'Transaction created (INVEST)', '[object Object]', '115.99.66.110', 'Dart/3.13 (dart:io)', NULL, '2026-11-22 18:37:54'),
+('858', '91', 'TRANSACTION_CREATE', 'transaction', '1449', 'Transaction created (INVEST)', '[object Object]', '115.99.66.110', 'Dart/3.13 (dart:io)', NULL, '2026-11-22 18:38:13'),
+('859', '91', 'TRANSACTION_CREATE', 'transaction', '1450', 'Transaction created (INVEST)', '[object Object]', '115.99.66.110', 'Dart/3.13 (dart:io)', NULL, '2026-11-22 18:39:42'),
+('860', '91', 'TRANSACTION_CREATE', 'transaction', '1451', 'Transaction created (INVEST)', '[object Object]', '115.99.66.110', 'Dart/3.13 (dart:io)', NULL, '2026-11-22 18:40:39'),
+('861', '91', 'TRANSACTION_CREATE', 'transaction', '1452', 'Transaction created (INVEST)', '[object Object]', '115.99.66.110', 'Dart/3.13 (dart:io)', NULL, '2026-11-22 18:41:27'),
+('862', '91', 'TRANSACTION_CREATE', 'transaction', '1453', 'Transaction created (INVEST)', '[object Object]', '115.99.66.110', 'Dart/3.13 (dart:io)', NULL, '2026-11-22 18:42:01'),
+('863', '91', 'TRANSACTION_CREATE', 'transaction', '1454', 'Transaction created (INVEST)', '[object Object]', '115.99.66.110', 'Dart/3.13 (dart:io)', NULL, '2026-11-22 18:42:37'),
+('864', '91', 'TRANSACTION_CREATE', 'transaction', '1455', 'Transaction created (INVEST)', '[object Object]', '115.99.66.110', 'Dart/3.13 (dart:io)', NULL, '2026-11-22 18:43:21'),
+('865', '91', 'TRANSACTION_CREATE', 'transaction', '1456', 'Transaction created (INVEST)', '[object Object]', '115.99.66.110', 'Dart/3.13 (dart:io)', NULL, '2026-11-22 18:43:50'),
+('866', '91', 'TRANSACTION_CREATE', 'transaction', '1457', 'Transaction created (INVEST)', '[object Object]', '115.99.66.110', 'Dart/3.13 (dart:io)', NULL, '2026-11-22 18:44:19'),
+('867', '91', 'TRANSACTION_CREATE', 'transaction', '1458', 'Transaction created (INVEST)', '[object Object]', '115.99.66.110', 'Dart/3.13 (dart:io)', NULL, '2026-11-22 18:45:49'),
+('868', '91', 'TRANSACTION_CREATE', 'transaction', '1459', 'Transaction created (INVEST)', '[object Object]', '115.99.66.110', 'Dart/3.13 (dart:io)', NULL, '2026-11-22 18:46:16'),
+('869', '91', 'TRANSACTION_CREATE', 'transaction', '1460', 'Transaction created (INVEST)', '[object Object]', '115.99.66.110', 'Dart/3.13 (dart:io)', NULL, '2026-11-22 18:49:07'),
+('870', '91', 'TRANSACTION_CREATE', 'transaction', '1461', 'Transaction created (INVEST)', '[object Object]', '115.99.66.110', 'Dart/3.13 (dart:io)', NULL, '2026-11-22 18:49:35'),
+('871', '91', 'TRANSACTION_CREATE', 'transaction', '1462', 'Transaction created (INVEST)', '[object Object]', '115.99.66.110', 'Dart/3.13 (dart:io)', NULL, '2026-11-22 18:50:06'),
+('872', '91', 'TRANSACTION_CREATE', 'transaction', '1463', 'Transaction created (INVEST)', '[object Object]', '115.99.66.110', 'Dart/3.13 (dart:io)', NULL, '2026-11-22 18:52:36'),
+('873', '91', 'TRANSACTION_CREATE', 'transaction', '1464', 'Transaction created (INVEST)', '[object Object]', '115.99.66.110', 'Dart/3.13 (dart:io)', NULL, '2026-11-22 18:53:02'),
+('874', '91', 'TRANSACTION_CREATE', 'transaction', '1465', 'Transaction created (INVEST)', '[object Object]', '115.99.66.110', 'Dart/3.13 (dart:io)', NULL, '2026-11-22 18:53:37'),
+('875', '91', 'TRANSACTION_CREATE', 'transaction', '1466', 'Transaction created (INVEST)', '[object Object]', '115.99.66.110', 'Dart/3.13 (dart:io)', NULL, '2026-11-22 18:54:23'),
+('876', '91', 'TRANSACTION_CREATE', 'transaction', '1467', 'Transaction created (INVEST)', '[object Object]', '115.99.66.110', 'Dart/3.13 (dart:io)', NULL, '2026-11-22 18:54:55'),
+('877', '91', 'TRANSACTION_CREATE', 'transaction', '1468', 'Transaction created (INVEST)', '[object Object]', '115.99.66.110', 'Dart/3.13 (dart:io)', NULL, '2026-11-22 18:55:47'),
+('878', '91', 'TRANSACTION_CREATE', 'transaction', '1469', 'Transaction created (INVEST)', '[object Object]', '115.99.66.110', 'Dart/3.13 (dart:io)', NULL, '2026-11-22 18:56:19'),
+('879', '91', 'TRANSACTION_CREATE', 'transaction', '1470', 'Transaction created (INVEST)', '[object Object]', '115.99.66.110', 'Dart/3.13 (dart:io)', NULL, '2026-11-22 18:58:11'),
+('880', '91', 'TRANSACTION_CREATE', 'transaction', '1471', 'Transaction created (INVEST)', '[object Object]', '115.99.66.110', 'Dart/3.13 (dart:io)', NULL, '2026-11-22 18:58:42'),
+('881', '91', 'TRANSACTION_CREATE', 'transaction', '1472', 'Transaction created (INVEST)', '[object Object]', '115.99.66.110', 'Dart/3.13 (dart:io)', NULL, '2026-11-22 18:59:07'),
+('882', '91', 'TRANSACTION_CREATE', 'transaction', '1473', 'Transaction created (INVEST)', '[object Object]', '115.99.66.110', 'Dart/3.13 (dart:io)', NULL, '2026-11-22 18:59:33'),
+('883', '91', 'TRANSACTION_CREATE', 'transaction', '1474', 'Transaction created (INVEST)', '[object Object]', '115.99.66.110', 'Dart/3.13 (dart:io)', NULL, '2026-11-22 18:59:49'),
+('884', '91', 'TRANSACTION_CREATE', 'transaction', '1475', 'Transaction created (INVEST)', '[object Object]', '115.99.66.110', 'Dart/3.13 (dart:io)', NULL, '2026-11-22 19:01:30'),
+('885', '91', 'TRANSACTION_CREATE', 'transaction', '1476', 'Transaction created (INVEST)', '[object Object]', '115.99.66.110', 'Dart/3.13 (dart:io)', NULL, '2026-11-22 19:01:50'),
+('886', '91', 'TRANSACTION_CREATE', 'transaction', '1477', 'Transaction created (INVEST)', '[object Object]', '115.99.66.110', 'Dart/3.13 (dart:io)', NULL, '2026-11-22 19:02:05'),
+('887', '91', 'TRANSACTION_CREATE', 'transaction', '1478', 'Transaction created (INVEST)', '[object Object]', '115.99.66.110', 'Dart/3.13 (dart:io)', NULL, '2026-11-22 19:02:21'),
+('888', '91', 'TRANSACTION_CREATE', 'transaction', '1479', 'Transaction created (INVEST)', '[object Object]', '115.99.66.110', 'Dart/3.13 (dart:io)', NULL, '2026-11-22 19:02:41');
 
 DROP TABLE IF EXISTS `user_credentials`;
 CREATE TABLE `user_credentials` (
@@ -3534,7 +3624,8 @@ INSERT INTO `user_credentials` (`user_id`, `password_hash`, `password_changed_at
 ('87', '$2a$10$edWm.iqaKic6KjHVW.xwwengd0En7pt76Ggx3y7vhKPQAz.WqI3Em', '2026-10-31 02:56:35', 0, NULL),
 ('88', '$2a$10$G2kXuhwWp366mrs/DrUToOrizZv464nbL/eOnEX0EFHXN2WD1VsHq', '2026-10-31 20:58:38', 0, NULL),
 ('89', '$2a$10$q3PMJGgHUe7av1qTanjUO.XElAH7y5Owo7RXleEMb744tOSME3mNO', '2026-11-08 15:03:02', 0, NULL),
-('90', '$2a$10$h3Ut8wWqjsIezU7yXSYPEOdJ4h3p9PIUZ3thneIU1kKzi1L6WiI.C', '2026-11-18 16:11:15', 0, NULL);
+('90', '$2a$10$h3Ut8wWqjsIezU7yXSYPEOdJ4h3p9PIUZ3thneIU1kKzi1L6WiI.C', '2026-11-18 16:11:15', 0, NULL),
+('91', '$2a$10$0qnyySHz4P9ZqipMrCpp/ONxFm5NnPR6DM7j5rdsnGdGL53jy5P9G', '2026-11-22 08:54:51', 0, NULL);
 
 DROP TABLE IF EXISTS `user_devices`;
 CREATE TABLE `user_devices` (
@@ -3566,7 +3657,7 @@ CREATE TABLE `user_devices` (
   KEY `idx_ud_user_active_used` (`user_id`,`is_active`,`last_used_at` DESC),
   KEY `idx_ud_token_status` (`token_status`),
   CONSTRAINT `user_devices_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=533 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=545 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 INSERT INTO `user_devices` (`id`, `user_id`, `device_id`, `device_name`, `brand`, `manufacturer`, `model`, `ram_size`, `fcm_token`, `android_version`, `platform`, `app_version`, `is_active`, `token_status`, `last_used_at`, `uninstalled_at`, `created_at`, `updated_at`, `is_deleted`, `deleted_at`) VALUES
 ('24', '33', 'BP2A.250605.015', 'OPPO Reno12 Pro 5G', 'OPPO', 'OPPO', 'CPH2629', '11.19', 'cLVWIovYR8eTI9R3pPsYIm:APA91bEFHeUhrm0wQVrgUhTsujbEFX8_S9lq1vhGV5tPFdJfBujKqIMs2P1TXKm5dxdU3D_RFZsqAmPV4-1Wbn-cj5XH3s_wuBa1cbRwzZkydtNp0NgLKYw', '16', 'android', NULL, 0, 'invalid', '2026-03-13 22:41:47', '2026-10-04 09:00:00', '2026-03-13 22:41:47', '2026-10-04 09:00:00', 0, NULL),
@@ -3590,7 +3681,7 @@ INSERT INTO `user_devices` (`id`, `user_id`, `device_id`, `device_name`, `brand`
 ('129', '53', 'W1UUIS36H.110-42-3', 'motorola edge 50 fusion', 'motorola', 'motorola', 'motorola edge 50 fusion', '11.11', 'dMCou354R6in10V5ngvcR-:APA91bHsHRNS-Q3hW2Wrz_JZHTJtcMBKzADC_XH3RyRhbdIkta-w7p6hoS6usHe_K8dzxDJ5WrJPMfr_p2deVMvALNL3cCeZ1cEtiVZRu_ds_tET_N-u6DQ', '16', 'android', NULL, 0, 'invalid', '2026-09-13 12:14:48', '2026-09-16 22:03:47', '2026-09-13 12:14:48', '2026-09-18 19:33:18', 0, NULL),
 ('131', '24', 'BP2A.250605.031.A3', 'V2355', 'vivo', 'vivo', 'V2355', '7.31', 'fEV8u366QuK_EFDpR6k45j:APA91bGsxyMKN2FqurnfcOrqKFF5nNB2CJs6I5xi76JnJyeUc9oKtbAAn33wnvixBo8uIcESMbC5m2Lapuhf_HTtDzdGF-ASdxDmhwXlYttGAwGrNImd9cs', '16', 'android', NULL, 1, 'active', '2026-09-14 20:15:29', NULL, '2026-09-14 20:15:29', '2026-09-14 20:15:29', 0, NULL),
 ('132', '55', 'BP2A.250605.015', 'OPPO Reno15 5G', 'OPPO', 'OPPO', 'CPH2825', '7.09', 'doJRwHniR36PEmaj-Slpom:APA91bETpJCGKQgf2v1hbvizfgKxIsqy_MkBqkaftWipEq29NDbfVESb2Hg3U1b2OqF1YkQy7VKiom-Ei3oDh9-o5fNlU8hQkYwQQAmmljp4kxpxCs2pfCY', '16', 'android', NULL, 0, 'invalid', '2026-09-15 07:09:48', '2026-09-18 11:36:42', '2026-09-15 07:09:48', '2026-09-18 19:33:18', 0, NULL),
-('134', '46', 'BP4A.251205.006', 'Nambirajan\'s M35', 'samsung', 'samsung', 'SM-M356B', '7.26', 'f_dagr1fTdCtGpnsBpzDMv:APA91bE4vi2FW8e8uCmGx1JWPn941Le5hJhbWEzfsivdA_64po7X5lodSEDrIFnqLFfbMZHQxAXKZj3Qq9-S2K3tzYIS7-d3b-UPRB_gveS_opOuX6EIJkI', '17', 'android', '5.3.2', 1, 'active', '2026-11-16 13:36:24', NULL, '2026-09-16 09:18:29', '2026-11-16 13:36:24', 0, NULL),
+('134', '46', 'BP4A.251205.006', 'Nambirajan\'s M35', 'samsung', 'samsung', 'SM-M356B', '7.26', 'f_dagr1fTdCtGpnsBpzDMv:APA91bE4vi2FW8e8uCmGx1JWPn941Le5hJhbWEzfsivdA_64po7X5lodSEDrIFnqLFfbMZHQxAXKZj3Qq9-S2K3tzYIS7-d3b-UPRB_gveS_opOuX6EIJkI', '17', 'android', '5.3.2', 1, 'active', '2026-11-22 09:55:11', NULL, '2026-09-16 09:18:29', '2026-11-22 09:55:11', 0, NULL),
 ('135', '56', 'CP2A.260705.006', 'Pixel 6a', 'google', 'Google', 'Pixel 6a', '5.46', 'ef0DYCbXTEOpm6vu8RBLRV:APA91bHbr3F5xMo56cVnf6Sg0EWV7hrI0cGqEnwQ7ITWNHwUJOITWWir1K-8rH3gH7Ow8X6DfFICDkJi1htQCXQVXl6-iNsuijWDsgtrMTcDclm2EvgYXiE', '17', 'android', NULL, 0, 'invalid', '2026-09-16 21:41:06', '2026-09-16 22:01:20', '2026-09-16 21:41:06', '2026-09-18 19:33:18', 0, NULL),
 ('157', '54', 'AP3A.240617.008', 'OPPO A78', 'OPPO', 'OPPO', 'CPH2565', '7.41', 'eCA3AacOT4ySKzZQFb1I84:APA91bGrfQeuuP3gNTEMNB4gG_013qiYacEcxoJWreOdYQd2ioHPEX-qxBm2TnsFjhHLvmwKIBQh3kwbyAdNdWHnIqcUr9kG5w__HvVc2zDEfdZhCv2i3Gs', '15', 'android', '5.3.1', 1, 'active', '2026-11-10 16:50:19', NULL, '2026-09-17 16:04:52', '2026-11-10 16:50:19', 0, NULL),
 ('160', '8', 'SKQ1.211019.001', 'Redmi Note 9 Pro Max', 'Redmi', 'Xiaomi', 'Redmi Note 9 Pro Max', '7.40', 'faTzbLM2T8K5JNtfyzNY7-:APA91bF828WlPuDkOKNRZ43Scnk1Ulu2BQ5R0cSZfa6f_ugjdd1WF_tte_TenfF3-lRjPHbFPF4_3llswWbSnHecfi2YdgA17VPpak6AVMVAD-sxKZXa6kE', '12', 'android', NULL, 1, 'active', '2026-09-17 19:11:14', NULL, '2026-09-17 19:11:14', '2026-09-17 19:11:14', 0, NULL),
@@ -3608,13 +3699,16 @@ INSERT INTO `user_devices` (`id`, `user_id`, `device_id`, `device_name`, `brand`
 ('439', '85', 'AP3A.240905.015.A2_CS', 'V2239', 'vivo', 'vivo', 'V2239', '7.38', 'd8ZqT9mURHWaLtebVw6LoC:APA91bH0Wfd47clw5oDtqAC9FY53ULf8l6Cxxb_Rg-SS3Sp5ZkCqKTcFYTfNaEuTokloZ0Y1ivcLFOuepltM0fi0ccprbiuKbiOaIvc4ybvt6fVtNgjS14s', '15', 'android', '5.2.2', 0, 'invalid', '2026-10-22 16:48:20', '2026-10-23 09:00:02', '2026-10-22 16:47:46', '2026-10-23 09:00:03', 0, NULL),
 ('455', '2', 'A171VCH.41-9', 'Moto 60 Fusion ', 'motorola', 'motorola', 'motorola edge 60 fusion', '11.15', 'fL6UFI1FRyefS4EWAyFVUO:APA91bF9vjgrh86SIRPh-2FdcKeVtz4D4q3gZX7BBZhStsim7TXXOydVuH2IqmwZ6iFZQqj8Kpau_tbHZtFeVqtpdODhLnMHWxcp_mOrDQqdd0gxUB-0M-E', '17', 'android', '5.3.1', 0, 'invalid', '2026-11-06 16:04:08', '2026-11-14 09:00:01', '2026-10-26 12:02:03', '2026-11-14 09:00:01', 0, NULL),
 ('472', '86', 'UKQ1.231108.001', 'realme NARZO 80 Pro 5G', 'realme', 'realme', 'RMX5033', '7.30', 'cbGupw4pTp2l1e7FtuBU6G:APA91bENSoIIsgvU_3eRddWd9jnqbZBkKSqS0j7gt49xhJ2ItdCsM-r38T_8kjNn4k4k3d-vlywLmVbdPz_yOSMxsfHMcMjH3ReDhLDn8oBYrcgX-bJI8sA', '15', 'android', '5.3.0', 1, 'active', '2026-10-29 15:56:16', NULL, '2026-10-29 15:42:32', '2026-10-29 15:56:16', 0, NULL),
-('479', '87', 'RP1A.200720.011', 'OPPO A54', 'OPPO', 'OPPO', 'CPH2239', '3.71', 'cFWeBDXGSZ64bcPKwlYlyn:APA91bFteQt20Hq-_wjs6guZ_M9EOp96N0Fnogvq974JthBuSF_Akdyt1dLDOTkdjbIPlS9AWeuCKuFLcYeKb_2WtfCjm0z7zPkYcLRvvg2fBeQEmLVL7mM', '11', 'android', '5.3.0', 1, 'active', '2026-10-31 03:40:25', NULL, '2026-10-31 02:56:35', '2026-10-31 03:40:25', 0, NULL),
+('479', '87', 'RP1A.200720.011', 'OPPO A54', 'OPPO', 'OPPO', 'CPH2239', '3.71', 'cFWeBDXGSZ64bcPKwlYlyn:APA91bFteQt20Hq-_wjs6guZ_M9EOp96N0Fnogvq974JthBuSF_Akdyt1dLDOTkdjbIPlS9AWeuCKuFLcYeKb_2WtfCjm0z7zPkYcLRvvg2fBeQEmLVL7mM', '11', 'android', '5.3.0', 0, 'invalid', '2026-10-31 03:40:25', '2026-11-21 09:00:01', '2026-10-31 02:56:35', '2026-11-21 09:00:01', 0, NULL),
 ('494', '88', 'UKQ1.230924.001', 'OnePlus Nord CE 3 Lite 5G', 'OnePlus', 'OnePlus', 'CPH2467', '7.21', 'd5L4ZTPMTCyD6jbcWZpBw2:APA91bGyQq0fduojkuijGe3d9oSyzh80a498ujIP1_nM-BAikr-_dtZklEa6ZdgMGUp92CjR_9WcPH0bhXyu9S7ZXr22RVZNmXUM-vgkHMDp5Yjz6sa9w_E', '15', 'android', '5.3.1', 0, 'invalid', '2026-10-31 20:58:53', '2026-11-01 09:00:00', '2026-10-31 20:58:39', '2026-11-01 09:00:00', 0, NULL),
 ('505', '16', 'BP2A.250605.031.A3', 'REDMI Note 15 Pro+ 5G', 'Redmi', 'Xiaomi', '2510ERA8BI', '11.09', 'dcdGdS0ITdCvt7N6v-sFM9:APA91bHmc3FR004FhZZ14ho5u_1kZm-g2UmwRMoqR6xTMn3F8eaMJCQ8ENhnj30X2cYhhRUqoTzioSLVpvlr8TWOaVbX5G7SEuR0skDtLje9u6dW7P6r4zM', '16', 'android', '5.3.1', 1, 'active', '2026-11-06 12:34:01', NULL, '2026-11-06 12:28:12', '2026-11-06 12:34:01', 0, NULL),
 ('510', '89', 'UP1A.231005.007', 'Sathiyanarayanan\'s Tab S9 FE', 'samsung', 'samsung', 'SM-X516B', '5.30', 'cVk2IzG6TVeTLz32kuPanO:APA91bH0UTC1aEDU_7sTXtkxho70-e_S_ZNCSXESi-EKoLsb_EK2XcZHKdeVOsiFp7mfsrPE_txroQB0KE8_CVW-EwVuj2njOy1SvIvL7yO8Be96aCldOpo', '14', 'android', '5.3.1', 0, 'invalid', '2026-11-09 07:04:26', '2026-11-17 09:00:02', '2026-11-08 15:03:02', '2026-11-17 09:00:02', 0, NULL),
-('516', '2', 'A171VCH.41-15', 'Moto 60 Fusion ', 'motorola', 'motorola', 'motorola edge 60 fusion', '11.15', 'eC4aE2ocRiKCFXo-GRJWYI:APA91bGc71eQNSNh476r4AZ2gwU67lMU-BatrOJTszULa34-WPEP3mHvuer1Nc7NaoID3RO3WZq70kgt53qnAJBGYvcytxaewjF4IMKPkpRIyZyWGtC8f_c', '17', 'android', '5.3.1', 1, 'active', '2026-11-13 17:28:26', NULL, '2026-11-13 17:28:26', '2026-11-13 17:28:26', 0, NULL),
+('516', '2', 'A171VCH.41-15', 'Moto 60 Fusion ', 'motorola', 'motorola', 'motorola edge 60 fusion', '11.15', 'fTBE5SJHRg2gV81j_u1Ba2:APA91bHKcGoe7NLz4AaugJhsfeRpeFzd_58MMCUuRu23VDUnhwC4Oxd-L9-Lq2LHWPMXXgnRAaPxpgC4qsn0Sfc8opAVy2NiIa4KmL4JQ34xx4Cws0FB5Zo', '17', 'android', '5.3.2', 1, 'active', '2026-11-21 15:56:57', NULL, '2026-11-13 17:28:26', '2026-11-21 15:56:57', 0, NULL),
 ('517', '20', 'QKR1.191246.002', 'OnePlus8Pro', 'OnePlus', 'OnePlus', 'OnePlus8Pro', '4.08', 'c1sxOWpiSYiKK8Jr-2cLTt:APA91bHMN7MEpdeaFa1Z943e2L0lP8FLdRTYQfCJmNScOpU3FYkbwALwvUuCz2YmGV0vKfCRzMOkIUsFWfsvWl1TcDhs1nuTUNpZhFwcauIxHo8vrBL3K3k', '11', 'android', '5.3.2', 1, 'active', '2026-11-14 18:02:24', NULL, '2026-11-13 17:40:16', '2026-11-14 18:02:24', 0, NULL),
-('529', '90', 'SP1A.210812.016', 'SSK', 'realme', 'realme', 'RMX2151', '7.47', 'd2Whr8QgRIO-0HaLlbHpEP:APA91bFvhiREzpxSt565ysGMwoUdTTctBaRNTUTjWlN5YRxijBnbd6nzsuLA4AF4sj-y_EpQIPkPZRd1PKO1LR2obOSxXVy5Fv6czHgYTyQ5QGPyEIi8Iwc', '12', 'android', '5.3.2', 1, 'active', '2026-11-18 16:38:09', NULL, '2026-11-18 16:11:15', '2026-11-18 16:38:09', 0, NULL);
+('529', '90', 'SP1A.210812.016', 'SSK', 'realme', 'realme', 'RMX2151', '7.47', 'd2Whr8QgRIO-0HaLlbHpEP:APA91bFvhiREzpxSt565ysGMwoUdTTctBaRNTUTjWlN5YRxijBnbd6nzsuLA4AF4sj-y_EpQIPkPZRd1PKO1LR2obOSxXVy5Fv6czHgYTyQ5QGPyEIi8Iwc', '12', 'android', '5.3.2', 0, 'invalid', '2026-11-18 16:38:09', '2026-11-18 19:11:21', '2026-11-18 16:11:15', '2026-11-18 19:11:21', 0, NULL),
+('535', '2', 'CE2A.260420.051.A2', 'sdk_gphone64_arm64', 'google', 'Google', 'sdk_gphone64_arm64', '3.82', 'dl1a2dF7SB6ABrWnJ1UdBD:APA91bHywi9M10zv6Vq5jBbKO_k1WLQIKlTwR1sUbNnyW9BXQVDTUQ2mJh-tTf6MCDpkNmNurqctrapvsjKCLRpiko7cnjL8lPP27tmLM98IvPGcYJQsqtc', '17', 'android', '5.3.2', 1, 'active', '2026-11-21 13:08:07', NULL, '2026-11-21 13:08:07', '2026-11-21 13:08:07', 0, NULL),
+('537', '20', 'BE2A.250530.026.F3', 'sdk_gphone64_arm64', 'google', 'Google', 'sdk_gphone64_arm64', '3.83', 'esmgHqy-TBeDOWeYc_jvCL:APA91bH1glll6NkkiFCqcEK2nC4wlQugpI8oJbhbR6he3VR73aJ2Eg4Jsh1MgZCaEIpRspJcAX_LNP6riUvUAU0TtqnUYSaGISWOk0i-EGSU4s9T1MIZRbE', '16', 'android', '5.3.3', 0, 'invalid', '2026-11-21 23:04:39', '2026-11-22 09:00:00', '2026-11-21 23:04:39', '2026-11-22 09:00:01', 0, NULL),
+('538', '91', 'BP2A.250605.031.A3_V000L1', 'I2221', 'iQOO', 'vivo', 'I2221', '11.02', 'ccB8SjFDS2u8CA-_3XrrUV:APA91bGPeytZrcaCaJW7sSCyMARR9AeyqsduK4gMDXo2zb31AtKneSuU_hyd6feXiFwhp0B6RFiQfAN5I6_rNwYH8q5GJ-RoGRI2MdmpgckqJsTj4NRZNVI', '16', 'android', '5.3.3', 1, 'active', '2026-11-22 18:27:09', NULL, '2026-11-22 08:54:52', '2026-11-22 18:27:09', 0, NULL);
 
 DROP TABLE IF EXISTS `user_mfa`;
 CREATE TABLE `user_mfa` (
@@ -3685,7 +3779,7 @@ INSERT INTO `user_profiles` (`user_id`, `gender`, `date_of_birth`, `profile_imag
 ('17', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
 ('18', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
 ('19', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-('20', 'MALE', '2022-10-01', 'uploads/20/profile/profile-1794574803860-996591169.jpg', 'Muthuraj Nagar', 'Murugabhavanam', 'Dindigul', 'Tamil Nadu', 'India', '624001'),
+('20', 'FEMALE', '2022-10-01', NULL, 'Muthuraj Nagar', 'Murugabhavanam', 'Dindigul', 'Tamil Nadu', 'India', '624001'),
 ('21', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
 ('22', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
 ('23', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
@@ -3722,7 +3816,8 @@ INSERT INTO `user_profiles` (`user_id`, `gender`, `date_of_birth`, `profile_imag
 ('87', 'MALE', '1981-10-04', NULL, NULL, NULL, 'THANJAVUR', NULL, NULL, NULL),
 ('88', NULL, NULL, NULL, NULL, NULL, 'UDUMALPET', NULL, NULL, NULL),
 ('89', NULL, NULL, NULL, NULL, NULL, 'TIRUVANNAMALAI', NULL, NULL, NULL),
-('90', NULL, NULL, NULL, NULL, NULL, 'NAMAKKAL', NULL, NULL, NULL);
+('90', NULL, NULL, NULL, NULL, NULL, 'NAMAKKAL', NULL, NULL, NULL),
+('91', NULL, NULL, NULL, NULL, NULL, 'CHENNAI', NULL, NULL, NULL);
 
 DROP TABLE IF EXISTS `user_referrals`;
 CREATE TABLE `user_referrals` (
@@ -3746,7 +3841,7 @@ CREATE TABLE `user_sessions` (
   KEY `idx_sessions_login` (`login_at`),
   KEY `idx_sessions_user` (`user_id`),
   CONSTRAINT `user_sessions_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=212 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=220 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 INSERT INTO `user_sessions` (`id`, `user_id`, `login_at`, `logout_at`) VALUES
 ('1', '20', '2026-09-19 05:30:20', '2026-09-19 05:30:45'),
@@ -3931,7 +4026,7 @@ INSERT INTO `user_sessions` (`id`, `user_id`, `login_at`, `logout_at`) VALUES
 ('190', '2', '2026-11-13 16:57:07', '2026-11-13 17:19:15'),
 ('191', '2', '2026-11-13 17:19:15', NULL),
 ('192', '2', '2026-11-13 17:24:00', NULL),
-('193', '2', '2026-11-13 17:28:25', NULL),
+('193', '2', '2026-11-13 17:28:25', '2026-11-21 07:48:51'),
 ('194', '20', '2026-11-13 17:40:14', '2026-11-13 18:15:01'),
 ('195', '20', '2026-11-13 18:15:01', '2026-11-14 18:02:20'),
 ('196', '46', '2026-11-13 18:46:25', '2026-11-13 18:46:27'),
@@ -3947,9 +4042,18 @@ INSERT INTO `user_sessions` (`id`, `user_id`, `login_at`, `logout_at`) VALUES
 ('206', '54', '2026-11-14 22:17:43', '2026-11-14 22:20:47'),
 ('207', '54', '2026-11-14 22:20:47', '2026-11-15 22:16:04'),
 ('208', '54', '2026-11-15 22:16:04', NULL),
-('209', '46', '2026-11-16 13:36:24', NULL),
-('210', '20', '2026-11-16 18:42:35', NULL),
+('209', '46', '2026-11-16 13:36:24', '2026-11-20 18:17:17'),
+('210', '20', '2026-11-16 18:42:35', '2026-11-21 23:04:39'),
 ('211', '90', '2026-11-18 16:11:36', NULL);
+INSERT INTO `user_sessions` (`id`, `user_id`, `login_at`, `logout_at`) VALUES
+('212', '46', '2026-11-20 18:17:17', '2026-11-22 09:55:11'),
+('213', '2', '2026-11-21 07:48:51', '2026-11-21 13:08:07'),
+('214', '2', '2026-11-21 13:08:07', '2026-11-21 15:56:57'),
+('215', '2', '2026-11-21 15:56:57', NULL),
+('216', '20', '2026-11-21 23:04:39', '2026-11-21 23:23:13'),
+('217', '91', '2026-11-22 08:55:17', '2026-11-22 18:27:09'),
+('218', '46', '2026-11-22 09:55:11', NULL),
+('219', '91', '2026-11-22 18:27:09', NULL);
 
 DROP TABLE IF EXISTS `users`;
 CREATE TABLE `users` (
@@ -3979,11 +4083,11 @@ CREATE TABLE `users` (
   KEY `idx_users_activity` (`last_activity_at`),
   KEY `idx_users_signup_type` (`signup_type`),
   KEY `idx_users_google_id` (`google_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=91 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=92 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 INSERT INTO `users` (`id`, `full_name`, `email`, `mobile`, `referral_code`, `status`, `signup_type`, `google_id`, `password_set`, `is_verified`, `email_verified_at`, `last_activity_at`, `is_deleted`, `deleted_at`, `created_at`, `updated_at`) VALUES
 ('1', 'P SANTHOSHRAJ', 'bccnmart@gmail.com', '9087471277', 'JVDG4TZV', 'ACTIVE', 'email', NULL, 1, 0, NULL, NULL, 0, NULL, '2026-03-02 18:07:30', '2026-09-21 04:01:31'),
-('2', 'GNANA PRAKASAM A', 'agprakash406@gmail.com', '7845456609', 'JVQWEX7D', 'ACTIVE', 'email', '112645014641543940932', 1, 1, '2026-09-21 05:42:47', '2026-11-13 17:28:25', 0, NULL, '2026-03-02 18:01:58', '2026-11-13 17:28:25'),
+('2', 'GNANA PRAKASAM A', 'agprakash406@gmail.com', '7845456609', 'JVQWEX7D', 'ACTIVE', 'email', '112645014641543940932', 1, 1, '2026-09-21 05:42:47', '2026-11-21 15:56:57', 0, NULL, '2026-03-02 18:01:58', '2026-11-21 15:56:57'),
 ('3', 'VIVEK', 'suvekavivek@gmail.com', '7397004496', 'KU6AVPSU', 'ACTIVE', 'email', NULL, 1, 0, NULL, NULL, 0, NULL, '2026-03-02 18:15:27', '2026-09-21 04:01:31'),
 ('4', 'MURUGAVEL', 'murukavel2001@gmail.com', '6381018318', 'ZP2SP4WH', 'ACTIVE', 'email', NULL, 1, 0, NULL, '2026-05-31 11:09:47', 0, NULL, '2026-05-31 11:09:25', '2026-09-21 04:01:31'),
 ('5', 'KOWSALYA', 'kowsalya25071996@gmail.com', '6381377512', 'HX7Z4QPF', 'ACTIVE', 'email', NULL, 1, 0, NULL, NULL, 0, NULL, '2026-03-02 18:13:20', '2026-09-21 04:01:31'),
@@ -4001,7 +4105,7 @@ INSERT INTO `users` (`id`, `full_name`, `email`, `mobile`, `referral_code`, `sta
 ('17', 'Sathyaprakash', 'sathya@gmail.com', '9940030304', 'N3NJE3B2', 'ACTIVE', 'email', NULL, 1, 0, NULL, NULL, 0, NULL, '2026-03-02 18:18:14', '2026-09-21 04:01:31'),
 ('18', 'PRIYANGA', 'bpriyanga2013@gmail.com', '9345089270', 'NZABV889', 'ACTIVE', 'email', NULL, 1, 0, NULL, NULL, 0, NULL, '2026-03-02 18:15:47', '2026-09-21 04:01:31'),
 ('19', 'THIRUMALAIKANNAN', 'vthirumalaikannan@gmail.com', '8778702712', '8SW6NV7D', 'ACTIVE', 'email', NULL, 1, 0, NULL, '2026-09-18 20:07:25', 0, NULL, '2026-03-02 18:19:29', '2026-09-21 04:01:31'),
-('20', 'Renzo Rowan', 'renzorowan1@gmail.com', '9865243275', 'S4GPUZEG', 'ACTIVE', 'email', '100588788012788507899', 1, 1, '2026-09-18 23:04:59', '2026-11-16 18:42:35', 0, NULL, '2026-03-02 18:22:27', '2026-11-16 18:42:35'),
+('20', 'Renzo Rowan', 'renzorowan1@gmail.com', '9865243275', 'S4GPUZEG', 'ACTIVE', 'email', '100588788012788507899', 1, 1, '2026-09-18 23:04:59', '2026-11-21 23:04:39', 0, NULL, '2026-03-02 18:22:27', '2026-11-21 23:17:21'),
 ('21', 'JAYAPRAKASH B', 'bjayaprakash75@gmail.com', '8098985612', 'CAPHNB5G', 'ACTIVE', 'email', NULL, 1, 0, NULL, NULL, 0, NULL, '2026-03-02 18:13:41', '2026-09-21 04:01:31'),
 ('22', 'B KRISHNA', 'kmoorthy362@gmail.com', '9940955808', 'NVJE7YBD', 'ACTIVE', 'email', NULL, 1, 0, NULL, '2026-03-06 19:20:24', 0, NULL, '2026-03-02 18:16:07', '2026-09-21 04:01:31'),
 ('23', 'KUPPUSAMY', 'shobibuvi@gmail.com', '9791585924', 'U7UWPKYR', 'ACTIVE', 'email', NULL, 1, 0, NULL, NULL, 0, NULL, '2026-03-02 18:19:52', '2026-09-21 04:01:31'),
@@ -4016,7 +4120,7 @@ INSERT INTO `users` (`id`, `full_name`, `email`, `mobile`, `referral_code`, `sta
 ('32', 'KARTHIKEYAN', 'tkarthik8656@gmail.com', '8056511475', 'CCMZBZ5F', 'ACTIVE', 'email', NULL, 1, 0, NULL, NULL, 0, NULL, '2026-03-02 18:14:20', '2026-09-21 04:01:31'),
 ('33', 'MUTHU', 'thendralcommunication1@gmail.com', '7200170016', 'GUTXXPHC', 'ACTIVE', 'email', NULL, 1, 0, NULL, '2026-03-13 22:41:46', 0, NULL, '2026-03-12 22:47:24', '2026-09-21 04:01:31'),
 ('45', 'KALAIMANI', 'nkmanimail@gmail.com', '9500885241', 'BXZ2R3D6', 'ACTIVE', 'email', NULL, 1, 0, NULL, NULL, 0, NULL, '2026-07-16 12:30:27', '2026-09-21 04:01:31'),
-('46', 'R.NAMBIRAJAN', 'rnambirajan.rajan@gmail.com', '9750091483', 'K4EJUUHA', 'ACTIVE', 'email', NULL, 1, 1, '2026-10-26 11:29:11', '2026-11-16 13:36:24', 0, NULL, '2026-08-22 07:05:24', '2026-11-16 13:36:24'),
+('46', 'R.NAMBIRAJAN', 'rnambirajan.rajan@gmail.com', '9750091483', 'K4EJUUHA', 'ACTIVE', 'email', NULL, 1, 1, '2026-10-26 11:29:11', '2026-11-22 09:55:11', 0, NULL, '2026-08-22 07:05:24', '2026-11-22 09:55:11'),
 ('47', 'KODEESWARAN', 'eswara1126@gmail.com', '9385504975', 'PZA9A8PT', 'ACTIVE', 'email', NULL, 1, 0, NULL, '2026-09-11 11:06:32', 0, NULL, '2026-08-25 10:49:37', '2026-09-21 04:01:31'),
 ('48', 'MARTIN', 'dhinadhinakar47@gmail.com', '8489916581', 'EUKKHKX5', 'ACTIVE', 'email', NULL, 1, 0, NULL, '2026-08-28 07:52:30', 0, NULL, '2026-08-28 07:51:34', '2026-09-21 04:01:31'),
 ('49', 'PRAKASH', 'prakashbose21@gmail.com', '9566383091', 'YSVFD7FE', 'ACTIVE', 'email', NULL, 1, 0, NULL, '2026-10-20 07:02:23', 0, NULL, '2026-08-29 15:44:06', '2026-10-20 07:02:23'),
@@ -4038,7 +4142,8 @@ INSERT INTO `users` (`id`, `full_name`, `email`, `mobile`, `referral_code`, `sta
 ('87', 'ARUN', 'arun.c1981@gmail.com', '9843640202', 'TC4FGNS3', 'ACTIVE', 'email', NULL, 1, 0, NULL, '2026-10-31 02:56:55', 0, NULL, '2026-10-31 02:56:35', '2026-10-31 03:01:32'),
 ('88', 'AJAY', 'ajayjothika17@gmail.com', '8248876435', 'DA3N5PCK', 'ACTIVE', 'email', NULL, 1, 0, NULL, '2026-10-31 20:58:53', 0, NULL, '2026-10-31 20:58:38', '2026-10-31 20:58:53'),
 ('89', 'SATHIYANARAYANAN', 'dr.sathiyammc@gmail.com', '9443344772', '6ZQ5SUDT', 'ACTIVE', 'email', NULL, 1, 1, '2026-11-08 16:46:14', '2026-11-09 07:04:26', 0, NULL, '2026-11-08 15:03:02', '2026-11-09 07:04:26'),
-('90', 'RAJA', 'srajait137@gmail.com', '9524355937', '8EMTDYA6', 'ACTIVE', 'email', NULL, 1, 0, NULL, '2026-11-18 16:11:36', 0, NULL, '2026-11-18 16:11:15', '2026-11-18 16:11:36');
+('90', 'RAJA', 'srajait137@gmail.com', '9524355937', '8EMTDYA6', 'ACTIVE', 'email', NULL, 1, 0, NULL, '2026-11-18 16:11:36', 0, NULL, '2026-11-18 16:11:15', '2026-11-18 16:11:36'),
+('91', 'GOPALAN', 'gopalan12062001@gmail.com', '9790861499', 'ESEVAYT5', 'ACTIVE', 'email', NULL, 1, 0, NULL, '2026-11-22 18:27:09', 0, NULL, '2026-11-22 08:54:51', '2026-11-22 18:27:09');
 
 SET UNIQUE_CHECKS=1;
 SET FOREIGN_KEY_CHECKS=1;

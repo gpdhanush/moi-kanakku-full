@@ -10,6 +10,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Trash2,
+  CalendarX2,
 } from "lucide-react";
 import { PageTitle } from "@/components/ui/page-title";
 import { StatCard, StatCardSkeleton } from "@/components/ui/stat-card";
@@ -53,6 +54,7 @@ import { formatDateTime, displayValue, formatLabel } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
 
 const PAGE_LIMITS = [5, 10, 20, 50] as const;
+const RETENTION_DAYS = 30;
 
 export default function AuditLogs() {
   const [searchParams] = useSearchParams();
@@ -64,6 +66,7 @@ export default function AuditLogs() {
   const [submittedSearch, setSubmittedSearch] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+  const [oldDeleteOpen, setOldDeleteOpen] = useState(false);
 
   const queryClient = useQueryClient();
   const metaElement = usePageMeta({
@@ -111,6 +114,37 @@ export default function AuditLogs() {
       toast({
         title: "Delete failed",
         description: err.message || "Unable to delete selected audit logs.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const oldCountQuery = useQuery({
+    queryKey: ["admin", "audit-logs", "old-count", RETENTION_DAYS],
+    queryFn: () => auditLogsApi.countOlderThan(RETENTION_DAYS),
+    enabled: oldDeleteOpen,
+    staleTime: 0,
+  });
+  const oldCount = oldCountQuery.data?.count ?? 0;
+
+  const deleteOldMutation = useMutation({
+    mutationFn: () => auditLogsApi.deleteOlderThan(RETENTION_DAYS),
+    onSuccess: (result) => {
+      toast({
+        title: "Old audit logs deleted",
+        description:
+          result?.message ||
+          `Deleted ${result?.deletedCount ?? 0} audit log(s) older than ${RETENTION_DAYS} days.`,
+      });
+      setOldDeleteOpen(false);
+      setSelectedIds(new Set());
+      setPage(1);
+      queryClient.invalidateQueries({ queryKey: ["admin", "audit-logs"] });
+    },
+    onError: (err: Error) => {
+      toast({
+        title: "Delete failed",
+        description: err.message || "Unable to delete old audit logs.",
         variant: "destructive",
       });
     },
@@ -273,6 +307,16 @@ export default function AuditLogs() {
                   </Button>
                 </>
               )}
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2 border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                onClick={() => setOldDeleteOpen(true)}
+                disabled={deleteOldMutation.isPending}
+              >
+                <CalendarX2 className="h-4 w-4" />
+                Delete older than {RETENTION_DAYS} days
+              </Button>
               <Select
                 value={actionFilter}
                 onValueChange={(value) => {
@@ -523,6 +567,78 @@ export default function AuditLogs() {
               }}
             >
               {deleteBulkMutation.isPending ? (
+                <span className="inline-flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Deleting...
+                </span>
+              ) : (
+                "Confirm delete"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        open={oldDeleteOpen}
+        onOpenChange={(open) => {
+          if (!deleteOldMutation.isPending) setOldDeleteOpen(open);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Delete audit logs older than {RETENTION_DAYS} days?
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2">
+                {oldCountQuery.isFetching ? (
+                  <span className="inline-flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Counting old audit logs...
+                  </span>
+                ) : oldCountQuery.isError ? (
+                  <span className="text-destructive">
+                    {(oldCountQuery.error as Error)?.message ||
+                      "Unable to count old audit logs."}
+                  </span>
+                ) : oldCount === 0 ? (
+                  <span>
+                    There are no audit logs older than {RETENTION_DAYS} days.
+                  </span>
+                ) : (
+                  <span>
+                    This will permanently delete{" "}
+                    <span className="font-medium text-foreground">
+                      {oldCount}
+                    </span>{" "}
+                    audit log{oldCount === 1 ? "" : "s"} for all users created
+                    more than {RETENTION_DAYS} days ago. Logs from the last{" "}
+                    {RETENTION_DAYS} days are kept. This action cannot be
+                    undone.
+                  </span>
+                )}
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteOldMutation.isPending}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={
+                deleteOldMutation.isPending ||
+                oldCountQuery.isFetching ||
+                oldCountQuery.isError ||
+                oldCount === 0
+              }
+              onClick={(e) => {
+                e.preventDefault();
+                deleteOldMutation.mutate();
+              }}
+            >
+              {deleteOldMutation.isPending ? (
                 <span className="inline-flex items-center gap-2">
                   <Loader2 className="h-4 w-4 animate-spin" />
                   Deleting...

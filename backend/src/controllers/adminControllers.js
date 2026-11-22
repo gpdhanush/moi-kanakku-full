@@ -4,6 +4,17 @@ const { fromBinaryUUID } = require('../helpers/uuid');
 const logger = require('../config/logger');
 const AuditLogs = require('../models/auditLogs');
 
+const MIN_AUDIT_RETENTION_DAYS = 30;
+const DEFAULT_AUDIT_RETENTION_DAYS = 30;
+
+/** Returns a valid retention day count (>= 30), or null when invalid. */
+function parseRetentionDays(value) {
+  if (value == null || value === '') return DEFAULT_AUDIT_RETENTION_DAYS;
+  const days = Number(value);
+  if (!Number.isInteger(days) || days < MIN_AUDIT_RETENTION_DAYS || days > 3650) return null;
+  return days;
+}
+
 exports.adminControllers = {
   /**
    * List all OTPs with user details
@@ -271,6 +282,67 @@ exports.adminControllers = {
       });
     } catch (error) {
       logger.error('Error bulk deleting audit logs:', error);
+      return res.status(500).json({
+        responseType: 'F',
+        responseValue: { message: error.toString() },
+      });
+    }
+  },
+
+  /**
+   * Count audit logs older than N days
+   * Query: ?days=30
+   */
+  countOldAuditLogs: async (req, res) => {
+    try {
+      const days = parseRetentionDays(req.query?.days);
+      if (days == null) {
+        return res.status(400).json({
+          responseType: 'F',
+          responseValue: { message: `Days must be a whole number of at least ${MIN_AUDIT_RETENTION_DAYS}.` },
+        });
+      }
+      const count = await AuditLogs.countOlderThan(days);
+      return res.status(200).json({
+        responseType: 'S',
+        responseValue: { days, count },
+      });
+    } catch (error) {
+      logger.error('Error counting old audit logs:', error);
+      return res.status(500).json({
+        responseType: 'F',
+        responseValue: { message: error.toString() },
+      });
+    }
+  },
+
+  /**
+   * Delete audit logs older than N days
+   * Body: { days?: number }
+   */
+  deleteOldAuditLogs: async (req, res) => {
+    try {
+      const days = parseRetentionDays(req.body?.days);
+      if (days == null) {
+        return res.status(400).json({
+          responseType: 'F',
+          responseValue: { message: `Days must be a whole number of at least ${MIN_AUDIT_RETENTION_DAYS}.` },
+        });
+      }
+      const deletedCount = await AuditLogs.deleteOlderThan(days);
+      logger.info(`Admin deleted ${deletedCount} audit log(s) older than ${days} days`);
+      return res.status(200).json({
+        responseType: 'S',
+        responseValue: {
+          message: deletedCount
+            ? `Deleted ${deletedCount} audit log(s) older than ${days} days.`
+            : `No audit logs older than ${days} days.`,
+          deletedCount,
+          days,
+        },
+      });
+    } catch (error) {
+      logger.error('Error deleting old audit logs:', error);
       return res.status(500).json({
         responseType: 'F',
         responseValue: { message: error.toString() },

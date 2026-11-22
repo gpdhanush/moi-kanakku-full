@@ -119,4 +119,29 @@ export const auditLogsApi = {
     );
     return assertSuccess(response.data);
   },
+
+  countOlderThan: async (
+    days = 30
+  ): Promise<{ days: number; count: number }> => {
+    const response = await apiClient.get<
+      MoiApiResponse<{ days: number; count: number }>
+    >('/admin/audit-logs/old-count', {
+      params: { days },
+      skipErrorHandler: true,
+    });
+    return assertSuccess(response.data);
+  },
+
+  deleteOlderThan: async (
+    days = 30
+  ): Promise<{ message?: string; deletedCount?: number; days?: number }> => {
+    const response = await apiClient.post<
+      MoiApiResponse<{ message?: string; deletedCount?: number; days?: number }>
+    >(
+      '/admin/audit-logs/delete-old',
+      { days },
+      { skipErrorHandler: true }
+    );
+    return assertSuccess(response.data);
+  },
 };

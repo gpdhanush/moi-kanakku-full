@@ -170,6 +170,34 @@ const AuditLogs = {
     );
     return result.affectedRows || 0;
   },
+
+  /**
+   * Count audit log rows older than N days.
+   * @param {number} days
+   * @returns {Promise<number>}
+   */
+  async countOlderThan(days = 30) {
+    const [rows] = await db.query(
+      `SELECT COUNT(*) AS total FROM user_audit_logs
+       WHERE created_at < (NOW() - INTERVAL ? DAY)`,
+      [days]
+    );
+    return Number(rows[0]?.total || 0);
+  },
+
+  /**
+   * Hard-delete audit log rows older than N days.
+   * @param {number} days
+   * @returns {Promise<number>} deletedCount
+   */
+  async deleteOlderThan(days = 30) {
+    const [result] = await db.query(
+      `DELETE FROM user_audit_logs
+       WHERE created_at < (NOW() - INTERVAL ? DAY)`,
+      [days]
+    );
+    return result.affectedRows || 0;
+  },
 };
 
 module.exports = AuditLogs;

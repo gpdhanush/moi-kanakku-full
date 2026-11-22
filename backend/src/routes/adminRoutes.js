@@ -31,6 +31,27 @@ router.post(
 );
 
 /**
+ * GET /apis/admin/audit-logs/old-count?days=30
+ * Count audit logs older than N days (default 30)
+ */
+router.get(
+  '/audit-logs/old-count',
+  authenticateAdminToken,
+  adminControllers.countOldAuditLogs
+);
+
+/**
+ * POST /apis/admin/audit-logs/delete-old
+ * Body: { days?: number } (default 30, minimum 30)
+ * Permanently delete audit logs older than N days
+ */
+router.post(
+  '/audit-logs/delete-old',
+  authenticateAdminToken,
+  adminControllers.deleteOldAuditLogs
+);
+
+/**
  * DELETE /apis/admin/otps/cleanup
  * Delete expired OTPs (admin maintenance)
  */
