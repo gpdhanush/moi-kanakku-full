@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_file_downloader/flutter_file_downloader.dart';
 import 'package:intl/intl.dart';
@@ -13,6 +12,7 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:tamil_pdf_shaper/tamil_pdf_shaper.dart';
+import 'package:moi/app_configs/app_logs.dart';
 
 class ExportService {
   static final NumberFormat _numberFormatter = NumberFormat('#,##,##,000.00');
@@ -64,7 +64,7 @@ class ExportService {
       // Share PDF via system share sheet
       await Printing.sharePdf(bytes: bytes, filename: filename);
     } catch (e) {
-      debugPrint('Error exporting transactions: $e');
+      printDirect('Error exporting transactions: $e');
       rethrow;
     }
   }
@@ -94,7 +94,7 @@ class ExportService {
           if (!completer.isCompleted) completer.complete(savedPath);
         },
         onError: (String error) {
-          debugPrint('Download save error: $error');
+          printDirect('Download save error: $error');
           if (!completer.isCompleted) completer.complete(null);
         },
       );
@@ -140,7 +140,7 @@ class ExportService {
       final logoBytes = await rootBundle.load(AppImages.appLogoImage);
       logoImage = pw.MemoryImage(logoBytes.buffer.asUint8List());
     } catch (e) {
-      debugPrint('Failed to load logo: $e');
+      printDirect('Failed to load logo: $e');
       // Continue without logo
     }
 
@@ -296,9 +296,9 @@ class ExportService {
 
             // Transactions Table (auto pagination + better alignment)
             pw.TableHelper.fromTextArray(
-              headerDecoration: pw.BoxDecoration(
+              headerDecoration: const pw.BoxDecoration(
                 color: PdfColors.blue100,
-                borderRadius: const pw.BorderRadius.all(pw.Radius.circular(3)),
+                borderRadius: pw.BorderRadius.all(pw.Radius.circular(3)),
               ),
               headerStyle: pw.TextStyle(
                 font: tamilFont,
@@ -365,9 +365,9 @@ class ExportService {
                 3: pw.Alignment.centerRight, // amount right aligned
                 4: pw.Alignment.center,
               },
-              border: pw.TableBorder(
-                bottom: const pw.BorderSide(color: PdfColors.grey300),
-                horizontalInside: const pw.BorderSide(
+              border: const pw.TableBorder(
+                bottom: pw.BorderSide(color: PdfColors.grey300),
+                horizontalInside: pw.BorderSide(
                   color: PdfColors.grey300,
                   width: 0.5,
                 ),

@@ -267,6 +267,7 @@ class _ForgotPasswordState extends State<ForgotPassword> {
   }
 
   Future<void> forgotPassword() async {
+    final lang = context.read<LanguageProvider>();
     FocusScope.of(context).unfocus();
     await alertServices.showLoading();
     final params = {'type': 'forgot', 'email': emailCtrl.text.toLowerCase()};
@@ -284,10 +285,7 @@ class _ForgotPasswordState extends State<ForgotPassword> {
           response['responseValue'] != null &&
           response['responseValue']['account_status'] == 'INACTIVE') {
         alertServices.errorToast(
-          Provider.of<LanguageProvider>(
-            context,
-            listen: false,
-          ).tr('auth.accountDeactivated'),
+          lang.tr('auth.accountDeactivated'),
         );
       } else if (response != null &&
           response['responseValue'] != null &&

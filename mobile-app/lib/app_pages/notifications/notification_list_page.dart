@@ -841,7 +841,7 @@ class _NotificationCard extends StatelessWidget {
             border: isUnread
                 ? Border.all(color: accent.withValues(alpha: 0.38), width: 2)
                 : null,
-            boxShadow: [],
+            boxShadow: const [],
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,

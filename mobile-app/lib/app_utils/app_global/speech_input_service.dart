@@ -3,6 +3,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:speech_to_text/speech_recognition_error.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text/speech_to_text.dart';
+import 'package:moi/app_configs/app_logs.dart';
 
 /// Shared speech-to-text helper.
 ///
@@ -65,7 +66,7 @@ class SpeechInputService {
       _initialized = true;
       return _available;
     } catch (e) {
-      debugPrint('SpeechInputService init error: $e');
+      printDirect('SpeechInputService init error: $e');
       _available = false;
       _initialized = true;
       return false;
@@ -79,10 +80,10 @@ class SpeechInputService {
       _availableLocales = await _speech.locales();
       if (kDebugMode) {
         final ids = _availableLocales.map((e) => e.localeId).join(', ');
-        debugPrint('SpeechInputService locales: $ids');
+        printDirect('SpeechInputService locales: $ids');
       }
     } catch (e) {
-      debugPrint('SpeechInputService locales error: $e');
+      printDirect('SpeechInputService locales error: $e');
     }
   }
 
@@ -123,7 +124,7 @@ class SpeechInputService {
     _onListeningChanged = onListeningChanged;
 
     final localeId = _resolveLocaleId(desiredLocaleId);
-    debugPrint(
+    printDirect(
       'SpeechInputService listening locale=$localeId '
       '(requested=$desiredLocaleId)',
     );
@@ -147,7 +148,7 @@ class SpeechInputService {
       );
       return true;
     } catch (e) {
-      debugPrint('SpeechInputService listen error: $e');
+      printDirect('SpeechInputService listen error: $e');
       _clearSessionIf(sessionId);
       onListeningChanged?.call(false);
       onError?.call('Could not start voice input. Please try again.');
@@ -188,7 +189,7 @@ class SpeechInputService {
   }
 
   void _handleStatus(String status) {
-    debugPrint('SpeechInputService status: $status');
+    printDirect('SpeechInputService status: $status');
     final listening = status == SpeechToText.listeningStatus;
     _onListeningChanged?.call(listening);
 
@@ -200,7 +201,7 @@ class SpeechInputService {
   }
 
   void _handleError(SpeechRecognitionError error) {
-    debugPrint('SpeechInputService error: ${error.errorMsg}');
+    printDirect('SpeechInputService error: ${error.errorMsg}');
     // Permanent no-match / timeout should not force stale text into the field.
     final normalizedError = error.errorMsg.toLowerCase();
     final ignorable =

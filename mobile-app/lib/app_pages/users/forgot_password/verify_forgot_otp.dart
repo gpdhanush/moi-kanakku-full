@@ -428,6 +428,7 @@ class _VerifyForgotOtpState extends State<VerifyForgotOtp> {
   }
 
   void startTimer() {
+    countdownTimer?.cancel();
     countdownTimer = Timer.periodic(const Duration(seconds: 1), (Timer t) {
       if (_start > 0) {
         setState(() {
@@ -449,6 +450,7 @@ class _VerifyForgotOtpState extends State<VerifyForgotOtp> {
   }
 
   Future<void> verifyOTP() async {
+    final lang = context.read<LanguageProvider>();
     FocusScope.of(context).unfocus();
     await alertServices.showLoading();
     final params = {
@@ -477,13 +479,13 @@ class _VerifyForgotOtpState extends State<VerifyForgotOtp> {
         alertServices.errorToast(
           message?.isNotEmpty == true
               ? message!
-              : context.read<LanguageProvider>().tr('common.tryAgain'),
+              : lang.tr('common.tryAgain'),
         );
       }
     } catch (_) {
       otpCtrl.clear();
       alertServices.errorToast(
-        context.read<LanguageProvider>().tr('common.tryAgain'),
+        lang.tr('common.tryAgain'),
       );
     } finally {
       await alertServices.hideLoading();

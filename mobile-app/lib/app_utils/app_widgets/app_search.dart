@@ -6,6 +6,7 @@ import 'package:moi/app_utils/app_providers/language_provider.dart';
 import 'package:moi/app_utils/app_widgets/voice_listening_indicator.dart';
 import 'package:provider/provider.dart';
 import 'package:speech_to_text/speech_to_text.dart';
+import 'package:moi/app_configs/app_logs.dart';
 
 /// Modern search field with speech-to-text mic support.
 class SearchWidget extends StatefulWidget {
@@ -92,14 +93,13 @@ class _SearchWidgetState extends State<SearchWidget>
     if (!_isInitialized) {
       await _initializeSpeech();
     }
-    if (!_isInitialized || widget.controller == null) return;
+    if (!mounted || !_isInitialized || widget.controller == null) return;
 
     final languageProvider = context.read<LanguageProvider>();
     await languageProvider.ensureReady();
     if (!mounted) return;
 
     final voiceCode = languageProvider.voiceLanguageCode;
-    debugPrint('SearchWidget voice language=$voiceCode');
 
     await _speech.startListening(
       sessionId: _sessionId,
@@ -122,7 +122,7 @@ class _SearchWidgetState extends State<SearchWidget>
       onError: (message) {
         if (!mounted) return;
         setState(() => _isListening = false);
-        debugPrint('Search speech error: $message');
+        printDirect('Search speech error: $message');
       },
     );
   }

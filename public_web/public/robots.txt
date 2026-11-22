@@ -26,9 +26,6 @@ Allow: /
 User-agent: PerplexityBot
 Allow: /
 
-User-agent: Googlebot
-Allow: /
-
 # Optional: block training scrapers while keeping search citability
 User-agent: GPTBot
 Allow: /

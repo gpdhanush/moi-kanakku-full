@@ -92,7 +92,7 @@ class _PermissionPageState extends State<PermissionPage> {
                       Expanded(
                         child: SingleChildScrollView(
                           physics: const BouncingScrollPhysics(),
-                          padding: EdgeInsets.fromLTRB(
+                          padding: const EdgeInsets.fromLTRB(
                             AppSpacing.page,
                             AppSpacing.lg,
                             AppSpacing.page,

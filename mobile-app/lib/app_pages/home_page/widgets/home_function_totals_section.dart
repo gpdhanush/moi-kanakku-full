@@ -111,18 +111,18 @@ class HomeFunctionTotalsSection extends StatelessWidget {
                       color: AppColors.of(context).surface,
                       borderRadius: BorderRadius.circular(AppRadius.card),
                       border: Border.all(color: AppColors.of(context).border),
-                      boxShadow: [],
+                      boxShadow: const [],
                     ),
-                    child: Row(
+                    child: const Row(
                       children: [
                         AppSkeleton(width: 52, height: 52, radius: 16),
-                        const SizedBox(width: AppSpacing.sm),
+                        SizedBox(width: AppSpacing.sm),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               AppSkeleton(width: 120, height: 12, radius: 8),
-                              const SizedBox(height: 8),
+                              SizedBox(height: 8),
                               AppSkeleton(width: 160, height: 11, radius: 8),
                             ],
                           ),
@@ -201,7 +201,7 @@ class _FunctionTotalCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(AppRadius.card),
             color: AppColors.surface,
             border: Border.all(color: AppColors.borderSubtle),
-            boxShadow: [],
+            boxShadow: const [],
           ),
           child: Row(
             children: [

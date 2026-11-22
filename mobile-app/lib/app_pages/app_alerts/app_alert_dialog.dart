@@ -7,6 +7,7 @@ import 'package:moi/app_utils/app_providers/language_provider.dart';
 import 'package:moi/app_utils/app_widgets/moi_network_image.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:moi/app_configs/app_logs.dart';
 
 class AppAlertData {
   final String id;
@@ -61,7 +62,7 @@ class AppAlertDialog {
 
       await show(context, alert: alert);
     } catch (e) {
-      debugPrint('App alert check failed: $e');
+      printDirect('App alert check failed: $e');
     }
   }
 
@@ -109,7 +110,7 @@ class _AppAlertDialogBodyState extends State<_AppAlertDialogBody> {
         remindHours: action == 'remind_later' ? 24 : null,
       );
     } catch (e) {
-      debugPrint('App alert action failed: $e');
+      printDirect('App alert action failed: $e');
     }
     if (!mounted) return;
     Navigator.of(context).pop();

@@ -59,6 +59,7 @@ class _GoogleProfileSetupPageState extends State<GoogleProfileSetupPage> {
   }
 
   Future<void> _saveAndContinue() async {
+    final lang = context.read<LanguageProvider>();
     if (!_formKey.currentState!.validate() || _isSaving || _user == null) {
       return;
     }
@@ -81,7 +82,7 @@ class _GoogleProfileSetupPageState extends State<GoogleProfileSetupPage> {
         if (passwordResponse?['responseType'] != 'S') {
           _alerts.errorToast(
             passwordResponse?['responseValue']?['message'] ??
-                context.read<LanguageProvider>().tr('common.tryAgain'),
+                lang.tr('common.tryAgain'),
           );
           return;
         }
@@ -90,17 +91,18 @@ class _GoogleProfileSetupPageState extends State<GoogleProfileSetupPage> {
           ..['mobile'] = _mobileController.text.trim()
           ..['city'] = _cityController.text.trim();
         await _storage.save(AppVariables.userInformation, _user);
+        if (!mounted) return;
         Navigator.pushNamedAndRemoveUntil(context, 'home', (route) => false);
       } else {
         _alerts.errorToast(
           response?['responseValue']?['message'] ??
-              context.read<LanguageProvider>().tr('common.tryAgain'),
+              lang.tr('common.tryAgain'),
         );
       }
     } catch (_) {
       if (mounted) {
         _alerts.errorToast(
-          context.read<LanguageProvider>().tr('common.tryAgain'),
+          lang.tr('common.tryAgain'),
         );
       }
     } finally {

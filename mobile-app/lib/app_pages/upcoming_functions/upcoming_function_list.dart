@@ -443,7 +443,7 @@ class _UpcomingFunctionListState extends State<UpcomingFunctionList> {
                         borderRadius: BorderRadius.circular(18),
                       ),
                       alignment: Alignment.center,
-                      child: HugeIcon(
+                      child: const HugeIcon(
                         icon: HugeIcons.strokeRoundedRefresh,
                         strokeWidth: 1.8,
                         size: 28,

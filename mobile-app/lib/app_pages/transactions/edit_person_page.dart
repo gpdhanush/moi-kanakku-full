@@ -6,6 +6,7 @@ import 'package:moi/app_storages/secure_storages.dart';
 import 'package:moi/app_utils/index.dart';
 import 'package:moi/app_utils/app_providers/language_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:moi/app_configs/app_logs.dart';
 
 class EditPersonPage extends StatefulWidget {
   final PersonResponseModel person;
@@ -95,7 +96,7 @@ class _EditPersonPageState extends State<EditPersonPage> {
       _alertServices.errorToast(
         context.read<LanguageProvider>().tr('common.tryAgain'),
       );
-      debugPrint('Error updating person: $e');
+      printDirect('Error updating person: $e');
     } finally {
       await _alertServices.hideLoading();
     }

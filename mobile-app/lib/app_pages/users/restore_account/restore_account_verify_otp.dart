@@ -366,6 +366,7 @@ class _RestoreAccountVerifyOtpState extends State<RestoreAccountVerifyOtp> {
 
   // Starts the countdown timer
   void startTimer() {
+    countdownTimer?.cancel();
     countdownTimer = Timer.periodic(const Duration(seconds: 1), (Timer t) {
       if (_start > 0) {
         setState(() {
@@ -389,6 +390,7 @@ class _RestoreAccountVerifyOtpState extends State<RestoreAccountVerifyOtp> {
 
   // Verifies the OTP and restores the account
   Future<void> verifyOTPAndRestore() async {
+    final lang = context.read<LanguageProvider>();
     FocusScope.of(context).unfocus();
     await alertServices.showLoading();
 
@@ -417,10 +419,7 @@ class _RestoreAccountVerifyOtpState extends State<RestoreAccountVerifyOtp> {
         if (restoreResponse != null && restoreResponse['responseType'] == "S") {
           String msg =
               restoreResponse['responseValue']['message']?.toString() ??
-              Provider.of<LanguageProvider>(
-                context,
-                listen: false,
-              ).tr('auth.accountRestored');
+              lang.tr('auth.accountRestored');
           alertServices.successToast(msg);
           if (!mounted) return;
           // Navigate to login page
@@ -428,27 +427,18 @@ class _RestoreAccountVerifyOtpState extends State<RestoreAccountVerifyOtp> {
         } else {
           String msg =
               restoreResponse?['responseValue']?['message']?.toString() ??
-              Provider.of<LanguageProvider>(
-                context,
-                listen: false,
-              ).tr('auth.restoreFailed');
+              lang.tr('auth.restoreFailed');
           alertServices.errorToast(msg);
         }
       } else {
         String msg =
             verifyResponse?['responseValue']?['message']?.toString() ??
-            Provider.of<LanguageProvider>(
-              context,
-              listen: false,
-            ).tr('auth.invalidOtp');
+            lang.tr('auth.invalidOtp');
         alertServices.errorToast(msg);
       }
     } catch (error) {
       alertServices.errorToast(
-        Provider.of<LanguageProvider>(
-          context,
-          listen: false,
-        ).tr('common.tryAgain'),
+        lang.tr('common.tryAgain'),
       );
     } finally {
       await alertServices.hideLoading();
@@ -467,6 +457,7 @@ class _RestoreAccountVerifyOtpState extends State<RestoreAccountVerifyOtp> {
 
   // Resends the OTP
   Future<void> resentOtp() async {
+    final lang = context.read<LanguageProvider>();
     await alertServices.showLoading();
     otpCtrl.clear();
     var params = {"type": "restore", "email": widget.email.toLowerCase()};
@@ -478,29 +469,21 @@ class _RestoreAccountVerifyOtpState extends State<RestoreAccountVerifyOtp> {
       if (response != null && response['responseType'] == "S") {
         alertServices.successToast(
           response['responseValue']['message']?.toString() ??
-              Provider.of<LanguageProvider>(
-                context,
-                listen: false,
-              ).tr('auth.otpResent'),
+              lang.tr('auth.otpResent'),
         );
+        if (!mounted) return;
         _start = 120;
         enableResend = false;
         startTimer();
       } else {
         String msg =
             response?['responseValue']?['message']?.toString() ??
-            Provider.of<LanguageProvider>(
-              context,
-              listen: false,
-            ).tr('auth.otpSendFailed');
+            lang.tr('auth.otpSendFailed');
         alertServices.errorToast(msg);
       }
     } catch (error) {
       alertServices.errorToast(
-        Provider.of<LanguageProvider>(
-          context,
-          listen: false,
-        ).tr('common.tryAgain'),
+        lang.tr('common.tryAgain'),
       );
     } finally {
       await alertServices.hideLoading();

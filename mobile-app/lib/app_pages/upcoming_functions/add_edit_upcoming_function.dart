@@ -465,16 +465,17 @@ class _AddEditUpcomingFunctionState extends State<AddEditUpcomingFunction> {
   }
 
   Future<void> _pickImage(ImageSource source) async {
+    final lang = context.read<LanguageProvider>();
     try {
       final permissions = await _checkPermissions();
       if ((source == ImageSource.camera && !permissions['camera']!) ||
           (source == ImageSource.gallery && !permissions['photos']!)) {
         _alertServices.errorToast(
           source == ImageSource.camera
-              ? context.read<LanguageProvider>().tr(
+              ? lang.tr(
                   'upcomingFunctions.cameraPermissionNeeded',
                 )
-              : context.read<LanguageProvider>().tr(
+              : lang.tr(
                   'upcomingFunctions.storagePermissionNeeded',
                 ),
         );
@@ -485,7 +486,7 @@ class _AddEditUpcomingFunctionState extends State<AddEditUpcomingFunction> {
         source: source,
         imageQuality: 100,
       );
-      if (pickedFile == null) return;
+      if (pickedFile == null || !mounted) return;
 
       final croppedFile = await _cropImage(pickedFile.path);
       if (croppedFile == null) return;
@@ -493,13 +494,14 @@ class _AddEditUpcomingFunctionState extends State<AddEditUpcomingFunction> {
       final compressedFile = await _compressImage(croppedFile.path);
       if (compressedFile == null) {
         _alertServices.errorToast(
-          context.read<LanguageProvider>().tr(
+          lang.tr(
             'upcomingFunctions.compressFailed',
           ),
         );
         return;
       }
 
+      if (!mounted) return;
       setState(() {
         _invitationImage = compressedFile;
         _existingImageUrl = null;
@@ -507,7 +509,7 @@ class _AddEditUpcomingFunctionState extends State<AddEditUpcomingFunction> {
       });
     } catch (e) {
       _alertServices.errorToast(
-        context.read<LanguageProvider>().tr(
+        lang.tr(
           'upcomingFunctions.imagePickFailed',
         ),
       );
@@ -576,6 +578,7 @@ class _AddEditUpcomingFunctionState extends State<AddEditUpcomingFunction> {
   }
 
   Future<void> _saveUpdateUpcomingFunction() async {
+    final lang = context.read<LanguageProvider>();
     await _alertServices.showLoading();
 
     try {
@@ -587,7 +590,7 @@ class _AddEditUpcomingFunctionState extends State<AddEditUpcomingFunction> {
           _uploadedImageUrl = uploadedUrl;
         } else {
           _alertServices.errorToast(
-            context.read<LanguageProvider>().tr(
+            lang.tr(
               'upcomingFunctions.uploadFailed',
             ),
           );
@@ -621,10 +624,10 @@ class _AddEditUpcomingFunctionState extends State<AddEditUpcomingFunction> {
         final message =
             response['responseValue']?['message']?.toString() ??
             (isEditing
-                ? context.read<LanguageProvider>().tr(
+                ? lang.tr(
                     'upcomingFunctions.updated',
                   )
-                : context.read<LanguageProvider>().tr(
+                : lang.tr(
                     'upcomingFunctions.saved',
                   ));
         _alertServices.successToast(message);
@@ -636,19 +639,19 @@ class _AddEditUpcomingFunctionState extends State<AddEditUpcomingFunction> {
                   ? response['responseValue']['message']
                   : response['message'] ??
                         response['responseValue']?.toString())
-            : context.read<LanguageProvider>().tr(
+            : lang.tr(
                 'upcomingFunctions.saveFailed',
               );
         _alertServices.errorToast(
           errorMessage?.toString() ??
-              context.read<LanguageProvider>().tr(
+              lang.tr(
                 'upcomingFunctions.saveFailed',
               ),
         );
       }
     } catch (error) {
       _alertServices.errorToast(
-        context.read<LanguageProvider>().tr('upcomingFunctions.saveFailed'),
+        lang.tr('upcomingFunctions.saveFailed'),
       );
       printContent('Error saving upcoming function: $error');
     } finally {

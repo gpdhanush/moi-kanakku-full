@@ -27,6 +27,7 @@ import {
   jsonLdScript,
   softwareAppSchema,
   webPageSchema,
+  ogImage,
 } from "@/lib/seo";
 
 export const Route = createFileRoute("/moi-app")({
@@ -34,7 +35,7 @@ export const Route = createFileRoute("/moi-app")({
     const title = "Moi App - Free Android Moi Kanakku | மொய் கணக்கு ஆப்";
     const description =
       "Download Moi Kanakku moi app (moi tech): record moi gifts, guests and functions, export Excel. Free on Google Play. No ads, no subscription.";
-    const head = buildPageHead({ title, description, path: "/moi-app" });
+    const head = buildPageHead({ title, description, path: "/moi-app", image: ogImage("moi-app") });
     return {
       ...head,
       scripts: [

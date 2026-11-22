@@ -216,7 +216,7 @@ class MoiAppHeader extends StatelessWidget implements PreferredSizeWidget {
                             Color(0xFF16A34A),
                           ],
                   ),
-                  borderRadius: BorderRadius.only(
+                  borderRadius: const BorderRadius.only(
                     bottomLeft: Radius.circular(20),
                     bottomRight: Radius.circular(20),
                   ),

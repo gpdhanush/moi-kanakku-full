@@ -1,6 +1,7 @@
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:moi/app_configs/api_endpoint_allowlist.dart';
+import 'package:moi/app_configs/app_logs.dart';
 
 /// Non-sensitive codes logged when startup configuration is invalid.
 enum ApiStartupConfigIssue {
@@ -99,7 +100,7 @@ class ApiStartupConfig {
   }
 
   static void _logDiagnostic(String diagnosticCode) {
-    debugPrint('API startup config invalid: $diagnosticCode');
+    printDirect('API startup config invalid: $diagnosticCode');
     if (kReleaseMode) {
       FirebaseCrashlytics.instance.log(
         'API startup config invalid: $diagnosticCode',

@@ -5,11 +5,12 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-sans: "Arimo", "Mukta Malar", "Noto Sans Tamil", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Space Grotesk", "Noto Sans Tamil", ui-sans-serif, system-ui, sans-serif;
-  /* Tamil: Noto Sans Tamil for headings, Mukta Malar for body */
+  /* English: Plus Jakarta Sans body + Space Grotesk headings */
+  --font-sans: "Plus Jakarta Sans", "Mukta Malar", "Noto Sans Tamil", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Space Grotesk", "Anek Tamil", "Noto Sans Tamil", ui-sans-serif, system-ui, sans-serif;
+  /* Tamil: Anek Tamil for headings, Mukta Malar for body (Noto Sans Tamil as fallback) */
   --font-tamil: "Mukta Malar", "Noto Sans Tamil", ui-sans-serif, system-ui, sans-serif;
-  --font-tamil-display: "Noto Sans Tamil", "Mukta Malar", ui-sans-serif, system-ui, sans-serif;
+  --font-tamil-display: "Anek Tamil", "Noto Sans Tamil", "Mukta Malar", ui-sans-serif, system-ui, sans-serif;
   --radius-sm: 5px;
   --radius-md: 5px;
   --radius-lg: 8px;
@@ -110,7 +111,7 @@
   h6 {
     font-family: var(--font-display);
   }
-  /* Tamil UI: Mukta Malar body + Noto Sans Tamil headings */
+  /* Tamil UI: Mukta Malar body + Anek Tamil headings */
   html.lang-ta body,
   html[lang="ta"] body,
   body.lang-ta {

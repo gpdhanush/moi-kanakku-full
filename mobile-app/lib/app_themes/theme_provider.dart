@@ -65,7 +65,20 @@ class ThemeProvider with ChangeNotifier {
     return getThemeForLanguage('en');
   }
 
+  /// Memoized theme: MaterialApp rebuilds on every Theme/Language notify, and
+  /// building ThemeData (ColorScheme + component themes) is not cheap.
+  ThemeData? _cachedTheme;
+  String? _cachedThemeKey;
+
   ThemeData getThemeForLanguage(String languageCode) {
+    final key = '${_seedColor.toARGB32()}|$_isDarkMode|$languageCode';
+    if (_cachedThemeKey == key && _cachedTheme != null) return _cachedTheme!;
+    _cachedTheme = _buildThemeForLanguage(languageCode);
+    _cachedThemeKey = key;
+    return _cachedTheme!;
+  }
+
+  ThemeData _buildThemeForLanguage(String languageCode) {
     final colors = AppColors.forBrightness(
       _isDarkMode ? Brightness.dark : Brightness.light,
     );

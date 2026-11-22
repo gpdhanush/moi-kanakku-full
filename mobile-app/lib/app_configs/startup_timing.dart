@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:moi/app_configs/app_logs.dart';
 
 /// Temporary cold-start timing helper for startup performance work.
 /// Logs only in debug/profile; no-op in release.
@@ -20,7 +21,7 @@ class StartupTiming {
   static void log(String label) {
     if (kReleaseMode) return;
     final ms = _started ? _app.elapsedMilliseconds : 0;
-    debugPrint('[STARTUP +${ms}ms] $label');
+    printDirect('[STARTUP +${ms}ms] $label');
   }
 
   static Future<T> timeAsync<T>(String label, Future<T> Function() action) async {

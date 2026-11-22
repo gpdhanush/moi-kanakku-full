@@ -139,18 +139,19 @@ class _AddEditPageState extends State<AddEditPage> {
   }
 
   Future<void> _submitTransaction() async {
+    final lang = context.read<LanguageProvider>();
     if (!_formKey.currentState!.validate()) return;
 
     if (selectedFunction.isEmpty && selectedFunctionId == null) {
       alertServices.errorToast(
-        context.read<LanguageProvider>().tr('transactions.selectFunction'),
+        lang.tr('transactions.selectFunction'),
       );
       return;
     }
 
     if (isCustomFunction && customFunctionCtrl.text.trim().isEmpty) {
       alertServices.errorToast(
-        context.read<LanguageProvider>().tr(
+        lang.tr(
           'transactions.customFunctionRequired',
         ),
       );
@@ -159,7 +160,7 @@ class _AddEditPageState extends State<AddEditPage> {
 
     if (amountCtrl.text.trim().isEmpty && thingsCtrl.text.trim().isEmpty) {
       alertServices.errorToast(
-        context.read<LanguageProvider>().tr(
+        lang.tr(
           'transactions.amountOrThingRequired',
         ),
       );
@@ -168,11 +169,16 @@ class _AddEditPageState extends State<AddEditPage> {
 
     FocusScope.of(context).unfocus();
 
+    var progressOpen = true;
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (_) => const Center(child: CircularProgressIndicator()),
     );
+    void closeProgress() {
+      if (progressOpen && mounted) Navigator.pop(context);
+      progressOpen = false;
+    }
 
     try {
       final params = await _buildTransactionParams();
@@ -180,24 +186,24 @@ class _AddEditPageState extends State<AddEditPage> {
           ? await txServices.updateTransaction(params, showLoading: false)
           : await txServices.createTransactionV2(params, showLoading: false);
 
-      if (mounted) Navigator.pop(context);
+      closeProgress();
 
       if (response != null && response['responseType'] == 'S') {
         alertServices.successToast(
           response['responseValue']['message']?.toString() ??
-              context.read<LanguageProvider>().tr('transactions.saved'),
+              lang.tr('transactions.saved'),
         );
         if (mounted) Navigator.pop(context, true);
       } else {
         alertServices.errorToast(
-          response['responseValue']['message']?.toString() ??
-              context.read<LanguageProvider>().tr('transactions.saveFailed'),
+          response?['responseValue']?['message']?.toString() ??
+              lang.tr('transactions.saveFailed'),
         );
       }
     } catch (_) {
-      if (mounted) Navigator.pop(context);
+      closeProgress();
       alertServices.errorToast(
-        context.read<LanguageProvider>().tr('common.tryAgain'),
+        lang.tr('common.tryAgain'),
       );
     }
   }

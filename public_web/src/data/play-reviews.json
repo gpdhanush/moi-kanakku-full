@@ -1,0 +1,38 @@
+{
+  "source": "https://play.google.com/store/apps/details?id=com.renzo.moi",
+  "fetchedAt": "2026-11-22",
+  "rating": 4.9,
+  "ratingCount": 9,
+  "reviews": [
+    {
+      "author": "J.Dhiwin Samrich",
+      "stars": 5,
+      "date": "2026-09-16",
+      "text": "Good app to save gifts. Thank you team."
+    },
+    {
+      "author": "Nambirajan Radhakrishnan",
+      "stars": null,
+      "date": "2026-08-26",
+      "text": "நன்று ஆனால் ஒவ்வொரு விழா entry கணக்கு தனிதனியாக தெரியவில்லை entry கணக்கு எண்ணிக்கை dashboard ல் தெரியவேண்டும்"
+    },
+    {
+      "author": "Vincen Charles",
+      "stars": 5,
+      "date": "2025-12-03",
+      "text": "Nice App to implement moi notes."
+    },
+    {
+      "author": "Shankar K",
+      "stars": null,
+      "date": "2025-10-31",
+      "text": "nice app to save my gifted amount"
+    },
+    {
+      "author": "Renzo Rowan",
+      "stars": null,
+      "date": "2025-09-03",
+      "text": "nice work. keep it up."
+    }
+  ]
+}

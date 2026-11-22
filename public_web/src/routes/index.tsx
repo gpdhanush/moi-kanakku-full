@@ -18,22 +18,22 @@ import {
   Search01Icon,
   Search02Icon,
 } from "@hugeicons/core-free-icons";
-import {
-  AnimatePresence,
-  motion,
-  useReducedMotion,
-} from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { T } from "@/lib/lang";
 import { DownloadModal, PlayButton } from "@/components/site";
 import { FaqAccordion } from "@/components/faq-accordion";
 import { WhyChooseBand } from "@/components/why-choose-band";
+import { TestimonialsSection } from "@/components/testimonials-section";
 import { OccasionsHang } from "@/components/occasions-hang";
+import playReviews from "@/data/play-reviews.json";
 import { cn } from "@/lib/utils";
 import {
   SERVICE_CITIES,
   buildPageHead,
   jsonLdScript,
   webPageSchema,
+  softwareAppRatingSchema,
+  ogImage,
 } from "@/lib/seo";
 import weddingImg from "@/assets/home/wedding.webp";
 import engagementsImg from "@/assets/home/engagements.webp";
@@ -46,24 +46,27 @@ import brandMark from "@/assets/label-dark.png";
 export const Route = createFileRoute("/")({
   head: () => {
     const head = buildPageHead({
-      title: "Moi Kanakku - Free Digital Moi Ledger | மொய் கணக்கு Moi App",
+      title: "Moi Kanakku Dindigul - Free Moi App | மொய் கணக்கு",
       description:
-        "Moi Kanakku (மொய் கணக்கு): free moi app for moi gift and moi function records. Moi tech for Tamil families in Dindigul, Madurai, Theni, Usilampatti. 100% free, no ads.",
+        "Moi Kanakku (மொய் கணக்கு) from Dindigul: free moi app to record moi gifts for weddings and family functions in Madurai, Theni and Tamil Nadu. No ads.",
       path: "/",
+      image: ogImage("default"),
     });
-    return {
-      ...head,
-      scripts: [
-        jsonLdScript(
-          webPageSchema({
-            path: "/",
-            name: "Moi Kanakku - Free Digital Moi Ledger",
-            description:
-              "Free Android digital moi ledger for Tamil family functions. Record moi given and received.",
-          }),
-        ),
-      ],
-    };
+    const scripts: Record<string, unknown>[] = [
+      webPageSchema({
+        path: "/",
+        name: "Moi Kanakku Dindigul - Free Moi App",
+        description:
+          "Free Android moi app from Dindigul for Tamil family functions. Record moi given and received.",
+      }),
+    ];
+    // Rating is shown on this page (testimonials), so it may be marked up here.
+    if (playReviews.rating != null && playReviews.ratingCount) {
+      scripts.push(
+        softwareAppRatingSchema({ value: playReviews.rating, count: playReviews.ratingCount }),
+      );
+    }
+    return { ...head, scripts: [jsonLdScript(scripts)] };
   },
   component: Index,
 });
@@ -187,9 +190,24 @@ const heroSlides = [
     subTa: "சுந்தர் & அனிதா திருமணம் - மதுரை",
     subEn: "Sundar & Anitha Wedding - Madurai",
     rows: [
-      { name: "சுப்பிரமணியன் மாமா", meta: "மதுரை · பெற்ற மொய்", amount: "₹ 10,001", tone: "in" as const },
-      { name: "ராஜேந்திரன் & குடும்பம்", meta: "கோவை · பெற்ற மொய்", amount: "₹ 5,005", tone: "in" as const },
-      { name: "கார்த்திக் K.", meta: "சென்னை · கொடுத்த மொய்", amount: "₹ 2,001", tone: "out" as const },
+      {
+        name: "சுப்பிரமணியன் மாமா",
+        meta: "மதுரை · பெற்ற மொய்",
+        amount: "₹ 10,001",
+        tone: "in" as const,
+      },
+      {
+        name: "ராஜேந்திரன் & குடும்பம்",
+        meta: "கோவை · பெற்ற மொய்",
+        amount: "₹ 5,005",
+        tone: "in" as const,
+      },
+      {
+        name: "கார்த்திக் K.",
+        meta: "சென்னை · கொடுத்த மொய்",
+        amount: "₹ 2,001",
+        tone: "out" as const,
+      },
     ],
   },
   {
@@ -199,8 +217,18 @@ const heroSlides = [
     subTa: "செல்வன் கார்த்தி காதணி விழா - திருச்சி",
     subEn: "Karthi Ear Piercing - Trichy",
     rows: [
-      { name: "சின்னச்சாமி தாய்மாமன்", meta: "தஞ்சாவூர் · பெற்ற மொய்", amount: "₹ 25,005", tone: "in" as const },
-      { name: "வீரமணி & சகோதரர்கள்", meta: "திருச்சி · பெற்ற மொய்", amount: "₹ 10,001", tone: "in" as const },
+      {
+        name: "சின்னச்சாமி தாய்மாமன்",
+        meta: "தஞ்சாவூர் · பெற்ற மொய்",
+        amount: "₹ 25,005",
+        tone: "in" as const,
+      },
+      {
+        name: "வீரமணி & சகோதரர்கள்",
+        meta: "திருச்சி · பெற்ற மொய்",
+        amount: "₹ 10,001",
+        tone: "in" as const,
+      },
     ],
   },
   {
@@ -210,8 +238,18 @@ const heroSlides = [
     subTa: "லக்ஷ்மி இல்லம் - திருநெல்வேலி",
     subEn: "Lakshmi Illam - Tirunelveli",
     rows: [
-      { name: "பெருமாள் பெரியப்பா", meta: "நெல்லை · பெற்ற மொய்", amount: "₹ 5,005", tone: "in" as const },
-      { name: "செல்வராஜ் நண்பர்கள்", meta: "சென்னை · பெற்ற மொய்", amount: "₹ 3,001", tone: "in" as const },
+      {
+        name: "பெருமாள் பெரியப்பா",
+        meta: "நெல்லை · பெற்ற மொய்",
+        amount: "₹ 5,005",
+        tone: "in" as const,
+      },
+      {
+        name: "செல்வராஜ் நண்பர்கள்",
+        meta: "சென்னை · பெற்ற மொய்",
+        amount: "₹ 3,001",
+        tone: "in" as const,
+      },
     ],
   },
 ] as const;
@@ -234,11 +272,7 @@ function HeroPhone() {
       <div className="relative overflow-hidden rounded-[5px] border border-[#0b3d2e]/15 bg-white shadow-[0_28px_60px_-28px_rgba(11,61,46,0.45)]">
         <div className="flex items-center justify-between bg-[#0b3d2e] px-3 py-2.5 text-white sm:px-4">
           <div className="flex min-w-0 items-center gap-2">
-            <img
-              src="/logo.png"
-              alt=""
-              className="h-7 w-7 shrink-0 rounded-[5px] object-contain"
-            />
+            <img src="/logo.png" alt="" className="h-7 w-7 shrink-0 rounded-[5px] object-contain" />
             <img
               src={brandMark}
               alt="Moi Kanakku"
@@ -498,7 +532,9 @@ function Index() {
               transition={{ ...spring, delay: i * 0.05 }}
               className="bg-white px-6 py-5 sm:px-8"
             >
-              <p className="font-display text-lg font-bold tracking-tight text-[#0b3d2e]">{item.k}</p>
+              <p className="font-display text-lg font-bold tracking-tight text-[#0b3d2e]">
+                {item.k}
+              </p>
               <p className="mt-1 text-sm text-muted-foreground">
                 <T ta={item.ta} en={item.en} />
               </p>
@@ -697,6 +733,8 @@ function Index() {
           </ul>
         </div>
       </section>
+
+      <TestimonialsSection />
 
       <FaqAccordion className="border-[#e5e7eb] bg-white" />
 

@@ -43,13 +43,6 @@ const mainNav: NavItem[] = [
   { kind: "route", to: "/contact", ta: "தொடர்புக்கு", en: "Contact Us" },
 ];
 
-const footerPolicies = [
-  { to: "/locations" as const, ta: "சேவை இடங்கள்", en: "Service locations" },
-  { to: "/moi-app" as const, ta: "மொய் ஆப்", en: "Moi App" },
-  { to: "/privacy" as const, ta: "தனியுரிமைக் கொள்கை", en: "Privacy Policy" },
-  { to: "/terms" as const, ta: "பயன்பாட்டு விதிகள்", en: "Terms of Use" },
-  { to: "/account-deletion" as const, ta: "கணக்கு & தரவு நீக்கம்", en: "Account & Data Deletion" },
-];
 
 function LangSwitch({ compact = false }: { compact?: boolean }) {
   const { lang, setLang } = useLang();
@@ -319,69 +312,172 @@ export function Header() {
   );
 }
 
-export function Footer() {
+const footerLegal = [
+  { to: "/privacy" as const, ta: "தனியுரிமைக் கொள்கை", en: "Privacy Policy" },
+  { to: "/terms" as const, ta: "பயன்பாட்டு விதிகள்", en: "Terms of Use" },
+  { to: "/account-deletion" as const, ta: "கணக்கு & தரவு நீக்கம்", en: "Account & Data Deletion" },
+];
+
+const footerLinkClass =
+  "group inline-flex items-center gap-1 text-sm text-white/65 transition-colors hover:text-lime";
+
+function FooterHeading({ children }: { children: ReactNode }) {
   return (
-    <footer className="border-t border-gold-500/20 bg-teal-950 py-12 text-slate-300">
-      <div className="container-page space-y-8 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 gap-8 md:grid-cols-12">
-          <div className="space-y-3 md:col-span-6">
-            <div className="flex items-center gap-2">
-              <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-lg border border-gold-500/30 bg-white p-0.5">
-                <img src={LOGO_SRC} alt="" className="h-full w-full object-contain" />
-              </div>
-              <span className="text-lg font-bold text-white">Moi Kanakku</span>
-            </div>
-            <p className="max-w-sm text-xs leading-relaxed text-slate-400">
+    // <p role="heading"> so the site-wide Tamil h3 size rule doesn't enlarge these labels.
+    <p
+      role="heading"
+      aria-level={3}
+      className="mb-4 text-xs font-semibold tracking-[0.16em] text-lime uppercase in-[.lang-ta]:text-sm in-[.lang-ta]:tracking-normal"
+    >
+      {children}
+    </p>
+  );
+}
+
+export function Footer() {
+  const year = new Date().getFullYear();
+  return (
+    <footer className="relative isolate overflow-hidden bg-[#0b3d2e] text-white">
+      {/* soft lime glow + grid texture */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -top-40 left-1/2 -z-10 h-[28rem] w-[56rem] -translate-x-1/2 rounded-full bg-lime/15 blur-3xl"
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(to_right,rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.04)_1px,transparent_1px)] [mask-image:radial-gradient(ellipse_at_top,black,transparent_70%)] bg-[size:48px_48px]"
+      />
+
+      <div className="mx-auto max-w-[1400px] px-4 pt-16 sm:px-6 lg:px-8 lg:pt-20">
+        {/* CTA */}
+        <div className="flex flex-col items-start justify-between gap-6 rounded-2xl border border-white/10 bg-white/[0.04] p-6 backdrop-blur-sm sm:p-8 md:flex-row md:items-center">
+          <div>
+            <p className="font-display text-2xl font-bold tracking-tight sm:text-3xl">
+              <T ta="ஒவ்வொரு மொய்யும் பத்திரமாக." en="Every moi, kept safe." />
+            </p>
+            <p className="mt-2 max-w-[48ch] text-sm text-white/65">
               <T
-                ta="தமிழ் குடும்பங்களின் விசேஷ மொய் கணக்குகளைப் பாதுகாப்பாகப் பதிவு செய்யும் Android செயலி. அனைவருக்கும் 100% இலவசம். விளம்பரம் / சந்தா இல்லை."
-                en="A simple Android app for your family's moi records. 100% free for everyone - no ads, no subscriptions."
+                ta="100% இலவசம். விளம்பரம் இல்லை, சந்தா இல்லை. இன்றே பதிவிறக்குங்கள்."
+                en="100% free. No ads, no subscriptions. Download it today."
               />
             </p>
           </div>
+          <PlayButton />
+        </div>
 
-          <div className="space-y-2 text-xs md:col-span-3">
-            <h4 className="mb-2 font-bold tracking-wider text-gold-400 uppercase">
-              <T ta="தொடர்புக்கு" en="SUPPORT CONTACT" />
-            </h4>
-            <a href={`mailto:${EMAIL}`} className="flex items-center gap-2 hover:text-gold-400">
-              <Mail className="h-3.5 w-3.5 text-gold-500" /> {EMAIL}
-            </a>
-            <a href={`tel:+${PHONE_RAW}`} className="flex items-center gap-2 hover:text-gold-400">
-              <Phone className="h-3.5 w-3.5 text-gold-500" /> {PHONE}
-            </a>
-            <a
-              href={MAP_URL}
-              target="_blank"
-              rel="noreferrer"
-              className="flex items-center gap-2 hover:text-gold-400"
-            >
-              <MapPin className="h-3.5 w-3.5 text-gold-500" /> Dindigul, Tamil Nadu
-            </a>
+        {/* Columns */}
+        <div className="grid grid-cols-2 gap-x-6 gap-y-10 py-14 md:grid-cols-12 lg:py-16">
+          <div className="col-span-2 md:col-span-5">
+            <Link to="/" className="inline-flex items-center gap-3">
+              <span className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-xl bg-white p-1 shadow-sm">
+                <img src={LOGO_SRC} alt="" className="h-full w-full object-contain" />
+              </span>
+              <span className="font-display text-xl font-bold tracking-tight">Moi Kanakku</span>
+            </Link>
+            <p className="mt-4 max-w-sm text-sm leading-relaxed text-white/65">
+              <T
+                ta="தமிழ் குடும்பங்களின் விசேஷ மொய் கணக்குகளைப் பாதுகாப்பாகப் பதிவு செய்யும் Android செயலி."
+                en="A simple Android app that keeps your family's moi records safe, for every celebration."
+              />
+            </p>
+            <ul className="mt-6 flex flex-wrap gap-2">
+              {[
+                { ta: "100% இலவசம்", en: "100% free" },
+                { ta: "தமிழ் & English", en: "Tamil & English" },
+                { ta: "விளம்பரம் இல்லை", en: "No ads" },
+              ].map((b) => (
+                <li
+                  key={b.en}
+                  className="rounded-full border border-lime/25 bg-lime/10 px-3 py-1 text-xs font-medium text-lime"
+                >
+                  <T ta={b.ta} en={b.en} />
+                </li>
+              ))}
+            </ul>
           </div>
 
-          <div className="space-y-2 text-xs md:col-span-3">
-            <h4 className="mb-2 font-bold tracking-wider text-gold-400 uppercase">
-              <T ta="மேலும்" en="EXPLORE" />
-            </h4>
-            <ul className="flex flex-col gap-2 text-slate-400">
-              {footerPolicies.map((p) => (
-                <li key={p.to}>
-                  <Link to={p.to} className="transition-colors hover:text-gold-400">
-                    • <T ta={p.ta} en={p.en} />
+          <nav aria-label="Footer" className="md:col-span-2">
+            <FooterHeading>
+              <T ta="மேலும்" en="Explore" />
+            </FooterHeading>
+            <ul className="space-y-3">
+              {mainNav.map((item) => (
+                <li key={item.to}>
+                  <Link to={item.to} className={footerLinkClass}>
+                    <T ta={item.ta} en={item.en} />
                   </Link>
+                </li>
+              ))}
+              <li>
+                <Link to="/locations" className={footerLinkClass}>
+                  <T ta="சேவை இடங்கள்" en="Service locations" />
+                </Link>
+              </li>
+            </ul>
+          </nav>
+
+          <div className="md:col-span-2">
+            <FooterHeading>
+              <T ta="சட்டம்" en="Legal" />
+            </FooterHeading>
+            <ul className="space-y-3">
+              {footerLegal.map((p) => (
+                <li key={p.to}>
+                  <Link to={p.to} className={footerLinkClass}>
+                    <T ta={p.ta} en={p.en} />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="col-span-2 md:col-span-3">
+            <FooterHeading>
+              <T ta="தொடர்புக்கு" en="Contact" />
+            </FooterHeading>
+            <ul className="space-y-3">
+              {[
+                { href: `mailto:${EMAIL}`, icon: Mail, label: EMAIL, external: false },
+                { href: `tel:+${PHONE_RAW}`, icon: Phone, label: PHONE, external: false },
+                { href: MAP_URL, icon: MapPin, label: "Dindigul, Tamil Nadu", external: true },
+              ].map(({ href, icon: Icon, label, external }) => (
+                <li key={href}>
+                  <a
+                    href={href}
+                    {...(external ? { target: "_blank", rel: "noreferrer" } : {})}
+                    className="group flex items-center gap-3 text-sm text-white/65 transition-colors hover:text-white"
+                  >
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-lime transition-colors group-hover:border-lime/40 group-hover:bg-lime/10">
+                      <Icon className="h-4 w-4" />
+                    </span>
+                    <span className="min-w-0 break-all">{label}</span>
+                  </a>
                 </li>
               ))}
             </ul>
           </div>
         </div>
 
-        <div className="border-t border-teal-900 pt-6 text-center text-[11px] text-slate-500">
+        {/* Bottom bar */}
+        <div className="flex flex-col gap-3 border-t border-white/10 py-6 text-xs text-white/50 sm:flex-row sm:items-center sm:justify-between">
           <p>
-            © 2026 Moi Kanakku | GK Tech.{" "}
-            <T ta="அனைத்து உரிமைகளும் பாதுகாக்கப்பட்டவை." en="All Rights Reserved." />
+            © {year} Moi Kanakku · GK Tech.{" "}
+            <T ta="அனைத்து உரிமைகளும் பாதுகாக்கப்பட்டவை." en="All rights reserved." />
+          </p>
+          <p>
+            <T ta="திண்டுக்கல்லில் அன்புடன் உருவாக்கப்பட்டது" en="Made with care in Dindigul" />{" "}
+            <span className="text-lime">♥</span>
           </p>
         </div>
       </div>
+
+      {/* Oversized wordmark */}
+      <p
+        aria-hidden
+        className="pointer-events-none -mb-[0.22em] text-center font-display text-[18vw] leading-none font-bold tracking-tighter text-white/[0.05] select-none lg:text-[13rem]"
+      >
+        moi kanakku
+      </p>
     </footer>
   );
 }

@@ -27,7 +27,7 @@ import {
   useTransform,
 } from "framer-motion";
 import { T } from "@/lib/lang";
-import { buildPageHead } from "@/lib/seo";
+import { buildPageHead, ogImage } from "@/lib/seo";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/about")({
@@ -37,6 +37,7 @@ export const Route = createFileRoute("/about")({
       description:
         "Moi Kanakku by GK Tech, built by GNANA PRAKASAM A in Dindigul. Modern digital moi ledger for Tamil family functions.",
       path: "/about",
+      image: ogImage("about"),
     }),
   component: About,
 });
@@ -103,13 +104,7 @@ const pillars = [
   },
 ] as const;
 
-function MagneticCta({
-  children,
-  className,
-}: {
-  children: ReactNode;
-  className?: string;
-}) {
+function MagneticCta({ children, className }: { children: ReactNode; className?: string }) {
   const reduce = useReducedMotion();
   const x = useMotionValue(0);
   const y = useMotionValue(0);
@@ -289,8 +284,7 @@ function About() {
                 <HugeiconsIcon icon={SourceCodeIcon} size={16} strokeWidth={1.5} />
               </span>
               <span>
-                GK Tech ·{" "}
-                <span className="font-semibold text-[#0b3d2e]">GNANA PRAKASAM A</span>
+                GK Tech · <span className="font-semibold text-[#0b3d2e]">GNANA PRAKASAM A</span>
               </span>
             </motion.p>
           </div>
@@ -314,11 +308,7 @@ function About() {
               {["Moi Kanakku", "Clear records", "Family trust"].map((label, i) => (
                 <motion.span
                   key={label}
-                  animate={
-                    reduce
-                      ? false
-                      : { y: [0, -3, 0], opacity: [0.75, 1, 0.75] }
-                  }
+                  animate={reduce ? false : { y: [0, -3, 0], opacity: [0.75, 1, 0.75] }}
                   transition={{
                     duration: 3.2 + i * 0.4,
                     repeat: Infinity,

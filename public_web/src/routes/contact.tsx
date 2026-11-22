@@ -13,15 +13,10 @@ import {
   WhatsappIcon,
 } from "@hugeicons/core-free-icons";
 import { format, startOfDay } from "date-fns";
-import {
-  motion,
-  useMotionValue,
-  useReducedMotion,
-  useSpring,
-} from "framer-motion";
+import { motion, useMotionValue, useReducedMotion, useSpring } from "framer-motion";
 import { T, useLang, useT } from "@/lib/lang";
 import { EMAIL, MAP_URL, PHONE, PHONE_RAW } from "@/components/site";
-import { buildPageHead } from "@/lib/seo";
+import { buildPageHead, ogImage } from "@/lib/seo";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
@@ -33,6 +28,7 @@ export const Route = createFileRoute("/contact")({
       description:
         "Book Moi @ Computer or note update for your function. Call or WhatsApp +91-78454 56609. Based in Dindigul, serving Tamil Nadu.",
       path: "/contact",
+      image: ogImage("contact"),
     }),
   component: Contact,
 });
@@ -140,12 +136,7 @@ function ContactLink({
       </span>
       <span className="min-w-0">
         <span className="block truncate font-semibold">{main}</span>
-        <span
-          className={cn(
-            "block text-sm",
-            accent ? "text-ink/70" : "text-muted-foreground",
-          )}
-        >
+        <span className={cn("block text-sm", accent ? "text-ink/70" : "text-muted-foreground")}>
           {sub}
         </span>
       </span>
@@ -291,7 +282,8 @@ Date: ${dateText}`;
                       className={cn(
                         inputClass,
                         "uppercase",
-                        errors.name && "border-destructive focus:border-destructive focus:ring-destructive/20",
+                        errors.name &&
+                          "border-destructive focus:border-destructive focus:ring-destructive/20",
                       )}
                       aria-invalid={!!errors.name}
                     />
@@ -455,10 +447,7 @@ Date: ${dateText}`;
                 <T ta="நேரடி தொடர்பு" en="Direct contact" />
               </h2>
               <p className="mt-2 text-sm text-white/65">
-                <T
-                  ta="WhatsApp அல்லது கால் மூலம் பேசுங்கள்."
-                  en="Reach us via WhatsApp or call."
-                />
+                <T ta="WhatsApp அல்லது கால் மூலம் பேசுங்கள்." en="Reach us via WhatsApp or call." />
               </p>
               {!reduce && (
                 <motion.div

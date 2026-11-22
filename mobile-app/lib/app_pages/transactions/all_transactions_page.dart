@@ -143,7 +143,7 @@ class _AllTransactionsPageState extends State<AllTransactionsPage> {
         setState(() => _paging.applyFailure(reset: reset));
       }
     } catch (e) {
-      debugPrint('Error fetching transactions: $e');
+      printDirect('Error fetching transactions: $e');
       if (mounted) {
         setState(() => _paging.applyFailure(reset: reset));
       }

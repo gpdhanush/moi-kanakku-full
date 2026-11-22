@@ -30,14 +30,14 @@ import {
 } from "framer-motion";
 import { T } from "@/lib/lang";
 import { cn } from "@/lib/utils";
-import { buildPageHead } from "@/lib/seo";
+import { buildPageHead, ogImage } from "@/lib/seo";
 
 export const Route = createFileRoute("/services")({
   head: () => {
     const title = "Moi Functions & Gift Services | Moi Kanakku";
     const description =
       "Moi function services: live moi @ computer, moi gift note updates, Moi App, and phone recording. Serving Dindigul, Madurai, Theni and Tamil Nadu.";
-    return buildPageHead({ title, description, path: "/services" });
+    return buildPageHead({ title, description, path: "/services", image: ogImage("services") });
   },
   component: Services,
 });
@@ -126,7 +126,8 @@ const benefits = [
     en: "Skilled on-site team",
     dta: "விழாவுக்கு ஏற்ப பயிற்சி பெற்ற நபர்கள் மேசை அமைப்பு மற்றும் பதிவு நிர்வாகத்தைக் கவனிப்பார்கள்.",
     den: "Trained people handle desk setup and live moi management at your event.",
-    glass: "border-[#7dd3a8]/45 bg-[linear-gradient(145deg,rgba(220,239,230,0.85),rgba(255,255,255,0.55))]",
+    glass:
+      "border-[#7dd3a8]/45 bg-[linear-gradient(145deg,rgba(220,239,230,0.85),rgba(255,255,255,0.55))]",
     iconBg: "bg-[#0b3d2e]/10 text-[#0b3d2e]",
   },
   {
@@ -135,7 +136,8 @@ const benefits = [
     en: "Instant guest receipts",
     dta: "விருந்தினருக்கு உடனே ரசீது - ஒவ்வொரு தொகைக்கும் தெளிவான ஆதாரம்.",
     den: "Guests get a receipt right away - clear proof for every contribution.",
-    glass: "border-[#c4e34a]/50 bg-[linear-gradient(145deg,rgba(236,252,180,0.8),rgba(255,255,255,0.55))]",
+    glass:
+      "border-[#c4e34a]/50 bg-[linear-gradient(145deg,rgba(236,252,180,0.8),rgba(255,255,255,0.55))]",
     iconBg: "bg-[#3f4d1a]/12 text-[#3f4d1a]",
   },
   {
@@ -144,7 +146,8 @@ const benefits = [
     en: "Full digital records",
     dta: "பெயர், ஊர், தொகை உள்ளிட்ட விழா விவரங்கள் பாதுகாப்பாக டிஜிட்டலாகச் சேமிக்கப்படும்.",
     den: "Names, places, amounts and event details are saved securely in digital form.",
-    glass: "border-[#6bb8a0]/45 bg-[linear-gradient(145deg,rgba(200,232,220,0.85),rgba(255,255,255,0.55))]",
+    glass:
+      "border-[#6bb8a0]/45 bg-[linear-gradient(145deg,rgba(200,232,220,0.85),rgba(255,255,255,0.55))]",
     iconBg: "bg-[#145c44]/12 text-[#145c44]",
   },
   {
@@ -153,7 +156,8 @@ const benefits = [
     en: "24/7 Support",
     dta: "வாடிக்கையாளர் சேவை எப்போதும் கிடைக்கும்.",
     den: "Customer support is always available.",
-    glass: "border-[#8fd4ff]/45 bg-[linear-gradient(145deg,rgba(214,236,255,0.85),rgba(255,255,255,0.55))]",
+    glass:
+      "border-[#8fd4ff]/45 bg-[linear-gradient(145deg,rgba(214,236,255,0.85),rgba(255,255,255,0.55))]",
     iconBg: "bg-[#1a4a6b]/12 text-[#1a4a6b]",
   },
   {
@@ -162,7 +166,8 @@ const benefits = [
     en: "Steady monthly income",
     dta: "மண்டபங்கள் மற்றும் சேவை வழங்குநர்கள் மொய் பதிவைச் சேர்த்து மாத வருவாயை வளர்க்கலாம்.",
     den: "Halls and partners can grow monthly income by offering moi recording.",
-    glass: "border-[#f0c14a]/45 bg-[linear-gradient(145deg,rgba(255,243,200,0.85),rgba(255,255,255,0.55))]",
+    glass:
+      "border-[#f0c14a]/45 bg-[linear-gradient(145deg,rgba(255,243,200,0.85),rgba(255,255,255,0.55))]",
     iconBg: "bg-[#6b541a]/12 text-[#6b541a]",
   },
   {
@@ -171,7 +176,8 @@ const benefits = [
     en: "Customer satisfaction",
     dta: "துல்லியமான பதிவும் தெளிவான ரசீதும் வாடிக்கையாளர்களுக்கு நம்பிக்கையையும் சிறந்த அனுபவத்தையும் தரும்.",
     den: "Accurate entries and clear receipts build trust and a smoother guest experience.",
-    glass: "border-[#a8d98a]/45 bg-[linear-gradient(145deg,rgba(226,245,210,0.85),rgba(255,255,255,0.55))]",
+    glass:
+      "border-[#a8d98a]/45 bg-[linear-gradient(145deg,rgba(226,245,210,0.85),rgba(255,255,255,0.55))]",
     iconBg: "bg-[#2d5a1a]/12 text-[#2d5a1a]",
   },
   {
@@ -180,7 +186,8 @@ const benefits = [
     en: "Competitive edge",
     dta: "நவீன மொய் பதிவு வசதியுடன் மற்ற விழா இடங்களிலிருந்து வேறுபட்டுத் தெரியுங்கள்.",
     den: "Offer modern moi recording and set your venue apart from nearby options.",
-    glass: "border-[#d4a574]/45 bg-[linear-gradient(145deg,rgba(255,232,210,0.85),rgba(255,255,255,0.55))]",
+    glass:
+      "border-[#d4a574]/45 bg-[linear-gradient(145deg,rgba(255,232,210,0.85),rgba(255,255,255,0.55))]",
     iconBg: "bg-[#6b3f1a]/12 text-[#6b3f1a]",
   },
 ] as const;
@@ -367,7 +374,12 @@ function Services() {
                         layout
                         className="flex h-12 w-12 items-center justify-center rounded-[5px] bg-white/12"
                       >
-                        <HugeiconsIcon icon={s.icon} size={24} strokeWidth={1.5} color="currentColor" />
+                        <HugeiconsIcon
+                          icon={s.icon}
+                          size={24}
+                          strokeWidth={1.5}
+                          color="currentColor"
+                        />
                       </motion.span>
 
                       <div>
@@ -395,7 +407,11 @@ function Services() {
                               </p>
                               <span className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-lime">
                                 <T ta="மேலும் பார்க்க" en="Open details" />
-                                <HugeiconsIcon icon={ArrowUpRight01Icon} size={16} strokeWidth={1.5} />
+                                <HugeiconsIcon
+                                  icon={ArrowUpRight01Icon}
+                                  size={16}
+                                  strokeWidth={1.5}
+                                />
                               </span>
                             </motion.div>
                           )}

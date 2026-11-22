@@ -162,7 +162,7 @@ class _ConfigurationErrorPageState extends State<ConfigurationErrorPage> {
                                 color: colorScheme.onPrimary,
                               ),
                             )
-                          : HugeIcon(
+                          : const HugeIcon(
                               icon: HugeIcons.strokeRoundedRefresh,
                               size: 22,
                               strokeWidth: 1.8,

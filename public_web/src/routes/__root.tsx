@@ -46,9 +46,9 @@ function ErrorComponent({ error, reset }: ErrorComponentProps) {
 }
 
 const rootSeo = buildPageHead({
-  title: "Moi Kanakku - Free Digital Moi Ledger for Android | மொய் கணக்கு",
+  title: "Moi Kanakku Dindigul - Free Moi App | மொய் கணக்கு",
   description:
-    "Moi Kanakku (மொய் கணக்கு): free Android moi app for moi gift and moi function records. Dindigul-based service across Madurai, Theni, Usilampatti and Tamil Nadu. No ads, no subscription.",
+    "Moi Kanakku (மொய் கணக்கு) from Dindigul: free Android moi app to record moi gifts for weddings and family functions across Tamil Nadu. No ads.",
   path: "/",
 });
 
@@ -59,6 +59,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       ...rootSeo.meta,
       { name: "theme-color", content: "#0b3d2e" },
+      { name: "application-name", content: "Moi Kanakku" },
+      { name: "apple-mobile-web-app-title", content: "Moi Kanakku" },
+      { name: "color-scheme", content: "light" },
       {
         name: "google-site-verification",
         content: import.meta.env["VITE_GOOGLE_SITE_VERIFICATION"] || "",
@@ -67,15 +70,15 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     links: [
       { rel: "stylesheet", href: appCss },
       { rel: "icon", href: "/favicon.png", type: "image/png" },
-      { rel: "apple-touch-icon", href: "/logo.png" },
+      { rel: "apple-touch-icon", href: "/icons/apple-touch-icon.png", sizes: "180x180" },
+      { rel: "manifest", href: "/site.webmanifest" },
       { rel: "sitemap", type: "application/xml", href: "/sitemap.xml" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Arimo:ital,wght@0,400..700;1,400..700&family=Space+Grotesk:wght@300..700&family=Mukta+Malar:wght@200;300;400;500;600;700;800&family=Noto+Sans+Tamil:wght@100..900&display=swap",
+        href: "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400..800;1,400..800&family=Space+Grotesk:wght@300..700&family=Anek+Tamil:wght@400..800&family=Mukta+Malar:wght@200;300;400;500;600;700;800&family=Noto+Sans+Tamil:wght@100..900&display=swap",
       },
-      ...rootSeo.links,
     ],
     scripts: [
       jsonLdScript([
@@ -115,7 +118,9 @@ function RootComponent() {
       <LangProvider>
         <div className="flex min-h-screen flex-col">
           <Header />
-          <main className="flex-1"><Outlet /></main>
+          <main className="flex-1">
+            <Outlet />
+          </main>
           <Footer />
           <ScrollTopButton />
         </div>

@@ -121,7 +121,7 @@ class _HomePageState extends State<HomePage> {
           userProvider.updateUserDetails(storedUser);
         }
       } catch (e) {
-        debugPrint('Error loading user information: $e');
+        printDirect('Error loading user information: $e');
       }
 
       try {
@@ -165,7 +165,7 @@ class _HomePageState extends State<HomePage> {
         unawaited(_initializeNotificationPipeline());
         unawaited(_maybeShowAppAlertDialog());
       } catch (e) {
-        debugPrint('Error during initialization: $e');
+        printDirect('Error during initialization: $e');
         if (mounted) {
           _alertServices.errorToast(
             context.read<LanguageProvider>().tr('home.startupError'),
@@ -235,7 +235,7 @@ class _HomePageState extends State<HomePage> {
       userProvider.updateUserDetails(user);
       await _secureStorage.save(AppVariables.userInformation, user);
     } catch (e) {
-      debugPrint('Error syncing profile image: $e');
+      printDirect('Error syncing profile image: $e');
     }
   }
 
@@ -243,7 +243,7 @@ class _HomePageState extends State<HomePage> {
     try {
       await PushNotificationService.instance.syncTokenForCurrentUser();
     } catch (e) {
-      debugPrint('Background notification setup error: $e');
+      printDirect('Background notification setup error: $e');
     }
   }
 
@@ -258,7 +258,7 @@ class _HomePageState extends State<HomePage> {
       if (!mounted) return;
       await AppAlertDialog.showIfNeeded(context);
     } catch (e) {
-      debugPrint('App alert dialog check failed: $e');
+      printDirect('App alert dialog check failed: $e');
     }
   }
 
@@ -285,7 +285,7 @@ class _HomePageState extends State<HomePage> {
         Permission.notification,
       ].request();
     } catch (e) {
-      debugPrint('Error requesting permissions: $e');
+      printDirect('Error requesting permissions: $e');
       rethrow;
     }
   }
@@ -297,7 +297,7 @@ class _HomePageState extends State<HomePage> {
       _needsRefresh = false;
       unawaited(
         _refreshHomeData(showLoading: false).catchError((e) {
-          debugPrint('Error refreshing data in didChangeDependencies: $e');
+          printDirect('Error refreshing data in didChangeDependencies: $e');
         }),
       );
     }
@@ -580,7 +580,7 @@ class _HomePageState extends State<HomePage> {
         FlutterExitApp.exitApp();
       }
     } catch (e) {
-      debugPrint('Error in backButtonExit: $e');
+      printDirect('Error in backButtonExit: $e');
       FlutterExitApp.exitApp();
     }
   }
@@ -608,7 +608,7 @@ class _HomePageState extends State<HomePage> {
         }
       }
     } catch (e) {
-      debugPrint('Error fetching total amount: $e');
+      printDirect('Error fetching total amount: $e');
       if (mounted && showLoading) {
         _alertServices.errorToast(
           context.read<LanguageProvider>().tr('home.fetchDataError'),
@@ -632,7 +632,7 @@ class _HomePageState extends State<HomePage> {
       DateTime dateTime = DateTime.parse(time).toLocal();
       return DateFormat("dd-MMM-yyyy hh:mm a").format(dateTime);
     } catch (e) {
-      debugPrint('Error parsing last login time: $e');
+      printDirect('Error parsing last login time: $e');
       return context.read<LanguageProvider>().tr('home.invalidDate');
     }
   }
@@ -665,7 +665,7 @@ class _HomePageState extends State<HomePage> {
         });
       }
     } catch (e) {
-      debugPrint('Error checking notification status: $e');
+      printDirect('Error checking notification status: $e');
       if (mounted) {
         setState(() {
           _unreadNotificationCount = 0;

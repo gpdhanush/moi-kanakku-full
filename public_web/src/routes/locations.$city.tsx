@@ -8,6 +8,7 @@ import {
   jsonLdScript,
   serviceCitySchema,
   webPageSchema,
+  ogImage,
 } from "@/lib/seo";
 
 export const Route = createFileRoute("/locations/$city")({
@@ -17,10 +18,15 @@ export const Route = createFileRoute("/locations/$city")({
   head: ({ params }) => {
     const city = getCity(params.city);
     if (!city) return {};
-    const title = `Moi in ${city.nameEn} | Moi Kanakku மொய் கணக்கு`;
-    const description = `Digital moi ledger and moi function service in ${city.nameEn}, ${city.districtEn}. Free Moi App for moi gift records. ${city.focusEn}`;
+    const title = `Moi Kanakku ${city.nameEn} | ${city.nameTa} மொய் கணக்கு`;
+    const description = `Moi Kanakku in ${city.nameEn}: free moi app and on-site moi function recording for ${city.districtEn} families. No ads, no subscription.`;
     const path = `/locations/${city.slug}`;
-    const head = buildPageHead({ title, description, path });
+    const head = buildPageHead({
+      title,
+      description,
+      path,
+      image: ogImage(`city-${city.slug}`),
+    });
     return {
       ...head,
       scripts: [
@@ -64,10 +70,7 @@ function LocationCityPage() {
         </nav>
 
         <h1 className="mt-4 font-display text-3xl font-extrabold tracking-tighter text-[#0b3d2e] sm:text-4xl md:text-5xl">
-          <T
-            ta={`${city.nameTa}வில் மொய் கணக்கு`}
-            en={`Moi Kanakku in ${city.nameEn}`}
-          />
+          <T ta={`${city.nameTaIn} மொய் கணக்கு`} en={`Moi Kanakku in ${city.nameEn}`} />
         </h1>
         <p className="mt-3 text-sm font-semibold text-[#0b3d2e]/55">
           <T ta={city.districtTa} en={city.districtEn} />
@@ -81,10 +84,7 @@ function LocationCityPage() {
 
         <section className="mt-10 space-y-4 border-t border-[#0b3d2e]/10 pt-8">
           <h2 className="font-display text-2xl font-bold tracking-tight text-[#0b3d2e]">
-            <T
-              ta={`${city.nameTa}வில் எப்படி தொடங்குவது`}
-              en={`How to start in ${city.nameEn}`}
-            />
+            <T ta={`${city.nameTaIn} எப்படி தொடங்குவது`} en={`How to start in ${city.nameEn}`} />
           </h2>
           <ol className="list-decimal space-y-3 pl-5 text-sm leading-relaxed text-[#0b3d2e]/75">
             <li>

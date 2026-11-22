@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:isolate';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:moi/app_configs/app_images.dart';
 import 'package:pdf/pdf.dart';
@@ -13,6 +12,7 @@ import 'package:flutter_file_downloader/flutter_file_downloader.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
 import 'package:open_file/open_file.dart';
+import 'package:moi/app_configs/app_logs.dart';
 
 class PdfExportService {
   static final NumberFormat _amountFormatter = NumberFormat('#,##,000.00');
@@ -44,13 +44,13 @@ class PdfExportService {
         final logoBytes = logoData.buffer.asUint8List();
         if (logoBytes.isNotEmpty) {
           logoImage = pw.MemoryImage(logoBytes);
-          debugPrint('Successfully loaded logo (${logoBytes.length} bytes)');
+          printDirect('Successfully loaded logo (${logoBytes.length} bytes)');
         } else {
-          debugPrint('Logo file is empty');
+          printDirect('Logo file is empty');
           logoImage = null;
         }
       } catch (e) {
-        debugPrint('Could not load logo: $e');
+        printDirect('Could not load logo: $e');
         logoImage = null;
       }
 
@@ -65,7 +65,7 @@ class PdfExportService {
       //     appFontFamily = pw.Font.ttf(appFontFamilyData);
       //   }
       // } catch (e) {
-      //   debugPrint('Failed to create Tamil font: $e');
+      //   printDirect('Failed to create Tamil font: $e');
       //   appFontFamily = null;
       // }
 
@@ -74,7 +74,7 @@ class PdfExportService {
           englishFont = pw.Font.ttf(englishFontData);
         }
       } catch (e) {
-        debugPrint('Failed to create English font: $e');
+        printDirect('Failed to create English font: $e');
         englishFont = null;
       }
 
@@ -83,7 +83,7 @@ class PdfExportService {
           boldFont = pw.Font.ttf(boldFontData);
         }
       } catch (e) {
-        debugPrint('Failed to create bold font: $e');
+        printDirect('Failed to create bold font: $e');
         boldFont = null;
       }
 
@@ -157,7 +157,7 @@ class PdfExportService {
                 vertical: 12,
                 horizontal: 16,
               ),
-              decoration: pw.BoxDecoration(
+              decoration: const pw.BoxDecoration(
                 gradient: pw.LinearGradient(
                   colors: [
                     PdfColors.blue600,
@@ -271,7 +271,7 @@ class PdfExportService {
     return pw.Container(
       padding: const pw.EdgeInsets.all(24),
       decoration: pw.BoxDecoration(
-        gradient: pw.LinearGradient(
+        gradient: const pw.LinearGradient(
           colors: [PdfColors.blue700, PdfColors.blue800],
           begin: pw.Alignment.topLeft,
           end: pw.Alignment.bottomRight,
@@ -400,7 +400,7 @@ class PdfExportService {
           child: pw.Container(
             padding: const pw.EdgeInsets.all(20),
             decoration: pw.BoxDecoration(
-              gradient: pw.LinearGradient(
+              gradient: const pw.LinearGradient(
                 colors: [PdfColors.blue50, PdfColors.blue100],
                 begin: pw.Alignment.topLeft,
                 end: pw.Alignment.bottomRight,
@@ -437,7 +437,7 @@ class PdfExportService {
           child: pw.Container(
             padding: const pw.EdgeInsets.all(20),
             decoration: pw.BoxDecoration(
-              gradient: pw.LinearGradient(
+              gradient: const pw.LinearGradient(
                 colors: [PdfColors.green50, PdfColors.green100],
                 begin: pw.Alignment.topLeft,
                 end: pw.Alignment.bottomRight,
@@ -502,7 +502,7 @@ class PdfExportService {
         border: pw.Border.all(color: PdfColors.grey300, width: 1.5),
       ),
       child: pw.Table(
-        border: pw.TableBorder(
+        border: const pw.TableBorder(
           verticalInside: pw.BorderSide(color: PdfColors.grey300, width: 1),
           horizontalInside: pw.BorderSide(color: PdfColors.grey200, width: 0.5),
         ),
@@ -517,7 +517,7 @@ class PdfExportService {
         children: [
           // Header row
           pw.TableRow(
-            decoration: pw.BoxDecoration(
+            decoration: const pw.BoxDecoration(
               gradient: pw.LinearGradient(
                 colors: [PdfColors.blue600, PdfColors.blue700],
                 begin: pw.Alignment.topLeft,
@@ -604,7 +604,7 @@ class PdfExportService {
             return pw.TableRow(
               decoration: isEven
                   ? null
-                  : pw.BoxDecoration(color: PdfColors.grey50),
+                  : const pw.BoxDecoration(color: PdfColors.grey50),
               children: [
                 _buildTableCell(
                   '${index + 1}',
@@ -661,7 +661,7 @@ class PdfExportService {
       child: pw.Container(
         padding: const pw.EdgeInsets.all(12),
         decoration: pw.BoxDecoration(
-          gradient: pw.LinearGradient(
+          gradient: const pw.LinearGradient(
             colors: [PdfColors.blue50, PdfColors.blue100],
             begin: pw.Alignment.topLeft,
             end: pw.Alignment.bottomRight,
@@ -680,11 +680,11 @@ class PdfExportService {
                 decoration: pw.BoxDecoration(
                   color: PdfColors.white,
                   borderRadius: pw.BorderRadius.circular(12),
-                  boxShadow: [
+                  boxShadow: const [
                     pw.BoxShadow(
                       color: PdfColors.grey400,
                       blurRadius: 8,
-                      offset: const PdfPoint(0, 2),
+                      offset: PdfPoint(0, 2),
                     ),
                   ],
                 ),
@@ -718,7 +718,7 @@ class PdfExportService {
                 vertical: 10,
               ),
               decoration: pw.BoxDecoration(
-                gradient: pw.LinearGradient(
+                gradient: const pw.LinearGradient(
                   colors: [PdfColors.blue600, PdfColors.blue700],
                   begin: pw.Alignment.topLeft,
                   end: pw.Alignment.bottomRight,
@@ -812,7 +812,7 @@ class PdfExportService {
       if (trimmed.isEmpty) return '-';
       return trimmed.toTitleCase();
     } catch (e) {
-      debugPrint('Error converting to title case: $e');
+      printDirect('Error converting to title case: $e');
       return text.trim().isNotEmpty ? text.trim() : '-';
     }
   }
@@ -830,7 +830,7 @@ class PdfExportService {
       // Check if file exists
       final file = File(cleanPath);
       if (!await file.exists()) {
-        debugPrint('PDF file does not exist: $cleanPath');
+        printDirect('PDF file does not exist: $cleanPath');
         return;
       }
 
@@ -838,10 +838,10 @@ class PdfExportService {
       final result = await OpenFile.open(cleanPath);
 
       if (result.type != ResultType.done) {
-        debugPrint('Failed to open PDF: ${result.message}');
+        printDirect('Failed to open PDF: ${result.message}');
       }
     } catch (e) {
-      debugPrint('Error opening PDF file: $e');
+      printDirect('Error opening PDF file: $e');
       // Silently fail - user can manually open the file from Downloads
     }
   }
@@ -876,7 +876,7 @@ class PdfExportService {
           final fullPath = fontPath + path;
           final fontData = await rootBundle.load(fullPath);
           if (fontData.lengthInBytes > 0) {
-            debugPrint(
+            printDirect(
               'Successfully loaded font $fontName from $fullPath (${fontData.lengthInBytes} bytes)',
             );
             return fontData;
@@ -890,13 +890,13 @@ class PdfExportService {
       }
 
       // All paths failed - only now print the error
-      debugPrint(
+      printDirect(
         'Failed to load font $fontName from any path: $possiblePaths${lastError != null ? ' - $lastError' : ''}',
       );
       return null;
     } catch (e) {
       // Font loading failed - return null to use fallback font
-      debugPrint('Failed to load font $fontName: $e');
+      printDirect('Failed to load font $fontName: $e');
       return null;
     }
   }

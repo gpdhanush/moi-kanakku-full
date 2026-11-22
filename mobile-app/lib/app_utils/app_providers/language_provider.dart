@@ -94,7 +94,7 @@ class LanguageProvider extends ChangeNotifier {
         jsonDecode(await rootBundle.loadString('assets/translations/en.json')),
         loadedTranslations,
       );
-      notifyListeners();
+      // Callers notify once after loading; avoid a duplicate app-wide rebuild.
     } catch (e) {
       _translations = {};
     }

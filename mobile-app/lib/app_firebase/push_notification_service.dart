@@ -119,7 +119,7 @@ class PushNotificationService {
 
       final token = await FirebaseMessaging.instance.getToken();
       if (token == null || token.isEmpty) {
-        debugPrint('FCM token unavailable');
+        printDirect('FCM token unavailable');
         return;
       }
 
@@ -140,7 +140,7 @@ class PushNotificationService {
       }, showLoading: false);
       _lastHeartbeatAt = DateTime.now();
     } catch (e) {
-      debugPrint('Error syncing device heartbeat');
+      printDirect('Error syncing device heartbeat');
     }
   }
 

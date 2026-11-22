@@ -4,6 +4,7 @@ import 'package:moi/app_utils/app_providers/language_provider.dart';
 import 'package:moi/app_utils/app_widgets/voice_listening_indicator.dart';
 import 'package:provider/provider.dart';
 import 'package:speech_to_text/speech_to_text.dart';
+import 'package:moi/app_configs/app_logs.dart';
 
 /// A widget that provides a microphone icon for speech-to-text functionality.
 class MicIconWidget extends StatefulWidget {
@@ -96,7 +97,7 @@ class _MicIconWidgetState extends State<MicIconWidget> {
     if (!mounted || _isDisposed) return;
 
     final voiceCode = languageProvider.voiceLanguageCode;
-    debugPrint('MicIconWidget voice language=$voiceCode');
+    printDirect('MicIconWidget voice language=$voiceCode');
 
     await _speech.startListening(
       sessionId: _sessionId,
@@ -117,7 +118,7 @@ class _MicIconWidgetState extends State<MicIconWidget> {
       onError: (message) {
         if (!mounted || _isDisposed) return;
         setState(() => _isListening = false);
-        debugPrint('Mic speech error: $message');
+        printDirect('Mic speech error: $message');
         final normalizedMessage = message.toLowerCase();
         if (normalizedMessage.contains('error_no_match') ||
             normalizedMessage.contains('error_speech_timeout') ||

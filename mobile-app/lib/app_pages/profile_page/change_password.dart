@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hugeicons/hugeicons.dart';
+import 'package:moi/app_configs/app_logs.dart';
 import 'package:moi/app_configs/app_variables.dart';
 import 'package:moi/app_services/user_services.dart';
 import 'package:moi/app_services/connection.dart';
@@ -259,7 +260,7 @@ class _ChangePasswordState extends State<ChangePassword> {
         try {
           await userServices.logout({"userId": userId});
         } catch (e) {
-          debugPrint("Logout API error: $e");
+          printContent("Logout API error: $e");
         }
 
         await secureStorageService.clearSessionData();
@@ -275,13 +276,8 @@ class _ChangePasswordState extends State<ChangePassword> {
         );
       }
     } catch (error) {
-      alertServices.errorToast(
-        Provider.of<LanguageProvider>(
-          context,
-          listen: false,
-        ).tr('common.tryAgain'),
-      );
-      debugPrint("Error changing password: $error");
+      alertServices.errorToast(languageProvider.tr('common.tryAgain'));
+      printContent("Error changing password: $error");
     } finally {
       await alertServices.hideLoading();
     }

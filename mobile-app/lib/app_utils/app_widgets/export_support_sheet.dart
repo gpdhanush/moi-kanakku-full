@@ -5,6 +5,7 @@ import 'package:moi/app_utils/app_providers/language_provider.dart';
 import 'package:moi/app_utils/app_widgets/custom_action_sheet.dart';
 import 'package:moi/app_utils/app_global/alert_services.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:moi/app_configs/app_logs.dart';
 
 /// Shows the support options used instead of generating an export PDF.
 Future<void> showExportSupportSheet({
@@ -69,7 +70,7 @@ Future<void> _launchContactAction(
       AlertServices().errorToast(failureMessage);
     }
   } on PlatformException catch (error, stackTrace) {
-    debugPrint('Admin contact action failed: ${error.code}');
+    printDirect('Admin contact action failed: ${error.code}');
     debugPrintStack(stackTrace: stackTrace);
     if (context.mounted) {
       AlertServices().errorToast(failureMessage);

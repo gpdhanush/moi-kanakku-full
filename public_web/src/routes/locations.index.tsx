@@ -7,6 +7,7 @@ import {
   jsonLdScript,
   localBusinessSchema,
   webPageSchema,
+  ogImage,
 } from "@/lib/seo";
 
 const title = "Moi Service Areas in Tamil Nadu | Moi Kanakku";
@@ -19,6 +20,7 @@ export const Route = createFileRoute("/locations/")({
       title,
       description,
       path: "/locations",
+      image: ogImage("locations"),
     });
     return {
       ...head,
@@ -45,10 +47,7 @@ function LocationsIndex() {
           <T ta="சேவை பகுதிகள்" en="Service areas" />
         </p>
         <h1 className="mt-2 max-w-[20ch] font-display text-3xl font-extrabold tracking-tighter text-[#0b3d2e] sm:text-4xl md:text-5xl">
-          <T
-            ta="தமிழ்நாடு முழுவதும் மொய் பதிவு"
-            en="Moi recording across Tamil Nadu"
-          />
+          <T ta="தமிழ்நாடு முழுவதும் மொய் பதிவு" en="Moi recording across Tamil Nadu" />
         </h1>
         <p className="mt-4 max-w-[60ch] text-base leading-relaxed text-[#0b3d2e]/75">
           <T

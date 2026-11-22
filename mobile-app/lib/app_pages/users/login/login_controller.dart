@@ -31,6 +31,7 @@ class LoginController {
   }
 
   Future<bool> submitLogin(BuildContext context) async {
+    final lang = context.read<LanguageProvider>();
     FocusScope.of(context).unfocus();
     final params = {
       "email": emailCtrl.text.trim(),
@@ -60,10 +61,7 @@ class LoginController {
         response['responseValue']['account_status'] == "INACTIVE") {
       if (!context.mounted) return false;
       alertServices.errorToast(
-        Provider.of<LanguageProvider>(
-          context,
-          listen: false,
-        ).tr('auth.accountDeactivated'),
+        lang.tr('auth.accountDeactivated'),
       );
       return false;
     } else if (response != null &&
@@ -79,10 +77,7 @@ class LoginController {
       return false;
     } else {
       alertServices.errorToast(
-        Provider.of<LanguageProvider>(
-          context,
-          listen: false,
-        ).tr('common.tryAgain'),
+        lang.tr('common.tryAgain'),
       );
       return false;
     }
@@ -174,11 +169,11 @@ class LoginController {
           error.code == 'sign_in_cancelled') {
         return false;
       }
-      debugPrint('Google login error: $error');
+      printDirect('Google login error: $error');
       alertServices.errorToast('Google sign-in failed. Please try again.');
       return false;
     } catch (error) {
-      debugPrint('Google login error: $error');
+      printDirect('Google login error: $error');
       alertServices.errorToast('Google sign-in failed. Please try again.');
       return false;
     }

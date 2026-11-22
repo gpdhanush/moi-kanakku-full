@@ -179,16 +179,17 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
   }
 
   Future<void> _submit() async {
+    final lang = context.read<LanguageProvider>();
     if (!_formKey.currentState!.validate()) return;
     if (selectedFunction.isEmpty && selectedFunctionId == null) {
       alertServices.errorToast(
-        context.read<LanguageProvider>().tr('transactions.selectFunction'),
+        lang.tr('transactions.selectFunction'),
       );
       return;
     }
     if (isCustomFunction && customFunctionCtrl.text.trim().isEmpty) {
       alertServices.errorToast(
-        context.read<LanguageProvider>().tr(
+        lang.tr(
           'transactions.customFunctionRequired',
         ),
       );
@@ -196,7 +197,7 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
     }
     if (amountCtrl.text.trim().isEmpty && thingsCtrl.text.trim().isEmpty) {
       alertServices.errorToast(
-        context.read<LanguageProvider>().tr(
+        lang.tr(
           'transactions.amountOrThingRequired',
         ),
       );
@@ -213,13 +214,13 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
 
       if (userId == null) {
         alertServices.errorToast(
-          context.read<LanguageProvider>().tr('transactions.userInfoMissing'),
+          lang.tr('transactions.userInfoMissing'),
         );
         return;
       }
       if (!widget.isEdit && personId == null) {
         alertServices.errorToast(
-          context.read<LanguageProvider>().tr('transactions.personInfoMissing'),
+          lang.tr('transactions.personInfoMissing'),
         );
         return;
       }
@@ -289,7 +290,7 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
     } catch (e) {
       printContent('Error creating/updating transaction: $e');
       alertServices.errorToast(
-        context.read<LanguageProvider>().tr('common.tryAgain'),
+        lang.tr('common.tryAgain'),
       );
     } finally {
       alertServices.hideLoading();

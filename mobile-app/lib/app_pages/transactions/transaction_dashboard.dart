@@ -261,8 +261,8 @@ class _TransactionDashboardState extends State<TransactionDashboard> {
         alertServices.errorToast(errorMsg);
       }
     } catch (e, stackTrace) {
-      debugPrint('Error deleting person: $e');
-      debugPrint('Stack trace: $stackTrace');
+      printDirect('Error deleting person: $e');
+      printDirect('Stack trace: $stackTrace');
       alertServices.errorToast(
         languageProvider.tr('transactions.deleteFailed'),
       );
@@ -307,7 +307,7 @@ class _TransactionDashboardState extends State<TransactionDashboard> {
                           hintText: languageProvider.tr('transactions.search'),
                         ),
                         const SizedBox(height: AppSpacing.sm),
-                        Row(
+                        const Row(
                           children: [
                             Expanded(
                               child: AppSkeleton(
@@ -316,7 +316,7 @@ class _TransactionDashboardState extends State<TransactionDashboard> {
                                 radius: 14,
                               ),
                             ),
-                            const SizedBox(width: 12),
+                            SizedBox(width: 12),
                             Expanded(
                               child: AppSkeleton(
                                 width: double.infinity,

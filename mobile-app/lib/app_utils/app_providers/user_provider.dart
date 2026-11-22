@@ -3,6 +3,7 @@ import 'package:flutter/painting.dart';
 import 'package:moi/app_configs/app_variables.dart';
 import 'package:moi/app_services/user_services.dart';
 import 'package:moi/app_storages/secure_storages.dart';
+import 'package:moi/app_configs/app_logs.dart';
 
 /// UserProvider manages user-related state including user details, JWT token, and device info.
 /// This replaces the global mutable state variables for better state management.
@@ -39,7 +40,7 @@ class UserProvider extends ChangeNotifier {
       _jwtToken = await _secureStorage.getToken();
       notifyListeners();
     } catch (e) {
-      debugPrint('Error initializing UserProvider: $e');
+      printDirect('Error initializing UserProvider: $e');
     }
   }
 
@@ -99,7 +100,7 @@ class UserProvider extends ChangeNotifier {
     try {
       await _secureStorage.save(AppVariables.userInformation, user);
     } catch (e) {
-      debugPrint('Error clearing profile image from storage: $e');
+      printDirect('Error clearing profile image from storage: $e');
     }
 
     if (fromMissingFile) {
@@ -108,7 +109,7 @@ class UserProvider extends ChangeNotifier {
         try {
           await _userServices.removeProfileImage({'userId': userId});
         } catch (e) {
-          debugPrint('Error clearing stale profile image on server: $e');
+          printDirect('Error clearing stale profile image on server: $e');
         }
       }
     }

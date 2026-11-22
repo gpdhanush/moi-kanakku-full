@@ -9,6 +9,7 @@ import 'package:moi/app_themes/index.dart';
 import 'package:moi/app_utils/index.dart';
 import 'package:moi/app_utils/app_providers/language_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:moi/app_configs/app_logs.dart';
 
 class Feedbacks extends StatefulWidget {
   final bool embeddedInShell;
@@ -122,7 +123,7 @@ class _FeedbacksState extends State<Feedbacks> {
           });
         }
       } catch (e) {
-        debugPrint('Error loading feedbacks: $e');
+        printDirect('Error loading feedbacks: $e');
         if (mounted) {
           setState(() {
             _previousFeedbacks = [];
@@ -235,13 +236,13 @@ class _FeedbacksState extends State<Feedbacks> {
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: AppColors.of(context).border),
                 ),
-                child: Column(
+                child: const Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     AppSkeleton(width: 160, height: 12, radius: 8),
-                    const SizedBox(height: 12),
+                    SizedBox(height: 12),
                     AppSkeleton(width: double.infinity, height: 62, radius: 12),
-                    const SizedBox(height: 12),
+                    SizedBox(height: 12),
                     AppSkeleton(width: 110, height: 11, radius: 8),
                   ],
                 ),
@@ -349,12 +350,13 @@ class _FeedbacksState extends State<Feedbacks> {
   }
 
   Future<void> _saveFeedback() async {
+    final lang = context.read<LanguageProvider>();
     try {
       final feedbackText = _feedbackController.text.trim();
       final userData = await _storage.get(AppVariables.userInformation);
       if (userData == null || userData['id'] == null) {
         _alertServices.errorToast(
-          context.read<LanguageProvider>().tr('feedback.userInfoMissing'),
+          lang.tr('feedback.userInfoMissing'),
         );
         return;
       }
@@ -369,7 +371,7 @@ class _FeedbacksState extends State<Feedbacks> {
       if (response != null && response['responseType'] == 'S') {
         final message =
             response['responseValue']?['message']?.toString() ??
-            context.read<LanguageProvider>().tr('feedback.saved');
+            lang.tr('feedback.saved');
         _alertServices.successToast(message);
 
         FocusScope.of(context).unfocus();
@@ -390,13 +392,13 @@ class _FeedbacksState extends State<Feedbacks> {
       } else {
         final errorMessage =
             response?['responseValue']?['message']?.toString() ??
-            context.read<LanguageProvider>().tr('feedback.saveFailed');
+            lang.tr('feedback.saveFailed');
         _alertServices.errorToast(errorMessage);
       }
     } catch (_) {
       if (mounted) {
         _alertServices.errorToast(
-          context.read<LanguageProvider>().tr('feedback.saveFailed'),
+          lang.tr('feedback.saveFailed'),
         );
       }
     }
