@@ -105,11 +105,11 @@ Locally you can run `npm run job:daily` / `npm run job:reminders`, or set `ENABL
 
 ## 💳 Paid PDF export (UPI)
 
-Users pay once by UPI QR, submit the 12-digit UPI transaction ID, and an admin approves it in **Export Payments**. One approval unlocks PDF export for that user permanently.
+Users pay once by UPI QR, submit the 12-digit UPI transaction ID, and an admin approves it in **Export Payments**. Each approval gives the user **3 PDF exports** (`EXPORT_PAYMENT_EXPORTS_PER_PAYMENT` in `.env` to change); after they are used, the user pays again. The app calls `POST /consume` once per export, just before sharing the PDF.
 
-- Tables: run `migrations/create_export_payments.sql` and `migrations/create_export_payment_settings.sql` once.
+- Tables: run `migrations/create_export_payments.sql`, `migrations/add_export_limits_to_export_payments.sql` and `migrations/create_export_payment_settings.sql` once.
 - Payee details: set in the admin panel (**Export Payments → Payment settings**): UPI ID, payee name, amount, and an optional uploaded QR image (PNG/JPG/WEBP, ≤ 2 MB, saved under `UPLOAD_DIR/export-payment/`). `EXPORT_PAYMENT_UPI_ID`, `EXPORT_PAYMENT_PAYEE_NAME` and `EXPORT_PAYMENT_AMOUNT` in `.env` are only fallbacks. Until a UPI ID + name or a QR image is set, the app shows "payments unavailable".
-- Routes (`/apis/export-payments`): `GET /status`, `POST /submit` (user token); `GET /admin/list`, `POST /admin/review`, `GET|PUT /admin/settings`, `POST|DELETE /admin/settings/qr` (admin).
+- Routes (`/apis/export-payments`): `GET /status`, `POST /submit`, `POST /consume` (user token); `GET /admin/list`, `POST /admin/review`, `GET|PUT /admin/settings`, `POST|DELETE /admin/settings/qr` (admin).
 
 ---
 

@@ -237,12 +237,15 @@ class _AllTransactionsPageState extends State<AllTransactionsPage> {
       await ExportService.exportTransactionsToPdf(
         transactions: transactions,
         userDetails: user,
+        beforeSave: useExportCredit,
       );
       if (mounted) {
         _alertServices.successToast(
           context.read<LanguageProvider>().tr('home.exportedSuccessfully'),
         );
       }
+    } on ExportLimitReachedException {
+      // Server message already shown.
     } catch (e) {
       debugPrint('Error exporting: $e');
       if (mounted) {

@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:moi/app_configs/index.dart';
 import 'package:moi/app_services/export_payment_services.dart';
-import 'package:moi/app_storages/secure_storages.dart';
 import 'package:moi/app_themes/index.dart';
 import 'package:moi/app_utils/app_providers/language_provider.dart';
 import 'package:moi/app_utils/index.dart';
@@ -11,40 +10,42 @@ import 'package:provider/provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-/// User id whose PDF export is known to be unlocked in this app session.
-/// Keyed by user so a different account on the same device is checked again.
-String? _unlockedUserId;
-
-Future<String?> _currentUserId() async {
-  final user = await SecureStorageService().get(AppVariables.userInformation);
-  final id = user is Map ? user['id']?.toString() : null;
-  return (id == null || id.isEmpty) ? null : id;
+/// Thrown by [useExportCredit] when no paid exports are left; the server's
+/// message has already been shown, so callers just stop the export quietly.
+class ExportLimitReachedException implements Exception {
+  const ExportLimitReachedException();
 }
 
-/// Returns true when the signed-in user may export PDFs.
+/// Returns true when the signed-in user has paid PDF exports left.
 ///
-/// One approved ₹49 payment unlocks all future exports. When export is still
-/// locked, opens [ExportPaymentPage] (QR code, transaction ID, review status)
-/// and returns true only if the user leaves it with export unlocked.
+/// Each approved payment buys a fixed number of exports (3 by default). When
+/// none are left, opens [ExportPaymentPage] (QR code, transaction ID, review
+/// status) and returns true only if the user leaves it with exports available.
 Future<bool> ensureExportUnlocked(BuildContext context) async {
-  final userId = await _currentUserId();
-  if (userId != null && userId == _unlockedUserId) return true;
-
   final status = await ExportPaymentServices().getStatus();
-  if (status?.canExport == true) {
-    _unlockedUserId = userId;
-    return true;
-  }
+  if (status?.canExport == true) return true;
   if (!context.mounted) return false;
 
   final unlocked = await Navigator.of(context).push<bool>(
     MaterialPageRoute(builder: (_) => ExportPaymentPage(initialStatus: status)),
   );
-  if (unlocked == true) {
-    _unlockedUserId = userId;
-    return true;
-  }
-  return false;
+  return unlocked == true;
+}
+
+/// Spends one paid export. Call after the PDF is built, before it is saved or
+/// shared. Throws [ExportLimitReachedException] when none are left.
+Future<void> useExportCredit() async {
+  final status = await ExportPaymentServices().consume();
+  if (status == null) throw const ExportLimitReachedException();
+  final context = navigatorKey.currentState?.overlay?.context;
+  final template =
+      context?.read<LanguageProvider>().tr('exportPayment.exportsLeftToast') ??
+      'PDF exports left: {left} of {total}';
+  AlertServices().successToast(
+    template
+        .replaceAll('{left}', '${status.remainingExports}')
+        .replaceAll('{total}', '${status.exportsPerPayment}'),
+  );
 }
 
 class ExportPaymentPage extends StatefulWidget {
@@ -194,7 +195,10 @@ class _ExportPaymentPageState extends State<ExportPaymentPage> {
           icon: HugeIcons.strokeRoundedCheckmarkCircle02,
           color: AppColors.lightSuccess,
           title: lang.tr('exportPayment.approvedTitle'),
-          message: lang.tr('exportPayment.approvedMessage'),
+          message: _withCounts(
+            lang.tr('exportPayment.approvedMessage'),
+            status,
+          ),
         ),
         const SizedBox(height: AppSpacing.lg),
         AppButton(
@@ -238,6 +242,18 @@ class _ExportPaymentPageState extends State<ExportPaymentPage> {
     }
 
     return [
+      if (status.isExhausted) ...[
+        _StatusCard(
+          icon: HugeIcons.strokeRoundedPdf02,
+          color: AppColors.saffronGold,
+          title: lang.tr('exportPayment.exhaustedTitle'),
+          message: _withCounts(
+            lang.tr('exportPayment.exhaustedMessage'),
+            status,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+      ],
       if (status.isRejected) ...[
         _StatusCard(
           icon: HugeIcons.strokeRoundedCancelCircle,
@@ -254,7 +270,8 @@ class _ExportPaymentPageState extends State<ExportPaymentPage> {
       Text(
         lang
             .tr('exportPayment.subtitle')
-            .replaceAll('{amount}', status.amountLabel),
+            .replaceAll('{amount}', status.amountLabel)
+            .replaceAll('{count}', '${status.exportsPerPayment}'),
         style: AppTypography.body.copyWith(color: AppColors.textSecondary),
       ),
       const SizedBox(height: AppSpacing.md),
@@ -313,6 +330,10 @@ class _ExportPaymentPageState extends State<ExportPaymentPage> {
       _helpLink(lang),
     ];
   }
+
+  String _withCounts(String text, ExportPaymentStatus status) => text
+      .replaceAll('{left}', '${status.remainingExports}')
+      .replaceAll('{total}', '${status.exportsPerPayment}');
 
   Widget _helpLink(LanguageProvider lang) {
     return Padding(

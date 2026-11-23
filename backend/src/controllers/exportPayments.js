@@ -32,6 +32,8 @@ const formatPayment = (p) => p && ({
     userMobile: p.userMobile,
     amount: p.amount,
     upiTxnId: p.upiTxnId,
+    exportsAllowed: p.exportsAllowed,
+    exportsUsed: p.exportsUsed,
     status: p.status,
     adminRemarks: p.adminRemarks || '',
     reviewedBy: p.reviewedBy,
@@ -45,24 +47,29 @@ const fail = (res, code, message) =>
     res.status(code).json({ responseType: 'F', responseValue: { message } });
 
 /**
- * Export access for a user. One approved payment unlocks PDF export for all
- * future exports: the PDF is built on the device from live ledger data, so
- * there is no server-side export to count against a single purchase.
+ * Export access for a user. Each approved payment buys a fixed number of PDF
+ * exports (default 3). The app calls POST /consume once per export, right
+ * before sharing the generated PDF.
+ *
+ * status: approved (exports left) | pending | rejected | exhausted (all used) | none
  */
 async function buildStatus(userId, req) {
     const config = await getExportPaymentConfig(req);
-    const [approved, history] = await Promise.all([
-        Model.hasApproved(userId),
+    const [remaining, history] = await Promise.all([
+        Model.remainingExports(userId),
         Model.listForUser(userId, 5),
     ]);
     const latest = history[0] || null;
     let status = 'none';
-    if (approved) status = 'approved';
+    if (remaining > 0) status = 'approved';
+    else if (latest?.status === 'approved') status = 'exhausted';
     else if (latest) status = latest.status;
 
     return {
         status,
-        canExport: approved,
+        canExport: remaining > 0,
+        remainingExports: remaining,
+        exportsPerPayment: config.exportsPerPayment,
         latest: formatPayment(latest),
         payment: {
             configured: config.configured,
@@ -72,6 +79,7 @@ async function buildStatus(userId, req) {
             currency: config.currency,
             upiUri: config.upiUri,
             qrImageUrl: config.qrImageUrl,
+            exportsPerPayment: config.exportsPerPayment,
         },
     };
 }
@@ -157,6 +165,32 @@ exports.controller = {
         }
     },
 
+    /** POST /export-payments/consume — uses one paid export; call right before sharing a PDF. */
+    consume: async (req, res) => {
+        try {
+            const userId = req.user?.userId;
+            const idCheck = validateUuid(userId, 'userId');
+            if (!idCheck.ok) return sendUuidError(res, idCheck.message);
+
+            if (!(await Model.consumeExport(userId))) {
+                return fail(res, 409, 'No PDF exports left. Pay again to export.');
+            }
+            const status = await buildStatus(userId, req);
+            recordAuditLog({
+                userId,
+                action: 'EXPORT_PDF_USE',
+                entityType: 'export_payment',
+                summary: `Used a paid PDF export (${status.remainingExports} left)`,
+                metadata: { remaining: status.remainingExports },
+                req,
+            });
+            return res.status(200).json({ responseType: 'S', responseValue: status });
+        } catch (error) {
+            logger.error('Export consume failed:', error);
+            return fail(res, 500, 'Unable to start the export. Please try again.');
+        }
+    },
+
     /** POST /export-payments/submit { upiTxnId } */
     submit: async (req, res) => {
         try {
@@ -174,8 +208,9 @@ exports.controller = {
                 return fail(res, 503, 'Payments are not available right now. Please try again later.');
             }
 
-            if (await Model.hasApproved(userId)) {
-                return fail(res, 409, 'PDF export is already unlocked for your account.');
+            const remaining = await Model.remainingExports(userId);
+            if (remaining > 0) {
+                return fail(res, 409, `You still have ${remaining} PDF export${remaining === 1 ? '' : 's'} left.`);
             }
 
             const history = await Model.listForUser(userId, 1);
@@ -258,12 +293,18 @@ exports.controller = {
 
             const status = action === 'approve' ? 'approved' : 'rejected';
             const adminId = adminIdOf(req);
-            const updated = await Model.review(paymentId, { status, adminId, remarks });
+            const { exportsPerPayment } = await getExportPaymentConfig(req);
+            const updated = await Model.review(paymentId, {
+                status,
+                adminId,
+                remarks,
+                exportsAllowed: status === 'approved' ? exportsPerPayment : null,
+            });
             if (!updated) return fail(res, 409, 'Payment was already reviewed.');
 
             if (status === 'approved') {
                 notifyUser(payment.userId, 'PDF export unlocked',
-                    'Your payment was verified. You can now export your Moi ledger as PDF.');
+                    `Your payment was verified. You can export your Moi ledger as PDF ${exportsPerPayment} time${exportsPerPayment === 1 ? '' : 's'}.`);
             } else {
                 notifyUser(payment.userId, 'Payment not verified',
                     remarks.length > 120 ? `${remarks.slice(0, 117)}...` : remarks);

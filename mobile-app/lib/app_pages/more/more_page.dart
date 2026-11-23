@@ -186,6 +186,7 @@ class MorePage extends StatelessWidget {
         userDetails: user,
         fileName: 'Moi_Kanakku_All_Functions_$timestamp.pdf',
         saveToDownloads: true,
+        beforeSave: useExportCredit,
         onBeforeShare: () async {
           if (loaderShown) {
             await alertServices.hideLoading();
@@ -197,6 +198,8 @@ class MorePage extends StatelessWidget {
       alertServices.successToast(
         languageProvider.tr('home.exportedSuccessfully'),
       );
+    } on ExportLimitReachedException {
+      // Server already explained why; the payment screen is one tap away.
     } catch (e) {
       debugPrint('More export error: $e');
       alertServices.errorToast(languageProvider.tr('home.exportError'));

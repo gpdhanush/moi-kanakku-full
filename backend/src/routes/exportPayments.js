@@ -7,6 +7,7 @@ const router = express.Router();
 // Mobile user endpoints (user id comes from the auth token, never the body)
 router.get('/status', authenticateToken, controller.status);
 router.post('/submit', authenticateToken, controller.submit);
+router.post('/consume', authenticateToken, controller.consume);
 
 // Admin review endpoints
 router.get('/admin/list', authenticateAdminToken, controller.adminList);

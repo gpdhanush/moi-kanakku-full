@@ -3,9 +3,15 @@ import 'package:moi/app_services/connection.dart';
 
 /// Paid PDF export: payee details, the user's payment status and submission.
 class ExportPaymentStatus {
-  /// none | pending | approved | rejected
+  /// none | pending | approved | rejected | exhausted (paid exports used up)
   final String status;
   final bool canExport;
+
+  /// Paid PDF exports the user can still make.
+  final int remainingExports;
+
+  /// Exports one approved payment buys (3 by default).
+  final int exportsPerPayment;
   final bool paymentConfigured;
   final String upiId;
   final String payeeName;
@@ -20,6 +26,8 @@ class ExportPaymentStatus {
   const ExportPaymentStatus({
     required this.status,
     required this.canExport,
+    this.remainingExports = 0,
+    this.exportsPerPayment = 3,
     required this.paymentConfigured,
     required this.upiId,
     required this.payeeName,
@@ -32,6 +40,7 @@ class ExportPaymentStatus {
 
   bool get isPending => status == 'pending';
   bool get isRejected => status == 'rejected';
+  bool get isExhausted => status == 'exhausted';
 
   String get amountLabel => amount == amount.roundToDouble()
       ? amount.toStringAsFixed(0)
@@ -51,6 +60,10 @@ class ExportPaymentStatus {
     return ExportPaymentStatus(
       status: value['status']?.toString() ?? 'none',
       canExport: value['canExport'] == true,
+      remainingExports:
+          int.tryParse(value['remainingExports']?.toString() ?? '') ?? 0,
+      exportsPerPayment:
+          int.tryParse(value['exportsPerPayment']?.toString() ?? '') ?? 3,
       paymentConfigured: payment['configured'] == true,
       upiId: payment['upiId']?.toString() ?? '',
       payeeName: payment['payeeName']?.toString() ?? '',
@@ -72,6 +85,17 @@ class ExportPaymentServices {
   Future<ExportPaymentStatus?> getStatus({bool showLoading = true}) async {
     final response = await connection.getData(
       '$appBaseUri/export-payments/status',
+      useToken: true,
+      showLoading: showLoading,
+    );
+    return ExportPaymentStatus.fromResponse(response);
+  }
+
+  /// Spends one paid export. Returns null (server message toasted) when none are left.
+  Future<ExportPaymentStatus?> consume({bool showLoading = false}) async {
+    final response = await connection.postData(
+      '$appBaseUri/export-payments/consume',
+      const <String, dynamic>{},
       useToken: true,
       showLoading: showLoading,
     );

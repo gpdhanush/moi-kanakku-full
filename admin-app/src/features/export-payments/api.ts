@@ -12,6 +12,9 @@ export interface ExportPayment {
   amount: number;
   upiTxnId: string;
   status: ExportPaymentStatus;
+  /** PDF exports this payment buys / has used (set on approval). */
+  exportsAllowed: number | null;
+  exportsUsed: number | null;
   adminRemarks: string;
   reviewedBy: string | null;
   reviewedByName: string | null;

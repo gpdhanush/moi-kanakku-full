@@ -11,6 +11,8 @@ ExportPaymentStatus _status(String status, {String remarks = ''}) {
   return ExportPaymentStatus(
     status: status,
     canExport: status == 'approved',
+    remainingExports: status == 'approved' ? 2 : 0,
+    exportsPerPayment: 3,
     paymentConfigured: true,
     upiId: 'payee@bank',
     payeeName: 'Moi Kanakku',
@@ -50,6 +52,8 @@ void main() {
       'responseValue': {
         'status': 'rejected',
         'canExport': false,
+        'remainingExports': 0,
+        'exportsPerPayment': 3,
         'latest': {'upiTxnId': '123456789012', 'adminRemarks': 'Not found'},
         'payment': {
           'configured': true,
@@ -126,6 +130,15 @@ void main() {
     await pumpPage(tester, _status('approved'));
 
     expect(
+      find.text(
+        languageProvider
+            .tr('exportPayment.approvedMessage')
+            .replaceAll('{left}', '2')
+            .replaceAll('{total}', '3'),
+      ),
+      findsOneWidget,
+    );
+    expect(
       find.text(languageProvider.tr('exportPayment.continueExport')),
       findsOneWidget,
     );
@@ -156,5 +169,18 @@ void main() {
       find.text(languageProvider.tr('exportPayment.unavailable')),
       findsNothing,
     );
+  });
+
+  testWidgets('user who used all exports is asked to pay again', (
+    tester,
+  ) async {
+    await pumpPage(tester, _status('exhausted'));
+
+    expect(
+      find.text(languageProvider.tr('exportPayment.exhaustedTitle')),
+      findsOneWidget,
+    );
+    expect(find.byType(QrImageView), findsOneWidget);
+    expect(find.textContaining('{total}'), findsNothing);
   });
 }

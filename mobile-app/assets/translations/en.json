@@ -716,7 +716,7 @@
   },
   "exportPayment": {
     "title": "Unlock PDF export",
-    "subtitle": "Pay ₹{amount} once to export your Moi ledger as PDF anytime.",
+    "subtitle": "Pay ₹{amount} to export your Moi ledger as PDF {count} times.",
     "scanToPay": "Scan with any UPI app to pay",
     "upiId": "UPI ID",
     "payWithApp": "Pay with UPI app",
@@ -732,7 +732,7 @@
     "pendingTitle": "Payment under review",
     "pendingMessage": "We are verifying your payment. PDF export unlocks once the admin approves it.",
     "approvedTitle": "PDF export unlocked",
-    "approvedMessage": "Your payment is verified. You can export PDFs anytime.",
+    "approvedMessage": "Your payment is verified. {left} of {total} PDF exports left.",
     "rejectedTitle": "Payment not verified",
     "rejectedMessage": "We could not verify your last payment. Check the transaction ID and submit again.",
     "reason": "Reason",
@@ -742,6 +742,9 @@
     "unavailable": "Payments are not available right now. Please contact the admin.",
     "loadFailed": "Unable to load payment status. Please try again.",
     "retry": "Try again",
-    "needHelp": "Need help? Contact admin"
+    "needHelp": "Need help? Contact admin",
+    "exhaustedTitle": "All PDF exports used",
+    "exhaustedMessage": "You have used all {total} PDF exports from your last payment. Pay again to export more.",
+    "exportsLeftToast": "PDF exports left: {left} of {total}"
   }
 }

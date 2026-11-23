@@ -324,6 +324,7 @@ class _TransactionDetailViewPageState extends State<TransactionDetailViewPage> {
       final timestamp = DateTime.now().toIso8601String().replaceAll(':', '-');
       final fileName = '$firstName-$city-$timestamp.pdf';
 
+      await useExportCredit();
       if (mounted) setState(() => _isLoadingPdf = false);
       await Printing.sharePdf(bytes: bytes, filename: fileName);
     } catch (e) {

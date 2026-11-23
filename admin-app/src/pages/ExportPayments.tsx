@@ -113,7 +113,7 @@ export default function ExportPayments() {
         title: target.action === "approve" ? "Payment approved" : "Payment rejected",
         description:
           target.action === "approve"
-            ? `PDF export unlocked for ${target.payment.userName || "the user"}.`
+            ? `${target.payment.userName || "The user"} can now make 3 PDF exports.`
             : "The user can submit a new transaction ID.",
       });
       closeReview();
@@ -155,7 +155,7 @@ export default function ExportPayments() {
         <PageTitle
           title="Export Payments"
           icon={BadgeIndianRupee}
-          description="Check each UPI transaction ID in your bank or UPI app, then approve or reject it. Approval unlocks PDF export for that user."
+          description="Check each UPI transaction ID in your bank or UPI app, then approve or reject it. Each approval gives that user 3 PDF exports."
         />
 
         <PaymentSettingsCard />
@@ -343,6 +343,11 @@ export default function ExportPayments() {
                         <Badge className={cn("capitalize", STATUS_STYLES[row.status])}>
                           {row.status}
                         </Badge>
+                        {row.status === "approved" && row.exportsAllowed != null && (
+                          <p className="mt-1 text-xs font-medium tabular-nums">
+                            Exports used: {row.exportsUsed ?? 0} / {row.exportsAllowed}
+                          </p>
+                        )}
                         {row.status !== "pending" && (
                           <p className="mt-1 text-xs text-muted-foreground">
                             {row.reviewedByName ? `by ${row.reviewedByName}` : ""}

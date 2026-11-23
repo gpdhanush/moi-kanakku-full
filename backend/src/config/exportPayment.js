@@ -9,6 +9,13 @@ const { ExportPaymentSettings } = require('../models/exportPaymentSettings');
  *   EXPORT_PAYMENT_UPI_ID, EXPORT_PAYMENT_PAYEE_NAME, EXPORT_PAYMENT_AMOUNT (default 49)
  */
 const DEFAULT_AMOUNT = 49;
+const DEFAULT_EXPORTS_PER_PAYMENT = 3;
+
+/** PDF exports one approved payment buys (EXPORT_PAYMENT_EXPORTS_PER_PAYMENT, default 3). */
+function exportsPerPayment() {
+    const value = Number.parseInt(process.env.EXPORT_PAYMENT_EXPORTS_PER_PAYMENT, 10);
+    return Number.isInteger(value) && value > 0 && value <= 255 ? value : DEFAULT_EXPORTS_PER_PAYMENT;
+}
 
 function envAmount() {
     const value = Number.parseFloat(process.env.EXPORT_PAYMENT_AMOUNT);
@@ -52,6 +59,7 @@ async function getExportPaymentConfig(req = null) {
         upiId,
         payeeName,
         amount,
+        exportsPerPayment: exportsPerPayment(),
         currency: 'INR',
         upiUri: buildUpiUri(upiId, payeeName, amount),
         qrImagePath,
@@ -61,4 +69,4 @@ async function getExportPaymentConfig(req = null) {
     };
 }
 
-module.exports = { getExportPaymentConfig, publicFileUrl };
+module.exports = { getExportPaymentConfig, publicFileUrl, exportsPerPayment };

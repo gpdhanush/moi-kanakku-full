@@ -151,6 +151,7 @@ class _FunctionTransactionListState extends State<FunctionTransactionList> {
         transactions: transactions,
         userDetails: user,
         fileName: fileName,
+        beforeSave: useExportCredit,
       );
 
       if (mounted) {
@@ -160,6 +161,8 @@ class _FunctionTransactionListState extends State<FunctionTransactionList> {
           ),
         );
       }
+    } on ExportLimitReachedException {
+      // Server message already shown.
     } catch (e) {
       debugPrint('Error exporting transactions: $e');
       if (mounted) {

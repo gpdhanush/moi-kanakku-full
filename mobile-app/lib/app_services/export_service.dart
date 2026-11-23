@@ -24,6 +24,10 @@ class ExportService {
     String? fileName,
     bool saveToDownloads = true,
     Future<void> Function()? onBeforeShare,
+
+    /// Runs after the PDF is built and before it is saved or shared.
+    /// Throw to stop the export (used to spend one paid export).
+    Future<void> Function()? beforeSave,
   }) async {
     try {
       if (transactions.isEmpty) {
@@ -52,6 +56,10 @@ class ExportService {
       final timestamp = DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
       final filename = fileName ?? 'Moi_Kanakku_Export_$timestamp.pdf';
       final bytes = await pdf.save();
+
+      if (beforeSave != null) {
+        await beforeSave();
+      }
 
       if (saveToDownloads) {
         await _savePdfToDownloads(bytes, filename);

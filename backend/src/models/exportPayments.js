@@ -13,6 +13,8 @@ function mapRow(r) {
         userMobile: r.mobile ?? null,
         amount: r.amount != null ? Number(r.amount) : null,
         upiTxnId: r.upi_txn_id,
+        exportsAllowed: r.exports_allowed != null ? Number(r.exports_allowed) : null,
+        exportsUsed: r.exports_used != null ? Number(r.exports_used) : null,
         status: r.status,
         adminRemarks: r.admin_remarks,
         reviewedBy: r.reviewed_by != null ? fromBinaryUUID(r.reviewed_by) : null,
@@ -24,7 +26,7 @@ function mapRow(r) {
 }
 
 const SELECT_WITH_USER = `
-    SELECT p.id, p.user_id, p.amount, p.upi_txn_id, p.status, p.admin_remarks,
+    SELECT p.id, p.user_id, p.amount, p.upi_txn_id, p.status, p.exports_allowed, p.exports_used, p.admin_remarks,
            p.reviewed_by, p.reviewed_at, p.created_at, p.updated_at,
            u.full_name, u.email, u.mobile, a.full_name AS reviewer_name
     FROM export_payments p
@@ -65,12 +67,30 @@ const Model = {
         return rows.map(mapRow);
     },
 
-    async hasApproved(userId) {
-        const [rows] = await db.query(
-            `SELECT 1 FROM export_payments WHERE user_id = ? AND status = 'approved' LIMIT 1`,
+    /** Unused PDF exports across the user's approved payments. */
+    async remainingExports(userId) {
+        const [[row]] = await db.query(
+            `SELECT COALESCE(SUM(GREATEST(exports_allowed - exports_used, 0)), 0) AS remaining
+             FROM export_payments WHERE user_id = ? AND status = 'approved'`,
             [toBinaryUUID(userId)]
         );
-        return rows.length > 0;
+        return Number(row?.remaining || 0);
+    },
+
+    /**
+     * Use one export from the oldest approved payment that still has some.
+     * A single conditional UPDATE, so parallel requests cannot overspend.
+     */
+    async consumeExport(userId) {
+        const [result] = await db.query(
+            `UPDATE export_payments
+             SET exports_used = exports_used + 1
+             WHERE user_id = ? AND status = 'approved' AND exports_used < exports_allowed
+             ORDER BY reviewed_at ASC, id ASC
+             LIMIT 1`,
+            [toBinaryUUID(userId)]
+        );
+        return (result.affectedRows || 0) > 0;
     },
 
     async listAll({ status = null, search = null, limit = 25, offset = 0 } = {}) {
@@ -115,12 +135,14 @@ const Model = {
      * Approve or reject a pending payment. Only pending rows change, so two
      * admins reviewing at once cannot both act on the same request.
      */
-    async review(id, { status, adminId, remarks }) {
+    async review(id, { status, adminId, remarks, exportsAllowed }) {
         const [result] = await db.query(
             `UPDATE export_payments
-             SET status = ?, admin_remarks = ?, reviewed_by = ?, reviewed_at = NOW()
+             SET status = ?, admin_remarks = ?, reviewed_by = ?, reviewed_at = NOW(),
+                 exports_allowed = COALESCE(?, exports_allowed), exports_used = 0
              WHERE id = ? AND status = 'pending'`,
-            [status, remarks || null, adminId != null ? toBinaryUUID(adminId) : null, toBinaryUUID(id)]
+            [status, remarks || null, adminId != null ? toBinaryUUID(adminId) : null,
+                exportsAllowed ?? null, toBinaryUUID(id)]
         );
         return (result.affectedRows || 0) > 0;
     },
