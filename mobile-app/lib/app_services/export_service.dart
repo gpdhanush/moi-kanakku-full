@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_file_downloader/flutter_file_downloader.dart';
 import 'package:intl/intl.dart';
@@ -13,6 +14,22 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:tamil_pdf_shaper/tamil_pdf_shaper.dart';
 import 'package:moi/app_configs/app_logs.dart';
+import 'package:moi/app_themes/app_colors.dart';
+
+PdfColor _pdf(Color color) => PdfColor.fromInt(color.toARGB32());
+
+/// PDF palette from the app's light theme (PDFs are always on white paper).
+abstract final class _PdfTheme {
+  static final PdfColor primary = _pdf(AppColors.lightPrimary);
+  static final PdfColor primarySoft = _pdf(AppColors.lightMoiReceivedSoft);
+  static final PdfColor headerFill = _pdf(
+    Color.lerp(AppColors.lightMoiReceivedSoft, AppColors.lightPrimary, 0.18)!,
+  );
+  static final PdfColor given = _pdf(AppColors.lightError);
+  static final PdfColor textPrimary = _pdf(AppColors.lightTextPrimary);
+  static final PdfColor textSecondary = _pdf(AppColors.lightTextSecondary);
+  static final PdfColor border = _pdf(AppColors.lightBorder);
+}
 
 class ExportService {
   static final NumberFormat _numberFormatter = NumberFormat('#,##,##,000.00');
@@ -130,6 +147,13 @@ class ExportService {
   }
 
   /// Generate PDF with transactions data
+  /// Builds the transactions PDF without saving or sharing it (for tests).
+  @visibleForTesting
+  static Future<pw.Document> buildTransactionsPdf(
+    List<dynamic> transactions,
+    Map<String, dynamic> userDetails,
+  ) => _generateTransactionsPdf(transactions, userDetails);
+
   static Future<pw.Document> _generateTransactionsPdf(
     List<dynamic> transactions,
     Map<String, dynamic> userDetails,
@@ -176,7 +200,7 @@ class ExportService {
             pw.Container(
               padding: const pw.EdgeInsets.all(10),
               decoration: pw.BoxDecoration(
-                border: pw.Border.all(color: PdfColors.blue, width: 2),
+                border: pw.Border.all(color: _PdfTheme.primary, width: 2),
                 borderRadius: pw.BorderRadius.circular(5),
               ),
               child: pw.Row(
@@ -195,7 +219,7 @@ class ExportService {
                             font: tamilFont,
                             fontSize: 18,
                             fontWeight: pw.FontWeight.bold,
-                            color: PdfColors.blue,
+                            color: _PdfTheme.primary,
                           ),
                         ),
                         pw.Text(
@@ -204,7 +228,7 @@ class ExportService {
                             font: tamilFont,
                             fontSize: 12,
                             fontWeight: pw.FontWeight.bold,
-                            color: PdfColors.grey700,
+                            color: _PdfTheme.textSecondary,
                           ),
                         ),
                       ],
@@ -214,7 +238,7 @@ class ExportService {
                     timestamp,
                     style: tamilTextStyle.copyWith(
                       fontSize: 8,
-                      color: PdfColors.grey600,
+                      color: _PdfTheme.textSecondary,
                     ),
                   ),
                 ],
@@ -227,7 +251,7 @@ class ExportService {
             pw.Container(
               padding: const pw.EdgeInsets.all(10),
               decoration: pw.BoxDecoration(
-                color: PdfColors.blue50,
+                color: _PdfTheme.primarySoft,
                 borderRadius: pw.BorderRadius.circular(5),
               ),
               child: pw.Row(
@@ -248,7 +272,7 @@ class ExportService {
                         style: pw.TextStyle(
                           font: tamilFont,
                           fontSize: 14,
-                          color: PdfColors.blue,
+                          color: _PdfTheme.primary,
                           fontWeight: pw.FontWeight.bold,
                         ),
                       ),
@@ -269,7 +293,7 @@ class ExportService {
                         style: pw.TextStyle(
                           font: tamilFont,
                           fontSize: 14,
-                          color: PdfColors.green,
+                          color: _PdfTheme.primary,
                           fontWeight: pw.FontWeight.bold,
                         ),
                       ),
@@ -290,7 +314,7 @@ class ExportService {
                         style: pw.TextStyle(
                           font: tamilFont,
                           fontSize: 14,
-                          color: PdfColors.red,
+                          color: _PdfTheme.given,
                           fontWeight: pw.FontWeight.bold,
                         ),
                       ),
@@ -304,16 +328,21 @@ class ExportService {
 
             // Transactions Table (auto pagination + better alignment)
             pw.TableHelper.fromTextArray(
-              headerDecoration: const pw.BoxDecoration(
-                color: PdfColors.blue100,
+              headerDecoration: pw.BoxDecoration(
+                color: _PdfTheme.headerFill,
                 borderRadius: pw.BorderRadius.all(pw.Radius.circular(3)),
               ),
               headerStyle: pw.TextStyle(
                 font: tamilFont,
                 fontSize: 10,
                 fontWeight: pw.FontWeight.bold,
+                color: _PdfTheme.textPrimary,
               ),
-              cellStyle: pw.TextStyle(font: tamilFont, fontSize: 9),
+              cellStyle: pw.TextStyle(
+                font: tamilFont,
+                fontSize: 9,
+                color: _PdfTheme.textPrimary,
+              ),
               columnWidths: {
                 0: const pw.FlexColumnWidth(2),
                 1: const pw.FlexColumnWidth(4),
@@ -373,10 +402,10 @@ class ExportService {
                 3: pw.Alignment.centerRight, // amount right aligned
                 4: pw.Alignment.center,
               },
-              border: const pw.TableBorder(
-                bottom: pw.BorderSide(color: PdfColors.grey300),
+              border: pw.TableBorder(
+                bottom: pw.BorderSide(color: _PdfTheme.border),
                 horizontalInside: pw.BorderSide(
-                  color: PdfColors.grey300,
+                  color: _PdfTheme.border,
                   width: 0.5,
                 ),
               ),
@@ -386,7 +415,7 @@ class ExportService {
             pw.Container(
               padding: const pw.EdgeInsets.all(10),
               decoration: pw.BoxDecoration(
-                border: pw.Border.all(color: PdfColors.grey400),
+                border: pw.Border.all(color: _PdfTheme.border),
                 borderRadius: pw.BorderRadius.circular(5),
               ),
               child: pw.Row(
@@ -403,7 +432,7 @@ class ExportService {
                         style: pw.TextStyle(
                           font: tamilFont,
                           fontSize: 10,
-                          color: PdfColors.blue,
+                          color: _PdfTheme.primary,
                         ),
                       ),
                     ],
@@ -413,7 +442,7 @@ class ExportService {
                     style: pw.TextStyle(
                       font: tamilFont,
                       fontSize: 8,
-                      color: PdfColors.grey600,
+                      color: _PdfTheme.textSecondary,
                     ),
                   ),
                 ],

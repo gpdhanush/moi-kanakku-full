@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moi/app_pages/export_payment/export_payment_page.dart';
 import 'package:moi/app_services/export_payment_services.dart';
@@ -196,6 +197,46 @@ void main() {
       findsOneWidget,
     );
     expect(find.byType(QrImageView), findsNothing);
+  });
+
+  test('extracts a 12-digit transaction ID from copied text', () {
+    expect(extractUpiTxnId('123456789012'), '123456789012');
+    expect(extractUpiTxnId('UPI Ref No: 1234 5678 9012'), '123456789012');
+    expect(extractUpiTxnId('UTR 1234-5678-9012 paid'), '123456789012');
+    expect(extractUpiTxnId('ref 12345'), isNull);
+    expect(extractUpiTxnId('1234567890123'), isNull);
+    expect(extractUpiTxnId(null), isNull);
+  });
+
+  testWidgets('paste button fills the transaction ID from the clipboard', (
+    tester,
+  ) async {
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      SystemChannels.platform,
+      (call) async => call.method == 'Clipboard.getData'
+          ? {'text': 'UPI Ref No. 6123 4567 8901'}
+          : null,
+    );
+    addTearDown(
+      () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        null,
+      ),
+    );
+    await pumpPage(tester, _status('none'));
+
+    final paste = find.byTooltip(languageProvider.tr('exportPayment.pasteTxn'));
+    await tester.scrollUntilVisible(
+      paste,
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(paste);
+    await tester.pumpAndSettle();
+
+    final field = tester.widget<TextField>(find.byType(TextField));
+    expect(field.controller?.text, '612345678901');
+    expect(find.text('0/12'), findsNothing);
   });
 
   testWidgets('pending user sees review state without the form', (

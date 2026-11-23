@@ -34,6 +34,9 @@ class TextFormWidget extends StatelessWidget {
   final String? suffixText;
   final String? prefixText;
   final VoidCallback? suffixIconOnPressed;
+
+  /// Tooltip / screen-reader label for the suffix icon button.
+  final String? suffixIconTooltip;
   final String? helperText;
   final String? errorText;
   final TextStyle? helperStyle;
@@ -73,6 +76,7 @@ class TextFormWidget extends StatelessWidget {
     this.inputFormatters,
     this.suffixIconTrue,
     this.suffixIcon,
+    this.suffixIconTooltip,
     this.prefixText,
     this.suffixText,
     this.suffixIconOnPressed,
@@ -259,6 +263,7 @@ class TextFormWidget extends StatelessWidget {
             visualDensity: VisualDensity.compact,
             constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
             icon: _fieldIcon(suffixIcon!, iconTint),
+            tooltip: suffixIconTooltip,
             onPressed: suffixIconOnPressed,
           ),
         ),

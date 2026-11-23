@@ -755,6 +755,8 @@
     "planLifetimeCaption": "Unlimited PDF exports, forever",
     "planPerExport": "₹{amount} per export",
     "bestValue": "Best value",
-    "lifetimeMessage": "Your lifetime plan is active. Export your Moi ledger as PDF any time."
+    "lifetimeMessage": "Your lifetime plan is active. Export your Moi ledger as PDF any time.",
+    "pasteTxn": "Paste transaction ID",
+    "pasteEmpty": "No 12-digit transaction ID found in the copied text"
   }
 }

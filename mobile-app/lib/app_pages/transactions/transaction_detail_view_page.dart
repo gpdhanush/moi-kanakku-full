@@ -5,7 +5,6 @@ import 'package:hugeicons/hugeicons.dart';
 import 'package:intl/intl.dart';
 import 'package:moi/app_configs/app_logs.dart';
 import 'package:moi/app_configs/app_images.dart';
-import 'package:moi/app_pages/export_payment/export_payment_page.dart';
 import 'package:moi/app_themes/index.dart';
 import 'package:moi/app_utils/index.dart';
 import 'package:moi/app_utils/app_providers/language_provider.dart';
@@ -250,9 +249,9 @@ class _TransactionDetailViewPageState extends State<TransactionDetailViewPage> {
     );
   }
 
+  /// Single moi PDF export is free: no payment check and no export credit used.
   Future<void> _sharePdf(BuildContext context) async {
     if (_isLoadingPdf) return;
-    if (!await ensureExportUnlocked(context) || !mounted) return;
     setState(() => _isLoadingPdf = true);
 
     try {
@@ -324,7 +323,6 @@ class _TransactionDetailViewPageState extends State<TransactionDetailViewPage> {
       final timestamp = DateTime.now().toIso8601String().replaceAll(':', '-');
       final fileName = '$firstName-$city-$timestamp.pdf';
 
-      await useExportCredit();
       if (mounted) setState(() => _isLoadingPdf = false);
       await Printing.sharePdf(bytes: bytes, filename: fileName);
     } catch (e) {

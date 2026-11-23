@@ -50,6 +50,16 @@ Future<void> useExportCredit() async {
   );
 }
 
+/// First 12-digit UPI transaction ID (UTR) in [text], ignoring spaces and
+/// dashes inside it; null when there is none.
+@visibleForTesting
+String? extractUpiTxnId(String? text) {
+  if (text == null) return null;
+  final compact = text.replaceAll(RegExp(r'(?<=\d)[\s-]+(?=\d)'), '');
+  final match = RegExp(r'(?<!\d)\d{12}(?!\d)').firstMatch(compact);
+  return match?.group(0);
+}
+
 class ExportPaymentPage extends StatefulWidget {
   final ExportPaymentStatus? initialStatus;
 
@@ -147,6 +157,22 @@ class _ExportPaymentPageState extends State<ExportPaymentPage> {
     if (upiId.isEmpty) return;
     await Clipboard.setData(ClipboardData(text: upiId));
     _alerts.successToast(lang.tr('exportPayment.copied'));
+  }
+
+  /// Pastes a UPI transaction ID from the clipboard. Picks the first
+  /// 12-digit number, so a copied line like "UPI Ref No: 1234 5678 9012" works.
+  Future<void> _pasteTxn(LanguageProvider lang) async {
+    final data = await Clipboard.getData(Clipboard.kTextPlain);
+    final txnId = extractUpiTxnId(data?.text);
+    if (txnId == null) {
+      _alerts.errorToast(lang.tr('exportPayment.pasteEmpty'));
+      return;
+    }
+    _txnController.value = TextEditingValue(
+      text: txnId,
+      selection: TextSelection.collapsed(offset: txnId.length),
+    );
+    _formKey.currentState?.validate();
   }
 
   String? _validateTxn(String? value, LanguageProvider lang) {
@@ -334,22 +360,32 @@ class _ExportPaymentPageState extends State<ExportPaymentPage> {
       const SizedBox(height: AppSpacing.lg),
       Form(
         key: _formKey,
-        child: TextFormField(
+        child: TextFormWidget(
+          title: lang.tr('exportPayment.txnLabel'),
+          hintText: lang.tr('exportPayment.txnHint'),
           controller: _txnController,
+          required: true,
+          prefixIcon: HugeIcons.strokeRoundedInvoice01,
           keyboardType: TextInputType.number,
           textInputAction: TextInputAction.done,
           maxLength: 12,
           inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-          autovalidateMode: AutovalidateMode.onUserInteraction,
+          autocorrect: false,
+          enableSuggestions: false,
           validator: (value) => _validateTxn(value, lang),
           onFieldSubmitted: (_) => _submit(lang),
-          decoration: InputDecoration(
-            labelText: lang.tr('exportPayment.txnLabel'),
-            hintText: lang.tr('exportPayment.txnHint'),
-            helperText: lang.tr('exportPayment.txnHelp'),
-            helperMaxLines: 3,
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
-          ),
+          suffixIconTrue: true,
+          suffixIcon: HugeIcons.strokeRoundedClipboardPaste,
+          suffixIconTooltip: lang.tr('exportPayment.pasteTxn'),
+          suffixIconOnPressed: () => _pasteTxn(lang),
+        ),
+      ),
+      const SizedBox(height: AppSpacing.xs),
+      Text(
+        lang.tr('exportPayment.txnHelp'),
+        style: AppTypography.label.copyWith(
+          color: AppColors.textSecondary,
+          fontWeight: FontWeight.w500,
         ),
       ),
       const SizedBox(height: AppSpacing.md),

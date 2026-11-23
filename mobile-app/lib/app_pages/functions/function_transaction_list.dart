@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:intl/intl.dart';
 import 'package:moi/app_configs/index.dart';
-import 'package:moi/app_pages/export_payment/export_payment_page.dart';
 import 'package:moi/app_services/index.dart';
+import 'package:moi/app_pages/export_payment/export_payment_page.dart';
 import 'package:moi/app_services/export_service.dart';
 import 'package:moi/app_storages/secure_storages.dart';
 import 'package:moi/app_themes/index.dart';
@@ -272,10 +272,10 @@ class _FunctionTransactionListState extends State<FunctionTransactionList> {
             child: MoiAppHeader.circleButton(
               tooltip: languageProvider.tr('transactionList.exportPdf'),
               onTap: _exportFunctionTransactionsPdf,
-              backgroundColor: Colors.white.withValues(alpha: 0.14),
-              child: const HugeIcon(
+              backgroundColor: AppColors.of(context).moiReceivedSoft,
+              child: HugeIcon(
                 icon: HugeIcons.strokeRoundedPdf02,
-                color: Colors.white,
+                color: Theme.of(context).colorScheme.primary,
                 size: 20,
                 strokeWidth: 1.9,
               ),
