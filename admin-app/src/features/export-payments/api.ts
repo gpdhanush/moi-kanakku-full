@@ -33,6 +33,17 @@ export interface ExportPaymentListResult {
   stats: ExportPaymentStats;
 }
 
+export interface ExportPaymentSettings {
+  upiId: string;
+  payeeName: string;
+  amount: number;
+  qrImageUrl: string | null;
+  upiUri: string | null;
+  configured: boolean;
+  updatedAt: string | null;
+  updatedByName: string | null;
+}
+
 interface ApiResponse<T> {
   responseType: string;
   responseValue: T;
@@ -52,6 +63,11 @@ function rethrow(error: unknown, fallback: string): never {
   if (data) throw new Error(messageFrom(data.responseValue, fallback));
   if (error instanceof Error) throw error;
   throw new Error(fallback);
+}
+
+function unwrap<T>(body: ApiResponse<T>, fallback: string): T {
+  if (body.responseType !== 'S') throw new Error(messageFrom(body.responseValue, fallback));
+  return body.responseValue;
 }
 
 export const exportPaymentsApi = {
@@ -110,6 +126,62 @@ export const exportPaymentsApi = {
       return response.data.responseValue;
     } catch (error) {
       rethrow(error, 'Update failed.');
+    }
+  },
+
+  getSettings: async (): Promise<ExportPaymentSettings> => {
+    try {
+      const response = await apiClient.get<ApiResponse<ExportPaymentSettings>>(
+        '/export-payments/admin/settings',
+        { skipErrorHandler: true }
+      );
+      return unwrap(response.data, 'Failed to load payment settings.');
+    } catch (error) {
+      rethrow(error, 'Failed to load payment settings.');
+    }
+  },
+
+  saveSettings: async (payload: {
+    upiId: string;
+    payeeName: string;
+    amount: number;
+  }): Promise<ExportPaymentSettings> => {
+    try {
+      const response = await apiClient.put<ApiResponse<ExportPaymentSettings>>(
+        '/export-payments/admin/settings',
+        payload,
+        { skipErrorHandler: true }
+      );
+      return unwrap(response.data, 'Failed to save payment settings.');
+    } catch (error) {
+      rethrow(error, 'Failed to save payment settings.');
+    }
+  },
+
+  uploadQr: async (file: File): Promise<ExportPaymentSettings> => {
+    try {
+      const form = new FormData();
+      form.append('file', file);
+      const response = await apiClient.post<ApiResponse<ExportPaymentSettings>>(
+        '/export-payments/admin/settings/qr',
+        form,
+        { skipErrorHandler: true }
+      );
+      return unwrap(response.data, 'Failed to upload QR image.');
+    } catch (error) {
+      rethrow(error, 'Failed to upload QR image.');
+    }
+  },
+
+  removeQr: async (): Promise<ExportPaymentSettings> => {
+    try {
+      const response = await apiClient.delete<ApiResponse<ExportPaymentSettings>>(
+        '/export-payments/admin/settings/qr',
+        { skipErrorHandler: true }
+      );
+      return unwrap(response.data, 'Failed to remove QR image.');
+    } catch (error) {
+      rethrow(error, 'Failed to remove QR image.');
     }
   },
 };

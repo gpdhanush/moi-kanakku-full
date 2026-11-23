@@ -130,4 +130,31 @@ void main() {
       findsOneWidget,
     );
   });
+
+  testWidgets('uploaded QR image replaces the generated QR', (tester) async {
+    const status = ExportPaymentStatus(
+      status: 'none',
+      canExport: false,
+      paymentConfigured: true,
+      upiId: '',
+      payeeName: '',
+      amount: 49,
+      upiUri: null,
+      qrImageUrl: 'https://example.com/uploads/export-payment/qr.png',
+      latestTxnId: null,
+      latestRemarks: '',
+    );
+    await pumpPage(tester, status);
+
+    expect(find.byType(Image), findsWidgets);
+    expect(find.byType(QrImageView), findsNothing);
+    expect(
+      find.text(languageProvider.tr('exportPayment.payWithApp')),
+      findsNothing,
+    );
+    expect(
+      find.text(languageProvider.tr('exportPayment.unavailable')),
+      findsNothing,
+    );
+  });
 }

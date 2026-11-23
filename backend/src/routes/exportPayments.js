@@ -11,5 +11,9 @@ router.post('/submit', authenticateToken, controller.submit);
 // Admin review endpoints
 router.get('/admin/list', authenticateAdminToken, controller.adminList);
 router.post('/admin/review', authenticateAdminToken, controller.adminReview);
+router.get('/admin/settings', authenticateAdminToken, controller.adminGetSettings);
+router.put('/admin/settings', authenticateAdminToken, controller.adminSaveSettings);
+router.post('/admin/settings/qr', authenticateAdminToken, controller.adminUploadQr);
+router.delete('/admin/settings/qr', authenticateAdminToken, controller.adminRemoveQr);
 
 module.exports = router;

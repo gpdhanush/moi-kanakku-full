@@ -51,6 +51,7 @@ import {
   type ExportPaymentStatus,
   type ExportPaymentStatusFilter,
 } from "@/features/export-payments/api";
+import { PaymentSettingsCard } from "@/features/export-payments/PaymentSettingsCard";
 import { displayValue, formatDateTime } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
 
@@ -156,6 +157,8 @@ export default function ExportPayments() {
           icon={BadgeIndianRupee}
           description="Check each UPI transaction ID in your bank or UPI app, then approve or reject it. Approval unlocks PDF export for that user."
         />
+
+        <PaymentSettingsCard />
 
         <div className="grid gap-4 sm:grid-cols-3">
           {isLoading || !stats ? (

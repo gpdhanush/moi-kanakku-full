@@ -224,7 +224,8 @@ class _ExportPaymentPageState extends State<ExportPaymentPage> {
       ];
     }
 
-    if (!status.paymentConfigured || status.upiUri == null) {
+    if (!status.paymentConfigured ||
+        (status.upiUri == null && status.qrImageUrl == null)) {
       return [
         _StatusCard(
           icon: HugeIcons.strokeRoundedAlert02,
@@ -264,22 +265,24 @@ class _ExportPaymentPageState extends State<ExportPaymentPage> {
         upiLabel: lang.tr('exportPayment.upiId'),
         onCopy: () => _copyUpiId(lang),
       ),
-      const SizedBox(height: AppSpacing.sm),
-      OutlinedButton.icon(
-        onPressed: () => _openUpiApp(lang),
-        icon: HugeIcon(
-          icon: HugeIcons.strokeRoundedSmartPhone01,
-          color: primary,
-          size: 18,
-        ),
-        label: Text(lang.tr('exportPayment.payWithApp')),
-        style: OutlinedButton.styleFrom(
-          minimumSize: const Size.fromHeight(48),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
+      if (status.upiUri != null) ...[
+        const SizedBox(height: AppSpacing.sm),
+        OutlinedButton.icon(
+          onPressed: () => _openUpiApp(lang),
+          icon: HugeIcon(
+            icon: HugeIcons.strokeRoundedSmartPhone01,
+            color: primary,
+            size: 18,
+          ),
+          label: Text(lang.tr('exportPayment.payWithApp')),
+          style: OutlinedButton.styleFrom(
+            minimumSize: const Size.fromHeight(48),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+            ),
           ),
         ),
-      ),
+      ],
       const SizedBox(height: AppSpacing.lg),
       Form(
         key: _formKey,
@@ -357,12 +360,16 @@ class _QrCard extends StatelessWidget {
               color: AppColors.textPrimary,
             ),
           ),
-          const SizedBox(height: AppSpacing.xxs),
-          Text(
-            status.payeeName,
-            textAlign: TextAlign.center,
-            style: AppTypography.label.copyWith(color: AppColors.textSecondary),
-          ),
+          if (status.payeeName.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.xxs),
+            Text(
+              status.payeeName,
+              textAlign: TextAlign.center,
+              style: AppTypography.label.copyWith(
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ],
           const SizedBox(height: AppSpacing.md),
           // QR stays dark-on-white in both themes so every UPI scanner reads it.
           Container(
@@ -371,12 +378,7 @@ class _QrCard extends StatelessWidget {
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: QrImageView(
-              data: status.upiUri!,
-              size: 220,
-              backgroundColor: Colors.white,
-              semanticsLabel: scanLabel,
-            ),
+            child: _QrImage(status: status, semanticsLabel: scanLabel),
           ),
           const SizedBox(height: AppSpacing.sm),
           Text(
@@ -384,38 +386,91 @@ class _QrCard extends StatelessWidget {
             textAlign: TextAlign.center,
             style: AppTypography.body.copyWith(color: AppColors.textSecondary),
           ),
-          const SizedBox(height: AppSpacing.sm),
-          InkWell(
-            onTap: onCopy,
-            borderRadius: BorderRadius.circular(10),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.sm,
-                vertical: AppSpacing.xs,
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Flexible(
-                    child: Text(
-                      '$upiLabel: ${status.upiId}',
-                      style: AppTypography.label.copyWith(
-                        color: AppColors.textPrimary,
-                        fontWeight: FontWeight.w700,
+          if (status.upiId.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.sm),
+            InkWell(
+              onTap: onCopy,
+              borderRadius: BorderRadius.circular(10),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.sm,
+                  vertical: AppSpacing.xs,
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Flexible(
+                      child: Text(
+                        '$upiLabel: ${status.upiId}',
+                        style: AppTypography.label.copyWith(
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: AppSpacing.xs),
-                  HugeIcon(
-                    icon: HugeIcons.strokeRoundedCopy01,
-                    color: primary,
-                    size: 18,
-                  ),
-                ],
+                    const SizedBox(width: AppSpacing.xs),
+                    HugeIcon(
+                      icon: HugeIcons.strokeRoundedCopy01,
+                      color: primary,
+                      size: 18,
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
+          ],
         ],
+      ),
+    );
+  }
+}
+
+/// Admin-uploaded QR image when set (falls back to the generated QR if it
+/// fails to load), otherwise a QR generated from the UPI payment link.
+class _QrImage extends StatelessWidget {
+  static const double size = 220;
+  final ExportPaymentStatus status;
+  final String semanticsLabel;
+
+  const _QrImage({required this.status, required this.semanticsLabel});
+
+  Widget _generated() {
+    final uri = status.upiUri;
+    if (uri == null) {
+      return const SizedBox(
+        width: size,
+        height: size,
+        child: Center(child: Icon(Icons.qr_code_2, size: 64)),
+      );
+    }
+    return QrImageView(
+      data: uri,
+      size: size,
+      backgroundColor: Colors.white,
+      semanticsLabel: semanticsLabel,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final imageUrl = status.qrImageUrl;
+    if (imageUrl == null) return _generated();
+    return Semantics(
+      label: semanticsLabel,
+      image: true,
+      child: Image.network(
+        imageUrl,
+        width: size,
+        height: size,
+        fit: BoxFit.contain,
+        loadingBuilder: (context, child, progress) => progress == null
+            ? child
+            : const SizedBox(
+                width: size,
+                height: size,
+                child: Center(child: CircularProgressIndicator()),
+              ),
+        errorBuilder: (context, error, stackTrace) => _generated(),
       ),
     );
   }

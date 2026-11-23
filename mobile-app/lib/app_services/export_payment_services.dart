@@ -11,6 +11,9 @@ class ExportPaymentStatus {
   final String payeeName;
   final double amount;
   final String? upiUri;
+
+  /// Admin-uploaded QR image; shown instead of the generated QR when set.
+  final String? qrImageUrl;
   final String? latestTxnId;
   final String latestRemarks;
 
@@ -22,6 +25,7 @@ class ExportPaymentStatus {
     required this.payeeName,
     required this.amount,
     required this.upiUri,
+    this.qrImageUrl,
     required this.latestTxnId,
     required this.latestRemarks,
   });
@@ -32,6 +36,11 @@ class ExportPaymentStatus {
   String get amountLabel => amount == amount.roundToDouble()
       ? amount.toStringAsFixed(0)
       : amount.toStringAsFixed(2);
+
+  static String? _nonEmpty(dynamic value) {
+    final text = value?.toString().trim() ?? '';
+    return text.isEmpty ? null : text;
+  }
 
   static ExportPaymentStatus? fromResponse(dynamic response) {
     if (response is! Map || response['responseType'] != 'S') return null;
@@ -46,7 +55,8 @@ class ExportPaymentStatus {
       upiId: payment['upiId']?.toString() ?? '',
       payeeName: payment['payeeName']?.toString() ?? '',
       amount: double.tryParse(payment['amount']?.toString() ?? '') ?? 49,
-      upiUri: payment['upiUri']?.toString(),
+      upiUri: _nonEmpty(payment['upiUri']),
+      qrImageUrl: _nonEmpty(payment['qrImageUrl']),
       latestTxnId: latest?['upiTxnId']?.toString(),
       latestRemarks: latest?['adminRemarks']?.toString() ?? '',
     );
