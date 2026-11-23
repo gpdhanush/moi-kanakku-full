@@ -3,6 +3,24 @@ import { apiClient } from '@/lib/axios';
 export type ExportPaymentStatus = 'pending' | 'approved' | 'rejected';
 export type ExportPaymentStatusFilter = ExportPaymentStatus | 'all';
 
+export type ExportPlanId = 'single' | 'pack5' | 'lifetime';
+
+/** Fixed export plan offered in the app. `exports: null` = unlimited (lifetime). */
+export interface ExportPlan {
+  id: ExportPlanId;
+  exports: number | null;
+  lifetime: boolean;
+  amount: number;
+  upiUri: string | null;
+}
+
+/** '1 export', '5 exports' or 'Unlimited (lifetime)'. */
+export function planLabel(planId: string | null, exports: number | null): string {
+  if (planId === 'lifetime' || (planId && exports == null)) return 'Unlimited (lifetime)';
+  if (exports == null) return '—';
+  return `${exports} export${exports === 1 ? '' : 's'}`;
+}
+
 export interface ExportPayment {
   id: string;
   userId: string;
@@ -10,6 +28,8 @@ export interface ExportPayment {
   userEmail: string | null;
   userMobile: string | null;
   amount: number;
+  /** Plan the user paid for; null on payments made before plans existed. */
+  plan: ExportPlanId | null;
   upiTxnId: string;
   status: ExportPaymentStatus;
   /** PDF exports this payment buys / has used (set on approval). */
@@ -39,7 +59,7 @@ export interface ExportPaymentListResult {
 export interface ExportPaymentSettings {
   upiId: string;
   payeeName: string;
-  amount: number;
+  plans: ExportPlan[];
   qrImageUrl: string | null;
   upiUri: string | null;
   configured: boolean;
@@ -147,7 +167,6 @@ export const exportPaymentsApi = {
   saveSettings: async (payload: {
     upiId: string;
     payeeName: string;
-    amount: number;
   }): Promise<ExportPaymentSettings> => {
     try {
       const response = await apiClient.put<ApiResponse<ExportPaymentSettings>>(

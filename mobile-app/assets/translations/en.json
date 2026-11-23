@@ -745,6 +745,16 @@
     "needHelp": "Need help? Contact admin",
     "exhaustedTitle": "All PDF exports used",
     "exhaustedMessage": "You have used all {total} PDF exports from your last payment. Pay again to export more.",
-    "exportsLeftToast": "PDF exports left: {left} of {total}"
+    "exportsLeftToast": "PDF exports left: {left} of {total}",
+    "choosePlan": "Choose a plan",
+    "subtitleOne": "Pay ₹{amount} to export your Moi ledger as PDF once.",
+    "subtitleLifetime": "Pay ₹{amount} once to export your Moi ledger as PDF any time, for life.",
+    "planOne": "1 export",
+    "planMany": "{count} exports",
+    "planLifetime": "Lifetime",
+    "planLifetimeCaption": "Unlimited PDF exports, forever",
+    "planPerExport": "₹{amount} per export",
+    "bestValue": "Best value",
+    "lifetimeMessage": "Your lifetime plan is active. Export your Moi ledger as PDF any time."
   }
 }

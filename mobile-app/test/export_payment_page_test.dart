@@ -7,10 +7,38 @@ import 'package:moi/app_utils/app_providers/language_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
-ExportPaymentStatus _status(String status, {String remarks = ''}) {
+const _plans = [
+  ExportPlan(
+    id: 'single',
+    exports: 1,
+    amount: 19,
+    upiUri: 'upi://pay?pa=payee@bank&am=19.00&cu=INR',
+  ),
+  ExportPlan(
+    id: 'pack5',
+    exports: 5,
+    amount: 49,
+    upiUri: 'upi://pay?pa=payee@bank&am=49.00&cu=INR',
+  ),
+  ExportPlan(
+    id: 'lifetime',
+    exports: null,
+    amount: 499,
+    upiUri: 'upi://pay?pa=payee@bank&am=499.00&cu=INR',
+  ),
+];
+
+ExportPaymentStatus _status(
+  String status, {
+  String remarks = '',
+  bool lifetime = false,
+}) {
   return ExportPaymentStatus(
     status: status,
     canExport: status == 'approved',
+    lifetime: lifetime,
+    plans: _plans,
+    defaultPlanId: 'pack5',
     remainingExports: status == 'approved' ? 2 : 0,
     exportsPerPayment: 3,
     paymentConfigured: true,
@@ -61,13 +89,42 @@ void main() {
           'payeeName': 'Moi',
           'amount': 49,
           'upiUri': 'upi://pay?pa=payee@bank',
+          'defaultPlan': 'pack5',
+          'plans': [
+            {'id': 'single', 'exports': 1, 'amount': 19, 'upiUri': 'u1'},
+            {'id': 'pack5', 'exports': 5, 'amount': 49, 'upiUri': 'u5'},
+            {
+              'id': 'lifetime',
+              'exports': null,
+              'lifetime': true,
+              'amount': 499,
+              'upiUri': 'ul',
+            },
+          ],
         },
       },
     });
+    expect(parsed?.plans.map((p) => p.id), ['single', 'pack5', 'lifetime']);
+    expect(parsed?.plans.last.isLifetime, isTrue);
+    expect(parsed?.plans.first.exports, 1);
+    expect(parsed?.defaultPlan.id, 'pack5');
     expect(parsed?.isRejected, isTrue);
     expect(parsed?.latestRemarks, 'Not found');
     expect(parsed?.amountLabel, '49');
     expect(ExportPaymentStatus.fromResponse({'responseType': 'F'}), isNull);
+  });
+
+  test('falls back to the legacy single price when no plans are sent', () {
+    final parsed = ExportPaymentStatus.fromResponse({
+      'responseType': 'S',
+      'responseValue': {
+        'status': 'none',
+        'payment': {'configured': true, 'amount': 49, 'upiUri': 'legacy'},
+      },
+    });
+    expect(parsed?.availablePlans, hasLength(1));
+    expect(parsed?.defaultPlan.id, isNull);
+    expect(parsed?.defaultPlan.upiUri, 'legacy');
   });
 
   test('accepts only 12-digit UPI transaction IDs', () {
@@ -98,6 +155,47 @@ void main() {
       find.text(languageProvider.tr('exportPayment.txnInvalid')),
       findsOneWidget,
     );
+  });
+
+  testWidgets('picking a plan updates the price and the QR code', (
+    tester,
+  ) async {
+    await pumpPage(tester, _status('none'));
+
+    Finder qrFor(int plan) =>
+        find.byKey(ValueKey<String>(_plans[plan].upiUri!));
+    expect(find.text('₹ 49'), findsOneWidget);
+    expect(qrFor(1), findsOneWidget);
+
+    await tester.tap(find.text(languageProvider.tr('exportPayment.planOne')));
+    await tester.pumpAndSettle();
+    expect(find.text('₹ 19'), findsOneWidget);
+    expect(qrFor(0), findsOneWidget);
+
+    await tester.tap(
+      find.text(languageProvider.tr('exportPayment.planLifetime')),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('₹ 499'), findsOneWidget);
+    expect(qrFor(2), findsOneWidget);
+    expect(
+      find.text(
+        languageProvider
+            .tr('exportPayment.subtitleLifetime')
+            .replaceAll('{amount}', '499'),
+      ),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('lifetime user sees the lifetime message', (tester) async {
+    await pumpPage(tester, _status('approved', lifetime: true));
+
+    expect(
+      find.text(languageProvider.tr('exportPayment.lifetimeMessage')),
+      findsOneWidget,
+    );
+    expect(find.byType(QrImageView), findsNothing);
   });
 
   testWidgets('pending user sees review state without the form', (

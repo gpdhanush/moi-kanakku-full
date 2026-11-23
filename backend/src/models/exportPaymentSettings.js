@@ -35,16 +35,16 @@ const ExportPaymentSettings = {
         }
     },
 
-    async saveDetails({ upiId, payeeName, amount, updatedBy }) {
+    /** Prices are fixed export plans now, so the legacy `amount` column is left as is. */
+    async saveDetails({ upiId, payeeName, updatedBy }) {
         await db.query(
-            `INSERT INTO export_payment_settings (id, upi_id, payee_name, amount, updated_by)
-             VALUES (?, ?, ?, ?, ?)
+            `INSERT INTO export_payment_settings (id, upi_id, payee_name, updated_by)
+             VALUES (?, ?, ?, ?)
              ON DUPLICATE KEY UPDATE
                upi_id = VALUES(upi_id),
                payee_name = VALUES(payee_name),
-               amount = VALUES(amount),
                updated_by = VALUES(updated_by)`,
-            [SETTINGS_ID, upiId || null, payeeName || null, amount, updatedBy ? toBinaryUUID(updatedBy) : null]
+            [SETTINGS_ID, upiId || null, payeeName || null, updatedBy ? toBinaryUUID(updatedBy) : null]
         );
         return ExportPaymentSettings.get();
     },

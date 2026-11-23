@@ -18,8 +18,8 @@ class ExportLimitReachedException implements Exception {
 
 /// Returns true when the signed-in user has paid PDF exports left.
 ///
-/// Each approved payment buys a fixed number of exports (3 by default). When
-/// none are left, opens [ExportPaymentPage] (QR code, transaction ID, review
+/// The user buys a plan: 1 export (₹19), 5 exports (₹49) or lifetime (₹499,
+/// unlimited). When none are left, opens [ExportPaymentPage] (QR code, transaction ID, review
 /// status) and returns true only if the user leaves it with exports available.
 Future<bool> ensureExportUnlocked(BuildContext context) async {
   final status = await ExportPaymentServices().getStatus();
@@ -37,6 +37,8 @@ Future<bool> ensureExportUnlocked(BuildContext context) async {
 Future<void> useExportCredit() async {
   final status = await ExportPaymentServices().consume();
   if (status == null) throw const ExportLimitReachedException();
+  // Lifetime exports are not counted, so there is nothing to report.
+  if (status.lifetime) return;
   final context = navigatorKey.currentState?.overlay?.context;
   final template =
       context?.read<LanguageProvider>().tr('exportPayment.exportsLeftToast') ??
@@ -64,6 +66,7 @@ class _ExportPaymentPageState extends State<ExportPaymentPage> {
   final TextEditingController _txnController = TextEditingController();
 
   ExportPaymentStatus? _status;
+  String? _selectedPlanId;
   bool _loading = false;
   bool _submitting = false;
 
@@ -90,13 +93,26 @@ class _ExportPaymentPageState extends State<ExportPaymentPage> {
     });
   }
 
+  /// The plan the user picked, else the backend's default plan.
+  ExportPlan _planFor(ExportPaymentStatus status) {
+    final selected = _selectedPlanId;
+    if (selected != null) {
+      for (final plan in status.availablePlans) {
+        if (plan.id == selected) return plan;
+      }
+    }
+    return status.defaultPlan;
+  }
+
   Future<void> _submit(LanguageProvider lang) async {
     if (_submitting) return;
     if (!(_formKey.currentState?.validate() ?? false)) return;
     FocusScope.of(context).unfocus();
     setState(() => _submitting = true);
+    final current = _status;
     final status = await _services.submit(
       _txnController.text.trim(),
+      planId: current == null ? null : _planFor(current).id,
       showLoading: false,
     );
     if (!mounted) return;
@@ -109,7 +125,8 @@ class _ExportPaymentPageState extends State<ExportPaymentPage> {
   }
 
   Future<void> _openUpiApp(LanguageProvider lang) async {
-    final uri = _status?.upiUri;
+    final current = _status;
+    final uri = current == null ? null : _planFor(current).upiUri;
     if (uri == null) return;
     var launched = false;
     try {
@@ -195,10 +212,9 @@ class _ExportPaymentPageState extends State<ExportPaymentPage> {
           icon: HugeIcons.strokeRoundedCheckmarkCircle02,
           color: AppColors.lightSuccess,
           title: lang.tr('exportPayment.approvedTitle'),
-          message: _withCounts(
-            lang.tr('exportPayment.approvedMessage'),
-            status,
-          ),
+          message: status.lifetime
+              ? lang.tr('exportPayment.lifetimeMessage')
+              : _withCounts(lang.tr('exportPayment.approvedMessage'), status),
         ),
         const SizedBox(height: AppSpacing.lg),
         AppButton(
@@ -228,8 +244,9 @@ class _ExportPaymentPageState extends State<ExportPaymentPage> {
       ];
     }
 
+    final plan = _planFor(status);
     if (!status.paymentConfigured ||
-        (status.upiUri == null && status.qrImageUrl == null)) {
+        (plan.upiUri == null && status.qrImageUrl == null)) {
       return [
         _StatusCard(
           icon: HugeIcons.strokeRoundedAlert02,
@@ -268,21 +285,35 @@ class _ExportPaymentPageState extends State<ExportPaymentPage> {
         const SizedBox(height: AppSpacing.md),
       ],
       Text(
-        lang
-            .tr('exportPayment.subtitle')
-            .replaceAll('{amount}', status.amountLabel)
-            .replaceAll('{count}', '${status.exportsPerPayment}'),
+        lang.tr('exportPayment.choosePlan'),
+        style: AppTypography.label.copyWith(
+          color: AppColors.textPrimary,
+          fontWeight: FontWeight.w700,
+          fontSize: 15,
+        ),
+      ),
+      const SizedBox(height: AppSpacing.xs),
+      _PlanPicker(
+        plans: status.availablePlans,
+        selected: plan,
+        lang: lang,
+        onSelected: (picked) => setState(() => _selectedPlanId = picked.id),
+      ),
+      const SizedBox(height: AppSpacing.sm),
+      Text(
+        _planSubtitle(lang, plan),
         style: AppTypography.body.copyWith(color: AppColors.textSecondary),
       ),
       const SizedBox(height: AppSpacing.md),
       _QrCard(
         status: status,
+        plan: plan,
         primary: primary,
         scanLabel: lang.tr('exportPayment.scanToPay'),
         upiLabel: lang.tr('exportPayment.upiId'),
         onCopy: () => _copyUpiId(lang),
       ),
-      if (status.upiUri != null) ...[
+      if (plan.upiUri != null) ...[
         const SizedBox(height: AppSpacing.sm),
         OutlinedButton.icon(
           onPressed: () => _openUpiApp(lang),
@@ -331,6 +362,18 @@ class _ExportPaymentPageState extends State<ExportPaymentPage> {
     ];
   }
 
+  String _planSubtitle(LanguageProvider lang, ExportPlan plan) {
+    final key = plan.isLifetime
+        ? 'exportPayment.subtitleLifetime'
+        : plan.exports == 1
+        ? 'exportPayment.subtitleOne'
+        : 'exportPayment.subtitle';
+    return lang
+        .tr(key)
+        .replaceAll('{amount}', plan.amountLabel)
+        .replaceAll('{count}', '${plan.exports ?? ''}');
+  }
+
   String _withCounts(String text, ExportPaymentStatus status) => text
       .replaceAll('{left}', '${status.remainingExports}')
       .replaceAll('{total}', '${status.exportsPerPayment}');
@@ -349,8 +392,191 @@ class _ExportPaymentPageState extends State<ExportPaymentPage> {
   }
 }
 
+/// Selectable list of export plans; the chosen one drives the QR and amount.
+class _PlanPicker extends StatelessWidget {
+  final List<ExportPlan> plans;
+  final ExportPlan selected;
+  final LanguageProvider lang;
+  final ValueChanged<ExportPlan> onSelected;
+
+  const _PlanPicker({
+    required this.plans,
+    required this.selected,
+    required this.lang,
+    required this.onSelected,
+  });
+
+  String _title(ExportPlan plan) {
+    if (plan.isLifetime) return lang.tr('exportPayment.planLifetime');
+    if (plan.exports == 1) return lang.tr('exportPayment.planOne');
+    return lang
+        .tr('exportPayment.planMany')
+        .replaceAll('{count}', '${plan.exports}');
+  }
+
+  String _caption(ExportPlan plan) {
+    if (plan.isLifetime) return lang.tr('exportPayment.planLifetimeCaption');
+    final count = plan.exports ?? 1;
+    final each = plan.amount / (count < 1 ? 1 : count);
+    final label = each == each.roundToDouble()
+        ? each.toStringAsFixed(0)
+        : each.toStringAsFixed(1);
+    return lang.tr('exportPayment.planPerExport').replaceAll('{amount}', label);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
+    return Column(
+      children: [
+        for (final plan in plans) ...[
+          _PlanTile(
+            title: _title(plan),
+            caption: _caption(plan),
+            price: '₹${plan.amountLabel}',
+            badge: plan.isLifetime ? lang.tr('exportPayment.bestValue') : null,
+            selected: plan.id == selected.id,
+            primary: primary,
+            onTap: () => onSelected(plan),
+          ),
+          if (plan != plans.last) const SizedBox(height: AppSpacing.xs),
+        ],
+      ],
+    );
+  }
+}
+
+class _PlanTile extends StatelessWidget {
+  final String title;
+  final String caption;
+  final String price;
+  final String? badge;
+  final bool selected;
+  final Color primary;
+  final VoidCallback onTap;
+
+  const _PlanTile({
+    required this.title,
+    required this.caption,
+    required this.price,
+    required this.badge,
+    required this.selected,
+    required this.primary,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      container: true,
+      button: true,
+      inMutuallyExclusiveGroup: true,
+      checked: selected,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(14),
+          child: AnimatedContainer(
+            duration: MediaQuery.disableAnimationsOf(context)
+                ? Duration.zero
+                : const Duration(milliseconds: 180),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.sm,
+            ),
+            decoration: BoxDecoration(
+              color: selected
+                  ? primary.withValues(alpha: 0.08)
+                  : AppColors.surface,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: selected ? primary : AppColors.borderSubtle,
+                width: selected ? 1.6 : 1,
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  selected
+                      ? Icons.radio_button_checked
+                      : Icons.radio_button_unchecked,
+                  color: selected ? primary : AppColors.textMuted,
+                  size: 22,
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Wrap(
+                        spacing: AppSpacing.xs,
+                        runSpacing: AppSpacing.xxs,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: [
+                          Text(
+                            title,
+                            style: AppTypography.label.copyWith(
+                              color: AppColors.textPrimary,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 15,
+                            ),
+                          ),
+                          if (badge != null)
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: AppSpacing.xs,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.saffronGold.withValues(
+                                  alpha: 0.18,
+                                ),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                badge!,
+                                style: AppTypography.label.copyWith(
+                                  color: AppColors.textPrimary,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        caption,
+                        style: AppTypography.label.copyWith(
+                          color: AppColors.textSecondary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Text(
+                  price,
+                  style: AppTypography.label.copyWith(
+                    color: selected ? primary : AppColors.textPrimary,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 18,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _QrCard extends StatelessWidget {
   final ExportPaymentStatus status;
+  final ExportPlan plan;
   final Color primary;
   final String scanLabel;
   final String upiLabel;
@@ -358,6 +584,7 @@ class _QrCard extends StatelessWidget {
 
   const _QrCard({
     required this.status,
+    required this.plan,
     required this.primary,
     required this.scanLabel,
     required this.upiLabel,
@@ -376,7 +603,7 @@ class _QrCard extends StatelessWidget {
       child: Column(
         children: [
           Text(
-            '₹ ${status.amountLabel}',
+            '₹ ${plan.amountLabel}',
             style: AppTypography.amountLarge.copyWith(
               color: AppColors.textPrimary,
             ),
@@ -399,7 +626,11 @@ class _QrCard extends StatelessWidget {
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: _QrImage(status: status, semanticsLabel: scanLabel),
+            child: _QrImage(
+              status: status,
+              upiUri: plan.upiUri,
+              semanticsLabel: scanLabel,
+            ),
           ),
           const SizedBox(height: AppSpacing.sm),
           Text(
@@ -451,12 +682,17 @@ class _QrCard extends StatelessWidget {
 class _QrImage extends StatelessWidget {
   static const double size = 220;
   final ExportPaymentStatus status;
+  final String? upiUri;
   final String semanticsLabel;
 
-  const _QrImage({required this.status, required this.semanticsLabel});
+  const _QrImage({
+    required this.status,
+    required this.upiUri,
+    required this.semanticsLabel,
+  });
 
   Widget _generated() {
-    final uri = status.upiUri;
+    final uri = upiUri;
     if (uri == null) {
       return const SizedBox(
         width: size,
@@ -465,6 +701,7 @@ class _QrImage extends StatelessWidget {
       );
     }
     return QrImageView(
+      key: ValueKey(uri),
       data: uri,
       size: size,
       backgroundColor: Colors.white,

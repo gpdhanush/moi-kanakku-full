@@ -48,6 +48,7 @@ import { toast } from "@/hooks/use-toast";
 import {
   exportPaymentsApi,
   type ExportPayment,
+  planLabel,
   type ExportPaymentStatus,
   type ExportPaymentStatusFilter,
 } from "@/features/export-payments/api";
@@ -69,6 +70,14 @@ const STATUS_STYLES: Record<ExportPaymentStatus, string> = {
     "border-transparent bg-emerald-500/15 text-emerald-700 dark:text-emerald-300",
   rejected: "border-transparent bg-rose-500/15 text-rose-700 dark:text-rose-300",
 };
+
+const PLAN_EXPORTS: Record<string, number | null> = { single: 1, pack5: 5, lifetime: null };
+
+/** Plan bought by a payment, e.g. "5 exports" or "Unlimited (lifetime)". */
+const paymentPlanLabel = (payment: ExportPayment) =>
+  payment.plan
+    ? planLabel(payment.plan, PLAN_EXPORTS[payment.plan] ?? null)
+    : planLabel(null, payment.exportsAllowed);
 
 const formatAmount = (amount: number) =>
   `₹${Number(amount || 0).toLocaleString("en-IN", {
@@ -332,6 +341,9 @@ export default function ExportPayments() {
                       </TableCell>
                       <TableCell className="text-right font-medium tabular-nums">
                         {formatAmount(row.amount)}
+                        <p className="text-xs font-normal text-muted-foreground">
+                          {paymentPlanLabel(row)}
+                        </p>
                       </TableCell>
                       <TableCell className="font-mono text-sm tracking-wide">
                         {row.upiTxnId}
@@ -343,7 +355,10 @@ export default function ExportPayments() {
                         <Badge className={cn("capitalize", STATUS_STYLES[row.status])}>
                           {row.status}
                         </Badge>
-                        {row.status === "approved" && row.exportsAllowed != null && (
+                        {row.status === "approved" && row.plan === "lifetime" && (
+                          <p className="mt-1 text-xs font-medium">Lifetime · unlimited exports</p>
+                        )}
+                        {row.status === "approved" && row.plan !== "lifetime" && row.exportsAllowed != null && (
                           <p className="mt-1 text-xs font-medium tabular-nums">
                             Exports used: {row.exportsUsed ?? 0} / {row.exportsAllowed}
                           </p>
@@ -468,6 +483,8 @@ export default function ExportPayments() {
                 <dd className="font-medium">{displayValue(reviewTarget.payment.userName)}</dd>
                 <dt className="text-muted-foreground">Amount</dt>
                 <dd className="font-medium">{formatAmount(reviewTarget.payment.amount)}</dd>
+                <dt className="text-muted-foreground">Plan</dt>
+                <dd className="font-medium">{paymentPlanLabel(reviewTarget.payment)}</dd>
                 <dt className="text-muted-foreground">Transaction ID</dt>
                 <dd className="font-mono">{reviewTarget.payment.upiTxnId}</dd>
               </dl>

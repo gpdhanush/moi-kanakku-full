@@ -7,7 +7,7 @@ const { recordAuditLog } = require('../helpers/auditLog');
 const path = require('path');
 const fs = require('fs');
 const multer = require('multer');
-const { getExportPaymentConfig } = require('../config/exportPayment');
+const { getExportPaymentConfig, findPlan, DEFAULT_PLAN } = require('../config/exportPayment');
 const { ExportPaymentSettings } = require('../models/exportPaymentSettings');
 const { queuePushNotification } = require('./notificationController');
 const { Notification, NotificationType } = require('../models/notificationModels');
@@ -31,6 +31,7 @@ const formatPayment = (p) => p && ({
     userEmail: p.userEmail,
     userMobile: p.userMobile,
     amount: p.amount,
+    plan: p.plan,
     upiTxnId: p.upiTxnId,
     exportsAllowed: p.exportsAllowed,
     exportsUsed: p.exportsUsed,
@@ -47,34 +48,43 @@ const fail = (res, code, message) =>
     res.status(code).json({ responseType: 'F', responseValue: { message } });
 
 /**
- * Export access for a user. Each approved payment buys a fixed number of PDF
- * exports (default 3). The app calls POST /consume once per export, right
- * before sharing the generated PDF.
+ * Export access for a user. The user picks a plan when paying: single (1
+ * export, ₹19), pack5 (5 exports, ₹49) or lifetime (unlimited, ₹499). The app
+ * calls POST /consume once per export, right before sharing the generated PDF.
  *
- * status: approved (exports left) | pending | rejected | exhausted (all used) | none
+ * status: approved (can export) | pending | rejected | exhausted (all used) | none
  */
 async function buildStatus(userId, req) {
     const config = await getExportPaymentConfig(req);
-    const [remaining, history] = await Promise.all([
+    const [lifetime, remaining, allowance, history] = await Promise.all([
+        Model.hasLifetime(userId),
         Model.remainingExports(userId),
+        Model.latestApprovedAllowance(userId),
         Model.listForUser(userId, 5),
     ]);
     const latest = history[0] || null;
+    const canExport = lifetime || remaining > 0;
     let status = 'none';
-    if (remaining > 0) status = 'approved';
+    if (canExport) status = 'approved';
     else if (latest?.status === 'approved') status = 'exhausted';
     else if (latest) status = latest.status;
+    // Exports granted by the last approved pack, for "{left} of {total}" copy.
+    const totalExports = allowance ?? config.exportsPerPayment;
 
     return {
         status,
-        canExport: remaining > 0,
+        canExport,
+        lifetime,
         remainingExports: remaining,
-        exportsPerPayment: config.exportsPerPayment,
+        exportsPerPayment: totalExports,
         latest: formatPayment(latest),
         payment: {
             configured: config.configured,
             upiId: config.upiId,
             payeeName: config.payeeName,
+            plans: config.plans,
+            defaultPlan: DEFAULT_PLAN,
+            // Legacy single-price fields for older app versions (the default plan).
             amount: config.amount,
             currency: config.currency,
             upiUri: config.upiUri,
@@ -83,6 +93,10 @@ async function buildStatus(userId, req) {
         },
     };
 }
+
+const planExportsLabel = (plan) => (plan.exports == null
+    ? 'unlimited times (lifetime)'
+    : `${plan.exports} time${plan.exports === 1 ? '' : 's'}`);
 
 // UPI VPA: handle@provider (e.g. name@okaxis, 9876543210@ybl).
 const UPI_ID_PATTERN = /^[a-zA-Z0-9._-]{2,256}@[a-zA-Z][a-zA-Z0-9.-]{1,64}$/;
@@ -124,7 +138,7 @@ async function settingsResponse(req) {
     return {
         upiId: config.upiId,
         payeeName: config.payeeName,
-        amount: config.amount,
+        plans: config.plans,
         qrImageUrl: config.qrImageUrl,
         upiUri: config.upiUri,
         configured: config.configured,
@@ -172,6 +186,19 @@ exports.controller = {
             const idCheck = validateUuid(userId, 'userId');
             if (!idCheck.ok) return sendUuidError(res, idCheck.message);
 
+            if (await Model.hasLifetime(userId)) {
+                const status = await buildStatus(userId, req);
+                recordAuditLog({
+                    userId,
+                    action: 'EXPORT_PDF_USE',
+                    entityType: 'export_payment',
+                    summary: 'Used a PDF export (lifetime plan)',
+                    metadata: { lifetime: true },
+                    req,
+                });
+                return res.status(200).json({ responseType: 'S', responseValue: status });
+            }
+
             if (!(await Model.consumeExport(userId))) {
                 return fail(res, 409, 'No PDF exports left. Pay again to export.');
             }
@@ -191,7 +218,7 @@ exports.controller = {
         }
     },
 
-    /** POST /export-payments/submit { upiTxnId } */
+    /** POST /export-payments/submit { upiTxnId, plan: single|pack5|lifetime } */
     submit: async (req, res) => {
         try {
             const userId = req.user?.userId;
@@ -203,9 +230,19 @@ exports.controller = {
                 return fail(res, 400, 'Enter the 12-digit UPI transaction ID (UTR).');
             }
 
+            const planId = req.body?.plan == null || req.body.plan === ''
+                ? DEFAULT_PLAN
+                : String(req.body.plan).trim().toLowerCase();
+            const plan = findPlan(planId);
+            if (!plan) return fail(res, 400, 'Choose a valid export plan.');
+
             const config = await getExportPaymentConfig(req);
             if (!config.configured) {
                 return fail(res, 503, 'Payments are not available right now. Please try again later.');
+            }
+
+            if (await Model.hasLifetime(userId)) {
+                return fail(res, 409, 'You already have lifetime PDF export.');
             }
 
             const remaining = await Model.remainingExports(userId);
@@ -224,7 +261,7 @@ exports.controller = {
 
             let created;
             try {
-                created = await Model.create({ userId, upiTxnId, amount: config.amount });
+                created = await Model.create({ userId, upiTxnId, amount: plan.amount, plan: plan.id });
             } catch (error) {
                 if (error?.code === 'ER_DUP_ENTRY') {
                     return fail(res, 409, 'This transaction ID has already been used.');
@@ -237,8 +274,8 @@ exports.controller = {
                 action: 'EXPORT_PAYMENT_SUBMIT',
                 entityType: 'export_payment',
                 entityId: created.insertId,
-                summary: 'Submitted UPI payment for PDF export',
-                metadata: { amount: config.amount },
+                summary: `Submitted UPI payment for PDF export (${plan.id})`,
+                metadata: { amount: plan.amount, plan: plan.id },
                 req,
             });
 
@@ -293,18 +330,24 @@ exports.controller = {
 
             const status = action === 'approve' ? 'approved' : 'rejected';
             const adminId = adminIdOf(req);
-            const { exportsPerPayment } = await getExportPaymentConfig(req);
+            // Legacy rows (no plan) keep the exports_allowed stored on them.
+            const plan = findPlan(payment.plan);
+            let exportsAllowed = null;
+            if (status === 'approved' && plan) exportsAllowed = plan.exports ?? 0;
             const updated = await Model.review(paymentId, {
                 status,
                 adminId,
                 remarks,
-                exportsAllowed: status === 'approved' ? exportsPerPayment : null,
+                exportsAllowed,
             });
             if (!updated) return fail(res, 409, 'Payment was already reviewed.');
 
             if (status === 'approved') {
+                const label = plan
+                    ? planExportsLabel(plan)
+                    : planExportsLabel({ exports: payment.exportsAllowed ?? 0 });
                 notifyUser(payment.userId, 'PDF export unlocked',
-                    `Your payment was verified. You can export your Moi ledger as PDF ${exportsPerPayment} time${exportsPerPayment === 1 ? '' : 's'}.`);
+                    `Your payment was verified. You can export your Moi ledger as PDF ${label}.`);
             } else {
                 notifyUser(payment.userId, 'Payment not verified',
                     remarks.length > 120 ? `${remarks.slice(0, 117)}...` : remarks);
@@ -330,24 +373,19 @@ exports.controller = {
         }
     },
 
-    /** PUT /export-payments/admin/settings { upiId, payeeName, amount } */
+    /** PUT /export-payments/admin/settings { upiId, payeeName } (prices are fixed plans) */
     adminSaveSettings: async (req, res) => {
         try {
             const upiId = String(req.body?.upiId ?? '').trim();
             const payeeName = String(req.body?.payeeName ?? '').trim().replace(/\s+/g, ' ');
-            const amount = Number.parseFloat(req.body?.amount);
 
             if (upiId && !UPI_ID_PATTERN.test(upiId)) return fail(res, 400, 'Enter a valid UPI ID, e.g. name@okaxis.');
             if (upiId && !payeeName) return fail(res, 400, 'Payee name is required with a UPI ID.');
             if (payeeName.length > 100) return fail(res, 400, 'Payee name must be 100 characters or less.');
-            if (!Number.isFinite(amount) || amount < 1 || amount > 100000) {
-                return fail(res, 400, 'Amount must be between ₹1 and ₹1,00,000.');
-            }
 
             await ExportPaymentSettings.saveDetails({
                 upiId,
                 payeeName,
-                amount: Math.round(amount * 100) / 100,
                 updatedBy: adminIdOf(req),
             });
             return res.status(200).json({ responseType: 'S', responseValue: await settingsResponse(req) });

@@ -105,10 +105,18 @@ Locally you can run `npm run job:daily` / `npm run job:reminders`, or set `ENABL
 
 ## 💳 Paid PDF export (UPI)
 
-Users pay once by UPI QR, submit the 12-digit UPI transaction ID, and an admin approves it in **Export Payments**. Each approval gives the user **3 PDF exports** (`EXPORT_PAYMENT_EXPORTS_PER_PAYMENT` in `.env` to change); after they are used, the user pays again. The app calls `POST /consume` once per export, just before sharing the PDF.
+Users pick a plan, pay by UPI QR, submit the 12-digit UPI transaction ID, and an admin approves it in **Export Payments**. Plans (fixed in `src/config/exportPayment.js`):
 
-- Tables: run `migrations/create_export_payments.sql`, `migrations/add_export_limits_to_export_payments.sql` and `migrations/create_export_payment_settings.sql` once.
-- Payee details: set in the admin panel (**Export Payments → Payment settings**): UPI ID, payee name, amount, and an optional uploaded QR image (PNG/JPG/WEBP, ≤ 2 MB, saved under `UPLOAD_DIR/export-payment/`). `EXPORT_PAYMENT_UPI_ID`, `EXPORT_PAYMENT_PAYEE_NAME` and `EXPORT_PAYMENT_AMOUNT` in `.env` are only fallbacks. Until a UPI ID + name or a QR image is set, the app shows "payments unavailable".
+| Plan id | Exports | Price |
+|---|---|---|
+| `single` | 1 | ₹19 |
+| `pack5` | 5 | ₹49 |
+| `lifetime` | unlimited | ₹499 |
+
+The app calls `POST /consume` once per export, just before sharing the PDF; lifetime users' exports are not counted. When a counted plan is used up the user pays again (a lifetime user can't buy again).
+
+- Tables: run `migrations/create_export_payments.sql`, `migrations/add_export_limits_to_export_payments.sql`, `migrations/create_export_payment_settings.sql` and `migrations/add_plan_to_export_payments.sql` once.
+- Payee details: set in the admin panel (**Export Payments → Payment settings**): UPI ID, payee name, and an optional uploaded QR image (PNG/JPG/WEBP, ≤ 2 MB, saved under `UPLOAD_DIR/export-payment/`). `EXPORT_PAYMENT_UPI_ID` and `EXPORT_PAYMENT_PAYEE_NAME` in `.env` are only fallbacks. With a UPI ID the app shows a QR for the chosen plan's exact price; an uploaded QR has no amount, so check the amount matches the plan before approving. Until a UPI ID + name or a QR image is set, the app shows "payments unavailable".
 - Routes (`/apis/export-payments`): `GET /status`, `POST /submit`, `POST /consume` (user token); `GET /admin/list`, `POST /admin/review`, `GET|PUT /admin/settings`, `POST|DELETE /admin/settings/qr` (admin).
 
 ---

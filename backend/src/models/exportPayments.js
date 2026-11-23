@@ -1,5 +1,6 @@
 const db = require('../config/database');
 const { toBinaryUUID, fromBinaryUUID } = require('../helpers/uuid');
+const { LIFETIME_PLAN } = require('../config/exportPayment');
 
 const STATUSES = ['pending', 'approved', 'rejected'];
 
@@ -12,6 +13,7 @@ function mapRow(r) {
         userEmail: r.email ?? null,
         userMobile: r.mobile ?? null,
         amount: r.amount != null ? Number(r.amount) : null,
+        plan: r.plan ?? null,
         upiTxnId: r.upi_txn_id,
         exportsAllowed: r.exports_allowed != null ? Number(r.exports_allowed) : null,
         exportsUsed: r.exports_used != null ? Number(r.exports_used) : null,
@@ -26,7 +28,7 @@ function mapRow(r) {
 }
 
 const SELECT_WITH_USER = `
-    SELECT p.id, p.user_id, p.amount, p.upi_txn_id, p.status, p.exports_allowed, p.exports_used, p.admin_remarks,
+    SELECT p.id, p.user_id, p.amount, p.plan, p.upi_txn_id, p.status, p.exports_allowed, p.exports_used, p.admin_remarks,
            p.reviewed_by, p.reviewed_at, p.created_at, p.updated_at,
            u.full_name, u.email, u.mobile, a.full_name AS reviewer_name
     FROM export_payments p
@@ -36,11 +38,11 @@ const SELECT_WITH_USER = `
 const Model = {
     STATUSES,
 
-    async create({ userId, upiTxnId, amount }) {
+    async create({ userId, upiTxnId, amount, plan }) {
         const [result] = await db.query(
-            `INSERT INTO export_payments (user_id, amount, upi_txn_id, status)
-             VALUES (?, ?, ?, 'pending')`,
-            [toBinaryUUID(userId), amount, upiTxnId]
+            `INSERT INTO export_payments (user_id, amount, plan, upi_txn_id, status)
+             VALUES (?, ?, ?, ?, 'pending')`,
+            [toBinaryUUID(userId), amount, plan, upiTxnId]
         );
         return { insertId: String(result.insertId) };
     },
@@ -67,14 +69,36 @@ const Model = {
         return rows.map(mapRow);
     },
 
-    /** Unused PDF exports across the user's approved payments. */
+    /** Unused PDF exports across the user's approved counted (non-lifetime) payments. */
     async remainingExports(userId) {
         const [[row]] = await db.query(
             `SELECT COALESCE(SUM(GREATEST(exports_allowed - exports_used, 0)), 0) AS remaining
-             FROM export_payments WHERE user_id = ? AND status = 'approved'`,
-            [toBinaryUUID(userId)]
+             FROM export_payments
+             WHERE user_id = ? AND status = 'approved' AND (plan IS NULL OR plan <> ?)`,
+            [toBinaryUUID(userId), LIFETIME_PLAN]
         );
         return Number(row?.remaining || 0);
+    },
+
+    /** True once the user has an approved lifetime payment (unlimited exports). */
+    async hasLifetime(userId) {
+        const [[row]] = await db.query(
+            `SELECT 1 AS found FROM export_payments
+             WHERE user_id = ? AND status = 'approved' AND plan = ? LIMIT 1`,
+            [toBinaryUUID(userId), LIFETIME_PLAN]
+        );
+        return Boolean(row?.found);
+    },
+
+    /** Exports granted by the user's most recently approved counted payment. */
+    async latestApprovedAllowance(userId) {
+        const [[row]] = await db.query(
+            `SELECT exports_allowed FROM export_payments
+             WHERE user_id = ? AND status = 'approved' AND (plan IS NULL OR plan <> ?)
+             ORDER BY reviewed_at DESC, id DESC LIMIT 1`,
+            [toBinaryUUID(userId), LIFETIME_PLAN]
+        );
+        return row ? Number(row.exports_allowed || 0) : null;
     },
 
     /**
@@ -86,9 +110,10 @@ const Model = {
             `UPDATE export_payments
              SET exports_used = exports_used + 1
              WHERE user_id = ? AND status = 'approved' AND exports_used < exports_allowed
+               AND (plan IS NULL OR plan <> ?)
              ORDER BY reviewed_at ASC, id ASC
              LIMIT 1`,
-            [toBinaryUUID(userId)]
+            [toBinaryUUID(userId), LIFETIME_PLAN]
         );
         return (result.affectedRows || 0) > 0;
     },

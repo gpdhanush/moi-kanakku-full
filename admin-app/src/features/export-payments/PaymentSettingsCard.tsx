@@ -15,7 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
 import { formatDateTime } from "@/lib/formatters";
-import { exportPaymentsApi, type ExportPaymentSettings } from "./api";
+import { exportPaymentsApi, planLabel, type ExportPaymentSettings } from "./api";
 
 const SETTINGS_KEY = ["admin", "export-payments", "settings"] as const;
 const UPI_ID_PATTERN = /^[a-zA-Z0-9._-]{2,256}@[a-zA-Z][a-zA-Z0-9.-]{1,64}$/;
@@ -28,7 +28,6 @@ export function PaymentSettingsCard() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [upiId, setUpiId] = useState("");
   const [payeeName, setPayeeName] = useState("");
-  const [amount, setAmount] = useState("49");
   const [generatedQr, setGeneratedQr] = useState<string | null>(null);
 
   const { data, isLoading, isError, error } = useQuery({
@@ -41,7 +40,6 @@ export function PaymentSettingsCard() {
     if (!data) return;
     setUpiId(data.upiId);
     setPayeeName(data.payeeName);
-    setAmount(String(data.amount ?? 49));
   }, [data]);
 
   // Preview of the QR the app generates from the saved UPI ID.
@@ -83,15 +81,12 @@ export function PaymentSettingsCard() {
   });
 
   const trimmedUpi = upiId.trim();
-  const amountValue = Number.parseFloat(amount);
   const upiInvalid = trimmedUpi.length > 0 && !UPI_ID_PATTERN.test(trimmedUpi);
   const nameMissing = trimmedUpi.length > 0 && payeeName.trim().length === 0;
-  const amountInvalid = !Number.isFinite(amountValue) || amountValue < 1 || amountValue > 100000;
   const dirty =
     !!data &&
     (trimmedUpi !== data.upiId ||
-      payeeName.trim() !== data.payeeName ||
-      amountValue !== data.amount);
+      payeeName.trim() !== data.payeeName);
   const busy = saveMutation.isPending || uploadMutation.isPending || removeMutation.isPending;
 
   const onFileChosen = (file: File | undefined) => {
@@ -152,11 +147,10 @@ export function PaymentSettingsCard() {
               className="grid gap-4 sm:grid-cols-2"
               onSubmit={(event) => {
                 event.preventDefault();
-                if (upiInvalid || nameMissing || amountInvalid) return;
+                if (upiInvalid || nameMissing) return;
                 saveMutation.mutate({
                   upiId: trimmedUpi,
                   payeeName: payeeName.trim(),
-                  amount: amountValue,
                 });
               }}
             >
@@ -188,28 +182,24 @@ export function PaymentSettingsCard() {
                   <p className="text-xs text-destructive">Payee name is required with a UPI ID.</p>
                 )}
               </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="export-amount">Amount (₹)</Label>
-                <Input
-                  id="export-amount"
-                  type="number"
-                  inputMode="decimal"
-                  min={1}
-                  max={100000}
-                  step="0.01"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  aria-invalid={amountInvalid}
-                />
-                {amountInvalid && (
-                  <p className="text-xs text-destructive">Amount must be between ₹1 and ₹1,00,000.</p>
-                )}
+              <div className="space-y-1.5 sm:col-span-2">
+                <p className="text-sm font-medium">Plans (fixed prices)</p>
+                <ul className="grid gap-2 sm:grid-cols-3">
+                  {(data?.plans ?? []).map((plan) => (
+                    <li key={plan.id} className="rounded-md border px-3 py-2 text-sm">
+                      <span className="block font-semibold">
+                        ₹{plan.amount.toLocaleString("en-IN")}
+                      </span>
+                      <span className="text-muted-foreground">{planLabel(plan.id, plan.exports)}</span>
+                    </li>
+                  ))}
+                </ul>
               </div>
               <div className="flex items-end">
                 <Button
                   type="submit"
                   className="gap-2"
-                  disabled={!dirty || busy || upiInvalid || nameMissing || amountInvalid}
+                  disabled={!dirty || busy || upiInvalid || nameMissing}
                 >
                   {saveMutation.isPending ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -220,9 +210,10 @@ export function PaymentSettingsCard() {
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground sm:col-span-2">
-                With a UPI ID, the app builds a QR for the exact amount and shows a "Pay with UPI app"
-                button. An uploaded QR image is shown instead when one is set — make sure it pays the
-                same account.
+                With a UPI ID, the app builds a QR for the exact price of the plan the user picks and
+                shows a "Pay with UPI app" button (the preview shows the 5-export plan). An uploaded QR
+                image is shown instead when one is set; it has no amount, so check the user paid the
+                plan's price before approving.
               </p>
             </form>
 

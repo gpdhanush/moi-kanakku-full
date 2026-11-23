@@ -1,28 +1,28 @@
 const { ExportPaymentSettings } = require('../models/exportPaymentSettings');
 
 /**
- * Paid PDF export payee settings.
+ * Paid PDF export plans and payee settings.
  *
- * Admins set these in the admin panel (Export Payments → Payment settings),
- * stored in `export_payment_settings`. Env vars are the fallback for any value
- * not set there:
- *   EXPORT_PAYMENT_UPI_ID, EXPORT_PAYMENT_PAYEE_NAME, EXPORT_PAYMENT_AMOUNT (default 49)
+ * Prices are fixed plans (below). Payee details are set in the admin panel
+ * (Export Payments → Payment settings), stored in `export_payment_settings`;
+ * EXPORT_PAYMENT_UPI_ID and EXPORT_PAYMENT_PAYEE_NAME are fallbacks.
  */
-const DEFAULT_AMOUNT = 49;
-const DEFAULT_EXPORTS_PER_PAYMENT = 3;
 
-/** PDF exports one approved payment buys (EXPORT_PAYMENT_EXPORTS_PER_PAYMENT, default 3). */
-function exportsPerPayment() {
-    const value = Number.parseInt(process.env.EXPORT_PAYMENT_EXPORTS_PER_PAYMENT, 10);
-    return Number.isInteger(value) && value > 0 && value <= 255 ? value : DEFAULT_EXPORTS_PER_PAYMENT;
+/** `exports: null` means unlimited (lifetime). Order is the order shown in the app. */
+const PLANS = Object.freeze([
+    Object.freeze({ id: 'single', exports: 1, amount: 19 }),
+    Object.freeze({ id: 'pack5', exports: 5, amount: 49 }),
+    Object.freeze({ id: 'lifetime', exports: null, amount: 499 }),
+]);
+const LIFETIME_PLAN = 'lifetime';
+/** Used when an older app version submits without choosing a plan. */
+const DEFAULT_PLAN = 'pack5';
+
+function findPlan(id) {
+    return PLANS.find((plan) => plan.id === id) || null;
 }
 
-function envAmount() {
-    const value = Number.parseFloat(process.env.EXPORT_PAYMENT_AMOUNT);
-    return Number.isFinite(value) && value > 0 ? Math.round(value * 100) / 100 : DEFAULT_AMOUNT;
-}
-
-function buildUpiUri(upiId, payeeName, amount) {
+function buildUpiUri(upiId, payeeName, amount, note = null) {
     if (!upiId) return null;
     // Keep "@" in the VPA literal; some UPI apps do not decode %40 in pa=.
     const enc = (value) => encodeURIComponent(value).replace(/%40/g, '@');
@@ -31,7 +31,7 @@ function buildUpiUri(upiId, payeeName, amount) {
         payeeName ? `pn=${enc(payeeName)}` : null,
         `am=${amount.toFixed(2)}`,
         'cu=INR',
-        `tn=${enc('Moi Kanakku PDF export')}`,
+        `tn=${enc(note || 'Moi Kanakku PDF export')}`,
     ].filter(Boolean).join('&');
     return `upi://pay?${query}`;
 }
@@ -50,18 +50,27 @@ async function getExportPaymentConfig(req = null) {
     const saved = await ExportPaymentSettings.get();
     const upiId = (saved?.upiId || process.env.EXPORT_PAYMENT_UPI_ID || '').trim();
     const payeeName = (saved?.payeeName || process.env.EXPORT_PAYMENT_PAYEE_NAME || '').trim();
-    const amount = saved?.amount > 0 ? saved.amount : envAmount();
     const qrImagePath = saved?.qrImagePath || '';
+    const defaultPlan = findPlan(DEFAULT_PLAN);
+    const plans = PLANS.map((plan) => ({
+        id: plan.id,
+        exports: plan.exports,
+        lifetime: plan.exports == null,
+        amount: plan.amount,
+        upiUri: buildUpiUri(upiId, payeeName, plan.amount, `Moi Kanakku PDF export - ${plan.id}`),
+    }));
 
     return {
         // Payable when the app can show a QR: generated from the UPI ID, or uploaded.
         configured: Boolean((upiId && payeeName) || qrImagePath),
         upiId,
         payeeName,
-        amount,
-        exportsPerPayment: exportsPerPayment(),
+        plans,
+        // Legacy single-price fields (older app versions): the default plan.
+        amount: defaultPlan.amount,
+        exportsPerPayment: defaultPlan.exports,
         currency: 'INR',
-        upiUri: buildUpiUri(upiId, payeeName, amount),
+        upiUri: buildUpiUri(upiId, payeeName, defaultPlan.amount),
         qrImagePath,
         qrImageUrl: publicFileUrl(req, qrImagePath),
         updatedAt: saved?.updatedAt || null,
@@ -69,4 +78,11 @@ async function getExportPaymentConfig(req = null) {
     };
 }
 
-module.exports = { getExportPaymentConfig, publicFileUrl, exportsPerPayment };
+module.exports = {
+    getExportPaymentConfig,
+    publicFileUrl,
+    findPlan,
+    PLANS,
+    LIFETIME_PLAN,
+    DEFAULT_PLAN,
+};
