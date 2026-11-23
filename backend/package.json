@@ -7,6 +7,8 @@
     "start": "node app.js",
     "dev": "nodemon app.js",
     "debug": "node --inspect app.js",
+    "job:daily": "node scripts/run-scheduled-job.js daily",
+    "job:reminders": "node scripts/run-scheduled-job.js reminders",
     "test": "node src/helpers/deviceInstallStatus.test.js && node src/middlewares/adminCookieAuth.test.js"
   },
   "author": "gpdhanush",

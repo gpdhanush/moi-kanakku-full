@@ -88,9 +88,20 @@ Base Endpoint: `http://localhost:3000/apis`
 
 ## ⏰ Scheduled Tasks (Cron Jobs)
 
-The backend runs automated daily tasks (`node-cron`) at 9:00 AM:
-1. **Password Expiration Check**: Evaluates user password age and dispatches renewal notifications.
-2. **Function Reminder Service**: Sends reminders 1 day prior to upcoming scheduled functions.
+Daily jobs run from **system cron** (cPanel → Cron Jobs), not inside the web process — LiteSpeed runs several app workers and pauses idle ones, which caused missed and duplicated runs.
+
+| Job | IST | cPanel schedule (server is UTC) | Command |
+|---|---|---|---|
+| Upcoming function reminders | 06:00 | `30 0 * * *` | `node scripts/run-scheduled-job.js reminders` |
+| Password expiry + FCM token health | 09:00 | `30 3 * * *` | `node scripts/run-scheduled-job.js daily` |
+
+cPanel command (use the Node venv path shown on the Setup Node.js App page):
+
+```
+cd /home/floatwal/moi-api.floatwalktiruppur.in/backend && /home/floatwal/nodevenv/moi-api.floatwalktiruppur.in/backend/20/bin/node scripts/run-scheduled-job.js reminders >> logs/cron.log 2>&1
+```
+
+Locally you can run `npm run job:daily` / `npm run job:reminders`, or set `ENABLE_IN_PROCESS_CRON=true` to keep the old node-cron schedule inside `app.js`.
 
 ---
 

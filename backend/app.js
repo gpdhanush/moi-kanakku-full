@@ -193,69 +193,83 @@ const server = app.listen(PORT, "0.0.0.0", () => {
 });
 
 /* =========================
-   CRON JOB (Daily 9 AM IST)
+   SCHEDULED JOBS
+   Production (LiteSpeed/cPanel) runs these via cPanel Cron Jobs calling
+   scripts/run-scheduled-job.js, because LiteSpeed runs several workers and
+   pauses idle ones (missed + duplicated runs). Set ENABLE_IN_PROCESS_CRON=true
+   only where a single long-lived process runs the app (e.g. local dev).
 ========================= */
 
-let isDailyCronRunning = false;
+if (process.env.ENABLE_IN_PROCESS_CRON === "true") {
+  /* =========================
+     CRON JOB (Daily 9 AM IST)
+  ========================= */
 
-cron.schedule(
-  "0 9 * * *",
-  async () => {
-    if (isDailyCronRunning) {
-      logger.warn("Daily cron already running, skipping.");
-      return;
-    }
+  let isDailyCronRunning = false;
 
-    isDailyCronRunning = true;
+  cron.schedule(
+    "0 9 * * *",
+    async () => {
+      if (isDailyCronRunning) {
+        logger.warn("Daily cron already running, skipping.");
+        return;
+      }
 
-    try {
-      logger.info("Running scheduled daily jobs...");
-      await checkAndNotifyPasswordExpiration();
-      await runFcmTokenHealthCheck();
-      logger.info("Daily cron jobs completed successfully.");
-    } catch (err) {
-      logger.error("Error in daily cron:", err);
-    } finally {
-      isDailyCronRunning = false;
-    }
-  },
-  {
-    timezone: "Asia/Kolkata",
-  },
-);
+      isDailyCronRunning = true;
 
-logger.info("Daily cron scheduled at 9:00 AM (Asia/Kolkata)");
+      try {
+        logger.info("Running scheduled daily jobs...");
+        await checkAndNotifyPasswordExpiration();
+        await runFcmTokenHealthCheck();
+        logger.info("Daily cron jobs completed successfully.");
+      } catch (err) {
+        logger.error("Error in daily cron:", err);
+      } finally {
+        isDailyCronRunning = false;
+      }
+    },
+    {
+      timezone: "Asia/Kolkata",
+    },
+  );
 
-/* =========================
-   UPCOMING FUNCTION REMINDERS (Daily 6 AM IST)
-========================= */
+  logger.info("Daily cron scheduled at 9:00 AM (Asia/Kolkata)");
 
-let isUpcomingReminderRunning = false;
+  /* =========================
+     UPCOMING FUNCTION REMINDERS (Daily 6 AM IST)
+  ========================= */
 
-cron.schedule(
-  "0 6 * * *",
-  async () => {
-    if (isUpcomingReminderRunning) {
-      logger.warn("Upcoming function reminder already running, skipping.");
-      return;
-    }
+  let isUpcomingReminderRunning = false;
 
-    isUpcomingReminderRunning = true;
+  cron.schedule(
+    "0 6 * * *",
+    async () => {
+      if (isUpcomingReminderRunning) {
+        logger.warn("Upcoming function reminder already running, skipping.");
+        return;
+      }
 
-    try {
-      await sendUpcomingFunctionReminders();
-    } catch (err) {
-      logger.error("Error sending upcoming function reminders:", err);
-    } finally {
-      isUpcomingReminderRunning = false;
-    }
-  },
-  {
-    timezone: "Asia/Kolkata",
-  },
-);
+      isUpcomingReminderRunning = true;
 
-logger.info("Upcoming function reminder scheduled at 6:00 AM (Asia/Kolkata)");
+      try {
+        await sendUpcomingFunctionReminders();
+      } catch (err) {
+        logger.error("Error sending upcoming function reminders:", err);
+      } finally {
+        isUpcomingReminderRunning = false;
+      }
+    },
+    {
+      timezone: "Asia/Kolkata",
+    },
+  );
+
+  logger.info("Upcoming function reminder scheduled at 6:00 AM (Asia/Kolkata)");
+} else {
+  logger.info(
+    "In-process cron disabled; run scripts/run-scheduled-job.js from system cron.",
+  );
+}
 
 /* =========================
    GLOBAL ERROR HANDLER
