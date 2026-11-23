@@ -29,6 +29,7 @@ const Transactions = lazy(() => import("./pages/Transactions"));
 const Functions = lazy(() => import("./pages/Functions"));
 const UpcomingFunctions = lazy(() => import("./pages/UpcomingFunctions"));
 const Feedback = lazy(() => import("./pages/Feedback"));
+const ExportPayments = lazy(() => import("./pages/ExportPayments"));
 const Notifications = lazy(() => import("./pages/Notifications"));
 const AppAlerts = lazy(() => import("./pages/AppAlerts"));
 const UserOtps = lazy(() => import("./pages/UserOtps"));
@@ -80,6 +81,7 @@ const AppContent = () => {
           <Route path="/functions" element={<LazyRoute><Functions /></LazyRoute>} />
           <Route path="/upcoming-functions" element={<LazyRoute><UpcomingFunctions /></LazyRoute>} />
           <Route path="/feedback" element={<LazyRoute><Feedback /></LazyRoute>} />
+          <Route path="/export-payments" element={<LazyRoute><ExportPayments /></LazyRoute>} />
           <Route path="/notifications" element={<LazyRoute><Notifications /></LazyRoute>} />
           <Route path="/app-alerts" element={<LazyRoute><AppAlerts /></LazyRoute>} />
           <Route path="/user-otps" element={<LazyRoute><UserOtps /></LazyRoute>} />

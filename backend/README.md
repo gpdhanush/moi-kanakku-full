@@ -103,6 +103,14 @@ cd /home/floatwal/moi-api.floatwalktiruppur.in/backend && /home/floatwal/nodeven
 
 Locally you can run `npm run job:daily` / `npm run job:reminders`, or set `ENABLE_IN_PROCESS_CRON=true` to keep the old node-cron schedule inside `app.js`.
 
+## 💳 Paid PDF export (UPI)
+
+Users pay once by UPI QR, submit the 12-digit UPI transaction ID, and an admin approves it in **Export Payments**. One approval unlocks PDF export for that user permanently.
+
+- Table: run `migrations/create_export_payments.sql` once.
+- Env (`.env`): `EXPORT_PAYMENT_UPI_ID` (payee VPA), `EXPORT_PAYMENT_PAYEE_NAME`, optional `EXPORT_PAYMENT_AMOUNT` (default `49`). Until both UPI values are set, the app shows "payments unavailable" and submit returns 503.
+- Routes (`/apis/export-payments`): `GET /status`, `POST /submit` (user token); `GET /admin/list`, `POST /admin/review` (admin).
+
 ---
 
 ## 📁 Project Structure

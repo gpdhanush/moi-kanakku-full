@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:intl/intl.dart';
 import 'package:moi/app_configs/index.dart';
+import 'package:moi/app_pages/export_payment/export_payment_page.dart';
+import 'package:moi/app_services/export_service.dart';
 import 'package:moi/app_services/index.dart';
 import 'package:moi/app_storages/secure_storages.dart';
 import 'package:moi/app_themes/index.dart';
@@ -25,6 +27,7 @@ class _AllTransactionsPageState extends State<AllTransactionsPage> {
 
   final TransactionServices _txServices = TransactionServices();
   final SecureStorageService _storage = SecureStorageService();
+  final AlertServices _alertServices = AlertServices();
   final TextEditingController _searchController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final PaginatedListState<Map<String, dynamic>> _paging = PaginatedListState(
@@ -175,11 +178,83 @@ class _AllTransactionsPageState extends State<AllTransactionsPage> {
     return '-';
   }
 
-  Future<void> _showExportSupportSheet() {
-    return showExportSupportSheet(
-      context: context,
-      languageProvider: context.read<LanguageProvider>(),
-    );
+  /// Loads all pages for PDF export (server-side filters applied).
+  Future<List<Map<String, dynamic>>> _fetchAllForExport() async {
+    final userId = _userId ?? await _resolveUserId();
+    if (userId == null || userId.isEmpty) return [];
+
+    final all = <Map<String, dynamic>>[];
+    var page = 1;
+    var hasMore = true;
+    final searchQuery = _searchController.text.trim();
+
+    while (hasMore) {
+      final response = await _txServices.listTransactions({
+        'userId': userId,
+        'page': page,
+        'limit': 100,
+        if (widget.type == 'INVEST' || widget.type == 'RETURN')
+          'type': widget.type,
+        if (searchQuery.isNotEmpty) 'search': searchQuery,
+      }, showLoading: false);
+
+      if (response == null ||
+          response is! Map ||
+          response['responseType'] != 'S') {
+        break;
+      }
+      final chunk = PaginatedResponseParser.mapChunk(response['responseValue']);
+      all.addAll(chunk);
+      hasMore = response['hasMore'] == true && chunk.isNotEmpty;
+      page += 1;
+      if (page > 500) break;
+    }
+    return all;
+  }
+
+  Future<void> _exportPdf() async {
+    if (!await ensureExportUnlocked(context) || !mounted) return;
+    var dialogOpen = false;
+    try {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => const Center(child: CircularProgressIndicator()),
+      );
+      dialogOpen = true;
+
+      final user = await _storage.get(AppVariables.userInformation);
+      final transactions = await _fetchAllForExport();
+
+      if (user == null) {
+        if (mounted) {
+          _alertServices.errorToast(
+            context.read<LanguageProvider>().tr('home.userDetailsNotFound'),
+          );
+        }
+        return;
+      }
+      await ExportService.exportTransactionsToPdf(
+        transactions: transactions,
+        userDetails: user,
+      );
+      if (mounted) {
+        _alertServices.successToast(
+          context.read<LanguageProvider>().tr('home.exportedSuccessfully'),
+        );
+      }
+    } catch (e) {
+      debugPrint('Error exporting: $e');
+      if (mounted) {
+        _alertServices.errorToast(
+          context.read<LanguageProvider>().tr('home.exportError'),
+        );
+      }
+    } finally {
+      if (dialogOpen && mounted) {
+        Navigator.of(context, rootNavigator: true).pop();
+      }
+    }
   }
 
   @override
@@ -196,7 +271,7 @@ class _AllTransactionsPageState extends State<AllTransactionsPage> {
       appBar: _MoiFlowHeader(
         title: title.toUpperCase(),
         onBack: () => Navigator.pop(context),
-        onExport: _showExportSupportSheet,
+        onExport: _exportPdf,
         exportTooltip: languageProvider.tr('home.exportData'),
       ),
       body: _paging.isLoading && _paging.items.isEmpty

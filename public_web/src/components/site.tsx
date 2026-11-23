@@ -464,10 +464,6 @@ export function Footer() {
             © {year} Moi Kanakku · GK Tech.{" "}
             <T ta="அனைத்து உரிமைகளும் பாதுகாக்கப்பட்டவை." en="All rights reserved." />
           </p>
-          <p>
-            <T ta="திண்டுக்கல்லில் அன்புடன் உருவாக்கப்பட்டது" en="Made with care in Dindigul" />{" "}
-            <span className="text-lime">♥</span>
-          </p>
         </div>
       </div>
 

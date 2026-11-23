@@ -109,6 +109,10 @@
             <action android:name="android.intent.action.VIEW"/>
             <data android:scheme="market"/>
         </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="upi"/>
+        </intent>
         <package android:name="com.android.vending"/>
     </queries>
 

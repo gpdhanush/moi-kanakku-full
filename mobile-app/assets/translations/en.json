@@ -359,7 +359,7 @@
     "contactHint": "Get help from our team",
     "export": "Export",
     "contactAdmin": "Contact admin",
-    "exportHint": "Contact admin for PDF export assistance",
+    "exportHint": "Download all function transactions as PDF",
     "exportSupportMessage": "For help with PDF exports, contact the admin at (+91) 7845456609.",
     "feedbacksHint": "Share feedback about the app",
     "logoutHint": "Sign out of your account",
@@ -368,7 +368,9 @@
     "sectionGeneral": "General",
     "settingsHint": "App tools and preferences",
     "subtitle": "Account, support and more",
-    "upcomingHint": "Plan and track upcoming events"
+    "upcomingHint": "Plan and track upcoming events",
+    "exportConfirmMessage": "You can export all function-based transactions in a single PDF. Tap OK to save it to Downloads and share.",
+    "exporting": "Preparing PDF..."
   },
   "nav": {
     "feedbacks": "Feedbacks",
@@ -711,5 +713,35 @@
     "kn": "Kannada",
     "ml": "Malayalam",
     "ta": "Tamil"
+  },
+  "exportPayment": {
+    "title": "Unlock PDF export",
+    "subtitle": "Pay ₹{amount} once to export your Moi ledger as PDF anytime.",
+    "scanToPay": "Scan with any UPI app to pay",
+    "upiId": "UPI ID",
+    "payWithApp": "Pay with UPI app",
+    "upiAppUnavailable": "No UPI app found on this device.",
+    "copied": "UPI ID copied",
+    "txnLabel": "UPI transaction ID (UTR)",
+    "txnHint": "12-digit UPI Ref No.",
+    "txnHelp": "After paying, open the payment in your UPI app and copy the 12-digit UPI Ref No. / UTR.",
+    "txnRequired": "Enter the UPI transaction ID",
+    "txnInvalid": "UPI transaction ID must be exactly 12 digits",
+    "submit": "Submit for verification",
+    "submitted": "Payment submitted for verification",
+    "pendingTitle": "Payment under review",
+    "pendingMessage": "We are verifying your payment. PDF export unlocks once the admin approves it.",
+    "approvedTitle": "PDF export unlocked",
+    "approvedMessage": "Your payment is verified. You can export PDFs anytime.",
+    "rejectedTitle": "Payment not verified",
+    "rejectedMessage": "We could not verify your last payment. Check the transaction ID and submit again.",
+    "reason": "Reason",
+    "submittedTxn": "Transaction ID",
+    "refresh": "Check status",
+    "continueExport": "Continue to export",
+    "unavailable": "Payments are not available right now. Please contact the admin.",
+    "loadFailed": "Unable to load payment status. Please try again.",
+    "retry": "Try again",
+    "needHelp": "Need help? Contact admin"
   }
 }

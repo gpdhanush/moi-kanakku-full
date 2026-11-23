@@ -1,11 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:intl/intl.dart';
+import 'package:moi/app_configs/app_logs.dart';
+import 'package:moi/app_configs/app_images.dart';
+import 'package:moi/app_pages/export_payment/export_payment_page.dart';
 import 'package:moi/app_themes/index.dart';
 import 'package:moi/app_utils/index.dart';
 import 'package:moi/app_utils/app_providers/language_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
+import 'package:screenshot/screenshot.dart';
 
 class TransactionDetailViewPage extends StatefulWidget {
   final Map<String, dynamic> transaction;
@@ -18,6 +26,9 @@ class TransactionDetailViewPage extends StatefulWidget {
 }
 
 class _TransactionDetailViewPageState extends State<TransactionDetailViewPage> {
+  final ScreenshotController _screenshotController = ScreenshotController();
+  bool _isLoadingPdf = false;
+
   String _formatDate(String? iso) {
     if (iso == null || iso.isEmpty) return '';
     try {
@@ -92,120 +103,129 @@ class _TransactionDetailViewPageState extends State<TransactionDetailViewPage> {
       body: Column(
         children: [
           Expanded(
-            child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.page,
-                AppSpacing.md,
-                AppSpacing.page,
-                AppSpacing.lg,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _AmountHeaderCard(
-                        accent: accent,
-                        amountText: '₹ $amount',
-                        functionLabel: isCustom ? customFunction : functionName,
-                      )
-                      .animate()
-                      .fadeIn(duration: 460.ms)
-                      .slideY(begin: 0.08, end: 0, duration: 460.ms),
-                  const SizedBox(height: AppSpacing.md),
-                  _DetailsSection(
-                    primary: primary,
-                    sectionTitle: languageProvider.tr('functionDetails.title'),
-                    rows: [
-                      (
-                        icon: HugeIcons.strokeRoundedWedding,
-                        label: languageProvider.tr('transactions.functionName'),
-                        value: functionName.isEmpty
-                            ? '—'
-                            : functionName.toUpperCase(),
-                        maxLines: 2,
-                        valueColor: null,
+            child: Screenshot(
+              controller: _screenshotController,
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.page,
+                  AppSpacing.md,
+                  AppSpacing.page,
+                  AppSpacing.lg,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _AmountHeaderCard(
+                          accent: accent,
+                          amountText: '₹ $amount',
+                          functionLabel: isCustom
+                              ? customFunction
+                              : functionName,
+                        )
+                        .animate()
+                        .fadeIn(duration: 460.ms)
+                        .slideY(begin: 0.08, end: 0, duration: 460.ms),
+                    const SizedBox(height: AppSpacing.md),
+                    _DetailsSection(
+                      primary: primary,
+                      sectionTitle: languageProvider.tr(
+                        'functionDetails.title',
                       ),
-                      (
-                        icon: HugeIcons.strokeRoundedCalendar01,
-                        label: languageProvider.tr('transactions.date'),
-                        value: transactionDate.isEmpty
-                            ? '—'
-                            : transactionDate.toUpperCase(),
-                        maxLines: 2,
-                        valueColor: null,
-                      ),
-                      if (isCustom)
+                      rows: [
                         (
-                          icon: HugeIcons.strokeRoundedSparkles,
+                          icon: HugeIcons.strokeRoundedWedding,
                           label: languageProvider.tr(
-                            'transactions.customFunction',
+                            'transactions.functionName',
                           ),
-                          value: customFunction.isEmpty
+                          value: functionName.isEmpty
                               ? '—'
-                              : customFunction.toUpperCase(),
+                              : functionName.toUpperCase(),
                           maxLines: 2,
                           valueColor: null,
                         ),
-                      if (itemName.isNotEmpty)
                         (
-                          icon: HugeIcons.strokeRoundedGift,
-                          label: languageProvider.tr('transactions.thing'),
-                          value: itemName.toUpperCase(),
+                          icon: HugeIcons.strokeRoundedCalendar01,
+                          label: languageProvider.tr('transactions.date'),
+                          value: transactionDate.isEmpty
+                              ? '—'
+                              : transactionDate.toUpperCase(),
                           maxLines: 2,
                           valueColor: null,
                         ),
-                      if (notes.isNotEmpty)
-                        (
-                          icon: HugeIcons.strokeRoundedNote,
-                          label: languageProvider.tr('transactions.notes'),
-                          value: notes.toUpperCase(),
-                          maxLines: 5,
-                          valueColor: null,
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  _DetailsSection(
-                    primary: primary,
-                    sectionTitle: languageProvider.tr(
-                      'profile.personalInformation',
+                        if (isCustom)
+                          (
+                            icon: HugeIcons.strokeRoundedSparkles,
+                            label: languageProvider.tr(
+                              'transactions.customFunction',
+                            ),
+                            value: customFunction.isEmpty
+                                ? '—'
+                                : customFunction.toUpperCase(),
+                            maxLines: 2,
+                            valueColor: null,
+                          ),
+                        if (itemName.isNotEmpty)
+                          (
+                            icon: HugeIcons.strokeRoundedGift,
+                            label: languageProvider.tr('transactions.thing'),
+                            value: itemName.toUpperCase(),
+                            maxLines: 2,
+                            valueColor: null,
+                          ),
+                        if (notes.isNotEmpty)
+                          (
+                            icon: HugeIcons.strokeRoundedNote,
+                            label: languageProvider.tr('transactions.notes'),
+                            value: notes.toUpperCase(),
+                            maxLines: 5,
+                            valueColor: null,
+                          ),
+                      ],
                     ),
-                    rows: [
-                      (
-                        icon: HugeIcons.strokeRoundedUser,
-                        label: languageProvider.tr('transactions.name'),
-                        value: personName.isEmpty
-                            ? '—'
-                            : personName.toUpperCase(),
-                        maxLines: 2,
-                        valueColor: null,
+                    const SizedBox(height: AppSpacing.md),
+                    _DetailsSection(
+                      primary: primary,
+                      sectionTitle: languageProvider.tr(
+                        'profile.personalInformation',
                       ),
-                      (
-                        icon: HugeIcons.strokeRoundedLocation01,
-                        label: languageProvider.tr('transactions.city'),
-                        value: city.isEmpty ? '—' : city.toUpperCase(),
-                        maxLines: 2,
-                        valueColor: null,
-                      ),
-                      (
-                        icon: HugeIcons.strokeRoundedCall,
-                        label: languageProvider.tr('transactions.mobile'),
-                        value: mobile.isEmpty ? '—' : mobile,
-                        maxLines: 1,
-                        valueColor: null,
-                      ),
-                      (
-                        icon: HugeIcons.strokeRoundedBriefcase01,
-                        label: languageProvider.tr('transactions.occupation'),
-                        value: occupation.isEmpty
-                            ? '—'
-                            : occupation.toUpperCase(),
-                        maxLines: 2,
-                        valueColor: null,
-                      ),
-                    ],
-                  ),
-                ],
+                      rows: [
+                        (
+                          icon: HugeIcons.strokeRoundedUser,
+                          label: languageProvider.tr('transactions.name'),
+                          value: personName.isEmpty
+                              ? '—'
+                              : personName.toUpperCase(),
+                          maxLines: 2,
+                          valueColor: null,
+                        ),
+                        (
+                          icon: HugeIcons.strokeRoundedLocation01,
+                          label: languageProvider.tr('transactions.city'),
+                          value: city.isEmpty ? '—' : city.toUpperCase(),
+                          maxLines: 2,
+                          valueColor: null,
+                        ),
+                        (
+                          icon: HugeIcons.strokeRoundedCall,
+                          label: languageProvider.tr('transactions.mobile'),
+                          value: mobile.isEmpty ? '—' : mobile,
+                          maxLines: 1,
+                          valueColor: null,
+                        ),
+                        (
+                          icon: HugeIcons.strokeRoundedBriefcase01,
+                          label: languageProvider.tr('transactions.occupation'),
+                          value: occupation.isEmpty
+                              ? '—'
+                              : occupation.toUpperCase(),
+                          maxLines: 2,
+                          valueColor: null,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -220,16 +240,96 @@ class _TransactionDetailViewPageState extends State<TransactionDetailViewPage> {
               ),
               child: _ExportButton(
                 title: languageProvider.tr('transactionList.exportPdf'),
-                onPressed: () => showExportSupportSheet(
-                  context: context,
-                  languageProvider: languageProvider,
-                ),
+                isLoading: _isLoadingPdf,
+                onPressed: () => _sharePdf(context),
               ),
             ),
           ),
         ],
       ),
     );
+  }
+
+  Future<void> _sharePdf(BuildContext context) async {
+    if (_isLoadingPdf) return;
+    if (!await ensureExportUnlocked(context) || !mounted) return;
+    setState(() => _isLoadingPdf = true);
+
+    try {
+      await Future.delayed(const Duration(milliseconds: 100));
+      final Uint8List? imageBytes = await _screenshotController.capture(
+        pixelRatio: 3.0,
+      );
+
+      if (imageBytes == null) {
+        if (mounted) setState(() => _isLoadingPdf = false);
+        return;
+      }
+
+      final pdf = pw.Document();
+      final image = pw.MemoryImage(imageBytes);
+      final logoBytes = await rootBundle.load(AppImages.appLogoImage);
+      final logoImage = pw.MemoryImage(logoBytes.buffer.asUint8List());
+
+      pdf.addPage(
+        pw.Page(
+          pageFormat: PdfPageFormat.a5,
+          margin: const pw.EdgeInsets.all(8),
+          build: (pw.Context context) {
+            final timestamp = DateFormat(
+              'dd-MMM-yyyy hh:mm:ss a',
+            ).format(DateTime.now()).toUpperCase();
+            return pw.Column(
+              children: [
+                pw.Expanded(
+                  child: pw.Center(
+                    child: pw.Image(image, fit: pw.BoxFit.contain),
+                  ),
+                ),
+                pw.SizedBox(height: 10),
+                pw.Divider(color: PdfColors.grey300),
+                pw.SizedBox(height: 4),
+                pw.Row(
+                  mainAxisAlignment: pw.MainAxisAlignment.center,
+                  children: [
+                    pw.Image(logoImage, height: 16),
+                    pw.SizedBox(width: 6),
+                    pw.Text(
+                      'Generated in Moi Kanakku app',
+                      style: pw.TextStyle(fontSize: 8, color: PdfColors.indigo),
+                    ),
+                  ],
+                ),
+                pw.SizedBox(height: 2),
+                pw.Text(
+                  timestamp,
+                  style: pw.TextStyle(fontSize: 5, color: PdfColors.grey),
+                  textAlign: pw.TextAlign.center,
+                ),
+              ],
+            );
+          },
+        ),
+      );
+
+      final bytes = await pdf.save();
+      final firstName = _clean(
+        widget.transaction['person']?['firstName'],
+        fallback: 'person',
+      ).toLowerCase().replaceAll(' ', '-');
+      final city = _clean(
+        widget.transaction['person']?['city'],
+        fallback: 'city',
+      ).toLowerCase().replaceAll(' ', '-');
+      final timestamp = DateTime.now().toIso8601String().replaceAll(':', '-');
+      final fileName = '$firstName-$city-$timestamp.pdf';
+
+      if (mounted) setState(() => _isLoadingPdf = false);
+      await Printing.sharePdf(bytes: bytes, filename: fileName);
+    } catch (e) {
+      if (mounted) setState(() => _isLoadingPdf = false);
+      printContent('Error generating PDF: $e');
+    }
   }
 }
 
@@ -506,9 +606,14 @@ class _DetailTile extends StatelessWidget {
 
 class _ExportButton extends StatelessWidget {
   final String title;
+  final bool isLoading;
   final VoidCallback onPressed;
 
-  const _ExportButton({required this.title, required this.onPressed});
+  const _ExportButton({
+    required this.title,
+    required this.isLoading,
+    required this.onPressed,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -520,7 +625,7 @@ class _ExportButton extends StatelessWidget {
       color: Colors.transparent,
       borderRadius: BorderRadius.circular(14),
       child: InkWell(
-        onTap: onPressed,
+        onTap: isLoading ? null : onPressed,
         borderRadius: BorderRadius.circular(14),
         child: Ink(
           height: 52,
@@ -540,26 +645,35 @@ class _ExportButton extends StatelessWidget {
             ],
           ),
           child: Center(
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                HugeIcon(
-                  icon: HugeIcons.strokeRoundedPdf02,
-                  color: contentColor,
-                  size: 18,
-                  strokeWidth: 1.9,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  title,
-                  style: AppTypography.label.copyWith(
-                    color: contentColor,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
+            child: isLoading
+                ? SizedBox(
+                    width: 22,
+                    height: 22,
+                    child: CircularProgressIndicator(
+                      color: contentColor,
+                      strokeWidth: 2.4,
+                    ),
+                  )
+                : Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      HugeIcon(
+                        icon: HugeIcons.strokeRoundedPdf02,
+                        color: contentColor,
+                        size: 18,
+                        strokeWidth: 1.9,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        title,
+                        style: AppTypography.label.copyWith(
+                          color: contentColor,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              ],
-            ),
           ),
         ),
       ),

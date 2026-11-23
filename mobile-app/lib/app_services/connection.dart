@@ -641,6 +641,13 @@ class Connection {
                 _tr('network.notFound', 'Resource Not Found'),
           );
           break;
+        case 409:
+        case 503:
+          _alertServices.errorToast(
+            responseData?['responseValue']?['message'] ??
+                '${_tr('network.serverError', 'Server Error')}: $statusCode',
+          );
+          break;
         case 500:
           _alertServices.errorToast(
             _tr('network.serverFailure', 'Internal Server Error'),

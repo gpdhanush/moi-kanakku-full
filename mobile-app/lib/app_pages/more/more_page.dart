@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:in_app_review/in_app_review.dart';
+import 'package:intl/intl.dart';
 import 'package:moi/app_configs/index.dart';
+import 'package:moi/app_pages/export_payment/export_payment_page.dart';
 import 'package:moi/app_pages/settings_page/settings_menus_panel.dart';
 import 'package:moi/app_services/connection.dart';
+import 'package:moi/app_services/export_service.dart';
 import 'package:moi/app_services/index.dart';
 import 'package:moi/app_storages/secure_storages.dart';
 import 'package:moi/app_themes/index.dart';
@@ -101,11 +104,107 @@ class MorePage extends StatelessWidget {
     await inAppReview.openStoreListing(appStoreId: 'com.renzo.moi');
   }
 
-  Future<void> _onExportTap(BuildContext context) {
-    return showExportSupportSheet(
-      context: context,
-      languageProvider: Provider.of<LanguageProvider>(context, listen: false),
+  Future<void> _onExportTap(BuildContext context) async {
+    if (!await ensureExportUnlocked(context) || !context.mounted) return;
+
+    final languageProvider = Provider.of<LanguageProvider>(
+      context,
+      listen: false,
     );
+
+    final confirm = await showMoiConfirmSheet(
+      context: context,
+      title: languageProvider.tr('more.export'),
+      message: languageProvider.tr('more.exportConfirmMessage'),
+      confirmLabel: languageProvider.tr('common.ok'),
+      cancelLabel: languageProvider.tr('common.cancel'),
+      icon: HugeIcons.strokeRoundedPdf02,
+    );
+
+    if (confirm == true && context.mounted) {
+      await _exportAllFunctionTransactions(context);
+    }
+  }
+
+  Future<void> _exportAllFunctionTransactions(BuildContext context) async {
+    final languageProvider = Provider.of<LanguageProvider>(
+      context,
+      listen: false,
+    );
+    final alertServices = AlertServices();
+    final storage = SecureStorageService();
+    final txServices = TransactionServices();
+    var loaderShown = false;
+
+    try {
+      await alertServices.showLoading(languageProvider.tr('more.exporting'));
+      loaderShown = true;
+
+      final user = await storage.get(AppVariables.userInformation);
+      if (user == null) {
+        alertServices.errorToast(
+          languageProvider.tr('home.userDetailsNotFound'),
+        );
+        return;
+      }
+
+      final transactions = <Map<String, dynamic>>[];
+      var page = 1;
+      var hasMore = true;
+      while (hasMore) {
+        final response = await txServices.listTransactions({
+          'userId': user['id'].toString(),
+          'page': page,
+          'limit': 100,
+        }, showLoading: false);
+
+        if (response == null ||
+            response is! Map ||
+            response['responseType'] != 'S') {
+          break;
+        }
+
+        final chunk = PaginatedResponseParser.mapChunk(
+          response['responseValue'],
+        );
+        transactions.addAll(chunk);
+        hasMore = response['hasMore'] == true && chunk.isNotEmpty;
+        page += 1;
+        if (page > 500) break;
+      }
+
+      if (transactions.isEmpty) {
+        alertServices.errorToast(
+          languageProvider.tr('home.noTransactionsToExport'),
+        );
+        return;
+      }
+
+      final timestamp = DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
+      await ExportService.exportTransactionsToPdf(
+        transactions: transactions,
+        userDetails: user,
+        fileName: 'Moi_Kanakku_All_Functions_$timestamp.pdf',
+        saveToDownloads: true,
+        onBeforeShare: () async {
+          if (loaderShown) {
+            await alertServices.hideLoading();
+            loaderShown = false;
+          }
+        },
+      );
+
+      alertServices.successToast(
+        languageProvider.tr('home.exportedSuccessfully'),
+      );
+    } catch (e) {
+      debugPrint('More export error: $e');
+      alertServices.errorToast(languageProvider.tr('home.exportError'));
+    } finally {
+      if (loaderShown) {
+        await alertServices.hideLoading();
+      }
+    }
   }
 
   Future<void> _onLogoutTap(BuildContext context) async {
