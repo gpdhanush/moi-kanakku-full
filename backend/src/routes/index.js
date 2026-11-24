@@ -1,7 +1,12 @@
 const express = require('express');
 const router = express.Router();
-const { generalRateLimiter } = require('../middlewares/apiSecurity');
+const { generalRateLimiter, aiBotGuard, noIndexHeader } = require('../middlewares/apiSecurity');
 
+// Keep API responses out of search / AI indexes.
+router.use(noIndexHeader);
+// Refuse known AI crawlers / scrapers by User-Agent (defense in depth; the
+// real app sends a "Dart/..." UA and is unaffected).
+router.use(aiBotGuard);
 // Apply general rate limit to all API routes
 router.use(generalRateLimiter);
 

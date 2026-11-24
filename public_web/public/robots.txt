@@ -1,19 +1,32 @@
-# Moi Kanakku — crawl policy (seo-technical + seo-agentic)
+# Moi Kanakku — crawl policy
 # Production host: set VITE_SITE_URL; sitemap uses https://moikanakku.com by default.
+#
+# Policy: allow real search engines (they send users), block AI training and
+# site-cloning crawlers. robots.txt is a request, not a wall — well-behaved
+# crawlers obey it; the server also blocks these agents by User-Agent as a
+# second layer (see backend aiBotGuard / public_web security headers).
 
+# ----- Search engines: allowed -----
 User-agent: Googlebot
 Allow: /
 
 User-agent: Bingbot
 Allow: /
 
+User-agent: DuckDuckBot
+Allow: /
+
+User-agent: Applebot
+Allow: /
+
+# Social link previews (unfurl when someone shares a link)
 User-agent: Twitterbot
 Allow: /
 
 User-agent: facebookexternalhit
 Allow: /
 
-# AI search citability (allow). Training-only bots can be tightened later if needed.
+# AI *search* assistants that cite and link back (drive traffic): allowed.
 User-agent: OAI-SearchBot
 Allow: /
 
@@ -26,22 +39,72 @@ Allow: /
 User-agent: PerplexityBot
 Allow: /
 
-# Optional: block training scrapers while keeping search citability
+# ----- AI training / scraping / cloning bots: blocked -----
+# These copy pages wholesale to train models or clone sites. No crawl.
 User-agent: GPTBot
-Allow: /
+Disallow: /
 
 User-agent: ClaudeBot
-Allow: /
+Disallow: /
+
+User-agent: anthropic-ai
+Disallow: /
 
 User-agent: Google-Extended
-Allow: /
+Disallow: /
 
-User-agent: Bytespider
+User-agent: Applebot-Extended
 Disallow: /
 
 User-agent: CCBot
 Disallow: /
 
+User-agent: Bytespider
+Disallow: /
+
+User-agent: Amazonbot
+Disallow: /
+
+User-agent: Meta-ExternalAgent
+Disallow: /
+
+User-agent: Meta-ExternalFetcher
+Disallow: /
+
+User-agent: FacebookBot
+Disallow: /
+
+User-agent: cohere-ai
+Disallow: /
+
+User-agent: cohere-training-data-crawler
+Disallow: /
+
+User-agent: Diffbot
+Disallow: /
+
+User-agent: Omgilibot
+Disallow: /
+
+User-agent: Omgili
+Disallow: /
+
+User-agent: ImagesiftBot
+Disallow: /
+
+User-agent: PerplexityBot-Extended
+Disallow: /
+
+User-agent: YouBot
+Disallow: /
+
+User-agent: Timpibot
+Disallow: /
+
+User-agent: Scrapy
+Disallow: /
+
+# Everything else: allowed (normal visitors and uncategorised crawlers).
 User-agent: *
 Allow: /
 

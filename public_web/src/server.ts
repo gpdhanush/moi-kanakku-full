@@ -44,18 +44,54 @@ function isH3SwallowedErrorBody(body: string): boolean {
   }
 }
 
+// Hardening headers added to every response. These raise the cost of framing,
+// embedding and automated scraping/cloning of the site. They do not make the
+// page un-copyable (browsers must receive the HTML), but they stop clickjacking,
+// cross-origin embedding, and tell AI crawlers not to archive or snippet.
+const SECURITY_HEADERS: Record<string, string> = {
+  // No other site may frame us (clickjacking / "wrap our UI" clones).
+  "X-Frame-Options": "DENY",
+  // Don't let browsers MIME-sniff responses into executable types.
+  "X-Content-Type-Options": "nosniff",
+  // Don't leak full URLs/paths to third parties.
+  "Referrer-Policy": "strict-origin-when-cross-origin",
+  // Lock down powerful features by default.
+  "Permissions-Policy": "camera=(), microphone=(), geolocation=(), browsing-topics=()",
+  // Tell search/AI crawlers: index, but do NOT archive or build large snippets
+  // (limits wholesale reproduction of our content by AI answer engines).
+  "X-Robots-Tag": "noarchive, nosnippet, max-snippet:160, notranslate",
+  // Isolate our browsing context from cross-origin openers.
+  "Cross-Origin-Opener-Policy": "same-origin",
+};
+
+function withSecurityHeaders(response: Response): Response {
+  // Response headers are immutable on some runtimes; clone to mutate safely.
+  const headers = new Headers(response.headers);
+  // Only add frame protection to documents, not to CORS-enabled API/data responses.
+  for (const [key, value] of Object.entries(SECURITY_HEADERS)) {
+    if (!headers.has(key)) headers.set(key, value);
+  }
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
+}
+
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     try {
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
-      return await normalizeCatastrophicSsrResponse(response);
+      return withSecurityHeaders(await normalizeCatastrophicSsrResponse(response));
     } catch (error) {
       console.error(error);
-      return new Response(renderErrorPage(), {
-        status: 500,
-        headers: { "content-type": "text/html; charset=utf-8" },
-      });
+      return withSecurityHeaders(
+        new Response(renderErrorPage(), {
+          status: 500,
+          headers: { "content-type": "text/html; charset=utf-8" },
+        }),
+      );
     }
   },
 };

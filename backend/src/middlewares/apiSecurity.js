@@ -115,9 +115,76 @@ function validateOrigin(req, res, next) {
     next();
 }
 
+/**
+ * Known AI training / scraping / site-cloning crawlers, matched against the
+ * User-Agent. These identify themselves by name, so the test is a plain
+ * substring match (case-insensitive) and never hits the Flutter app, which
+ * sends a "Dart/..." User-Agent, or ordinary browsers.
+ *
+ * This is the server-side counterpart to the website's robots.txt block —
+ * robots.txt is advisory, this one actually refuses the request.
+ */
+const AI_BOT_UA_PATTERN = new RegExp(
+    [
+        'GPTBot',
+        'ChatGPT-User',           // only when you want to block agent fetches too
+        'OAI-SearchBot',
+        'ClaudeBot',
+        'anthropic-ai',
+        'Claude-Web',
+        'CCBot',
+        'Google-Extended',
+        'Applebot-Extended',
+        'Bytespider',
+        'Amazonbot',
+        'Meta-ExternalAgent',
+        'Meta-ExternalFetcher',
+        'FacebookBot',
+        'cohere-ai',
+        'Diffbot',
+        'Omgili',
+        'ImagesiftBot',
+        'PerplexityBot',
+        'YouBot',
+        'Timpibot',
+        'Scrapy',
+        'python-requests',        // common scraping client
+    ].join('|'),
+    'i'
+);
+
+/**
+ * Blocks requests from known AI crawlers / scrapers by User-Agent.
+ * Set DISABLE_AI_BOT_GUARD=true in .env to turn it off if it ever misfires.
+ */
+function aiBotGuard(req, res, next) {
+    if (process.env.DISABLE_AI_BOT_GUARD === 'true') return next();
+
+    const ua = req.headers['user-agent'] || '';
+    if (ua && AI_BOT_UA_PATTERN.test(ua)) {
+        logger.warn(`Blocked AI/scraper bot: ${ua} -> ${req.method} ${req.originalUrl}`);
+        return res.status(403).json({
+            responseType: 'F',
+            responseValue: { message: 'Automated access is not allowed.' }
+        });
+    }
+    next();
+}
+
+/**
+ * Tells search engines and AI crawlers not to index, follow, archive or
+ * snippet API responses. Applied globally; harmless to the mobile app.
+ */
+function noIndexHeader(req, res, next) {
+    res.setHeader('X-Robots-Tag', 'noindex, nofollow, noarchive, nosnippet');
+    next();
+}
+
 module.exports = {
     generalRateLimiter,
     validateApiKey,
     registrationRateLimiter,
-    validateOrigin
+    validateOrigin,
+    aiBotGuard,
+    noIndexHeader
 };
